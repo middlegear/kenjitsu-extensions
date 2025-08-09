@@ -15,6 +15,7 @@
     "test-hianime": "vitest hianime.test.ts  --config vitest.config.ts",
     "test-animekai": "vitest animekai.test.ts --config vitest.config.ts",
     "test-flixhq": "vitest flixhq.test.ts --config vitest.config.ts",
+    "test-tmdb": "vitest tmdb.test.ts --config vitest.config.ts",
     "test": "vitest  --config vitest.config.ts",
     "lint": "tsc",
     "ci": "tsc && pnpm test && pnpm run build",
@@ -44,8 +45,8 @@
   "devDependencies": {
     "@commitlint/cli": "^19.8.1",
     "@commitlint/config-conventional": "^19.8.1",
-    "@types/crypto-js": "^4.2.2",
     "@types/node": "^22.17.0",
+    "@types/tough-cookie": "^4.0.5",
     "commitizen": "^4.3.1",
     "cz-conventional-changelog": "^3.3.0",
     "prettier": "^3.6.2",
@@ -55,10 +56,10 @@
     "vitest": "^3.2.4"
   },
   "dependencies": {
-    "axios": "^1.11.0",
     "cheerio": "^1.1.2",
-    "crypto-js": "^4.2.0",
-    "got-scraping": "^4.1.2"
+    "got-scraping": "^4.1.2",
+    "tough-cookie": "^5.1.2",
+    "undici": "^7.13.0"
   },
   "packageManager": "pnpm@10.6.3+sha512.bb45e34d50a9a76e858a95837301bfb6bd6d35aea2c5d52094fa497a467c43f5c440103ce2511e9e0a2f89c3d6071baac3358fc68ac6fb75e2ceb3d2736065e6",
   "config": {

@@ -1,6 +1,7 @@
 import * as cheerio from 'cheerio';
 import type { Anime, AnimeInfo, EpisodeInfo, ServerInfo } from './types.js';
-import { SubOrDub, zoroBaseUrl } from '../../index.js';
+import { SubOrDub } from '../../index.js';
+import { zoroBaseUrl } from './hianime.js';
 
 export function extractSearchResults($: cheerio.CheerioAPI, selector: cheerio.SelectorType) {
   const anime: Anime[] = [];
@@ -115,14 +116,15 @@ export function extractServerData($: cheerio.CheerioAPI) {
   servers.episodeNumber = Number(episodeNo) || null;
   $(subSelector).each((_, element) => {
     servers.sub.push({
-      //dont delete will be needed in the future for reference when the servers change
-      // severId: Number($(element)?.attr('data-server-id') || null),
+      serverId: Number($(element)?.attr('data-server-id') || null),
+      mediaId: Number($(element).attr('data-id') || null),
       serverName: $(element).find('.btn').text().trim().toLowerCase() || null,
     });
   });
   $(dubSelector).each((_, element) => {
     servers.dub.push({
-      // severId: Number($(element)?.attr('data-server-id') || null),
+      serverId: Number($(element)?.attr('data-server-id') || null),
+      mediaId: Number($(element).attr('data-id') || null),
       serverName: $(element)?.find('.btn')?.text().trim().toLowerCase() || null,
     });
   });

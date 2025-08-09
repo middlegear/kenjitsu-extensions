@@ -1,8 +1,11 @@
-import axios from 'axios';
+import { BrowserFetchClient } from '../../../config/client.js';
 import { tmdbTitle } from '../../../utils/mapper.js';
 import { TheMovieDatabase } from '../tmdb/index.js';
 
 const tvMazeApiUrl = 'https://api.tvmaze.com' as const;
+
+const axios = new BrowserFetchClient();
+
 type searchData = {
   tvMazeId: number;
   url: string;

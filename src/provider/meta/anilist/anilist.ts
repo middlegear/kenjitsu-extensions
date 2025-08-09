@@ -1,4 +1,3 @@
-import axios from 'axios';
 import { bestTitleMatch } from '../../../utils/mapper.js';
 
 import {
@@ -14,14 +13,15 @@ import {
 
 import { AnimeProvider, Charactersort, Format, MediaType, Seasons, Sort, AnilistStatus } from '../../../types/types.js';
 import { getAnilistMapping } from '../anizip/index.js';
-import { USER_AGENT_HEADER } from '../../index.js';
+
 import { AnimeKai } from '../../anime/animekai/index.js';
 import { HiAnime } from '../../anime/hianime/index.js';
+import { BrowserFetchClient } from '../../../config/client.js';
 
 const baseURL = `https://graphql.anilist.co`;
 const Referer = 'https://anilist.co';
-const Origin = 'https://anilist.co';
 
+const client = new BrowserFetchClient();
 export type AnilistData = {
   malId: number;
   anilistId: number;
@@ -92,22 +92,10 @@ export async function searchAnime(
   }
   try {
     const variables = { search, page, perPage, type, isAdult };
-    const response = await axios.post(
-      baseURL,
-      {
-        query: searchQuery,
-        variables,
-      },
-      {
-        headers: {
-          'User-Agent': USER_AGENT_HEADER,
-          Accept: 'application/json',
-          'Content-Type': 'application/json',
-          Referer: 'https://anilist.co',
-          Origin: 'https://anilist.co',
-        },
-      },
-    );
+    const response = await client.post(baseURL, {
+      query: searchQuery,
+      variables,
+    });
     if (!response.data)
       return {
         error: response.statusText || 'Server returned an empty response',
@@ -206,21 +194,10 @@ export async function fetchAnimeById(id: number): Promise<AnilistInfo> {
   }
   const variables = { id };
   try {
-    const response = await axios.post(
-      baseURL,
-      {
-        query: fetchByIdQuery,
-        variables,
-      },
-      {
-        headers: {
-          'User-Agent': USER_AGENT_HEADER,
-          Accept: 'application/json',
-          Referer: Referer,
-          Origin: Origin,
-        },
-      },
-    );
+    const response = await client.post(baseURL, {
+      query: fetchByIdQuery,
+      variables,
+    });
 
     if (!response.data)
       return {
@@ -309,22 +286,10 @@ export async function fetchUpcoming(
 ): Promise<AnilistUpcoming> {
   try {
     const variables = { page, perPage, type, status, isAdult, sort };
-    const response = await axios.post(
-      baseURL,
-      {
-        query: topQuery,
-        variables,
-      },
-      {
-        headers: {
-          'User-Agent': USER_AGENT_HEADER,
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
-          Origin: Origin,
-          Referer: Referer,
-        },
-      },
-    );
+    const response = await client.post(baseURL, {
+      query: topQuery,
+      variables,
+    });
     if (!response.data)
       return {
         error: response.statusText || 'Server returned an empty response',
@@ -403,22 +368,10 @@ export async function fetchTopAiring(
 ): Promise<AnilistTopAiring> {
   try {
     const variables = { page, perPage, type, format, status, isAdult, sort };
-    const response = await axios.post(
-      baseURL,
-      {
-        query: topQuery,
-        variables,
-      },
-      {
-        headers: {
-          'User-Agent': USER_AGENT_HEADER,
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
-          Origin: Origin,
-          Referer: Referer,
-        },
-      },
-    );
+    const response = await client.post(baseURL, {
+      query: topQuery,
+      variables,
+    });
     if (!response.data)
       return {
         error: response.statusText || 'Server returned an empty response',
@@ -508,22 +461,10 @@ export async function fetchPopular(
 ): Promise<AnilistMostPopular> {
   try {
     const variables = { page, perPage, type, format, isAdult, sort };
-    const response = await axios.post(
-      baseURL,
-      {
-        query: popularAnimeQuery,
-        variables,
-      },
-      {
-        headers: {
-          Accept: 'application/json',
-          'Content-Type': 'application/json',
-          'User-Agent': USER_AGENT_HEADER,
-          Origin: Origin,
-          Referer: Referer,
-        },
-      },
-    );
+    const response = await client.post(baseURL, {
+      query: popularAnimeQuery,
+      variables,
+    });
     if (!response.data)
       return {
         error: response.statusText || 'Server returned an empty response',
@@ -614,22 +555,10 @@ export async function fetchTopRated(
 ): Promise<AnilistTopRated> {
   try {
     const variables = { page, perPage, type, format, isAdult, sort };
-    const response = await axios.post(
-      baseURL,
-      {
-        query: popularAnimeQuery,
-        variables,
-      },
-      {
-        headers: {
-          Accept: 'application/json',
-          'Content-Type': 'application/json',
-          'User-Agent': USER_AGENT_HEADER,
-          Origin: Origin,
-          Referer: Referer,
-        },
-      },
-    );
+    const response = await client.post(baseURL, {
+      query: popularAnimeQuery,
+      variables,
+    });
     if (!response.data)
       return {
         error: response.statusText || 'Server returned an empty response',
@@ -743,22 +672,10 @@ export async function fetchSeason(
       seasonYear,
       sort,
     };
-    const response = await axios.post(
-      baseURL,
-      {
-        query: seasonQuery,
-        variables,
-      },
-      {
-        headers: {
-          Accept: 'application/json',
-          'Content-Type': 'application/json',
-          'User-Agent': USER_AGENT_HEADER,
-          Origin: Origin,
-          Referer: Referer,
-        },
-      },
-    );
+    const response = await client.post(baseURL, {
+      query: seasonQuery,
+      variables,
+    });
     if (!response.data)
       return {
         error: response.statusText || 'Server returned an empty response',
@@ -846,22 +763,10 @@ export async function getTrends(page: number, perPage: number): Promise<AnilistT
     perPage,
   };
   try {
-    const response = await axios.post(
-      baseURL,
-      {
-        query: mediaTrendQuery,
-        variables,
-      },
-      {
-        headers: {
-          Accept: 'application/json',
-          'Content-Type': 'application/json',
-          'User-Agent': USER_AGENT_HEADER,
-          Origin: Origin,
-          Referer: Referer,
-        },
-      },
-    );
+    const response = await client.post(baseURL, {
+      query: mediaTrendQuery,
+      variables,
+    });
     if (!response.data)
       return {
         error: response.statusText || 'Server returned an empty response',
@@ -971,22 +876,10 @@ export async function getRelated(mediaId: number, type: MediaType = MediaType.AN
     type,
   };
   try {
-    const response = await axios.post(
-      baseURL,
-      {
-        query: relatedQuery,
-        variables,
-      },
-      {
-        headers: {
-          Accept: 'application/json',
-          'Content-Type': 'application/json',
-          'User-Agent': USER_AGENT_HEADER,
-          Origin: Origin,
-          Referer: Referer,
-        },
-      },
-    );
+    const response = await client.post(baseURL, {
+      query: relatedQuery,
+      variables,
+    });
     if (!response.data)
       return {
         error: response.statusText || 'Server returned an empty response',
@@ -1064,22 +957,10 @@ export async function fetchAnimeCharacters(
 
   try {
     const variables = { mediaId, sort, voiceActorsSort2 };
-    const response = await axios.post(
-      baseURL,
-      {
-        query: characterQuery,
-        variables,
-      },
-      {
-        headers: {
-          Accept: 'application/json',
-          'Content-Type': 'application/json',
-          'User-Agent': USER_AGENT_HEADER,
-          Origin: Origin,
-          Referer: Referer,
-        },
-      },
-    );
+    const response = await client.post(baseURL, {
+      query: characterQuery,
+      variables,
+    });
     if (!response.data)
       return {
         error: response.statusText || 'Server returned an empty response',

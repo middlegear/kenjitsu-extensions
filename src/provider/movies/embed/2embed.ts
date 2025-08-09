@@ -1,14 +1,20 @@
-import { providerClient } from '../../../config/clients.js';
-import { embedBaseUrl } from '../../../utils/constants.js';
 import * as cheerio from 'cheerio';
 import { ScrapeSwishId } from './scraper.js';
-import StreamWish, { type ExtractedData } from '../../../source-extractors/streamwish.js';
+import StreamWish from '../../../source-extractors/streamwish.js';
+import { BrowserFetchClient } from '../../../config/client.js';
+import type { ExtractedData } from './types.js';
+
+export const embedBaseUrl = 'https://www.2embed.cc' as const;
 
 const embedUrl = 'https://yesmovies.baby' as const;
-/// tv url has cors issues
+const client = new BrowserFetchClient();
+
+///needs some proper headers https://www.youtube.com/watch?v=JesHXRoJbzw
+
 export async function _getEmbedMovieUrl(tmdbId: number) {
   try {
-    const response = await providerClient.get(`${embedBaseUrl}/embed/${tmdbId}`);
+    const response = await client.get(`${embedBaseUrl}/embed/${tmdbId}`);
+
     const data$ = cheerio.load(response.data);
     const swishUrl = ScrapeSwishId(data$);
     if (!swishUrl || typeof swishUrl !== 'string') {
@@ -20,7 +26,7 @@ export async function _getEmbedMovieUrl(tmdbId: number) {
       throw new Error(`Invalid swishUrl format: ${swishUrl}`).message;
     }
     const referer = new URL(swishUrl);
-    const packedScriptUrl = await providerClient.get(`${embedUrl}/e/${id}`, {
+    const packedScriptUrl = await client.get(`${embedUrl}/e/${id}`, {
       headers: {
         Referer: `${referer.origin}/`,
       },

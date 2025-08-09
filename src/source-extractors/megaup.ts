@@ -1,6 +1,5 @@
 // animekai-decoder.ts
 
-import axios from 'axios';
 import { headers } from '../provider/anime/animekai/animekai.js';
 
 interface AutoKai {
@@ -52,18 +51,18 @@ export class AnimekaiDecoder {
   }
 
   private static async fetchAndParseAutokaiJson(): Promise<AutoKai | null> {
-    try {
-      const response = await axios.get(AnimekaiDecoder.AUTOKAI_URL, {
-        headers: {
-          'User-Agent': AnimekaiDecoder.HEADERS['User-Agent'],
-          Accept: AnimekaiDecoder.HEADERS['Accept'],
-        },
-      });
-      return response.data;
-    } catch (e) {
-      AnimekaiDecoder.error('KeyFetcher', 'Error fetching or parsing AutoKai keys:', e);
-      return null;
-    }
+    // try {
+    //   const response = await axios.get(AnimekaiDecoder.AUTOKAI_URL, {
+    //     headers: {
+    //       'User-Agent': AnimekaiDecoder.HEADERS['User-Agent'],
+    //       Accept: AnimekaiDecoder.HEADERS['Accept'],
+    //     },
+    //   });
+    //   return response.data;
+    // } catch (e) {
+    //   AnimekaiDecoder.error('KeyFetcher', 'Error fetching or parsing AutoKai keys:', e);
+    return null;
+    // }
   }
 
   public static async getHomeKeys(): Promise<string[][]> {
@@ -157,29 +156,29 @@ export class AnimekaiDecoder {
     const url = videoUrl.href.replace(/\/(e|e2)\//, '/media/');
     AnimekaiDecoder.log('Extractor', `Fetching media from: ${url}`);
     try {
-      const res = await axios.get(url, {
-        headers: headers,
-      });
+      // const res = await axios.get(url, {
+      //   headers: headers,
+      // });
       // console.log(res.data.result);
-      const decodedString = this.Decode(res.data.result);
-      if (!decodedString) {
-        throw new Error('Failed to decode video data.');
-      }
-      const decryptedResult = JSON.parse((await decodedString).replace(/\\/g, ''));
+      // const decodedString = this.Decode(res.data.result);
+      // if (!decodedString) {
+      //   throw new Error('Failed to decode video data.');
+      // }
+      // const decryptedResult = JSON.parse((await decodedString).replace(/\\/g, ''));
 
-      const data = {
-        sources: decryptedResult.sources.map((s: { file: string }) => ({
-          url: s.file,
-          isM3U8: s.file.includes('.m3U8') || s.file.endsWith('m3u8'),
-        })),
-        subtitles: decryptedResult.tracks.map((t: { kind: any; file: any }) => ({
-          kind: t.kind,
-          url: t.file,
-        })),
-        download: decryptedResult.download,
-      };
+      // const data = {
+      //   sources: decryptedResult.sources.map((s: { file: string }) => ({
+      //     url: s.file,
+      //     isM3U8: s.file.includes('.m3U8') || s.file.endsWith('m3u8'),
+      //   })),
+      //   subtitles: decryptedResult.tracks.map((t: { kind: any; file: any }) => ({
+      //     kind: t.kind,
+      //     url: t.file,
+      //   })),
+      //   download: decryptedResult.download,
+      // };
 
-      return data;
+      return '';
     } catch (error) {
       throw new Error((error as Error).message);
     }

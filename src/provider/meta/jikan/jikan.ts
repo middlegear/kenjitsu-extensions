@@ -1,13 +1,13 @@
-import axios from 'axios';
 import { AnimeProvider, Format, Seasons, JikanStatus } from '../../../types/types.js';
 import { bestTitleMatch } from '../../../utils/mapper.js';
 import { getMalMapping } from '../anizip/index.js';
 import { HiAnime } from '../../anime/hianime/index.js';
 import { AnimeKai } from '../../anime/animekai/index.js';
 import { normalizeLowerCaseSeason, normalizeLowerCaseFormat } from '../../../utils/normalize.js';
+import { BrowserFetchClient } from '../../../config/client.js';
 
 const jikanBaseUrl = 'https://api.jikan.moe/v4';
-
+const client = new BrowserFetchClient();
 export type JIkanData = {
   malId: number;
   image: string;
@@ -69,7 +69,13 @@ export async function searchAnime(query: string, page: number, limit: number): P
     };
   }
   try {
-    const response = await axios.get(`${jikanBaseUrl}/anime?q=${query}&page=${page}&limit=${limit}`);
+    const response = await client.get(`${jikanBaseUrl}/anime`, {
+      params: {
+        q: query,
+        page: String(page),
+        limit: String(limit),
+      },
+    });
     if (!response.data)
       return {
         error: 'Server returned an empty response',
@@ -165,7 +171,7 @@ export async function getInfoById(Id: number): Promise<JikanInfo> {
     };
   }
   try {
-    const response = await axios.get(`${jikanBaseUrl}/anime/${Id}`);
+    const response = await client.get(`${jikanBaseUrl}/anime/${Id}`);
     if (!response.data)
       return {
         error: response.statusText || 'Server returned an empty response',
@@ -257,7 +263,7 @@ export async function getAnimeCharacters(id: number): Promise<JikanCharacters> {
     };
   }
   try {
-    const response = await axios.get(`${jikanBaseUrl}/anime/${id}/characters`);
+    const response = await client.get(`${jikanBaseUrl}/anime/${id}/characters`);
     if (!response.data)
       return {
         error: response.statusText || 'Server returned an empty response',
@@ -305,7 +311,14 @@ export async function getCurrentSeason(page: number, limit: number, filter: Form
   }
   const newFormat = filter.toLowerCase();
   try {
-    const response = await axios.get(`${jikanBaseUrl}/seasons/now?filter=${newFormat}&?sfw&page=${page}&limit=${limit}`);
+    const response = await client.get(`${jikanBaseUrl}/seasons/now`, {
+      params: {
+        filter: newFormat,
+        page: String(page),
+        sfw: 'true',
+        limit: String(limit),
+      },
+    });
     if (!response.data)
       return {
         error: response.statusText || 'Server returned an empty response',
@@ -402,9 +415,14 @@ export async function getNextSeason(page: number, limit: number, filter: Format)
   }
   const newFormat = filter.toLowerCase();
   try {
-    const response = await axios.get(
-      `${jikanBaseUrl}/seasons/upcoming?filter=${newFormat}&?sfw&page=${page}&limit=${limit}`,
-    );
+    const response = await client.get(`${jikanBaseUrl}/seasons/upcoming`, {
+      params: {
+        filter: newFormat,
+        sfw: 'true',
+        page: String(page),
+        limit: String(limit),
+      },
+    });
     if (!response.data)
       return {
         error: response.statusText || 'Server returned an empty response',
@@ -508,9 +526,14 @@ export async function getSeason(
   try {
     const newseason = normalizeLowerCaseSeason(season);
     const format = normalizeLowerCaseFormat(filter);
-    const response = await axios.get(
-      `${jikanBaseUrl}/seasons/${year}/${newseason}?filter=${format}&?sfw&page=${page}&limit=${limit}`,
-    );
+    const response = await client.get(`${jikanBaseUrl}/seasons/${year}/${newseason}`, {
+      params: {
+        filter: format,
+        sfw: 'true',
+        page: String(page),
+        limit: String(limit),
+      },
+    });
     if (!response.data)
       return {
         error: response.statusText || 'Server returned an empty response',
@@ -601,7 +624,14 @@ export async function getTopUpcoming(
   filter: JikanStatus = JikanStatus.Upcoming,
 ): Promise<JikanTopAnime> {
   try {
-    const response = await axios.get(`${jikanBaseUrl}/top/anime?filter=${filter}&?sfw&page=${page}&limit=${perPage}`);
+    const response = await client.get(`${jikanBaseUrl}/top/anime`, {
+      params: {
+        filter: filter,
+        sfw: 'true',
+        page: String(page),
+        limit: String(perPage),
+      },
+    });
     if (!response.data)
       return {
         error: response.statusText || 'Server returned an empty response',
@@ -688,9 +718,15 @@ export async function getTopUpcoming(
 export async function getTopAnime(page: number, limit: number, filter: JikanStatus, type: Format): Promise<JikanTopAnime> {
   try {
     const format = normalizeLowerCaseFormat(type);
-    const response = await axios.get(
-      `${jikanBaseUrl}/top/anime?filter=${filter}&type=${format}&?sfw&page=${page}&limit=${limit}`,
-    );
+    const response = await client.get(`${jikanBaseUrl}/top/anime`, {
+      params: {
+        filter: filter,
+        type: format,
+        sfw: 'true',
+        page: String(page),
+        limit: String(limit),
+      },
+    });
     if (!response.data)
       return {
         error: response.statusText || 'Server returned an empty response',
@@ -811,7 +847,11 @@ export async function getEpisodes(id: number, page: number): Promise<JikanEpisod
   }
 
   try {
-    const response = await axios.get(`${jikanBaseUrl}/anime/${id}/episodes?page=${page}`);
+    const response = await client.get(`${jikanBaseUrl}/anime/${id}/episodes`, {
+      params: {
+        page: String(page),
+      },
+    });
     if (!response.data)
       return {
         error: response.statusText || 'Server returned an empty response',
@@ -866,7 +906,7 @@ export async function getEpisodeInfo(Id: number, episodeNumber: number): Promise
   }
 
   try {
-    const response = await axios.get(`${jikanBaseUrl}/anime/${Id}/episodes/${episodeNumber}`);
+    const response = await client.get(`${jikanBaseUrl}/anime/${Id}/episodes/${episodeNumber}`);
     if (!response.data)
       return {
         error: response.statusText || 'Server returned an empty response',

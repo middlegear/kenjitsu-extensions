@@ -1,9 +1,14 @@
 import * as cheerio from 'cheerio';
-import { flixhqBaseUrl } from '../../../utils/constants.js';
+
 import { scrapeMediaInfo, scrapeSearch } from './scraper.js';
-import { providerClient } from '../../../config/clients.js';
+
 import { type FLixepisodes, type MediaInfo, type searchTypes, type ServerRes, StreamingServers } from './types.js';
 import VidCloud, { type sources, type subtitles, type ExtractedData } from '../../../source-extractors/vidcloud.js';
+import { BrowserFetchClient } from '../../../config/client.js';
+
+export const flixhqBaseUrl = 'https://flixhq.to' as const;
+
+const client = new BrowserFetchClient();
 interface FlixSucessSearchRes {
   data: searchTypes[];
   hasNextPage: boolean;
@@ -20,8 +25,9 @@ export async function _search(query: string, page: number): Promise<FlixSearchRe
   if (!query) {
     return { data: [], error: 'Missing required params: query!', currentPage: 0, hasNextPage: false };
   }
+  const searchString = query.replace(/[\W_]+/g, '-');
   try {
-    const reponse = await providerClient.get(`${flixhqBaseUrl}/search/${query.replace(/[\W_]+/g, '-')}?page=${page}`);
+    const reponse = await client.get(`${flixhqBaseUrl}/search/${searchString}`, { params: { page: String(page) } });
     const data$ = cheerio.load(reponse.data);
     const res = scrapeSearch(data$);
 
@@ -49,7 +55,7 @@ export async function _getInfo(mediaId: string): Promise<FLixInfoRes> {
   const finalMediaId = `${flixhqBaseUrl}/${newId}`;
 
   try {
-    const response = await providerClient.get(finalMediaId);
+    const response = await client.get(finalMediaId);
     const data$ = cheerio.load(response.data);
     const res = scrapeMediaInfo(data$);
 
@@ -61,7 +67,7 @@ export async function _getInfo(mediaId: string): Promise<FLixInfoRes> {
       | { episodeId: string; title: string; number: number; season: number }[]
       | { episodeId: string; title: string | null }[] = [];
     if (res.type === 'TV') {
-      const { data } = await providerClient.get(ajaxReqUrl(uid, 'tv', true));
+      const { data } = await client.get(ajaxReqUrl(uid, 'tv', true));
 
       const $$ = cheerio.load(data);
       const seasonsIds = $$('.dropdown-menu > a')
@@ -70,7 +76,7 @@ export async function _getInfo(mediaId: string): Promise<FLixInfoRes> {
 
       let season = 1;
       for (const id of seasonsIds) {
-        const { data } = await providerClient.get(ajaxReqUrl(id, 'season'));
+        const { data } = await client.get(ajaxReqUrl(id, 'season'));
         const $$$ = cheerio.load(data);
 
         $$$('.nav > li')
@@ -118,7 +124,7 @@ export async function _getServers(episodeId: string): Promise<FlixServerRes> {
   else episodeId = `${flixhqBaseUrl}/ajax/v2/episode/servers/${episodeId.split('-').at(1)}`;
 
   try {
-    const { data } = await providerClient.get(episodeId);
+    const { data } = await client.get(episodeId);
     const data$ = cheerio.load(data);
 
     const servers = data$('.nav > li')
@@ -186,7 +192,7 @@ export async function _getsources(episodeId: string, server: StreamingServers): 
         throw new Error(`Server ${server} not found`);
       }
       const serverId = servers.data[index].id;
-      const { data } = await providerClient.get(`${flixhqBaseUrl}/ajax/episode/sources/${serverId}`);
+      const { data } = await client.get(`${flixhqBaseUrl}/ajax/episode/sources/${serverId}`);
 
       const serverUrl: URL = new URL(data.link);
       return await _getsources(serverUrl.href, server);

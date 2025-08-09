@@ -1,14 +1,13 @@
 import * as cheerio from 'cheerio';
 import { HiAnimeServers, type Anime, type EpisodeInfo, type AnimeInfo, type ServerInfo } from './types.js';
-import {
-  extractSearchResults,
-  extractAnimeInfo,
-  extractEpisodesList,
-  extractServerData,
-  extractAnimeServerId,
-} from './scraper.js';
-import { providerClient, zoroSearch, zoroBaseUrl, MegaCloud } from '../../index.js';
+import { extractSearchResults, extractAnimeInfo, extractEpisodesList, extractServerData } from './scraper.js';
+import { MegaCloud } from '../../index.js';
 import { type ASource, SubOrDub } from '../../../types/types.js';
+import { BrowserFetchClient } from '../../../config/client.js';
+
+export const zoroBaseUrl = 'https://hianime.to' as const;
+
+const client = new BrowserFetchClient();
 
 export interface SuccessSearchResponse {
   data: Anime[];
@@ -25,7 +24,7 @@ export interface SearchErrorResponse {
 }
 export type SearchResponse = SuccessSearchResponse | SearchErrorResponse;
 export async function searchAnime(query: string, page: number): Promise<SearchResponse> {
-  if (!query)
+  if (!query) {
     return {
       hasNextPage: false,
       currentPage: 0,
@@ -33,35 +32,43 @@ export async function searchAnime(query: string, page: number): Promise<SearchRe
       data: [],
       error: 'Missing required Params : query',
     };
+  }
 
   query = query.trim();
 
   try {
-    const response = await providerClient.get(`${zoroSearch}?keyword=${query}&page=${page as number}`);
+    const response = await client.get(`${zoroBaseUrl}/search`, {
+      params: {
+        keyword: query,
+        page: page.toString(),
+      },
+    });
 
     if (!response.data) {
       return {
         hasNextPage: false,
         currentPage: 0,
         lastPage: 0,
-        error: response.statusText || `Received empty response from server`,
+        error: response.statusText || 'Received empty response from server',
         data: [],
       };
     }
-    const $data = cheerio.load(response.data);
 
+    const html = response.data;
+    const $data = cheerio.load(html);
     const searchSelector: cheerio.SelectorType = '.block_area-content .film_list-wrap .flw-item';
-
     const { anime, hasNextPage, totalPages, currentPage } = extractSearchResults($data, searchSelector);
+
     if (!Array.isArray(anime) || anime.length === 0) {
       return {
         hasNextPage: false,
         currentPage: 0,
         lastPage: 0,
-        error: 'Scraper Error: No results found',
+        error: 'Cheerio Error: No results found',
         data: [],
       };
     }
+
     return {
       hasNextPage: hasNextPage,
       currentPage: Number(currentPage) || 0,
@@ -78,7 +85,6 @@ export async function searchAnime(query: string, page: number): Promise<SearchRe
     };
   }
 }
-
 export interface AnimeInfoSuccess {
   data: AnimeInfo;
 }
@@ -95,7 +101,7 @@ export async function fetchAnimeInfo(animeId: string): Promise<ZoroAnimeInfo> {
     };
 
   try {
-    const response = await providerClient.get(`${zoroBaseUrl}/${animeId}`, {
+    const response = await client.get(`${zoroBaseUrl}/${animeId}`, {
       headers: {
         'X-Requested-With': 'XMLHttpRequest',
         Referer: `${zoroBaseUrl}/watch/${animeId}`,
@@ -120,7 +126,7 @@ export async function fetchAnimeInfo(animeId: string): Promise<ZoroAnimeInfo> {
   } catch (error) {
     return {
       data: null,
-      error: error instanceof Error ? error.message : 'Contact dev if you see this',
+      error: error instanceof Error ? error.message : 'Fatal error',
     };
   }
 }
@@ -140,7 +146,7 @@ export async function getEpisodes(animeId: string): Promise<EpisodeInfoRes> {
       error: 'Missing required params :animeId',
     };
   try {
-    const response = await providerClient.get(`${zoroBaseUrl}/ajax/v2/episode/list/${animeId.split('-').pop()}`, {
+    const response = await client.get(`${zoroBaseUrl}/ajax/v2/episode/list/${animeId.split('-').pop()}`, {
       headers: {
         'X-Requested-With': 'XMLHttpRequest',
         Referer: `${zoroBaseUrl}/watch/${animeId}`,
@@ -187,9 +193,12 @@ export async function fetchServers(episodeId: string): Promise<ServerInfoRespons
     };
 
   try {
-    const newId = episodeId.split('-').pop();
+    const newId = episodeId.split('-').pop()?.trim() as string;
 
-    const response = await providerClient.get(`${zoroBaseUrl}/ajax/v2/episode/servers?episodeId=${newId}`, {
+    const response = await client.get(`${zoroBaseUrl}/ajax/v2/episode/servers`, {
+      params: {
+        episodeId: newId,
+      },
       headers: {
         'X-Requested-With': 'XMLHttpRequest',
         Referer: `${zoroBaseUrl}/watch/?ep=${newId}`,
@@ -221,70 +230,6 @@ export async function fetchServers(episodeId: string): Promise<ServerInfoRespons
   }
 }
 
-async function _getSource(episodeId: string, server: HiAnimeServers, category: SubOrDub) {
-  try {
-    const newId = episodeId.split('-').pop();
-    const response = await providerClient.get(`${zoroBaseUrl}/ajax/v2/episode/servers?episodeId=${newId}`, {
-      headers: {
-        'X-Requested-With': 'XMLHttpRequest',
-        Referer: `${zoroBaseUrl}/watch/?ep=${newId}`,
-      },
-    });
-
-    if (!response.data)
-      return {
-        error: response.statusText,
-      };
-    const datares$: cheerio.CheerioAPI = cheerio.load(response.data.html);
-    let mediadataId: string | null = null;
-
-    switch (server) {
-      case HiAnimeServers.HD1: {
-        mediadataId = extractAnimeServerId(datares$, 4, category);
-        if (!mediadataId) throw new Error('HD1 not found');
-        break;
-      }
-      case HiAnimeServers.HD2: {
-        mediadataId = extractAnimeServerId(datares$, 1, category);
-        if (!mediadataId) throw new Error('HD2 not found');
-        break;
-      }
-      case HiAnimeServers.HD3: {
-        mediadataId = extractAnimeServerId(datares$, 6, category);
-        if (!mediadataId) throw new Error('HD3 not found');
-        break;
-      }
-    }
-    if (!mediadataId)
-      return {
-        error: 'Server returned no mediadataId',
-      };
-    const dataLink = await providerClient.get(`${zoroBaseUrl}//ajax/v2/episode/sources?id=${mediadataId}`, {
-      headers: {
-        'X-Requested-With': 'XMLHttpRequest',
-        Referer: `${zoroBaseUrl}/watch/?ep=${newId}`,
-      },
-    });
-    if (!dataLink.data)
-      return {
-        error: dataLink.statusText || 'Server returned an empty response',
-      };
-    // dataLink.data  is an object that contains something similar to this
-    //       {
-    //   type: 'iframe',
-    //   link: 'https://megacloud.blog/embed-2/v2/e-1/5kyDcuM3rrUq?k=1',
-    //   server: 1,
-    //   sources: [],
-    //   tracks: [],
-    //   htmlGuide: ''
-    // }
-    return dataLink.data.link;
-  } catch (error) {
-    return {
-      error: error instanceof Error ? error.message : 'Unknown Error',
-    };
-  }
-}
 export interface SuccessSourceRes {
   data: ASource;
   headers: {
@@ -305,24 +250,16 @@ export async function fetchEpisodeSources(
   server: HiAnimeServers,
   category: SubOrDub,
 ): Promise<HianimeSourceResponse> {
-  if (!episodeId) {
+  if (!episodeId || !episodeId.includes('-')) {
     return {
       data: null,
       headers: {
         Referer: null,
       },
-      error: 'Missing required params episodeId',
+      error: 'Missing required vaild params episodeId',
     };
   }
-  if (!episodeId.includes('-')) {
-    return {
-      data: null,
-      headers: {
-        Referer: null,
-      },
-      error: 'Missing required params: Valid episodeId',
-    };
-  }
+
   if (episodeId.startsWith('http')) {
     const serverUrl = new URL(episodeId);
     switch (server) {
@@ -346,10 +283,41 @@ export async function fetchEpisodeSources(
     // const id = link.split('/').at(-1);
     // console.log(id);
     // const sources = puppeteer(id);
-    //
-    const embedUrl = await _getSource(episodeId, server, category);
-    // console.log(embedUrl);
-    return await fetchEpisodeSources(embedUrl, server, category);
+
+    const findServerId = (servers: ServerInfo, category: SubOrDub, server: HiAnimeServers) => {
+      if (!servers || !servers[category]) {
+        return null;
+      }
+
+      const serverIndex = servers[category].findIndex(s => (s.serverName || '').toLowerCase() === server.toLowerCase());
+
+      return serverIndex !== -1 ? servers[category][serverIndex].mediaId : null;
+    };
+
+    const fetchedServers = (await fetchServers(episodeId)).data as ServerInfo;
+    const serverId = findServerId(fetchedServers, category, server);
+
+    const newId = episodeId.split('-').pop() as string;
+
+    const response = await client.get(`${zoroBaseUrl}/ajax/v2/episode/sources`, {
+      params: {
+        id: String(serverId),
+      },
+      headers: {
+        'X-Requested-With': 'XMLHttpRequest',
+        Referer: `${zoroBaseUrl}/watch/?ep=${newId}`,
+      },
+    });
+    if (!response.data)
+      return {
+        data: null,
+        headers: {
+          Referer: null,
+        },
+        error: response.statusText || 'Server returned an empty response',
+      };
+
+    return await fetchEpisodeSources(response.data.link, server, category);
   } catch (error) {
     return {
       data: null,

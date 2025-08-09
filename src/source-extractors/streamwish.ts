@@ -1,21 +1,5 @@
+import type { ExtractedData } from '../provider/movies/embed/types.js';
 import { unpack } from '../utils/unpacker.js';
-
-export type sources = {
-  url: string;
-  isM3U8: boolean;
-  type: string;
-  default?: boolean;
-};
-
-export type subtitles = {
-  url: string;
-  lang: string;
-};
-
-export type ExtractedData = {
-  subtitles: subtitles[];
-  sources: sources[];
-};
 
 class StreamWish {
   private readonly baseUrl: string = 'https://yesmovies.baby';

@@ -1,21 +1,6 @@
 import type { CheerioAPI } from 'cheerio';
 import { ScrapeCloudStreampro } from '../provider/movies/embed/scraper.js';
-
-type sources = {
-  url: string;
-  isM3U8: boolean;
-  type: string;
-  default?: boolean;
-};
-type subtitles = {
-  url: string;
-  lang: string;
-};
-
-type ExtractedData = {
-  subtitles: subtitles[];
-  sources: sources[];
-};
+import type { subtitles, sources, ExtractedData } from './vidcloud.js';
 
 class CloudStreamPro {
   //

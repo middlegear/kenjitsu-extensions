@@ -1,8 +1,8 @@
-import axios from 'axios';
 import { transformData } from './utils.js';
+import { BrowserFetchClient } from '../../../config/client.js';
 
 const baseUrl = 'https://api.ani.zip/mappings';
-
+const client = new BrowserFetchClient();
 export async function getAnilistMapping(id: number) {
   if (!id)
     return {
@@ -10,7 +10,7 @@ export async function getAnilistMapping(id: number) {
       data: null,
     };
   try {
-    const response = await axios.get(`${baseUrl}?anilist_id=${id}`);
+    const response = await client.get(`${baseUrl}?anilist_id=${id}`);
     if (!response.data) {
       return {
         error: 'Received empty response from server',
@@ -41,7 +41,7 @@ export async function getMalMapping(id: number) {
       data: null,
     };
   try {
-    const response = await axios.get(`${baseUrl}?mal_id=${id}`);
+    const response = await client.get(`${baseUrl}?mal_id=${id}`);
     if (!response.data) {
       return {
         error: 'Received empty response from server',

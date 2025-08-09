@@ -1,15 +1,15 @@
 import * as cheerio from 'cheerio';
 import { gotScraping } from 'got-scraping';
-import { animekaiBaseUrl } from '../../../utils/constants.js';
 import { extractAnimeInfo, extractsearchresults } from './scraper.js';
-import axios from 'axios';
-// import { MegaUp } from '../../../source-extractors/megaup/megaup';
+
 import { type ASource, SubOrDub } from '../../../types/types.js';
 import { type Info, type searchRes, AnimeKaiServers } from './types.js';
 
-import { providerClient } from '../../../config/clients.js';
 import { AnimekaiDecoder } from '../../../source-extractors/megaup.js';
+import { BrowserFetchClient } from '../../../config/client.js';
 
+const animekaiBaseUrl = 'https://animekai.to' as const;
+const client = new BrowserFetchClient();
 export const headers = {
   'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:134.0) Gecko/20100101 Firefox/134.0',
   Accept: 'text/html, */*; q=0.01',
@@ -242,7 +242,7 @@ export async function getEpisodeServers(episodeId: string, category: SubOrDub): 
   const gentoken = await token.GenerateToken(tokenstuff);
   if (tokenstuff) episodeId = `${animekaiBaseUrl}/ajax/links/list?token=${tokenstuff}&_=${gentoken}`;
   try {
-    const { data } = await axios.get(episodeId, {
+    const { data } = await client.get(episodeId, {
       headers: {
         ...headers,
       },
@@ -259,7 +259,7 @@ export async function getEpisodeServers(episodeId: string, category: SubOrDub): 
     await Promise.all(
       serverItems.map(async (i, server) => {
         const id = $(server).attr('data-lid');
-        const { data } = await providerClient.get(
+        const { data } = await client.get(
           `${animekaiBaseUrl}/ajax/links/view?id=${id}&_=${new AnimekaiDecoder().GenerateToken(id!)}`,
           {
             headers: headers,
@@ -325,13 +325,13 @@ export async function getEpisodeSources(
       case AnimeKaiServers.MegaUp:
         return {
           headers: { Referer: `${serverUrl.href}` },
-          data: (await new AnimekaiDecoder().extract(serverUrl)) as ASource,
+          data: (await new AnimekaiDecoder().extract(serverUrl)) as unknown as ASource,
         };
 
       default:
         return {
           headers: { Referer: `${serverUrl.href}` },
-          data: (await new AnimekaiDecoder().extract(serverUrl)) as ASource,
+          data: (await new AnimekaiDecoder().extract(serverUrl)) as unknown as ASource,
         };
     }
   }

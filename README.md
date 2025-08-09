@@ -22,6 +22,6 @@ This project is licensed under the **[MIT License](LICENSE)**.
 
 -----
 
-### 🎖 Credit
+### Thanks
 
 **[Consumet](https://github.com/consumet)**.

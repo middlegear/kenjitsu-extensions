@@ -1,6 +1,6 @@
 import type { TvEpisodes, ShowInfo, tmdbTV, tmdbMovie, MovieInfoRes, EpisodeInfoRes } from './tmdb.js';
 import { TimeWindow } from '../../../types/types.js';
-import { _getMovieProviderId, _getTvProviderId, type TvProviderId, type MovieProviderId } from './mapping.js'; // Added _getMovieProviderId and MovieProviderId imports
+import { _getMovieProviderId, _getTvProviderId, type TvProviderId, type MovieProviderId } from './mapping.js';
 import {
   searchTVShows,
   getTvShowInfo,

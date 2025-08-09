@@ -1,7 +1,9 @@
-import axios from 'axios';
+import { BrowserFetchClient } from '../../../config/client.js';
 import { TimeWindow } from '../../../types/types.js';
 
-const tmdbUrl = 'https://api.themoviedb.org/3';
+const tmdbUrl = 'https://api.themoviedb.org/3' as const;
+const client = new BrowserFetchClient();
+
 export interface searchTVData {
   tmdbId: number;
   name: string;
@@ -134,9 +136,15 @@ export async function searchTVShows(query: string, page: number, apiKey: string)
     };
   }
   try {
-    const response = await axios.get(
-      `${tmdbUrl}/search/tv?include_adult=false&language=en-US&page=${page}&api_key=${apiKey}&query=${query}`,
-    );
+    const response = await client.get(`${tmdbUrl}/search/tv`, {
+      params: {
+        include_adult: 'false',
+        language: 'en-US',
+        page: String(page),
+        api_key: apiKey,
+        query: query,
+      },
+    });
 
     if (!response.data)
       return {
@@ -195,7 +203,7 @@ export async function searchTVShows(query: string, page: number, apiKey: string)
 }
 interface successShowInfo {
   data: Info;
-  seasons: seasons;
+  seasons: seasons[];
 }
 interface errorShowInfo {
   data: null;
@@ -212,7 +220,12 @@ export async function getTvShowInfo(tmdbId: number, apiKey: string): Promise<Sho
     };
   }
   try {
-    const response = await axios.get(`${tmdbUrl}/tv/${tmdbId}?language=en-US&api_key=${apiKey}`);
+    const response = await client.get(`${tmdbUrl}/tv/${tmdbId}`, {
+      params: {
+        language: 'en-US',
+        api_key: apiKey,
+      },
+    });
 
     if (!response.data)
       return {
@@ -284,7 +297,7 @@ export async function getTvShowInfo(tmdbId: number, apiKey: string): Promise<Sho
         original: `https://image.tmdb.org/t/p/original${item.poster_path}` || null,
       },
     }));
-    return { data: data as Info, seasons: seasons };
+    return { data: data as Info, seasons: seasons as seasons[] };
   } catch (error) {
     return { data: null, seasons: [], error: error instanceof Error ? error.message : 'Unknown error' };
   }
@@ -320,7 +333,11 @@ export async function getTvEpisodes(tmdbId: number, season: number, apiKey: stri
     return { data: [], error: 'Missing required params :tmdbId!' };
   }
   try {
-    const response = await axios.get(`${tmdbUrl}/tv/${tmdbId}/season/${season}?api_key=${apiKey}`);
+    const response = await client.get(`${tmdbUrl}/tv/${tmdbId}/season/${season}`, {
+      params: {
+        api_key: apiKey,
+      },
+    });
 
     if (!response.data)
       return {
@@ -380,7 +397,11 @@ export async function _getEpisodeDetails(
   apiKey: string,
 ): Promise<EpisodeInfoRes> {
   try {
-    const response = await axios.get(`${tmdbUrl}/tv/${tmdbId}/season/${season}/episode/${episodeNumber}?api_key=${apiKey}`);
+    const response = await client.get(`${tmdbUrl}/tv/${tmdbId}/season/${season}/episode/${episodeNumber}`, {
+      params: {
+        api_key: apiKey,
+      },
+    });
     if (!response.data)
       return {
         data: null,
@@ -425,9 +446,15 @@ export async function searchTmdbMovie(query: string, page: number, apiKey: strin
     };
   }
   try {
-    const response = await axios.get(
-      `${tmdbUrl}/search/movie?include_adult=false&language=en-US&page=${page}&api_key=${apiKey}&query=${query}`,
-    );
+    const response = await client.get(`${tmdbUrl}/search/movie`, {
+      params: {
+        include_adult: 'false',
+        language: 'en-US',
+        page: String(page),
+        api_key: apiKey,
+        query: query,
+      },
+    });
     if (!response.data)
       return {
         data: [],
@@ -536,7 +563,11 @@ export async function getMovieInfo(tmdbId: number, apiKey: string): Promise<Movi
     return { data: null, error: 'Missing required params tmdbId!' };
   }
   try {
-    const response = await axios.get(`${tmdbUrl}/movie/${tmdbId}?api_key=${apiKey}`);
+    const response = await client.get(`${tmdbUrl}/movie/${tmdbId}`, {
+      params: {
+        api_key: apiKey,
+      },
+    });
 
     const data = {
       tmdbId: response.data.id || null,
@@ -587,8 +618,15 @@ export async function getMovieInfo(tmdbId: number, apiKey: string): Promise<Movi
 }
 export async function _getTrendingMovies(timeWindow: TimeWindow, page: number, apiKey: string): Promise<tmdbMovie> {
   try {
-    const response = await axios.get(
+    const response = await client.get(
       `${tmdbUrl}/trending/movie/${timeWindow}?language=en-US&api_key=${apiKey}&page=${page}`,
+      {
+        params: {
+          language: 'en-US',
+          page: String(page),
+          api_key: apiKey,
+        },
+      },
     );
 
     if (!response.data)
@@ -648,7 +686,13 @@ export async function _getTrendingMovies(timeWindow: TimeWindow, page: number, a
 }
 export async function _getPopularMovies(page: number, apiKey: string): Promise<tmdbMovie> {
   try {
-    const response = await axios.get(`${tmdbUrl}/movie/popular?api_key=${apiKey}&page=${page}`);
+    const response = await client.get(`${tmdbUrl}/movie/popular?api_key=${apiKey}&page=${page}`, {
+      params: {
+        language: 'en-US',
+        page: String(page),
+        api_key: apiKey,
+      },
+    });
     if (!response.data)
       return {
         data: [],
@@ -707,7 +751,12 @@ export async function _getPopularMovies(page: number, apiKey: string): Promise<t
 
 export async function _getTopRatedMovies(page: number, apiKey: string): Promise<tmdbMovie> {
   try {
-    const response = await axios.get(`${tmdbUrl}/movie/top_rated?api_key=${apiKey}&page=${page}`);
+    const response = await client.get(`${tmdbUrl}/movie/top_rated`, {
+      params: {
+        api_key: apiKey,
+        page: String(page),
+      },
+    });
     if (!response.data)
       return {
         data: [],
@@ -765,7 +814,12 @@ export async function _getTopRatedMovies(page: number, apiKey: string): Promise<
 }
 export async function _getReleasingMovies(page: number, apiKey: string): Promise<tmdbMovie> {
   try {
-    const response = await axios.get(`${tmdbUrl}/movie/now_playing?api_key=${apiKey}&page=${page}`);
+    const response = await client.get(`${tmdbUrl}/movie/now_playing`, {
+      params: {
+        api_key: apiKey,
+        page: String(page),
+      },
+    });
 
     if (!response.data)
       return {
@@ -824,7 +878,12 @@ export async function _getReleasingMovies(page: number, apiKey: string): Promise
 }
 export async function _getUpcomingMovies(page: number, apiKey: string): Promise<tmdbMovie> {
   try {
-    const response = await axios.get(`${tmdbUrl}/movie/upcoming?api_key=${apiKey}&page=${page}`);
+    const response = await client.get(`${tmdbUrl}/movie/upcoming`, {
+      params: {
+        api_key: apiKey,
+        page: String(page),
+      },
+    });
 
     if (!response.data)
       return {
@@ -884,7 +943,13 @@ export async function _getUpcomingMovies(page: number, apiKey: string): Promise<
 
 export async function _getTrendingTv(timeWindow: TimeWindow, page: number, apiKey: string): Promise<tmdbTV> {
   try {
-    const response = await axios.get(`${tmdbUrl}/trending/tv/${timeWindow}?language=en-US&api_key=${apiKey}&page=${page}`);
+    const response = await client.get(`${tmdbUrl}/trending/tv/${timeWindow}`, {
+      params: {
+        language: 'en-US',
+        api_key: apiKey,
+        page: String(page),
+      },
+    });
 
     if (!response.data)
       return {
@@ -943,7 +1008,13 @@ export async function _getTrendingTv(timeWindow: TimeWindow, page: number, apiKe
 }
 export async function _getPopularTv(page: number, apiKey: string): Promise<tmdbTV> {
   try {
-    const response = await axios.get(`${tmdbUrl}/tv/popular?language=en-US&api_key=${apiKey}&page=${page}`);
+    const response = await client.get(`${tmdbUrl}/tv/popular`, {
+      params: {
+        language: 'en-US',
+        api_key: apiKey,
+        page: String(page),
+      },
+    });
 
     if (!response.data)
       return {
@@ -1002,7 +1073,13 @@ export async function _getPopularTv(page: number, apiKey: string): Promise<tmdbT
 }
 export async function _getTopRatedTv(page: number, apiKey: string): Promise<tmdbTV> {
   try {
-    const response = await axios.get(`${tmdbUrl}/tv/top_rated?language=en-US&api_key=${apiKey}&page=${page}`);
+    const response = await client.get(`${tmdbUrl}/tv/top_rated`, {
+      params: {
+        language: 'en-US',
+        api_key: apiKey,
+        page: String(page),
+      },
+    });
 
     if (!response.data)
       return {
@@ -1062,7 +1139,13 @@ export async function _getTopRatedTv(page: number, apiKey: string): Promise<tmdb
 
 export async function _getAiringTv(page: number, apiKey: string): Promise<tmdbTV> {
   try {
-    const response = await axios.get(`${tmdbUrl}/tv/on_the_air?language=en-US&api_key=${apiKey}&page=${page}`);
+    const response = await client.get(`${tmdbUrl}/tv/on_the_air`, {
+      params: {
+        language: 'en-US',
+        api_key: apiKey,
+        page: String(page),
+      },
+    });
 
     if (!response.data)
       return {

@@ -1,32 +1,29 @@
 import * as cheerio from 'cheerio';
-import { providerClient } from '../../../config/clients.js';
-import { vidsrcBaseUrl } from '../../../utils/constants.js';
-import { EmbedServers } from './types.js';
-import { getFrame, getServersHash } from './scraper.js';
-import { USER_AGENT_HEADER } from '../../index.js';
-import axios from 'axios';
-import CloudStreamPro from '../../../source-extractors/cloudstreampro.js';
-import { type ExtractedData } from '../../../source-extractors/streamwish.js';
-import type { EmbedSrcResponse } from './index.js';
 
+import { EmbedServers, type ExtractedData } from './types.js';
+import { getFrame, getServersHash } from './scraper.js';
+
+import CloudStreamPro from '../../../source-extractors/cloudstreampro.js';
+
+import type { EmbedSrcResponse } from './index.js';
+import { BrowserFetchClient } from '../../../config/client.js';
+
+export const vidsrcBaseUrl = 'https://vidsrc.io/embed' as const;
+
+const client = new BrowserFetchClient();
 async function _getRCP(hash: string) {
   try {
-    const rcp = await axios.get(`https://cloudnestra.com/rcp/${hash}`, {
+    const rcp = await client.get(`https://cloudnestra.com/rcp/${hash}`, {
       headers: {
-        'User-Agent': USER_AGENT_HEADER,
-        Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
         Referer: 'https://vidsrc.io/',
-        'Content-Encoding': 'gzip, deflate, br, zstd',
       },
     });
+
     const frame$ = cheerio.load(rcp.data);
     const iframe = getFrame(frame$);
-    const srcp = await axios.get(`https://cloudnestra.com/${iframe}`, {
+    const srcp = await client.get(`https://cloudnestra.com/${iframe}`, {
       headers: {
-        'User-Agent': USER_AGENT_HEADER,
-        Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
         Referer: `https://cloudnestra.com/rcp/${hash}`,
-        'Content-Encoding': 'gzip, deflate, br, zstd',
       },
     });
     return srcp.data;
@@ -36,7 +33,7 @@ async function _getRCP(hash: string) {
 }
 async function _getMovieHash(tmdbId: number, server: EmbedServers = EmbedServers.CloudStream) {
   try {
-    const response = await providerClient.get(`${vidsrcBaseUrl}/${tmdbId}/`);
+    const response = await client.get(`${vidsrcBaseUrl}/${tmdbId}/`);
     const data$ = cheerio.load(response.data);
     const servers = getServersHash(data$);
 
@@ -67,9 +64,10 @@ async function _getTvHash(
   server: EmbedServers = EmbedServers.CloudStream,
 ) {
   try {
-    const response = await providerClient.get(`${vidsrcBaseUrl}/${tmdbId}/${season}-${episodeNumber}/`);
+    const response = await client.get(`${vidsrcBaseUrl}/${tmdbId}/${season}-${episodeNumber}/`);
     const data$ = cheerio.load(response.data);
     const servers = getServersHash(data$);
+
     if (!Array.isArray(servers) || servers.length === 0) {
       throw new Error('No servers found');
     }
@@ -93,7 +91,7 @@ async function _getTvHash(
 
 export async function _getVidSrcMovieUrl(tmdbId: number): Promise<EmbedSrcResponse> {
   if (!tmdbId) {
-    return { data: [], error: 'Missing required params: tmdbId!' };
+    return { data: null, error: 'Missing required params: tmdbId!' };
   }
   try {
     const data = await _getMovieHash(tmdbId);
@@ -101,16 +99,15 @@ export async function _getVidSrcMovieUrl(tmdbId: number): Promise<EmbedSrcRespon
     const data$: cheerio.CheerioAPI = cheerio.load(data);
 
     return { data: new CloudStreamPro().extract(data$) as ExtractedData };
-    //
   } catch (error) {
-    return { data: [], error: error instanceof Error ? error.message : 'Unknown Err' };
+    return { data: null, error: error instanceof Error ? error.message : 'Unknown Err' };
   }
 }
 
 export async function _getVidSrcTvUrl(tmdbId: number, season: number, episodeNumber: number): Promise<EmbedSrcResponse> {
   if (!tmdbId) {
     return {
-      data: [],
+      data: null,
       error: 'Missing required params: tmdbId! ',
     };
   }
@@ -122,6 +119,6 @@ export async function _getVidSrcTvUrl(tmdbId: number, season: number, episodeNum
     return { data: new CloudStreamPro().extract(data$) as ExtractedData };
     //
   } catch (error) {
-    return { data: [], error: error instanceof Error ? error.message : 'Unknown Err' };
+    return { data: null, error: error instanceof Error ? error.message : 'Unknown Err' };
   }
 }

@@ -1,6 +1,6 @@
 import * as cheerio from 'cheerio';
-import { flixhqBaseUrl } from '../../../utils/constants.js';
 import type { MediaInfo, searchTypes } from './types.js';
+import { flixhqBaseUrl } from './flixhq.js';
 
 export function scrapeSearch($: cheerio.CheerioAPI) {
   const searchRes: searchTypes[] = [];

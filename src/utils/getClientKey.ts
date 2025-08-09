@@ -1,8 +1,7 @@
-import axios from 'axios';
-
 import { load } from 'cheerio';
+import { BrowserFetchClient } from '../config/client.js';
 
-import { USER_AGENT_HEADER } from '../provider/index.js';
+const client = new BrowserFetchClient();
 
 export async function getClientKey(embedUrl: string, Referer: string): Promise<string> {
   const salts: string[] = [];
@@ -10,10 +9,9 @@ export async function getClientKey(embedUrl: string, Referer: string): Promise<s
 
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     try {
-      const response = await axios.get(embedUrl, {
+      const response = await client.get(embedUrl, {
         headers: {
           Referer,
-          'User-Agent': USER_AGENT_HEADER,
           'X-Requested-With': 'XMLHttpRequest',
         },
       });

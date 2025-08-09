@@ -1,8 +1,6 @@
-import axios from 'axios';
-import { providerClient } from '../config/clients.js';
-import { USER_AGENT_HEADER } from '../provider/index.js';
 import { Decrypter } from '../utils/decrypt.js';
 import { getClientKey } from '../utils/getClientKey.js';
+import { BrowserFetchClient } from '../config/client.js';
 
 export type sources = {
   url: string;
@@ -20,13 +18,18 @@ export type ExtractedData = {
   subtitles: subtitles[];
   sources: sources[];
 };
-
+const client = new BrowserFetchClient();
 class VidCloud {
   private primaryKeyUrl = 'https://raw.githubusercontent.com/yogesh-hacker/MegacloudKeys/refs/heads/main/keys.json';
   async fetchKey(url: string): Promise<string> {
     try {
-      const response = await axios.get(url);
-      const jsonData = response.data;
+      const response = await fetch(url);
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const jsonData = await response.json();
       if (typeof jsonData === 'object' && jsonData !== null && 'rabbit' in jsonData) {
         const key = jsonData.rabbit;
         if (typeof key === 'string' && key.length > 0) {
@@ -41,13 +44,6 @@ class VidCloud {
   }
 
   async extract(videoUrl: URL, referer: string = 'https://flixhq.to/'): Promise<ExtractedData | string> {
-    const Options = {
-      headers: {
-        'X-Requested-With': 'XMLHttpRequest',
-        Referer: videoUrl.href,
-        'User-Agent': USER_AGENT_HEADER,
-      },
-    };
     const extractedData: ExtractedData = {
       subtitles: [],
       sources: [],
@@ -63,21 +59,29 @@ class VidCloud {
     const fullPathname = videoUrl.pathname;
     const lastSlashIndex = fullPathname.lastIndexOf('/');
     const basePathname = fullPathname.substring(0, lastSlashIndex);
-
+    const sourcesBaseUrl = `${videoUrl.origin}${basePathname}/getSources`;
     try {
-      const clientkey = await getClientKey(videoUrl.href, referer);
-      if (!clientkey) {
+      const clientKey = await getClientKey(videoUrl.href, referer);
+      if (!clientKey) {
         throw new Error('Failed to fetch ClientKey').message;
       }
 
-      const sourcesUrl = `${videoUrl.origin}${basePathname}/getSources?id=${sourceId}&_k=${clientkey}`;
+      const { data: initialResponse } = await client.get(sourcesBaseUrl, {
+        params: {
+          id: sourceId,
+          _k: clientKey,
+        },
 
-      const { data: initialResponse } = await providerClient.get(sourcesUrl, Options);
+        headers: {
+          'X-Requested-With': 'XMLHttpRequest',
+          Referer: videoUrl.href,
+        },
+      });
 
       if (initialResponse.encrypted) {
         const key = await this.fetchKey(this.primaryKeyUrl);
         const decryptor = new Decrypter();
-        const decrypted = decryptor.decrypt(initialResponse.sources, clientkey, key);
+        const decrypted = decryptor.decrypt(initialResponse.sources, clientKey, key);
         const sources = JSON.parse(decrypted);
 
         if (!Array.isArray(sources)) {
