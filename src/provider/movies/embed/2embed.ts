@@ -15,12 +15,11 @@ const cfClearanceCookie =
 
 ///needs some proper headers https://www.youtube.com/watch?v=JesHXRoJbzw
 
-export async function _getEmbedMovieUrl(tmdbId: number) {
+async function _getEmbedMovieUrl(tmdbId: number) {
   try {
     const response = await client.get(`${embedBaseUrl}/embed/${tmdbId}`, {
       headers: {
         Cookie: cfClearanceCookie,
-        Referer: 'https://hakai-api.vercel.app',
       },
     });
 

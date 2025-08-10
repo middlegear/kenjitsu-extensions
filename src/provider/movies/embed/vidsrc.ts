@@ -5,7 +5,6 @@ import { getFrame, getServersHash } from './scraper.js';
 
 import CloudStreamPro from '../../../source-extractors/cloudstreampro.js';
 
-import type { EmbedSrcResponse } from './index.js';
 import { FetchClient } from '../../../config/client.js';
 
 export const vidsrcBaseUrl = 'https://vidsrc.io/embed' as const;
@@ -88,7 +87,14 @@ async function _getTvHash(
     return { error: error instanceof Error ? error.message : 'Unknown Err' };
   }
 }
-
+interface SuccessResponse {
+  data: ExtractedData;
+}
+interface ErrorResponse {
+  data: null;
+  error: string;
+}
+export type EmbedSrcResponse = SuccessResponse | ErrorResponse;
 export async function _getVidSrcMovieUrl(tmdbId: number): Promise<EmbedSrcResponse> {
   if (!tmdbId) {
     return { data: null, error: 'Missing required params: tmdbId!' };

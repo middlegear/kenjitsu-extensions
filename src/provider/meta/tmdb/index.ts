@@ -18,9 +18,8 @@ import {
   _getUpcomingMovies,
   _getEpisodeDetails,
 } from './tmdb.js';
-import { getMovieUrl, type EmbedSrcResponse } from '../../movies/embed/index.js';
-import { EmbedServers } from '../../movies/embed/types.js';
-import { _getVidSrcTvUrl } from '../../movies/embed/vidsrc.js';
+
+import { _getVidSrcMovieUrl, _getVidSrcTvUrl, type EmbedSrcResponse } from '../../movies/embed/vidsrc.js';
 
 /**
  * A class for interacting with The Movie Database (TMDb) API to search for and retrieve
@@ -196,11 +195,10 @@ class TheMovieDatabase {
   /**
    * Fetches movie streaming sources using TMDB ID
    * @param {number} tmdbId - The unique TMDb ID for the movie (required).
-   * @param {EmbedServers} server - The streaming server to use (optional, defaults to EmbedServers.CloudStream )
    * @returns {Promise<EmbedSrcResponse>} A promise that resolves to an object containing array of available streaming sources.
    */
-  async fetchMovieSources(tmdbId: number, server: EmbedServers = EmbedServers.CloudStream): Promise<EmbedSrcResponse> {
-    return getMovieUrl(tmdbId, server);
+  async fetchMovieSources(tmdbId: number): Promise<EmbedSrcResponse> {
+    return _getVidSrcMovieUrl(tmdbId);
   }
 
   /**
