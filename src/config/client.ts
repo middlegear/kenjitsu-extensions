@@ -1,4 +1,3 @@
-import { CookieJar } from 'tough-cookie';
 import { fetch, Headers } from 'undici';
 import { URLSearchParams } from 'url';
 
@@ -48,7 +47,6 @@ export type RequestInterceptor = (config: RequestConfig) => Promise<RequestConfi
 export type ResponseInterceptor = (response: FetchResponse) => Promise<FetchResponse> | FetchResponse;
 
 export class FetchClient {
-  private readonly cookieJar = new CookieJar();
   private readonly defaultOptions: {
     timeout: number;
     retries: number;
@@ -87,7 +85,7 @@ export class FetchClient {
           'Sec-CH-UA-Mobile': '?0',
         },
       },
-      'firefox-desktop': {
+      'librewolf-desktop': {
         headers: {
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:129.0) Gecko/20100101 Firefox/129.0',
           Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
@@ -100,17 +98,23 @@ export class FetchClient {
           'Sec-Fetch-Site': 'none',
         },
       },
-      'librewolf-desktop': {
+      '2embed': {
         headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:129.0) Gecko/20100101 Firefox/129.0',
-          Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-          'Accept-Language': 'en-US,en;q=0.5',
-          'Accept-Encoding': 'gzip, deflate, br',
-          Connection: 'keep-alive',
-          'Upgrade-Insecure-Requests': '1',
-          'Sec-Fetch-Dest': 'document',
-          'Sec-Fetch-Mode': 'navigate',
-          'Sec-Fetch-Site': 'none',
+          'user-agent':
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36',
+          accept:
+            'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+          'accept-language': 'en-US,en;q=0.9',
+          'accept-encoding': 'gzip, deflate, br, zstd',
+          priority: 'u=0, i',
+          'sec-ch-ua': '"Not)A;Brand";v="8", "Chromium";v="138", "Google Chrome";v="138"',
+          'sec-ch-ua-mobile': '?0',
+          'sec-ch-ua-platform': '"Windows"',
+          'sec-fetch-dest': 'iframe',
+          'sec-fetch-mode': 'navigate',
+          'sec-fetch-site': 'cross-site',
+          'sec-fetch-storage-access': 'active',
+          'upgrade-insecure-requests': '1',
         },
       },
     };
@@ -131,28 +135,6 @@ export class FetchClient {
 
   public useResponseInterceptor(interceptor: ResponseInterceptor): void {
     this.responseInterceptors.push(interceptor);
-  }
-
-  public async setCookie(name: string, value: string, url: string) {
-    const cookieStr = `${name}=${value}; Path=/; HttpOnly; Secure`;
-
-    await this.cookieJar.setCookie(cookieStr, url);
-    console.log(`🍪 Manually set cookie: ${name}=${value}`);
-  }
-
-  private async getCookies(url: string): Promise<string> {
-    return this.cookieJar.getCookieString(url);
-  }
-
-  private async setCookies(url: string, cookieHeader: string | string[] | null): Promise<void> {
-    if (!cookieHeader) return;
-    const cookies = Array.isArray(cookieHeader) ? cookieHeader : [cookieHeader];
-    for (const cookie of cookies) {
-      await this.cookieJar.setCookie(cookie, url);
-      if (cookie.startsWith('cf_clearance=')) {
-        console.log(`✅ Captured cf_clearance: ${cookie.split(';')[0]}`);
-      }
-    }
   }
 
   private async delayIfNeeded(): Promise<void> {
@@ -182,16 +164,8 @@ export class FetchClient {
     const profile = this.profiles[this.activeProfile];
     const profileHeaders = profile.headers;
 
-    const refererUrl = new URL(url);
-    if (!headers['Referer']) {
-      headers['Referer'] = `${refererUrl.protocol}//${refererUrl.host}/`;
-    }
-
-    const cookies = await this.getCookies(url);
-
     const mergedHeadersArray = Object.entries({
       ...profileHeaders,
-      ...(cookies ? { Cookie: cookies } : {}),
       ...headers,
     }).sort(() => Math.random() - 0.5);
 
@@ -226,8 +200,6 @@ export class FetchClient {
       });
 
       clearTimeout(timeout);
-
-      await this.setCookies(url, response.headers.get('set-cookie'));
 
       let data: T;
       const contentType = response.headers.get('content-type');

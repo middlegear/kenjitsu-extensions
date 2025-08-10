@@ -8,12 +8,20 @@ export const embedBaseUrl = 'https://www.2embed.cc' as const;
 
 const embedUrl = 'https://yesmovies.baby' as const;
 const client = new FetchClient();
+client.setProfile('2embed');
+
+const cfClearanceCookie =
+  'cf_clearance=I4KTwInnVYqvSIkX0Lz.R.vto96Gnc.AV4hrMHHC5bk-1754824672-1.2.1.1-ReQAs2a11oOGFpkKuY8lh0uMsOmXNOX2xZFY5tAispdnnAvPWQUzYbuGh3rh2nVwP3UKQ8fKegk.rDyjJBgMitk6bilyq8pxuyq5vG0bSeKLYbXDmQh3qM39a4DdllTSdPu2c8ZXEshPyR7EmljSOivJZRapOgoSqQpx2nFFWx4NFvjEYZXLhUQ8zqt__RDO7ePbzWp09PjCHwsnRUG4pGj1Tj9y7lT_6oH9bUziO_Q';
 
 ///needs some proper headers https://www.youtube.com/watch?v=JesHXRoJbzw
 
 export async function _getEmbedMovieUrl(tmdbId: number) {
   try {
-    const response = await client.get(`${embedBaseUrl}/embed/${tmdbId}`);
+    const response = await client.get(`${embedBaseUrl}/embed/${tmdbId}`, {
+      headers: {
+        cookie: cfClearanceCookie,
+      },
+    });
 
     const data$ = cheerio.load(response.data);
     const swishUrl = ScrapeSwishId(data$);
@@ -25,7 +33,10 @@ export async function _getEmbedMovieUrl(tmdbId: number) {
     if (!id) {
       throw new Error(`Invalid swishUrl format: ${swishUrl}`).message;
     }
+
     const referer = new URL(swishUrl);
+    console.log(referer.href);
+
     const packedScriptUrl = await client.get(`${embedUrl}/e/${id}`, {
       headers: {
         Referer: `${referer.origin}/`,
