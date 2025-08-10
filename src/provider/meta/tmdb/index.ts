@@ -119,11 +119,11 @@ class TheMovieDatabase {
    * Fetches TV show streaming sources using TMDB ID
    *
    * @param {number} tmdbId - The unique TMDb ID for the TV show (required).
-   * @param {number} season - The season number for which to fetch episodes (optional, defaults to 1)
-   * @param {number} episodeNumber - The episode number for which to fetch streaming sources (optional, defaults to 1)
+   * @param {number} season - The season number for which to fetch episodes(required)
+   * @param {number} episodeNumber - The episode number for which to fetch streaming sources (required)
    * @returns {Promise<EmbedSrcResponse>} A promise that resolves to an object containing array of available streaming sources.
    */
-  async fetchTvSources(tmdbId: number, season: number = 1, episodeNumber: number = 1): Promise<EmbedSrcResponse> {
+  async fetchTvSources(tmdbId: number, season: number, episodeNumber: number): Promise<EmbedSrcResponse> {
     return _getVidSrcTvUrl(tmdbId, season, episodeNumber);
   }
 

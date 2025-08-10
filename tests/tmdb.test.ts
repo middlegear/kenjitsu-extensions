@@ -59,7 +59,7 @@ test('returns an object containing providerId and tv show info ', async () => {
 });
 
 test('returns an object containing array of tv streaming sources', async () => {
-  const data = await tmdb.fetchTvSources(119051);
+  const data = await tmdb.fetchTvSources(119051, 1, 1);
   expect(data.data).not.toBe(null);
   expect(Array.isArray(data.data?.sources)).toBe(true);
   expect(data.data?.sources.length).toBeGreaterThan(0);
