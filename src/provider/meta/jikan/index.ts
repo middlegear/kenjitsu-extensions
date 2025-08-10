@@ -193,7 +193,7 @@ class Jikan {
    * @param {number} [page=1] - The page number for pagination (optional, defaults to 1).
    * @returns {Promise<JikanEpisodes>} A promise that resolves to an object containing the anime episodes list.
    */
-  async fetchMalEpisodes(id: number, page: number = 1): Promise<JikanEpisodes> {
+  async fetchEpisodes(id: number, page: number = 1): Promise<JikanEpisodes> {
     return getEpisodes(id, page);
   }
 
@@ -203,7 +203,7 @@ class Jikan {
    * @param {number} episodeNumber - The specific episode number (required).
    * @returns {Promise<JikanEpisodeInfo>} A promise that resolves to an object containing the detailed episode information.
    */
-  async fetchMalEpisodeInfo(id: number, episodeNumber: number): Promise<JikanEpisodeInfo> {
+  async fetchEpisodeInfo(id: number, episodeNumber: number): Promise<JikanEpisodeInfo> {
     return getEpisodeInfo(id, episodeNumber);
   }
 }

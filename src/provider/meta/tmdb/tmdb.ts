@@ -1,8 +1,9 @@
-import { BrowserFetchClient } from '../../../config/client.js';
+import { FetchClient } from '../../../config/client.js';
 import { TimeWindow } from '../../../types/types.js';
 
 const tmdbUrl = 'https://api.themoviedb.org/3' as const;
-const client = new BrowserFetchClient();
+
+const client = new FetchClient();
 
 export interface searchTVData {
   tmdbId: number;

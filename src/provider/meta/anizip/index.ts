@@ -1,8 +1,8 @@
 import { transformData } from './utils.js';
-import { BrowserFetchClient } from '../../../config/client.js';
+import { FetchClient } from '../../../config/client.js';
 
 const baseUrl = 'https://api.ani.zip/mappings';
-const client = new BrowserFetchClient();
+const client = new FetchClient();
 export async function getAnilistMapping(id: number) {
   if (!id)
     return {

@@ -26,7 +26,6 @@ export async function _getTvProviderId(tmdbId: number): Promise<TvProviderId> {
     const title = data.data?.name as string;
     const flixId = await flixhq.search(title);
 
-    // const seasons = data.data?.seasons as number;
     const tvshow = flixId.data
       .filter((item: any) => item.type === 'TV')
       .map((item: any) => ({
@@ -36,7 +35,7 @@ export async function _getTvProviderId(tmdbId: number): Promise<TvProviderId> {
         seasons: item.seasons,
         quality: item.quality,
       }));
-    /// will use seasons as afront to further narrow down stuff
+
     const matchTitle = bestTvShowTitle(title, tvshow);
     return {
       data: data.data as Info,
@@ -80,7 +79,7 @@ export async function _getMovieProviderId(tmdbId: number): Promise<MovieProvider
         releaseDate: item.releaseDate,
         quality: item.quality,
       }));
-    /// will use seasons as afront to further narrow down stuff
+
     const matchTitle = bestMovieTitle(title, movie);
     return {
       data: data.data as Movie,

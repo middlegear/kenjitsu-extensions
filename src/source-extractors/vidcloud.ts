@@ -1,6 +1,6 @@
 import { Decrypter } from '../utils/decrypt.js';
 import { getClientKey } from '../utils/getClientKey.js';
-import { BrowserFetchClient } from '../config/client.js';
+import { FetchClient } from '../config/client.js';
 
 export type sources = {
   url: string;
@@ -18,7 +18,7 @@ export type ExtractedData = {
   subtitles: subtitles[];
   sources: sources[];
 };
-const client = new BrowserFetchClient();
+const client = new FetchClient();
 class VidCloud {
   private primaryKeyUrl = 'https://raw.githubusercontent.com/yogesh-hacker/MegacloudKeys/refs/heads/main/keys.json';
   async fetchKey(url: string): Promise<string> {

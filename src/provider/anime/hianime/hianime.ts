@@ -1,13 +1,13 @@
 import * as cheerio from 'cheerio';
 import { HiAnimeServers, type Anime, type EpisodeInfo, type AnimeInfo, type ServerInfo } from './types.js';
 import { extractSearchResults, extractAnimeInfo, extractEpisodesList, extractServerData } from './scraper.js';
-import { MegaCloud } from '../../index.js';
+import MegaCloud from '../../../source-extractors/megacloud.js';
 import { type ASource, SubOrDub } from '../../../types/types.js';
-import { BrowserFetchClient } from '../../../config/client.js';
+import { FetchClient } from '../../../config/client.js';
 
 export const zoroBaseUrl = 'https://hianime.to' as const;
 
-const client = new BrowserFetchClient();
+const client = new FetchClient();
 
 export interface SuccessSearchResponse {
   data: Anime[];

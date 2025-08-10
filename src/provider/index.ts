@@ -7,5 +7,4 @@ import { TvMaze } from './meta/tvmaze/index.js';
 import { FlixHQ } from './movies/flixhq/index.js';
 import { SubOrDub } from '../types/types.js';
 
-import MegaCloud from '../source-extractors/megacloud.js';
-export { MegaCloud, AnimeKai, SubOrDub, Meta, Anilist, TheMovieDatabase, TvMaze, FlixHQ, Jikan };
+export { AnimeKai, SubOrDub, Meta, Anilist, TheMovieDatabase, TvMaze, FlixHQ, Jikan };

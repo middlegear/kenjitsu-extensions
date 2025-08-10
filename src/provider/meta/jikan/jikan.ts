@@ -4,10 +4,10 @@ import { getMalMapping } from '../anizip/index.js';
 import { HiAnime } from '../../anime/hianime/index.js';
 import { AnimeKai } from '../../anime/animekai/index.js';
 import { normalizeLowerCaseSeason, normalizeLowerCaseFormat } from '../../../utils/normalize.js';
-import { BrowserFetchClient } from '../../../config/client.js';
+import { FetchClient } from '../../../config/client.js';
 
-const jikanBaseUrl = 'https://api.jikan.moe/v4';
-const client = new BrowserFetchClient();
+const jikanBaseUrl = 'https://api.jikan.moe/v4' as const;
+const client = new FetchClient();
 export type JIkanData = {
   malId: number;
   image: string;

@@ -1,13 +1,13 @@
 import * as cheerio from 'cheerio';
 import { ScrapeSwishId } from './scraper.js';
 import StreamWish from '../../../source-extractors/streamwish.js';
-import { BrowserFetchClient } from '../../../config/client.js';
 import type { ExtractedData } from './types.js';
+import { FetchClient } from '../../../config/client.js';
 
 export const embedBaseUrl = 'https://www.2embed.cc' as const;
 
 const embedUrl = 'https://yesmovies.baby' as const;
-const client = new BrowserFetchClient();
+const client = new FetchClient();
 
 ///needs some proper headers https://www.youtube.com/watch?v=JesHXRoJbzw
 

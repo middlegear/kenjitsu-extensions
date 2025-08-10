@@ -1,7 +1,7 @@
 import { load } from 'cheerio';
-import { BrowserFetchClient } from '../config/client.js';
+import { FetchClient } from '../config/client.js';
 
-const client = new BrowserFetchClient();
+const client = new FetchClient();
 
 export async function getClientKey(embedUrl: string, Referer: string): Promise<string> {
   const salts: string[] = [];

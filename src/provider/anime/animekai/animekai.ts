@@ -1,15 +1,15 @@
 import * as cheerio from 'cheerio';
-import { gotScraping } from 'got-scraping';
 import { extractAnimeInfo, extractsearchresults } from './scraper.js';
 
 import { type ASource, SubOrDub } from '../../../types/types.js';
 import { type Info, type searchRes, AnimeKaiServers } from './types.js';
 
 import { AnimekaiDecoder } from '../../../source-extractors/megaup.js';
-import { BrowserFetchClient } from '../../../config/client.js';
+import { FetchClient } from '../../../config/client.js';
 
 const animekaiBaseUrl = 'https://animekai.to' as const;
-const client = new BrowserFetchClient();
+const client = new FetchClient();
+client.setProfile('librewolf-desktop');
 export const headers = {
   'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:134.0) Gecko/20100101 Firefox/134.0',
   Accept: 'text/html, */*; q=0.01',
@@ -56,22 +56,24 @@ export async function searchanime(query: string, page: number = 1): Promise<Sear
   }
 
   try {
-    const response = await gotScraping({
-      url: `${animekaiBaseUrl}/browser?keyword=${encodeURIComponent(query.trim())}&page=${page}`,
-      responseType: 'text',
+    const response = await client.get(`${animekaiBaseUrl}/browser`, {
+      params: {
+        keyword: encodeURIComponent(query.trim()),
+        page: String(page),
+      },
     });
 
-    if (!response.body) {
+    if (!response.data) {
       return {
         hasNextPage: false,
         currentPage: 0,
         lastPage: 0,
         data: [],
-        error: 'Error: No response ',
+        error: response.statusText,
       };
     }
 
-    const data$ = cheerio.load(response.body);
+    const data$ = cheerio.load(response.data);
     const { res, searchresults } = extractsearchresults(data$);
 
     return {
@@ -80,13 +82,13 @@ export async function searchanime(query: string, page: number = 1): Promise<Sear
       lastPage: res.totalPages ?? 0,
       data: searchresults,
     };
-  } catch (error: any) {
+  } catch (error) {
     return {
       hasNextPage: false,
       currentPage: 0,
       lastPage: 0,
       data: [],
-      error: error.message || 'Unknown error occurred',
+      error: error instanceof Error ? error.message : 'Unknown error occurred',
     };
   }
 }
@@ -114,23 +116,18 @@ export async function getAnimeInfo(animeId: string): Promise<AnimeInfoKai> {
       providerEpisodes: [],
     };
   }
-
+  ///appropiate headers are needed including cookies basically everything from here onwards is broken
   try {
     // Fetch anime info
-    const response = await gotScraping(`${animekaiBaseUrl}/watch/${encodeURIComponent(animeId.trim())}`, {
+    const response = await client.get(`${animekaiBaseUrl}/watch/${encodeURIComponent(animeId.trim())}`, {
       headers,
-      responseType: 'text',
     });
 
-    if (!response.body) {
-      return {
-        error: 'Scraper Error: No animeInfo found',
-        data: null,
-        providerEpisodes: [],
-      };
+    if (!response.data) {
+      throw new Error(response.statusText).message;
     }
 
-    const data$ = cheerio.load(response.body);
+    const data$ = cheerio.load(response.data);
     const { animeInfo } = extractAnimeInfo(data$);
     // console.log(animeInfo);
 
@@ -148,24 +145,19 @@ export async function getAnimeInfo(animeId: string): Promise<AnimeInfoKai> {
     const token = await tokenInstance.GenerateToken(ani_id);
     // console.log(token);
 
-    const episodesResponse = await gotScraping(`${animekaiBaseUrl}/ajax/episodes/list?ani_id=${ani_id}&_=${token}`, {
+    const episodesResponse = await client.get(`${animekaiBaseUrl}/ajax/episodes/list?ani_id=${ani_id}&_=${token}`, {
       headers: {
         'X-Requested-With': 'XMLHttpRequest',
         ...headers,
       },
-      responseType: 'text',
     });
     // console.log(episodesResponse.body);
 
-    if (!episodesResponse.body) {
-      return {
-        error: 'Scraper Error: No Episodes found',
-        data: null,
-        providerEpisodes: [],
-      };
+    if (!episodesResponse.data) {
+      throw new Error(episodesResponse.statusText).message;
     }
 
-    const episodes$: cheerio.CheerioAPI = cheerio.load(JSON.parse(episodesResponse.body).result);
+    const episodes$: cheerio.CheerioAPI = cheerio.load(JSON.parse(episodesResponse.data).result);
     const episodes: {
       episodeId: string | null;
       episodeNumber: number;
@@ -195,11 +187,11 @@ export async function getAnimeInfo(animeId: string): Promise<AnimeInfoKai> {
       data: animeInfo,
       providerEpisodes: episodes,
     };
-  } catch (error: any) {
+  } catch (error) {
     return {
       data: null,
       providerEpisodes: [],
-      error: error.message || 'Unknown error occurred',
+      error: error instanceof Error ? error.message : 'Unknown error occurred',
     };
   }
 }

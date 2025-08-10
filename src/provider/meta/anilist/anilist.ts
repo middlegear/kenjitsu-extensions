@@ -16,12 +16,11 @@ import { getAnilistMapping } from '../anizip/index.js';
 
 import { AnimeKai } from '../../anime/animekai/index.js';
 import { HiAnime } from '../../anime/hianime/index.js';
-import { BrowserFetchClient } from '../../../config/client.js';
+import { FetchClient } from '../../../config/client.js';
 
-const baseURL = `https://graphql.anilist.co`;
-const Referer = 'https://anilist.co';
+const baseURL = `https://graphql.anilist.co` as const;
 
-const client = new BrowserFetchClient();
+const client = new FetchClient();
 export type AnilistData = {
   malId: number;
   anilistId: number;

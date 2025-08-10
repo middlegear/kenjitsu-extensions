@@ -1,6 +1,6 @@
 import type { CheerioAPI } from 'cheerio';
 import { ScrapeCloudStreampro } from '../provider/movies/embed/scraper.js';
-import type { subtitles, sources, ExtractedData } from './vidcloud.js';
+import type { sources, ExtractedData } from './vidcloud.js';
 
 class CloudStreamPro {
   //

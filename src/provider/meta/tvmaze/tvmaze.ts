@@ -1,10 +1,10 @@
-import { BrowserFetchClient } from '../../../config/client.js';
+import { FetchClient } from '../../../config/client.js';
 import { tmdbTitle } from '../../../utils/mapper.js';
 import { TheMovieDatabase } from '../tmdb/index.js';
 
 const tvMazeApiUrl = 'https://api.tvmaze.com' as const;
 
-const axios = new BrowserFetchClient();
+const client = new FetchClient();
 
 type searchData = {
   tvMazeId: number;
@@ -80,7 +80,11 @@ export async function searchShows(query: string): Promise<TvMazeRes> {
     };
   }
   try {
-    const response = await axios.get(`${tvMazeApiUrl}/search/shows?q=${query}`);
+    const response = await client.get(`${tvMazeApiUrl}/search/shows`, {
+      params: {
+        q: query,
+      },
+    });
     const data: searchData[] = response.data.map((item: any) => ({
       tvMazeId: item.show.id,
       url: item.show.url,
@@ -126,55 +130,17 @@ interface ErrorExternalRes {
   error: string;
 }
 export type ExternalDbRes = SuccessExternalRes | ErrorExternalRes;
-export async function searchTvdb(tvdbId: number): Promise<ExternalDbRes> {
-  if (!tvdbId) {
-    return { data: null, error: 'Missing required params tvdb Id' };
-  }
-  try {
-    const response = await axios.get(`${tvMazeApiUrl}/lookup/shows?thetvdb=${tvdbId}`);
-    const data: searchData = {
-      tvMazeId: response.data.id || null,
-      url: response.data.url || null,
-      name: response.data.name || null,
-      type: response.data.type || null,
-      language: response.data.language || null,
-      status: response.data.status || null,
-      genres: response.data.genres || [],
-      startDate: response.data.premiered || null,
-      endDate: response.data.ended || null,
-      officialSite: response.data.officialSite || null,
-      airSchedule: response.data.schedule || null,
-      rating: response.data.rating.average || null,
-      image: response.data.image || null,
-      network: response.data.network || null,
-      summary: response.data.summary || null,
-      previousEpisode: response.data._links.previousepisode || null,
-      searchScore: response.data.score || null,
-      weight: response.data.weight || null,
-      external: response.data.externals || null,
-    };
 
-    if (!response.data)
-      return {
-        data: null,
-        error: response.statusText,
-      };
-    return {
-      data: data as searchData,
-    };
-  } catch (error) {
-    return {
-      data: null,
-      error: error instanceof Error ? error.message : 'Unknown error',
-    };
-  }
-}
 export async function searchImdb(imdbId: string): Promise<ExternalDbRes> {
   if (!imdbId) {
     return { data: null, error: 'Missing required params imdb Id' };
   }
   try {
-    const response = await axios.get(`${tvMazeApiUrl}/lookup/shows?imdb=${imdbId}`);
+    const response = await client.get(`${tvMazeApiUrl}/lookup/shows`, {
+      params: {
+        imdb: imdbId,
+      },
+    });
     const data: searchData = {
       tvMazeId: response.data.id || null,
       url: response.data.url || null,
@@ -229,7 +195,7 @@ export async function getInfoDetailed(tvmazeId: number): Promise<ShowInfo> {
     return { data: null, episodes: [], cast: [], error: 'Missing required params tvmaze Id' };
   }
   try {
-    const response = await axios.get(`${tvMazeApiUrl}/shows/${tvmazeId}?embed[]=episodes&embed[]=cast`);
+    const response = await client.get(`${tvMazeApiUrl}/shows/${tvmazeId}?embed[]=episodes&embed[]=cast`);
     const data = {
       tvMazeId: response.data.id || null,
       url: response.data.url || null,
@@ -318,7 +284,7 @@ export async function getShowEpisodes(tvmazeId: number): Promise<ShowEpisodes> {
     return { data: [], error: 'Missing required params tvmaze Id' };
   }
   try {
-    const response = await axios.get(`${tvMazeApiUrl}/shows/${tvmazeId}/episodes`);
+    const response = await client.get(`${tvMazeApiUrl}/shows/${tvmazeId}/episodes`);
     const data: episodeData[] = response.data.map((item: any) => ({
       tvMazeEpisodeId: item.id || null,
       url: item.url || null,
@@ -373,12 +339,12 @@ export async function getExternal(tvMazeId: number): Promise<ExternalIdPromise> 
     return { data: null, error: 'Missing required params tvmaze Id' };
   }
   try {
-    const response = await axios.get(`${tvMazeApiUrl}/shows/${tvMazeId}`);
+    const response = await client.get(`${tvMazeApiUrl}/shows/${tvMazeId}`);
     const data = {
       tvMazeId: response.data.id || null,
       name: response.data.name || null,
       tvRageId: response.data.externals.tvrage || null,
-      theTvDb: response.data.externals.thetvdb || null,
+      // theTvDb: response.data.externals.thetvdb || null,
       imdb: response.data.externals.imdb || null,
     };
 

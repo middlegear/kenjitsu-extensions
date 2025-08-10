@@ -47,8 +47,7 @@ export interface FetchResponse<T = any> {
 export type RequestInterceptor = (config: RequestConfig) => Promise<RequestConfig> | RequestConfig;
 export type ResponseInterceptor = (response: FetchResponse) => Promise<FetchResponse> | FetchResponse;
 
-// --- Main Client Class ---
-export class BrowserFetchClient {
+export class FetchClient {
   private readonly cookieJar = new CookieJar();
   private readonly defaultOptions: {
     timeout: number;

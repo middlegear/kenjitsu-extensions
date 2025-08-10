@@ -16,6 +16,7 @@
     "test-animekai": "vitest animekai.test.ts --config vitest.config.ts",
     "test-flixhq": "vitest flixhq.test.ts --config vitest.config.ts",
     "test-tmdb": "vitest tmdb.test.ts --config vitest.config.ts",
+    "test-tvmaze": "vitest tvmze.test.ts --config vitest.config.ts",
     "test": "vitest  --config vitest.config.ts",
     "lint": "tsc",
     "ci": "tsc && pnpm test && pnpm run build",
@@ -57,7 +58,6 @@
   },
   "dependencies": {
     "cheerio": "^1.1.2",
-    "got-scraping": "^4.1.2",
     "tough-cookie": "^5.1.2",
     "undici": "^7.13.0"
   },

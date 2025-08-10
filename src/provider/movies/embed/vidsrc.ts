@@ -6,11 +6,11 @@ import { getFrame, getServersHash } from './scraper.js';
 import CloudStreamPro from '../../../source-extractors/cloudstreampro.js';
 
 import type { EmbedSrcResponse } from './index.js';
-import { BrowserFetchClient } from '../../../config/client.js';
+import { FetchClient } from '../../../config/client.js';
 
 export const vidsrcBaseUrl = 'https://vidsrc.io/embed' as const;
 
-const client = new BrowserFetchClient();
+const client = new FetchClient();
 async function _getRCP(hash: string) {
   try {
     const rcp = await client.get(`https://cloudnestra.com/rcp/${hash}`, {

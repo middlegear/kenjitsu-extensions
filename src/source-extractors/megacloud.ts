@@ -1,9 +1,9 @@
 import type { ASource } from '../types/types.js';
 import { getClientKey } from '../utils/getClientKey.js';
 import { MegacloudDecryptor } from '../utils/megaclouddecrypt.js';
-import { BrowserFetchClient } from '../config/client.js';
+import { FetchClient } from '../config/client.js';
 
-const client = new BrowserFetchClient();
+const client = new FetchClient();
 
 class MegaCloud {
   readonly referer: string = `https://hianime.to/`;
