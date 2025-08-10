@@ -19,7 +19,7 @@ export async function _getEmbedMovieUrl(tmdbId: number) {
   try {
     const response = await client.get(`${embedBaseUrl}/embed/${tmdbId}`, {
       headers: {
-        cookie: cfClearanceCookie,
+        cookie: cfClearanceCookie, ///might need to add referer of the hosted instance
       },
     });
 
@@ -29,13 +29,9 @@ export async function _getEmbedMovieUrl(tmdbId: number) {
       throw new Error('Invalid swishUrl from ScrapeSwishId').message;
     }
 
-    const id = swishUrl.split('=').at(1);
-    if (!id) {
-      throw new Error(`Invalid swishUrl format: ${swishUrl}`).message;
-    }
-
     const referer = new URL(swishUrl);
-    console.log(referer.href);
+
+    const id = referer.searchParams.get('id');
 
     const packedScriptUrl = await client.get(`${embedUrl}/e/${id}`, {
       headers: {
