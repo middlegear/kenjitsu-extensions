@@ -16,7 +16,7 @@
     "test-animekai": "vitest animekai.test.ts --config vitest.config.ts",
     "test-flixhq": "vitest flixhq.test.ts --config vitest.config.ts",
     "test-tmdb": "vitest tmdb.test.ts --config vitest.config.ts",
-    "test-tvmaze": "vitest tvmze.test.ts --config vitest.config.ts",
+    "test-tvmaze": "vitest tvmaze.test.ts --config vitest.config.ts",
     "test": "vitest  --config vitest.config.ts",
     "lint": "tsc",
     "ci": "tsc && pnpm test && pnpm run build",
