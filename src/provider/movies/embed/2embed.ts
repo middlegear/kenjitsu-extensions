@@ -19,7 +19,8 @@ export async function _getEmbedMovieUrl(tmdbId: number) {
   try {
     const response = await client.get(`${embedBaseUrl}/embed/${tmdbId}`, {
       headers: {
-        cookie: cfClearanceCookie, ///might need to add referer of the hosted instance
+        Cookie: cfClearanceCookie,
+        Referer: 'https://hakai-api.vercel.app',
       },
     });
 
