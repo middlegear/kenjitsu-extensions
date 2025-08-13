@@ -37,7 +37,7 @@ export type AnilistData = {
   status: string;
   duration: number;
   score: number;
-  genres: string;
+  genres: string[];
   episodes: number;
   synopsis: string;
   season: string;
@@ -264,7 +264,7 @@ export async function fetchAnimeById(id: number): Promise<AnilistInfo> {
     };
 
     return {
-      data: res,
+      data: res as AnilistData,
     };
   } catch (error) {
     return {
