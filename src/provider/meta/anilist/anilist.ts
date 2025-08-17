@@ -22,6 +22,8 @@ import { createSlug } from '../../../utils/normalize.js';
 const baseURL = `https://graphql.anilist.co` as const;
 
 const client = new FetchClient();
+client.setProfile('normal-fetch');
+
 export type AnilistData = {
   malId: number;
   anilistId: number;

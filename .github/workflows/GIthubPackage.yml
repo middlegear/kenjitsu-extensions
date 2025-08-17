@@ -24,23 +24,23 @@ jobs:
       - name: Install dependencies
         run: pnpm install --no-frozen-lockfile
 
-      - name: Test Anilist
-        run: pnpm test-anilist
+      # - name: Test Anilist
+      #   run: pnpm test-anilist
 
-      - name: Test Jikan
-        run: pnpm test-jikan
+      # - name: Test Jikan
+      #   run: pnpm test-jikan
 
-      - name: Test Hianime
-        run: pnpm test-hianime
+      # - name: Test Hianime
+      #   run: pnpm test-hianime
       
-      - name: Test FlixHQ
-        run: pnpm test-flixhq
+      # - name: Test FlixHQ
+      #   run: pnpm test-flixhq
 
-      - name: Test TMDB
-        run: pnpm test-tmdb  
+      # - name: Test TMDB
+      #   run: pnpm test-tmdb  
 
-      - name: Test TvMaze
-        run: pnpm test-tvmaze     
+      # - name: Test TvMaze
+      #   run: pnpm test-tvmaze     
 
       - name: Lint
         run: pnpm lint

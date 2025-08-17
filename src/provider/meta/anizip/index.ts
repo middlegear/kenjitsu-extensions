@@ -3,6 +3,8 @@ import { FetchClient } from '../../../config/client.js';
 
 const baseUrl = 'https://api.ani.zip/mappings';
 const client = new FetchClient();
+client.setProfile('normal-fetch');
+
 export async function getAnilistMapping(id: number) {
   if (!id)
     return {

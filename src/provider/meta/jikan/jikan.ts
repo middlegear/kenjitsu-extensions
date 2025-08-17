@@ -7,7 +7,10 @@ import { normalizeLowerCaseSeason, normalizeLowerCaseFormat, createSlug } from '
 import { FetchClient } from '../../../config/client.js';
 
 const jikanBaseUrl = 'https://api.jikan.moe/v4' as const;
+
 const client = new FetchClient();
+client.setProfile('normal-fetch');
+
 export type JIkanData = {
   malId: number;
   image: string;

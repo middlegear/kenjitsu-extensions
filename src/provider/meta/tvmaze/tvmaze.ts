@@ -6,6 +6,7 @@ const tvMazeApiUrl = 'https://api.tvmaze.com' as const;
 
 const client = new FetchClient();
 
+client.setProfile('normal-fetch');
 type searchData = {
   tvMazeId: number;
   url: string;
