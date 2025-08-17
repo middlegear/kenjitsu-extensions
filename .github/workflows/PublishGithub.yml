@@ -2,8 +2,7 @@ name: Publish to GitHub Packages
 
 on:
   workflow_dispatch:
-  push:
-    branches: [dev]
+
 
 jobs:
   publish:
@@ -34,12 +33,11 @@ jobs:
       - name: Generate unique version
         id: version_generator
         run: |
-          # Get the current date and time in a specific format
+          # Get the current date and hour in 24-hour format
           VERSION_DATE=$(date +%Y.%m.%d)
-          # Get a short commit SHA to make the version unique
-          VERSION_SHA=$(echo ${{ github.sha }} | cut -c1-7)
+          VERSION_HOUR=$(date +%H)
           # Combine them for a unique version string
-          echo "NEW_VERSION=${VERSION_DATE}-${VERSION_SHA}" >> $GITHUB_ENV
+          echo "NEW_VERSION=${VERSION_DATE}-${VERSION_HOUR}" >> $GITHUB_ENV
 
       - name: Update package.json with the new version
         run: |
