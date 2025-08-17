@@ -19,6 +19,14 @@ jobs:
       - name: Install pnpm
         run: npm install -g pnpm
 
+      - name: Configure GitHub Packages Auth
+        run: |
+          # Clear any existing npmrc
+          rm -f ~/.npmrc
+          # Set auth specifically for GitHub Packages
+          echo "//npm.pkg.github.com/:_authToken=${{ secrets.GITHUB_TOKEN }}" > ~/.npmrc
+          echo "always-auth=true" >> ~/.npmrc
+
       - name: Install dependencies
         run: |
           pnpm config set registry https://registry.npmjs.org/
@@ -27,13 +35,13 @@ jobs:
       - name: Build package
         run: pnpm build
 
-      - name: Publish to GitHub Packages (with forced scope)
+      - name: Force publish unscoped package
         run: |
-          # Temporarily rename package to scoped version for publishing
-          echo "Publishing under @middlegear scope"
+          # Temporary override for unscoped package
+          pnpm config set @middlegear:registry=https://npm.pkg.github.com
           pnpm publish \
             --registry=https://npm.pkg.github.com \
             --no-git-checks \
-            --tag github-packages
+            --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
