@@ -21,7 +21,6 @@
     "lint": "tsc",
     "ci": "tsc && pnpm test && pnpm run build",
     "format": "prettier --write .",
-    "prepare": "pnpm run build",
     "semantic-release": "semantic-release --branches main"
   },
   "files": [
@@ -62,23 +61,5 @@
     "commitizen": {
       "path": "cz-conventional-changelog"
     }
-  },
-  "release": {
-    "branches": [
-      {
-        "name": "main",
-        "prerelease": "development"
-      }
-    ],
-    "plugins": [
-      "@semantic-release/commit-analyzer",
-      "@semantic-release/release-notes-generator",
-      [
-        "@semantic-release/npm",
-        {
-          "npmPublish": true
-        }
-      ]
-    ]
   }
 }
