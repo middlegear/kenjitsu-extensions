@@ -1,4 +1,4 @@
-name: Publish to GitHub Packages
+name: Publish to GitHub Packages (Development)
 
 on:
   workflow_dispatch:
@@ -35,16 +35,15 @@ jobs:
 
       - name: Prepare GitHub Package name
         run: |
-          # Replace package name with scoped one for GitHub Packages
+          # Scope the package for GitHub Packages
           jq '.name = "@${{ github.repository_owner }}/hakai-extensions"' package.json > package.tmp.json
           mv package.tmp.json package.json
+          # Set publishConfig registry to GitHub Packages
+          jq '.publishConfig.registry = "https://npm.pkg.github.com/"' package.json > package.tmp.json
+          mv package.tmp.json package.json
 
-      - name: Publish to GitHub Packages
-        run: |
-          pnpm config set @${{ github.repository_owner }}:registry=https://npm.pkg.github.com
-          pnpm publish \
-            --registry=https://npm.pkg.github.com \
-            --no-git-checks \
-            --access public
+      - name: Semantic Release (Development)
         env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npx semantic-release
