@@ -2,12 +2,35 @@ name: Publish GitHub Release
 
 on:
   workflow_dispatch:
+  push:
+    branches: [ main ]
 
 jobs:
+  run-tests:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install pnpm
+        run: npm install -g pnpm
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Run tests
+        run: pnpm test
+
   publish-github-package:
     name: Publish GitHub Package
-    runs-on: ubuntu-latest
     needs: run-tests
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -33,8 +56,12 @@ jobs:
       - name: Build
         run: pnpm build
 
+      - name: Configure .npmrc
+        run: |
+          echo "//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}" >> ~/.npmrc
+          echo "always-auth=true" >> ~/.npmrc
+
       - name: Publish to GitHub Packages
-        run: pnpm publish --no-git-checks
+        run: pnpm publish --no-git-checks --access public
         env:
-    
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
