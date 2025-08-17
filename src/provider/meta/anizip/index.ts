@@ -18,9 +18,8 @@ export async function getAnilistMapping(id: number) {
       };
     }
     const results = transformData(response.data);
+
     return {
-      success: true,
-      status: 200,
       images: results.images,
       titles: results.animeTitles,
       episodes: results.episodes,
@@ -49,6 +48,7 @@ export async function getMalMapping(id: number) {
       };
     }
     const results = transformData(response.data);
+
     return {
       images: results.images,
       titles: results.animeTitles,

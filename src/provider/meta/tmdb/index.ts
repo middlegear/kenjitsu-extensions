@@ -50,10 +50,10 @@ class TheMovieDatabase {
   /**
    * Fetches episodes available in a specific season of a TV show.
    * @param {number} tmdbId - The unique TMDb ID for the TV show (required).
-   * @param {number} [season=1] - The season number for which to fetch episodes (optional, defaults to 1).
+   * @param {number} [season] - The season number for which to fetch episodes (required).
    * @returns {Promise<TvEpisodes>} A promise that resolves to an object containing an array of episodes and their information for the specified season.
    */
-  async fetchTvEpisodes(tmdbId: number, season: number = 1): Promise<TvEpisodes> {
+  async fetchTvEpisodes(tmdbId: number, season: number): Promise<TvEpisodes> {
     return getTvEpisodes(tmdbId, season, this.apiKey);
   }
 

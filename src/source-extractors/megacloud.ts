@@ -49,17 +49,10 @@ class MegaCloud {
       sources: [],
     };
 
-    // const options = {
-    //   headers: {
-    //     'X-Requested-With': 'XMLHttpRequest',
-    //     Referer: videoUrl.href,
-    //   },
-    // };
-
     const match = /\/([^\/\?]+)(?:\?|$)/.exec(videoUrl.href);
     const sourceId = match?.[1];
     if (!sourceId) {
-      return 'Failed to extract source ID';
+      throw new Error('Failed to extract source ID').message;
     }
 
     const fullPathname = videoUrl.pathname;
@@ -91,10 +84,14 @@ class MegaCloud {
         const secret = await this.fetchKey();
         const decoded = decryptor.decrypt(secret as string, clientKey, initialResponse.sources);
 
-        const sources = JSON.parse(decoded);
+        let sources;
+        try {
+          sources = JSON.parse(decoded);
+        } catch {
+          throw new Error('Decrypted sources is not valid JSON.').message;
+        }
         if (!Array.isArray(sources)) {
-          console.error('Decrypted sources is not an array:', sources);
-          return 'Decrypted sources is not an array';
+          throw new Error('Decrypted sources is not an array.').message;
         }
 
         extractedData.sources = sources.map((s: any) => ({

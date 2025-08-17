@@ -17,6 +17,7 @@ import { getAnilistMapping } from '../anizip/index.js';
 import { AnimeKai } from '../../anime/animekai/index.js';
 import { HiAnime } from '../../anime/hianime/index.js';
 import { FetchClient } from '../../../config/client.js';
+import { createSlug } from '../../../utils/normalize.js';
 
 const baseURL = `https://graphql.anilist.co` as const;
 
@@ -1025,12 +1026,13 @@ async function getZoroProviderId(id: number): Promise<AnilistProviderId> {
   try {
     const anilistData = await fetchAnimeById(id);
     if (!anilistData?.data?.title) {
-      throw new Error('Title not found.');
+      throw new Error('Title not found.').message;
     }
 
     const titles = anilistData.data.title;
 
-    const userPref = titles.romaji?.split(' ').slice(0, 3).join(' ') || '';
+    const userPref = titles.english || titles.romaji || titles.native;
+    const titleSlug = createSlug(userPref);
 
     const searchZoro = async (title: string) => {
       try {
@@ -1044,15 +1046,14 @@ async function getZoroProviderId(id: number): Promise<AnilistProviderId> {
           })) || []
         );
       } catch (error) {
-        console.error('Error fetching from HiAnime:', error);
-        return [];
+        throw new Error(error as string).message;
       }
     };
 
-    const zoroResults = await searchZoro(userPref);
+    const zoroResults = await searchZoro(titleSlug);
 
     const data = {
-      zoro: bestTitleMatch(titles, zoroResults) || null,
+      zoro: bestTitleMatch(titles, zoroResults),
     };
 
     return {
@@ -1080,13 +1081,13 @@ async function getKaiProviderId(id: number): Promise<AnilistProviderId> {
   try {
     const anilistData = await fetchAnimeById(id);
     if (!anilistData?.data?.title) {
-      throw new Error('Title not found.');
+      throw new Error('Title not found.').message;
     }
 
     const titles = anilistData.data.title;
 
-    const userPref = titles.english;
-
+    const userPref = titles.english || titles.romaji || titles.native;
+    const titleSlug = createSlug(userPref);
     const searchKai = async (title: string) => {
       try {
         const result = await new AnimeKai().search(title);
@@ -1099,15 +1100,14 @@ async function getKaiProviderId(id: number): Promise<AnilistProviderId> {
           })) || []
         );
       } catch (error) {
-        console.error('Error fetching from HiAnime:', error);
-        return [];
+        throw new Error(error as string).message;
       }
     };
 
-    const kaiResults = await searchKai(userPref);
+    const kaiResults = await searchKai(titleSlug);
 
     const data = {
-      kai: bestTitleMatch(titles, kaiResults) || null,
+      kai: bestTitleMatch(titles, kaiResults),
     };
 
     return {
@@ -1148,27 +1148,21 @@ export async function fetchAnimeProviderIdWithInfo(id: number, provider: AnimePr
     };
   }
 }
-type animeRes = {
-  episodeId: string;
-  episodeNumber: number;
-  title: string;
-  providerName: string;
-};
 
 type CrossMatchedEpisodes = {
-  episodeNumber: number;
-  rating: number;
-  aired: boolean;
-  episodeId: string;
-  title: string;
-  overview: string;
-  thumbnail: string;
-  providerName: string;
+  episodeNumber: number | null;
+  rating: number | null;
+  aired: boolean | null;
+  episodeId: string | null;
+  title: string | null;
+  overview: string | null;
+  thumbnail: string | null;
+  providerName: string | null;
 };
 
 export interface SuccessEpisodesres {
   data: AnilistData;
-  providerEpisodes: animeRes[] | CrossMatchedEpisodes[];
+  providerEpisodes: CrossMatchedEpisodes[];
 }
 export interface ErrorEpisodesres {
   data: null;
@@ -1176,6 +1170,44 @@ export interface ErrorEpisodesres {
   providerEpisodes: [];
 }
 export type AnilistEpisodes = SuccessEpisodesres | ErrorEpisodesres;
+async function fetchZoroEpisodes(anilistId: number) {
+  const ZoroAnime = new HiAnime();
+  try {
+    const anilistData = await getZoroProviderId(anilistId);
+    const result = await ZoroAnime.fetchEpisodes(anilistData.animeProvider?.animeId as string);
+    return {
+      anilistData: anilistData.data,
+      zoroProviderEpisodes: result.data.map((item: any) => ({
+        episodeId: item.episodeId,
+        episodeNumber: item.episodeNumber,
+        title: item.title,
+        providerName: 'HiAnime',
+      })),
+    };
+  } catch (error) {
+    throw new Error(error as string).message;
+  }
+}
+async function fetchKaiEpisodes(anilistId: number) {
+  const animekai = new AnimeKai();
+  try {
+    const anilistData = await getKaiProviderId(anilistId);
+    const result = await animekai.fetchAnimeInfo(anilistData.animeProvider?.animeId as string);
+
+    return {
+      anilistData: anilistData.data,
+      providerEpisodes: result.providerEpisodes.map((item: any) => ({
+        episodeId: item.episodeId,
+        episodeNumber: item.episodeNumber,
+        title: item.title,
+        providerName: 'Animekai',
+      })),
+    };
+  } catch (error) {
+    throw new Error(error as string).message;
+  }
+}
+
 async function getEpisodeswithInfoZoro(anilistId: number): Promise<AnilistEpisodes> {
   if (!anilistId) {
     return {
@@ -1185,74 +1217,33 @@ async function getEpisodeswithInfoZoro(anilistId: number): Promise<AnilistEpisod
     };
   }
   try {
-    const anilistData = await getZoroProviderId(anilistId);
-    const zoro = anilistData.animeProvider;
+    const [zoroProvider, anizipEpisodes] = await Promise.all([fetchZoroEpisodes(anilistId), getAnilistMapping(anilistId)]);
+    const aniZip = new Map(anizipEpisodes.episodes?.map(item => [item.episodeAnizipNumber, item]));
+    const encrichedEpisodes = zoroProvider.zoroProviderEpisodes.map((anime: any) => {
+      const episodes = aniZip.get(anime.episodeNumber);
+      return {
+        episodeNumber: episodes?.episodeAnizipNumber || anime.episodeNumber || null,
+        rating: episodes?.rating || null,
+        aired: episodes?.aired || null,
+        episodeId: anime.episodeId || null,
+        title: episodes?.title?.english || episodes?.title?.romanizedJapanese || null,
+        overview: episodes?.overview,
+        thumbnail: episodes?.image || null,
+        providerName: anime.providerName || null,
+      };
+    });
 
-    const fetchZoroEpisodes = async (animeId: string) => {
-      const ZoroAnime = new HiAnime();
-      try {
-        const result = await ZoroAnime.fetchEpisodes(animeId);
-        return result.data.map((item: any) => ({
-          episodeId: item.episodeId,
-          episodeNumber: item.episodeNumber,
-          title: item.title,
-          providerName: 'HiAnime',
-        }));
-      } catch (error) {
-        console.error('Error fetching from HiAnime:', error);
-        return null;
-      }
+    return {
+      data: zoroProvider.anilistData as AnilistData,
+      providerEpisodes: encrichedEpisodes as CrossMatchedEpisodes[],
     };
-
-    if (zoro) {
-      if (anilistData.data.episodes == null || anilistData.data.episodes > 64) {
-        const zoroEpisodes = await fetchZoroEpisodes(zoro.animeId as string);
-        return {
-          data: anilistData.data,
-          providerEpisodes: zoroEpisodes as animeRes[],
-        };
-      } else {
-        const [zoroanime, aniMapping2] = await Promise.all([
-          fetchZoroEpisodes(zoro.animeId as string),
-          getAnilistMapping(anilistId),
-        ]);
-
-        const episodeMap2 = new Map(aniMapping2.episodes?.map(item => [item.episodeAnimeNumber, item]));
-
-        const matchingResults2 = zoroanime?.map((anime: any) => {
-          const episodes = episodeMap2.get(anime.episodeNumber);
-
-          return {
-            episodeNumber: episodes?.episodeAnimeNumber ?? anime.episodeNumber ?? null,
-            rating: episodes?.rating ?? null,
-            aired: episodes?.aired ?? null,
-            episodeId: anime.episodeId ?? null,
-            title: episodes?.title?.english ?? episodes?.title?.romanizedJapanese ?? null,
-            overview: episodes?.overview ?? 'No overview available',
-            thumbnail: episodes?.image ?? null,
-            providerName: anime.providerName ?? null,
-          };
-        });
-
-        return {
-          data: anilistData.data,
-          providerEpisodes: matchingResults2 as CrossMatchedEpisodes[],
-        };
-      }
-    }
   } catch (error) {
     return {
       data: null,
-
       error: error instanceof Error ? error.message : 'Unknown Err',
       providerEpisodes: [],
     };
   }
-  return {
-    error: 'I KNOW WHAT WRONG WITH IT AINT GOT  NO GAS IN IT',
-    data: null,
-    providerEpisodes: [],
-  };
 }
 
 async function getEpisodeswithInfoKai(anilistId: number): Promise<AnilistEpisodes> {
@@ -1264,61 +1255,32 @@ async function getEpisodeswithInfoKai(anilistId: number): Promise<AnilistEpisode
     };
   }
   try {
-    const anilistData = await getKaiProviderId(anilistId);
-    const kai = anilistData.animeProvider;
+    const [animeKaiProvider, anizipEpisodes] = await Promise.all([
+      fetchKaiEpisodes(anilistId),
+      getAnilistMapping(anilistId),
+    ]);
 
-    const fetchKaiEpisodes = async (animeId: string) => {
-      const animekai = new AnimeKai();
-      try {
-        const result = await animekai.fetchAnimeInfo(animeId);
-        return result.providerEpisodes.map((item: any) => ({
-          episodeId: item.episodeId,
-          episodeNumber: item.episodeNumber,
-          title: item.title,
-          providerName: 'Animekai',
-        }));
-      } catch (error) {
-        console.error('Error fetching from HiAnime:', error);
-        return null;
-      }
+    const aniZip = new Map(anizipEpisodes.episodes?.map(item => [item.episodeAnizipNumber, item]));
+
+    const encrichedEpisodes = animeKaiProvider.providerEpisodes?.map((anime: any) => {
+      const episodes = aniZip.get(anime.episodeNumber);
+
+      return {
+        episodeNumber: episodes?.episodeAnizipNumber || anime.episodeNumber || null,
+        rating: episodes?.rating || null,
+        aired: episodes?.aired || null,
+        episodeId: anime.episodeId || null,
+        title: episodes?.title?.english || episodes?.title?.romanizedJapanese || null,
+        overview: episodes?.overview || 'No overview available',
+        thumbnail: episodes?.image || null,
+        providerName: anime.providerName || null,
+      };
+    });
+
+    return {
+      data: animeKaiProvider.anilistData as AnilistData,
+      providerEpisodes: encrichedEpisodes as CrossMatchedEpisodes[],
     };
-
-    if (kai) {
-      if (anilistData.data.episodes == null || anilistData.data.episodes > 64) {
-        const AnimekaiEpisodes = await fetchKaiEpisodes(kai.animeId as string);
-        return {
-          data: anilistData.data,
-          providerEpisodes: AnimekaiEpisodes as animeRes[],
-        };
-      } else {
-        const [hianime, aniMapping2] = await Promise.all([
-          fetchKaiEpisodes(kai.animeId as string),
-          getAnilistMapping(anilistId),
-        ]);
-
-        const episodeMap2 = new Map(aniMapping2.episodes?.map(item => [item.episodeAnimeNumber, item]));
-
-        const matchingResults2 = hianime?.map((anime: any) => {
-          const episodes = episodeMap2.get(anime.episodeNumber);
-
-          return {
-            episodeNumber: episodes?.episodeAnimeNumber ?? anime.episodeNumber ?? null,
-            rating: episodes?.rating ?? null,
-            aired: episodes?.aired ?? null,
-            episodeId: anime.episodeId ?? null,
-            title: episodes?.title?.english ?? episodes?.title?.romanizedJapanese ?? null,
-            overview: episodes?.overview ?? 'No overview available',
-            thumbnail: episodes?.image ?? null,
-            providerName: anime.providerName ?? null,
-          };
-        });
-
-        return {
-          data: anilistData.data,
-          providerEpisodes: matchingResults2 as CrossMatchedEpisodes[],
-        };
-      }
-    }
   } catch (error) {
     return {
       error: error instanceof Error ? error.message : 'Unknown Err',
@@ -1326,11 +1288,6 @@ async function getEpisodeswithInfoKai(anilistId: number): Promise<AnilistEpisode
       providerEpisodes: [],
     };
   }
-  return {
-    data: null,
-    error: 'I KNOW WHAT IS WRONG WITH IT AINT GOT NO GAS IN IT',
-    providerEpisodes: [],
-  };
 }
 
 export async function getAnimeProviderEpisodes(id: number, provider: AnimeProvider): Promise<AnilistEpisodes> {

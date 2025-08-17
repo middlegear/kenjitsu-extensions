@@ -15,6 +15,7 @@ import {
   HiAnimeServers,
   AnimeProvider,
 } from './types/index.js';
+import { getAnilistMapping } from './provider/meta/anizip/index.js';
 
 export {
   Seasons,

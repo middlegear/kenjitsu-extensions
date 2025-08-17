@@ -15,18 +15,16 @@ interface Mappings {
   anidb_id: number;
   notifymoe_id: string;
   livechart_id: number;
-  thetvdb_id: number;
   imdb_id: string;
   themoviedb_id: number;
 }
 
 interface Episode {
+  length: number;
+  airdate: string;
+  summary: string | undefined;
   episode: number;
-  tvdbId: number;
-  tvdbShowId: number;
-  seasonNumber: number;
   episodeNumber: number;
-  absoluteEpisodeNumber: number;
   title: { en?: string; ja?: string; de?: string; 'x-jat'?: string };
   airDate: string;
   airDateUtc: string;
@@ -44,9 +42,10 @@ interface ApiResponse {
 }
 
 export function transformData(data: ApiResponse) {
-  if (!data) {
+  if (!data || !data.episodes) {
     return { animeTitles: {}, mappings: {}, episodes: [] };
   }
+
   const titles = {
     english: data.titles?.en || data.titles?.['x-jat'] || null,
     japanese: data.titles?.ja || null,
@@ -63,37 +62,33 @@ export function transformData(data: ApiResponse) {
     anidbId: data.mappings?.anidb_id || null,
     notifymoeId: data.mappings?.notifymoe_id || null,
     livechartId: data.mappings?.livechart_id || null,
-    thetvdbId: data.mappings?.thetvdb_id || null,
     imdbId: data.mappings?.imdb_id || null,
     themoviedbId: data.mappings?.themoviedb_id || null,
   };
-  const now = new Date();
 
-  const transformedEpisodes = Object.values(data.episodes)
-    .filter(episode => {
-      const airDateTime = new Date(episode.airDateUtc);
-      airDateTime.setMinutes(airDateTime.getMinutes() + 0); // Add 30 minutes buffer idk for now its 0
-      return airDateTime <= now;
-    })
-    .map(episode => ({
-      tvdbId: episode.tvdbId,
-      tvdbShowId: episode.tvdbShowId || null,
-      seasonNumber: episode.seasonNumber || null,
-      episodeAnimeNumber: Number(episode.episode) || null,
-      absoluteEpisode: episode.absoluteEpisodeNumber || null,
-      title: {
-        english: episode.title?.en || episode.title?.['x-jat'] || null,
-        japanese: episode.title?.ja || null,
-        german: episode.title?.de || null,
-        romanizedJapanese: episode.title?.['x-jat'] || null,
-      },
-      airDate: episode.airDate || null,
-      runtime: episode.runtime || null,
-      overview: episode.overview || 'No overview available' || null,
-      image: episode.image || 'No image available' || null,
-      rating: episode.rating ? parseFloat(episode.rating) : null,
-      aired: true,
-    }));
+  const episodeKeys = Object.keys(data.episodes);
+
+  const transformedEpisodes = episodeKeys
+    .filter(key => /^\d+$/.test(key))
+    .map(key => {
+      const episode = data.episodes[key];
+      return {
+        episodeAnizipNumber: Number(episode.episode || episode.episodeNumber) || null,
+        title: {
+          english: episode.title?.en || episode.title?.['x-jat'] || null,
+          japanese: episode.title?.ja || null,
+          german: episode.title?.de || null,
+          romanizedJapanese: episode.title?.['x-jat'] || null,
+        },
+        airDate: episode.airDate || episode.airdate,
+        runtime: episode.runtime || episode.length,
+        overview: episode.overview || episode.summary,
+        image: episode.image || 'No image available',
+        rating: episode.rating || null,
+        aired: true,
+      };
+    });
+
   const images = data.images || null;
   return {
     images: images,

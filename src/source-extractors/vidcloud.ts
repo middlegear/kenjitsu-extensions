@@ -82,10 +82,14 @@ class VidCloud {
         const key = await this.fetchKey(this.primaryKeyUrl);
         const decryptor = new Decrypter();
         const decrypted = decryptor.decrypt(initialResponse.sources, clientKey, key);
-        const sources = JSON.parse(decrypted);
-
+        let sources;
+        try {
+          sources = JSON.parse(decrypted);
+        } catch {
+          throw new Error('Decrypted sources is not valid JSON.').message;
+        }
         if (!Array.isArray(sources)) {
-          throw new Error('Decrypted sources is not a valid array').message;
+          throw new Error('Decrypted sources is not an array.').message;
         }
 
         extractedData.sources = sources.map((s: any) => ({

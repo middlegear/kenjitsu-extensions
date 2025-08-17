@@ -9,9 +9,10 @@ export class MegacloudDecryptor {
       hash = BigInt(input.charCodeAt(i)) + hash * 31n + (hash << 7n) - hash;
     }
 
+    if (hash < 0n) hash = -hash;
     const modHash = hash % 0x7fffffffffffffffn;
 
-    const xorProcessed = [...input].map(char => String.fromCharCode(char.charCodeAt(0) ^ 247)).join('');
+    const xorProcessed = [...input].map(char => String.fromCharCode(char.charCodeAt(0) ^ 0xff)).join('');
 
     const shift = (Number(modHash) % xorProcessed.length) + 5;
     const rotated = xorProcessed.slice(shift) + xorProcessed.slice(0, shift);

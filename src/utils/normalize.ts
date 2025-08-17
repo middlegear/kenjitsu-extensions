@@ -23,5 +23,17 @@ export function normalizeLowerCaseFormat(input: string): string {
     throw new Error(`Invalid season: "${input}". Expected one of: ${Object.keys(Seasons).join(', ')}`);
   }
 
-  return upperInput.toLowerCase(); // Convert to lowercase before returning
+  return upperInput.toLowerCase();
+}
+export function createSlug(text: string) {
+  if (typeof text !== 'string' || text.trim() === '') {
+    return '';
+  }
+
+  return text
+    .toLowerCase()
+    .trim()
+    .replace(/[^\w\s-]/g, '')
+    .replace(/[\s_-]+/g, '-')
+    .replace(/^-+|-+$/g, '');
 }
