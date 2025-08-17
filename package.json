@@ -1,7 +1,7 @@
 {
-  "name": "@middlegear/hakai-extensions",
+  "name": "hakai-extensions",
   "version": "0.0.0-development",
-  "description": "scraper package serving anime movie and tv media infomation",
+  "description": "scraper package serving anime movie and tv  media infomation",
   "main": "dist/main.js",
   "types": "dist/main.d.ts",
   "module": "dist/main.js",
@@ -10,14 +10,14 @@
     "build": "tsup",
     "dev": "pnpm build && node dist/main.js",
     "commit": "pnpm lint && cz",
-    "test-jikan": "vitest jikan.test.ts --config vitest.config.ts",
-    "test-anilist": "vitest anilist.test.ts --config vitest.config.ts",
-    "test-hianime": "vitest hianime.test.ts --config vitest.config.ts",
+    "test-jikan": "vitest jikan.test.ts   --config vitest.config.ts",
+    "test-anilist": "vitest anilist.test.ts  --config vitest.config.ts",
+    "test-hianime": "vitest hianime.test.ts  --config vitest.config.ts",
     "test-animekai": "vitest animekai.test.ts --config vitest.config.ts",
     "test-flixhq": "vitest flixhq.test.ts --config vitest.config.ts",
     "test-tmdb": "vitest tmdb.test.ts --config vitest.config.ts",
     "test-tvmaze": "vitest tvmaze.test.ts --config vitest.config.ts",
-    "test": "vitest --config vitest.config.ts",
+    "test": "vitest  --config vitest.config.ts",
     "lint": "tsc",
     "ci": "tsc && pnpm test && pnpm run build",
     "format": "prettier --write .",
@@ -39,6 +39,9 @@
     "type": "git",
     "url": "https://github.com/middlegear/hakai-extensions.git"
   },
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/"
+  },
   "homepage": "https://github.com/middlegear/hakai-extensions#readme",
   "devDependencies": {
     "@commitlint/cli": "^19.8.1",
@@ -56,11 +59,6 @@
     "cheerio": "^1.1.2",
     "undici": "^7.14.0"
   },
-  "publishConfig": {
-    "access": "public",
-    "registry": "https://npm.pkg.github.com"
-  },
-  "packageManager": "pnpm@10.6.3+sha512.bb45e34d50a9a76e858a95837301bfb6bd6d35aea2c5d52094fa497a467c43f5c440103ce2511e9e0a2f89c3d6071baac3358fc68ac6fb75e2ceb3d2736065e6",
   "config": {
     "commitizen": {
       "path": "cz-conventional-changelog"

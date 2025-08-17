@@ -1,4 +1,4 @@
-name: Test Providers
+name:  Test Providers
 
 on:
   workflow_dispatch:  
@@ -29,17 +29,27 @@ jobs:
       - name: Lint
         run: pnpm lint
 
-      - name: Run test Anilist
+      - name: Test Anilist
         run: pnpm test-anilist
 
-      - name: Run test Jikan
+      - name: Test Jikan
         run: pnpm test-jikan
 
-      - name: Run test Hianime
+      - name: Test Hianime
         run: pnpm test-hianime
+
       
-      - name: Run test Animekai
-        run: pnpm test-animekai
+      # - name: Test Animekai
+      #   run: pnpm test-animekai
+
+      - name: Test FlixHQ
+        run: pnpm test-flixhq
+
+      - name: Test TMDB
+        run: pnpm test-tmdb  
+
+      - name: Test TvMaze
+        run: pnpm test-tvmaze 
 
      
   
