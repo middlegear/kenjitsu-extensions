@@ -21,9 +21,7 @@ jobs:
 
       - name: Configure GitHub Packages Auth
         run: |
-          # Clear any existing npmrc
           rm -f ~/.npmrc
-          # Set auth specifically for GitHub Packages
           echo "//npm.pkg.github.com/:_authToken=${{ secrets.GITHUB_TOKEN }}" > ~/.npmrc
           echo "always-auth=true" >> ~/.npmrc
 
@@ -35,10 +33,15 @@ jobs:
       - name: Build package
         run: pnpm build
 
-      - name: Force publish unscoped package
+      - name: Prepare GitHub Package name
         run: |
-          # Temporary override for unscoped package
-          pnpm config set @middlegear:registry=https://npm.pkg.github.com
+          # Replace package name with scoped one for GitHub Packages
+          jq '.name = "@${{ github.repository_owner }}/hakai-extensions"' package.json > package.tmp.json
+          mv package.tmp.json package.json
+
+      - name: Publish to GitHub Packages
+        run: |
+          pnpm config set @${{ github.repository_owner }}:registry=https://npm.pkg.github.com
           pnpm publish \
             --registry=https://npm.pkg.github.com \
             --no-git-checks \
