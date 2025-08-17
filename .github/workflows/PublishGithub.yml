@@ -19,23 +19,24 @@ jobs:
       - name: Install pnpm
         run: npm install -g pnpm
 
-      - name: Configure GitHub Packages Auth
+      - name: Install dependencies (from npm)
         run: |
-          # Override the registry just for this workflow
-          echo "registry=https://npm.pkg.github.com" >> ~/.npmrc
-          echo "//npm.pkg.github.com/:_authToken=${{ secrets.GITHUB_TOKEN }}" >> ~/.npmrc
-          echo "always-auth=true" >> ~/.npmrc
-
-      - name: Install dependencies
-        run: pnpm install
+          # Use default npm registry for installation
+          pnpm config set registry https://registry.npmjs.org/
+          pnpm install
 
       - name: Build package
         run: pnpm build
 
-      - name: Force publish to GitHub Packages
+      - name: Configure GitHub Packages for publishing only
         run: |
-          # Temporary override of publishConfig
-          pnpm config set publishConfig.registry https://npm.pkg.github.com
-          pnpm publish --no-git-checks
+          # Only configure GitHub Packages auth without changing default registry
+          echo "//npm.pkg.github.com/:_authToken=${{ secrets.GITHUB_TOKEN }}" >> ~/.npmrc
+          echo "always-auth=true" >> ~/.npmrc
+
+      - name: Publish to GitHub Packages
+        run: |
+          # Temporary override just for publishing
+          pnpm publish --registry=https://npm.pkg.github.com --no-git-checks
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
