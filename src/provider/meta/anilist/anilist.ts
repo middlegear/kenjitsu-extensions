@@ -1183,7 +1183,7 @@ async function fetchZoroEpisodes(anilistId: number) {
         episodeId: item.episodeId,
         episodeNumber: item.episodeNumber,
         title: item.title,
-        providerName: 'HiAnime',
+        provider: 'hianime',
       })),
     };
   } catch (error) {
@@ -1202,7 +1202,7 @@ async function fetchKaiEpisodes(anilistId: number) {
         episodeId: item.episodeId,
         episodeNumber: item.episodeNumber,
         title: item.title,
-        providerName: 'Animekai',
+        provider: 'animekai',
       })),
     };
   } catch (error) {
