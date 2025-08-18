@@ -214,10 +214,7 @@ export async function fetchServers(episodeId: string): Promise<ServerInfoRespons
 
     const { servers } = extractServerData(res$);
     if (!servers) {
-      return {
-        error: 'Scraper Error: No results found',
-        data: null,
-      };
+      throw new Error('Couldnt find servers');
     }
     return {
       data: servers,
@@ -250,14 +247,8 @@ export async function fetchEpisodeSources(
   server: HiAnimeServers,
   category: SubOrDub,
 ): Promise<HianimeSourceResponse> {
-  if (!episodeId || !episodeId.includes('-')) {
-    return {
-      data: null,
-      headers: {
-        Referer: null,
-      },
-      error: 'Missing required vaild params episodeId',
-    };
+  if (!episodeId) {
+    throw new Error('Missing required vaild params episodeId');
   }
 
   if (episodeId.startsWith('http')) {
@@ -286,7 +277,7 @@ export async function fetchEpisodeSources(
 
     const findServerId = (servers: ServerInfo, category: SubOrDub, server: HiAnimeServers) => {
       if (!servers || !servers[category]) {
-        return null;
+        throw new Error('Invalid servers or category data.');
       }
 
       const serverIndex = servers[category].findIndex(s => (s.serverName || '').toLowerCase() === server.toLowerCase());
@@ -297,7 +288,7 @@ export async function fetchEpisodeSources(
     const fetchedServers = (await fetchServers(episodeId)).data as ServerInfo;
     const serverId = findServerId(fetchedServers, category, server);
     if (!serverId) {
-      throw new Error('Couldnt find source').message;
+      throw new Error('Couldnt find source');
     }
     const newId = episodeId.split('-').pop() as string;
 
@@ -310,7 +301,7 @@ export async function fetchEpisodeSources(
         Referer: `${zoroBaseUrl}/watch/?ep=${newId}`,
       },
     });
-    if (!response.data) throw new Error(response.statusText).message;
+    if (!response.data) throw new Error(response.statusText);
 
     return await fetchEpisodeSources(response.data.link, server, category);
   } catch (error) {
