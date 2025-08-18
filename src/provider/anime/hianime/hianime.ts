@@ -296,7 +296,9 @@ export async function fetchEpisodeSources(
 
     const fetchedServers = (await fetchServers(episodeId)).data as ServerInfo;
     const serverId = findServerId(fetchedServers, category, server);
-
+    if (!serverId) {
+      throw new Error('Couldnt find source').message;
+    }
     const newId = episodeId.split('-').pop() as string;
 
     const response = await client.get(`${zoroBaseUrl}/ajax/v2/episode/sources`, {
@@ -308,14 +310,7 @@ export async function fetchEpisodeSources(
         Referer: `${zoroBaseUrl}/watch/?ep=${newId}`,
       },
     });
-    if (!response.data)
-      return {
-        data: null,
-        headers: {
-          Referer: null,
-        },
-        error: response.statusText || 'Server returned an empty response',
-      };
+    if (!response.data) throw new Error(response.statusText).message;
 
     return await fetchEpisodeSources(response.data.link, server, category);
   } catch (error) {
