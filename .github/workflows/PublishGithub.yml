@@ -29,6 +29,7 @@ jobs:
           pnpm config set registry https://registry.npmjs.org/
           pnpm install
 
+
       
       - name: Generate unique version
         id: version_generator
@@ -37,21 +38,25 @@ jobs:
           VERSION_DATE=$(date +%Y.%m.%d)
           VERSION_HOUR=$(date +%H)
           
+
+
           echo "NEW_VERSION=${VERSION_DATE}-${VERSION_HOUR}" >> $GITHUB_ENV
 
       - name: Update package.json with the new version
         run: |
+
        
           jq '.version = env.NEW_VERSION' package.json > package.tmp.json
           mv package.tmp.json package.json
       
+
       
       - name: Build package
         run: pnpm build
 
       - name: Prepare GitHub Package name
         run: |
-  
+
           jq '.name = "@${{ github.repository_owner }}/hakai-extensions"' package.json > package.tmp.json
           mv package.tmp.json package.json
 
