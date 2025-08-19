@@ -8,7 +8,7 @@ const client = new FetchClient();
 class MegaCloud {
   readonly referer: string = `https://hianime.to/`;
 
-  async fetchKey(): Promise<string | null> {
+  async fetchKey(): Promise<string> {
     const url = 'https://raw.githubusercontent.com/yogesh-hacker/MegacloudKeys/refs/heads/main/keys.json';
     try {
       const response = await fetch(url);
@@ -25,13 +25,10 @@ class MegaCloud {
           return key;
         }
         console.warn(`'mega' field is empty or not a string from ${url}.`);
-        return null;
       }
-      console.warn(`JSON from ${url} does not contain an expected 'mega' field or is invalid.`);
-      return null;
+      throw new Error(`Invalid 'mega' field or key not found in JSON from ${url}.`);
     } catch (error) {
-      console.warn(`Failed to fetch key:`, (error as Error).message);
-      return null;
+      throw new Error(`Failed to fetch key from ${url}: ${error as Error}`);
     }
   }
 
@@ -52,7 +49,7 @@ class MegaCloud {
     const match = /\/([^\/\?]+)(?:\?|$)/.exec(videoUrl.href);
     const sourceId = match?.[1];
     if (!sourceId) {
-      throw new Error('Failed to extract source ID').message;
+      throw new Error('Failed to extract source ID');
     }
 
     const fullPathname = videoUrl.pathname;
@@ -64,7 +61,7 @@ class MegaCloud {
     try {
       const clientKey = await getClientKey(videoUrl.href, this.referer);
       if (!clientKey) {
-        throw new Error('Failed to fetch ClientKey').message;
+        throw new Error('Failed to fetch ClientKey');
       }
       const { data: initialResponse } = await client.get(sourcesBaseUrl, {
         params: {
@@ -78,6 +75,10 @@ class MegaCloud {
         },
       });
 
+      if (!initialResponse.sources) {
+        throw new Error('Boys we are fucked.It will take a while to fix this. Touch some grass');
+      }
+
       if (initialResponse.encrypted) {
         const decryptor = new MegacloudDecryptor();
 
@@ -88,10 +89,10 @@ class MegaCloud {
         try {
           sources = JSON.parse(decoded);
         } catch {
-          throw new Error('Decrypted sources is not valid JSON.').message;
+          throw new Error('Decrypted sources is not valid JSON.');
         }
         if (!Array.isArray(sources)) {
-          throw new Error('Decrypted sources is not an array.').message;
+          throw new Error('Decrypted sources is not an array.');
         }
 
         extractedData.sources = sources.map((s: any) => ({
@@ -122,7 +123,7 @@ class MegaCloud {
 
       return extractedData;
     } catch (error) {
-      return error instanceof Error ? error.message : 'Fatal Error';
+      return error instanceof Error ? error.message : 'Boys we are screwed';
     }
   }
 }

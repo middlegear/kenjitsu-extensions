@@ -27,10 +27,25 @@ export async function _search(query: string, page: number): Promise<FlixSearchRe
   }
   const searchString = query.replace(/[\W_]+/g, '-');
   try {
-    const reponse = await client.get(`${flixhqBaseUrl}/search/${searchString}`, { params: { page: String(page) } });
-    const data$ = cheerio.load(reponse.data);
+    const response = await client.get(`${flixhqBaseUrl}/search/${searchString}`, { params: { page: String(page) } });
+    if (!response.data) {
+      return {
+        hasNextPage: false,
+        currentPage: 0,
+        error: response.statusText || 'Received empty response from server',
+        data: [],
+      };
+    }
+    const data$ = cheerio.load(response.data);
     const res = scrapeSearch(data$);
-
+    if (!Array.isArray(res.results) || res.results.length === 0) {
+      return {
+        hasNextPage: false,
+        currentPage: 0,
+        error: 'Cheerio Error: No search results found',
+        data: [],
+      };
+    }
     return { currentPage: page, hasNextPage: res.hasNextPage, data: res.results };
   } catch (error) {
     return { data: [], currentPage: 0, hasNextPage: false, error: error instanceof Error ? error.message : 'Unknown err' };
@@ -49,64 +64,107 @@ interface ErrorFlixInfo {
 export type FLixInfoRes = SuccessFlixInfo | ErrorFlixInfo;
 export async function _getInfo(mediaId: string): Promise<FLixInfoRes> {
   if (!mediaId) {
-    return { data: null, episodes: [], error: 'Missing required parameter mediaId!' };
+    return {
+      data: null,
+      episodes: [],
+      error: 'Missing required parameter mediaId!',
+    };
   }
-  const newId = mediaId.replace('-', '/');
-  const finalMediaId = `${flixhqBaseUrl}/${newId}`;
+
+  const finalMediaId = `${flixhqBaseUrl}/${mediaId.replace('-', '/')}`;
 
   try {
     const response = await client.get(finalMediaId);
-    const data$ = cheerio.load(response.data);
-    const res = scrapeMediaInfo(data$);
+    if (!response.data) {
+      return {
+        data: null,
+        episodes: [],
+        error: response.statusText || 'Received empty response from server',
+      };
+    }
 
-    const uid = data$('.watch_block').attr('data-id')!;
+    const $ = cheerio.load(response.data);
+    const mediaInfo = scrapeMediaInfo($);
+    const uid = $('.watch_block').attr('data-id')!;
 
-    const ajaxReqUrl = (id: string, type: string, isSeasons: boolean = false) =>
-      `${flixhqBaseUrl}/ajax/${type === 'movie' ? type : `v2/${type}`}/${isSeasons ? 'seasons' : 'episodes'}/${id}`;
-    let episodes:
-      | { episodeId: string; title: string; number: number; season: number }[]
-      | { episodeId: string; title: string | null }[] = [];
-    if (res.type === 'TV') {
-      const { data } = await client.get(ajaxReqUrl(uid, 'tv', true));
+    // URL Builder
+    function buildAjaxUrl(id: string, kind: 'movie' | 'tv' | 'season') {
+      switch (kind) {
+        case 'movie':
+          return `${flixhqBaseUrl}/ajax/movie/episodes/${id}`;
+        case 'tv': // initial request for TV seasons
+          return `${flixhqBaseUrl}/ajax/v2/tv/seasons/${id}`;
+        case 'season': // fetch episodes for a season
+          return `${flixhqBaseUrl}/ajax/v2/season/episodes/${id}`;
+      }
+    }
+
+    //Fetch Seasons
+    async function fetchSeasons(tvId: string): Promise<{ id: string; seasonNum: number }[]> {
+      const { data } = await client.get(buildAjaxUrl(tvId, 'tv'));
+      if (!data) return [];
 
       const $$ = cheerio.load(data);
-      const seasonsIds = $$('.dropdown-menu > a')
-        .map((i, el) => data$(el).attr('data-id'))
+      return $$('.dropdown-menu > a')
+        .map((_, el) => {
+          const id = $$(el).attr('data-id')!;
+          const label = $$(el).text().trim(); // e.g., "Season 2"
+          const seasonNum = parseInt(label.replace(/\D/g, ''), 10) || 1;
+          return { id, seasonNum };
+        })
         .get();
+    }
 
-      let season = 1;
-      for (const id of seasonsIds) {
-        const { data } = await client.get(ajaxReqUrl(id, 'season'));
-        const $$$ = cheerio.load(data);
+    //Fetch Episodes
+    async function fetchEpisodes(seasonId: string, seasonNum: number) {
+      const { data } = await client.get(buildAjaxUrl(seasonId, 'season'));
+      if (!data) return [];
 
-        $$$('.nav > li')
-          .map((i, el) => {
-            const episode = {
-              episodeId: `episode-${$$$(el).find('a').attr('id')!.split('-')[1]}`,
-              title: $$$(el).find('a').attr('title')!,
-              number: parseInt($$$(el).find('a').attr('title')!.split(':')[0].slice(3).trim()),
-              season: season,
-            };
-            episodes?.push(episode);
-          })
-          .get();
-        season++;
+      const $$ = cheerio.load(data);
+      return $$('.nav > li')
+        .map((_, el) => {
+          const anchor = $$(el).find('a');
+          const rawId = anchor.attr('id')!; // e.g. "ep-12345"
+          const title = anchor.attr('title')!;
+          return {
+            episodeId: `episode-${rawId.split('-')[1]}`,
+            title,
+            number: parseInt(title.split(':')[0].slice(3).trim(), 10),
+            season: seasonNum,
+          };
+        })
+        .get();
+    }
+
+    // Handle TV vs Movie
+    let episodes: FLixepisodes = [];
+
+    if (mediaInfo.type === 'TV') {
+      const seasons = await fetchSeasons(uid);
+
+      for (const { id, seasonNum } of seasons) {
+        const seasonEpisodes = await fetchEpisodes(id, seasonNum);
+        episodes.push(...seasonEpisodes);
       }
-      //  url: `${flixhqBaseUrl}/ajax/v2/episode/servers/${$$$(el).find('a').attr('id')!.split('-')[1]}`, for episodes
-      //  url: `${flixhqBaseUrl}/ajax/movie/episodes/${uid} for movies
     } else {
       episodes = [
         {
           episodeId: `movie-${uid}`,
-          title: res.title,
+          title: mediaInfo.title,
         },
       ];
     }
-    return { data: res, episodes: episodes as FLixepisodes };
-  } catch (error) {
-    return { data: null, episodes: [], error: error instanceof Error ? error.message : 'Unknown err' };
+
+    return { data: mediaInfo, episodes };
+  } catch (err) {
+    return {
+      data: null,
+      episodes: [],
+      error: err instanceof Error ? err.message : 'Unknown error',
+    };
   }
 }
+
 interface SuccessFlixServerRes {
   data: ServerRes[];
 }
@@ -120,29 +178,38 @@ export async function _getServers(episodeId: string): Promise<FlixServerRes> {
     return { data: [], error: 'Missing required params episodeId!' };
   }
 
-  if (episodeId.includes('movie')) episodeId = `${flixhqBaseUrl}/ajax/movie/episodes/${episodeId.split('-').at(1)}`;
-  else episodeId = `${flixhqBaseUrl}/ajax/v2/episode/servers/${episodeId.split('-').at(1)}`;
+  const isMovie = episodeId.startsWith('movie-');
+  const id = episodeId.split('-').at(1);
+
+  const url = isMovie ? `${flixhqBaseUrl}/ajax/movie/episodes/${id}` : `${flixhqBaseUrl}/ajax/v2/episode/servers/${id}`;
 
   try {
-    const { data } = await client.get(episodeId);
-    const data$ = cheerio.load(data);
+    const { data } = await client.get(url);
+    const $ = cheerio.load(data);
 
-    const servers = data$('.nav > li')
-      .map((i, el) => {
-        const server = {
-          name: episodeId.includes('movie')
-            ? data$(el).find('a').attr('title')!.toLowerCase().trim()
-            : data$(el).find('a').attr('title')!.slice(6).toLowerCase().trim(),
+    const servers = $('.nav > li')
+      .map((_, el) => {
+        const anchor = $(el).find('a');
+        const title = anchor.attr('title') || '';
 
-          id: Number(data$(el).find('a').attr('data-id') || data$(el).find('a').attr('data-linkid')),
+        return {
+          name: isMovie
+            ? title.toLowerCase().trim()
+            : title
+                .replace(/^Server\s*/i, '')
+                .toLowerCase()
+                .trim(), // instead of slice(6)
+          id: Number(anchor.attr('data-id') || anchor.attr('data-linkid')),
         };
-
-        return server;
       })
       .get();
+
     return { data: servers as ServerRes[] };
-  } catch (error) {
-    return { data: [], error: error instanceof Error ? error.message : 'Unknown Error' };
+  } catch (err) {
+    return {
+      data: [],
+      error: err instanceof Error ? err.message : 'Unknown error',
+    };
   }
 }
 
@@ -183,7 +250,7 @@ export async function _getsources(episodeId: string, server: StreamingServers): 
     const servers = await _getServers(episodeId);
 
     if ('error' in servers) {
-      throw new Error(servers.error).message;
+      throw new Error(servers.error);
     }
 
     if (Array.isArray(servers.data) && servers.data.length > 0) {
@@ -197,7 +264,7 @@ export async function _getsources(episodeId: string, server: StreamingServers): 
       const serverUrl: URL = new URL(data.link);
       return await _getsources(serverUrl.href, server);
     } else {
-      throw new Error(`Server ${server} not found or data invalid`).message;
+      throw new Error(`Server ${server} not found or data invalid`);
     }
   } catch (error) {
     return { data: null, headers: { Referer: null }, error: error instanceof Error ? error.message : 'Unknown error' };

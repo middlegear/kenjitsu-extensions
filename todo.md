@@ -22,6 +22,7 @@
 
 
 
-//// TODOs
-
- fix 2embed with the right headers. Would require a cloudflare clearance scraper
+1. Fix errors that show missing valid params episodeId eg tales of god case for dub category(mostlikely in serverId)
+2. have a unified m3u8 format type 
+3. move all types to a folder called types 
+4. refactor error handling   

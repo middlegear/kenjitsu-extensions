@@ -2,35 +2,40 @@ export class MegacloudDecryptor {
   private readonly DEFAULT_CHARSET = Array.from({ length: 95 }, (_, i) => String.fromCharCode(i + 32));
 
   private deriveKey(secret: string, nonce: string): string {
+    // Step 1: Concatenate the input strings
     const input = secret + nonce;
+
+    // Step 2: Compute hash
     let hash = 0n;
-
+    const multiplier = 31n;
     for (let i = 0; i < input.length; i++) {
-      hash = BigInt(input.charCodeAt(i)) + hash * 31n + (hash << 7n) - hash;
+      const charCode = BigInt(input.charCodeAt(i));
+      hash = charCode + hash * multiplier + (hash << 7n) - hash;
     }
+    const modHash = Number(hash % 0x7fffffffffffffffn);
 
-    if (hash < 0n) hash = -hash;
-    const modHash = hash % 0x7fffffffffffffffn;
+    // Step 3: XOR each character with 23
+    const xorProcessed = [...input].map(char => String.fromCharCode(char.charCodeAt(0) ^ 23)).join('');
 
-    const xorProcessed = [...input].map(char => String.fromCharCode(char.charCodeAt(0) ^ 0xff)).join('');
-
-    const shift = (Number(modHash) % xorProcessed.length) + 5;
+    // Step 4: Rotate the string
+    const shift = (modHash % xorProcessed.length) + 5;
     const rotated = xorProcessed.slice(shift) + xorProcessed.slice(0, shift);
 
+    // Step 5: Interleave with reversed nonce
     const reversedNonce = [...nonce].reverse().join('');
-
     let interleaved = '';
     const maxLen = Math.max(rotated.length, reversedNonce.length);
     for (let i = 0; i < maxLen; i++) {
       interleaved += (rotated[i] || '') + (reversedNonce[i] || '');
     }
 
-    const len = 96 + (Number(modHash) % 33);
+    // Step 6: Take substring of length (modHash + 96) % 33
+    const len = (modHash + 96) % 33;
     const sliced = interleaved.substring(0, len);
 
-    return [...sliced].map(ch => String.fromCharCode((ch.charCodeAt(0) % 95) + 32)).join('');
+    // Step 7: Map characters to (code % 95) + 32
+    return [...sliced].map(char => String.fromCharCode((char.charCodeAt(0) % 95) + 32)).join('');
   }
-
   private columnarTranspositionCipher(text: string, key: string): string {
     const cols = key.length;
     const rows = Math.ceil(text.length / cols);
