@@ -30,7 +30,7 @@ export async function searchAnime(query: string, page: number): Promise<SearchRe
       currentPage: 0,
       lastPage: 0,
       data: [],
-      error: 'Missing required Params : query',
+      error: 'Missing required Params : a query string',
     };
   }
 
@@ -64,7 +64,7 @@ export async function searchAnime(query: string, page: number): Promise<SearchRe
         hasNextPage: false,
         currentPage: 0,
         lastPage: 0,
-        error: 'Cheerio Error: No results found',
+        error: 'Cheerio Error: No search results found',
         data: [],
       };
     }
@@ -118,7 +118,7 @@ export async function fetchAnimeInfo(animeId: string): Promise<ZoroAnimeInfo> {
     const { res } = extractAnimeInfo($animeData);
     if (!res) {
       return {
-        error: 'Scraper error',
+        error: 'Scraper error: No AnimeInfo found',
         data: null,
       };
     }
@@ -164,7 +164,7 @@ export async function getEpisodes(animeId: string): Promise<EpisodeInfoRes> {
     const { resEpisodeList } = extractEpisodesList($episodes, episodesSelector);
     if (!Array.isArray(resEpisodeList) || resEpisodeList.length === 0) {
       return {
-        error: 'Scraper Error: No results found',
+        error: 'Scraper Error: No episodes found',
         data: [],
       };
     }
@@ -186,12 +186,18 @@ export interface ErrorServerInfo {
 }
 export type ServerInfoResponse = SuccessServerInfo | ErrorServerInfo;
 export async function fetchServers(episodeId: string): Promise<ServerInfoResponse> {
-  if (!episodeId)
+  if (!episodeId || episodeId.includes('?ep=')) {
+    if (episodeId.includes('?ep=')) {
+      return {
+        data: null,
+        error: "Invalid format! Please use the '-episode-' format instead of ?ep=.",
+      };
+    }
     return {
       data: null,
-      error: 'Missing required params: episodeId!',
+      error: 'Missing required params: valid episodeId!',
     };
-
+  }
   try {
     const newId = episodeId.split('-').pop()?.trim() as string;
 
@@ -213,8 +219,8 @@ export async function fetchServers(episodeId: string): Promise<ServerInfoRespons
     const res$: cheerio.CheerioAPI = cheerio.load(response.data.html);
 
     const { servers } = extractServerData(res$);
-    if (!servers) {
-      throw new Error('Couldnt find servers');
+    if (servers.sub.length === 0) {
+      throw new Error('No server data received. Use a different category');
     }
     return {
       data: servers,
@@ -288,7 +294,7 @@ export async function fetchEpisodeSources(
     const fetchedServers = (await fetchServers(episodeId)).data as ServerInfo;
     const serverId = findServerId(fetchedServers, category, server);
     if (!serverId) {
-      throw new Error('Couldnt find source');
+      throw new Error('Couldnt find a sourceID: Try a different server ');
     }
     const newId = episodeId.split('-').pop() as string;
 
@@ -310,7 +316,7 @@ export async function fetchEpisodeSources(
       headers: {
         Referer: null,
       },
-      error: error instanceof Error ? error.message : 'Unknown error',
+      error: error instanceof Error ? error.message : 'Fatal Error',
     };
   }
 }

@@ -31,7 +31,7 @@ export type ServerRes = {
 
 export type FLixepisodes =
   | { episodeId: string; title: string; number: number; season: number }[]
-  | { iepisodeId: string; title: string | null }[];
+  | { episodeId: string; title: string | null }[];
 export const StreamingServers = {
   Upcloud: 'upcloud',
 

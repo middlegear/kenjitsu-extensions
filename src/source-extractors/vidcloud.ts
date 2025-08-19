@@ -39,7 +39,7 @@ class VidCloud {
 
       throw new Error(`Invalid 'rabbit' field or key not found in JSON from ${url}.`);
     } catch (error) {
-      throw new Error(`Failed to fetch key from ${url}: ${(error as Error).message}`);
+      throw new Error(`Failed to fetch key from ${url}: ${error as Error}`);
     }
   }
 
@@ -63,7 +63,7 @@ class VidCloud {
     try {
       const clientKey = await getClientKey(videoUrl.href, referer);
       if (!clientKey) {
-        throw new Error('Failed to fetch ClientKey').message;
+        throw new Error('Failed to fetch ClientKey');
       }
 
       const { data: initialResponse } = await client.get(sourcesBaseUrl, {
@@ -78,6 +78,10 @@ class VidCloud {
         },
       });
 
+      if (!initialResponse.sources) {
+        throw new Error('Boys we are fucked.It will take a while to fix this. Touch some grass');
+      }
+
       if (initialResponse.encrypted) {
         const key = await this.fetchKey(this.primaryKeyUrl);
         const decryptor = new Decrypter();
@@ -86,10 +90,10 @@ class VidCloud {
         try {
           sources = JSON.parse(decrypted);
         } catch {
-          throw new Error('Decrypted sources is not valid JSON.').message;
+          throw new Error('Decrypted sources is not valid JSON.');
         }
         if (!Array.isArray(sources)) {
-          throw new Error('Decrypted sources is not an array.').message;
+          throw new Error('Decrypted sources is not an array.');
         }
 
         extractedData.sources = sources.map((s: any) => ({
