@@ -253,8 +253,11 @@ export async function fetchEpisodeSources(
   server: HiAnimeServers,
   category: SubOrDub,
 ): Promise<HianimeSourceResponse> {
-  if (!episodeId) {
-    throw new Error('Missing required vaild params episodeId');
+  if (!episodeId || episodeId.includes('?ep=')) {
+    if (episodeId.includes('?ep=')) {
+      throw new Error("Invalid format! Please use the ' - episode - ' format instead of ?ep=.");
+    }
+    throw new Error('Missing required params: valid episodeId!');
   }
 
   if (episodeId.startsWith('http')) {
@@ -282,10 +285,6 @@ export async function fetchEpisodeSources(
     // const sources = puppeteer(id);
 
     const findServerId = (servers: ServerInfo, category: SubOrDub, server: HiAnimeServers) => {
-      if (!servers || !servers[category]) {
-        throw new Error('Invalid servers or category data.');
-      }
-
       const serverIndex = servers[category].findIndex(s => (s.serverName || '').toLowerCase() === server.toLowerCase());
 
       return serverIndex !== -1 ? servers[category][serverIndex].mediaId : null;
