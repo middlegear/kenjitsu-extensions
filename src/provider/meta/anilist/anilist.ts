@@ -1159,7 +1159,7 @@ type CrossMatchedEpisodes = {
   title: string | null;
   overview: string | null;
   thumbnail: string | null;
-  providerName: string | null;
+  provider: string | null;
 };
 
 export interface SuccessEpisodesres {
@@ -1231,7 +1231,7 @@ async function getEpisodeswithInfoZoro(anilistId: number): Promise<AnilistEpisod
         title: episodes?.title?.english || episodes?.title?.romanizedJapanese || null,
         overview: episodes?.overview,
         thumbnail: episodes?.image || null,
-        providerName: anime.providerName || null,
+        provider: anime.provider || null,
       };
     });
 
@@ -1275,7 +1275,7 @@ async function getEpisodeswithInfoKai(anilistId: number): Promise<AnilistEpisode
         title: episodes?.title?.english || episodes?.title?.romanizedJapanese || null,
         overview: episodes?.overview || 'No overview available',
         thumbnail: episodes?.image || null,
-        providerName: anime.providerName || null,
+        provider: anime.provider || null,
       };
     });
 
