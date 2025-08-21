@@ -5,7 +5,6 @@ export class MegacloudDecryptor {
     // Step 1: Concatenate the input strings
     const input = secret + nonce;
 
-    // Step 2: Compute hash
     let hash = 0n;
     const multiplier = 31n;
     for (let i = 0; i < input.length; i++) {
@@ -14,14 +13,11 @@ export class MegacloudDecryptor {
     }
     const modHash = Number(hash % 0x7fffffffffffffffn);
 
-    // Step 3: XOR each character with 23
-    const xorProcessed = [...input].map(char => String.fromCharCode(char.charCodeAt(0) ^ 23)).join('');
+    const xorProcessed = [...input].map(char => String.fromCharCode(char.charCodeAt(0) ^ 247)).join('');
 
-    // Step 4: Rotate the string
     const shift = (modHash % xorProcessed.length) + 5;
     const rotated = xorProcessed.slice(shift) + xorProcessed.slice(0, shift);
 
-    // Step 5: Interleave with reversed nonce
     const reversedNonce = [...nonce].reverse().join('');
     let interleaved = '';
     const maxLen = Math.max(rotated.length, reversedNonce.length);
@@ -29,13 +25,12 @@ export class MegacloudDecryptor {
       interleaved += (rotated[i] || '') + (reversedNonce[i] || '');
     }
 
-    // Step 6: Take substring of length (modHash + 96) % 33
-    const len = (modHash + 96) % 33;
+    const len = 96 + (modHash % 33);
     const sliced = interleaved.substring(0, len);
 
-    // Step 7: Map characters to (code % 95) + 32
     return [...sliced].map(char => String.fromCharCode((char.charCodeAt(0) % 95) + 32)).join('');
   }
+
   private columnarTranspositionCipher(text: string, key: string): string {
     const cols = key.length;
     const rows = Math.ceil(text.length / cols);
