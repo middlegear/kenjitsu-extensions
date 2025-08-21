@@ -219,7 +219,9 @@ export async function fetchServers(episodeId: string): Promise<ServerInfoRespons
     const res$: cheerio.CheerioAPI = cheerio.load(response.data.html);
 
     const { servers } = extractServerData(res$);
+
     if (servers.sub.length === 0 && servers.dub.length === 0 && servers.raw.length === 0) {
+
       throw new Error('No server data received. Use a different category');
     }
     return {
@@ -253,11 +255,13 @@ export async function fetchEpisodeSources(
   server: HiAnimeServers,
   category: SubOrDub,
 ): Promise<HianimeSourceResponse> {
+
   if (!episodeId || episodeId.includes('ep=')) {
     if (episodeId.includes('ep=')) {
       throw new Error("Invalid format! Please use the ' - episode - ' format instead of ?ep=.");
     }
     throw new Error('Missing required params: valid episodeId!');
+
   }
 
   if (episodeId.startsWith('http')) {
@@ -285,10 +289,12 @@ export async function fetchEpisodeSources(
     // const sources = puppeteer(id);
 
     const findServerId = (servers: ServerInfo, category: SubOrDub, server: HiAnimeServers) => {
+
       const serverIndex = servers[category].findIndex(s => (s.serverName || '').toLowerCase() === server.toLowerCase());
 
       if (serverIndex !== -1) {
         return servers[category][serverIndex].mediaId;
+
       }
 
       const suggestions: string[] = [];
@@ -312,7 +318,9 @@ export async function fetchEpisodeSources(
 
     const fetchedServers = (await fetchServers(episodeId)).data as ServerInfo;
     const serverId = findServerId(fetchedServers, category, server);
-
+    if (!serverId) {
+      throw new Error('Couldnt find a sourceID: Try a different server ');
+    }
     const newId = episodeId.split('-').pop() as string;
 
     const response = await client.get(`${zoroBaseUrl}/ajax/v2/episode/sources`, {
