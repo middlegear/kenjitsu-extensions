@@ -42,9 +42,11 @@ export type SubServers = {
 };
 export type DubServers = SubServers;
 export type RawServers = SubServers;
+
 export type ServerInfo = {
   sub: SubServers[];
   dub: DubServers[];
+  raw: RawServers[];
   episodeNumber: number | null;
 };
 

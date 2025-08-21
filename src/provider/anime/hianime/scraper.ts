@@ -107,11 +107,12 @@ export function extractServerData($: cheerio.CheerioAPI) {
   const servers: ServerInfo = {
     sub: [],
     dub: [],
+    raw: [],
     episodeNumber: 0,
   };
   const subSelector: cheerio.SelectorType = '.ps_-block.ps_-block-sub.servers-sub .ps__-list .server-item';
   const dubSelector: cheerio.SelectorType = '.ps_-block.ps_-block-sub.servers-dub .ps__-list .server-item';
-
+  const rawSelector: cheerio.SelectorType = '.ps_-block.ps_-block-sub.servers-raw .ps__-list .server-item';
   const episodeNo = $('.content .server-notice')?.find('b')?.text().split(' ').pop();
   servers.episodeNumber = Number(episodeNo) || null;
   $(subSelector).each((_, element) => {
@@ -126,6 +127,13 @@ export function extractServerData($: cheerio.CheerioAPI) {
       serverId: Number($(element)?.attr('data-server-id') || null),
       mediaId: Number($(element).attr('data-id') || null),
       serverName: $(element)?.find('.btn')?.text().trim().toLowerCase() || null,
+    });
+  });
+  $(rawSelector).each((_, element) => {
+    servers.raw.push({
+      serverId: Number($(element)?.attr('data-server-id') || null),
+      mediaId: Number($(element).attr('data-id') || null),
+      serverName: $(element).find('.btn').text().trim().toLowerCase() || null,
     });
   });
 

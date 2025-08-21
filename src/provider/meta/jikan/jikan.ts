@@ -1100,7 +1100,7 @@ async function fetchZoroEpisodes(malId: number) {
         episodeId: item.episodeId,
         episodeNumber: item.episodeNumber,
         title: item.title,
-        providerName: 'HiAnime',
+        provider: 'hianime',
       })),
     };
   } catch (error) {
@@ -1116,7 +1116,7 @@ type CrossMatchedEpisodes = {
   title: string | null;
   overview: string | null;
   thumbnail: string | null;
-  providerName: string | null;
+  provider: string | null;
 };
 
 export interface SuccessEpisodesres {
@@ -1154,7 +1154,7 @@ async function getZoroEpisodeswithInfo(jikanId: number): Promise<JikanMatchedEpi
         title: (episodes?.title?.english || episodes?.title?.romanizedJapanese) ?? null,
         overview: episodes?.overview || 'No overview available',
         thumbnail: episodes?.image || null,
-        providerName: anime.providerName || null,
+        provider: anime.provider || null,
       };
     });
 
@@ -1181,7 +1181,7 @@ async function fetchKaiEpisodes(malId: number) {
         episodeId: item.episodeId,
         episodeNumber: item.episodeNumber,
         title: item.title,
-        providerName: 'AnimeKai',
+        provider: 'animeKai',
       })),
     };
   } catch (error) {
@@ -1212,7 +1212,7 @@ async function getEpisodeswithInfoKai(jikanId: number): Promise<JikanMatchedEpis
         title: episodes?.title?.english || episodes?.title?.romanizedJapanese || null,
         overview: episodes?.overview || 'No overview available',
         thumbnail: episodes?.image || null,
-        providerName: anime.providerName || null,
+        provider: anime.provider || null,
       };
     });
 

@@ -1,7 +1,5 @@
 import * as cheerio from 'cheerio';
-
 import { scrapeMediaInfo, scrapeSearch } from './scraper.js';
-
 import { type FLixepisodes, type MediaInfo, type searchTypes, type ServerRes, StreamingServers } from './types.js';
 import VidCloud, { type sources, type subtitles, type ExtractedData } from '../../../source-extractors/vidcloud.js';
 import { FetchClient } from '../../../config/client.js';
@@ -9,6 +7,7 @@ import { FetchClient } from '../../../config/client.js';
 export const flixhqBaseUrl = 'https://flixhq.to' as const;
 
 const client = new FetchClient();
+
 interface FlixSucessSearchRes {
   data: searchTypes[];
   hasNextPage: boolean;

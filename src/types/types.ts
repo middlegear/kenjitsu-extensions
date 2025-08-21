@@ -26,6 +26,7 @@ export type ASource = {
 export const SubOrDub = {
   SUB: 'sub',
   DUB: 'dub',
+  RAW: 'raw',
 } as const;
 export type SubOrDub = (typeof SubOrDub)[keyof typeof SubOrDub];
 
