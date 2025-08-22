@@ -221,7 +221,6 @@ export async function fetchServers(episodeId: string): Promise<ServerInfoRespons
     const { servers } = extractServerData(res$);
 
     if (servers.sub.length === 0 && servers.dub.length === 0 && servers.raw.length === 0) {
-
       throw new Error('No server data received. Use a different category');
     }
     return {
@@ -255,13 +254,11 @@ export async function fetchEpisodeSources(
   server: HiAnimeServers,
   category: SubOrDub,
 ): Promise<HianimeSourceResponse> {
-
   if (!episodeId || episodeId.includes('ep=')) {
     if (episodeId.includes('ep=')) {
       throw new Error("Invalid format! Please use the ' - episode - ' format instead of ?ep=.");
     }
     throw new Error('Missing required params: valid episodeId!');
-
   }
 
   if (episodeId.startsWith('http')) {
@@ -289,38 +286,40 @@ export async function fetchEpisodeSources(
     // const sources = puppeteer(id);
 
     const findServerId = (servers: ServerInfo, category: SubOrDub, server: HiAnimeServers) => {
+      const availableCategories: string[] = [];
+      if (servers.sub?.length > 0) availableCategories.push('sub');
+      if (servers.dub?.length > 0) availableCategories.push('dub');
+      if (servers.raw?.length > 0) availableCategories.push('raw');
 
+      if (!servers[category] || servers[category].length === 0) {
+        const suggestionMessage =
+          availableCategories.length > 0
+            ? ` Available categories: ${availableCategories.join(' or ')}.`
+            : ' No servers available in any category right now.';
+
+        throw new Error(`Category '${category}' has no servers.${suggestionMessage}`);
+      }
+
+      const availableServers = servers[category].map(s => s.serverName || 'unknown');
       const serverIndex = servers[category].findIndex(s => (s.serverName || '').toLowerCase() === server.toLowerCase());
 
-      if (serverIndex !== -1) {
-        return servers[category][serverIndex].mediaId;
-
+      if (serverIndex === -1) {
+        throw new Error(
+          `Server '${server}' not found in category '${category}'. ` +
+            `Try one of the available servers: ${availableServers.join(', ')}.`,
+        );
       }
 
-      const suggestions: string[] = [];
-      if (servers.sub.length > 0) {
-        suggestions.push('sub');
-      }
-      if (servers.dub.length > 0) {
-        suggestions.push('dub');
-      }
-      if (servers.raw.length > 0) {
-        suggestions.push('raw');
-      }
-
-      const suggestionMessage =
-        suggestions.length > 0
-          ? ` Available categories with servers include: ${suggestions.join(' or ')}.`
-          : 'No other categories have available servers.';
-
-      throw new Error(`Couldn't find a required sourceId for the selected category '${category}'.${suggestionMessage}`);
+      return servers[category][serverIndex].mediaId;
     };
 
     const fetchedServers = (await fetchServers(episodeId)).data as ServerInfo;
-    const serverId = findServerId(fetchedServers, category, server);
-    if (!serverId) {
-      throw new Error('Couldnt find a sourceID: Try a different server ');
+
+    if ('error' in fetchedServers) {
+      throw new Error(fetchedServers.error as string);
     }
+    const serverId = findServerId(fetchedServers, category, server);
+
     const newId = episodeId.split('-').pop() as string;
 
     const response = await client.get(`${zoroBaseUrl}/ajax/v2/episode/sources`, {

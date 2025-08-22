@@ -32,7 +32,9 @@ export {
   AnimeProvider,
 };
 
-
+// const zoro = new HiAnime();
+// const data = await zoro.fetchSources('dan-da-dan-season-2-19793-episode-141568', 'hd-2');
+// console.log(JSON.stringify(data));
 
 export { Anime, Meta, Anilist, Jikan, HiAnime, AnimeKai, FlixHQ, TheMovieDatabase, TvMaze };
 // episode-1019968
