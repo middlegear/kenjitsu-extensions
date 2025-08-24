@@ -1,6 +1,23 @@
 import * as cheerio from 'cheerio';
-import { HiAnimeServers, type Anime, type EpisodeInfo, type AnimeInfo, type ServerInfo } from './types.js';
-import { extractSearchResults, extractAnimeInfo, extractEpisodesList, extractServerData } from './scraper.js';
+import {
+  HiAnimeServers,
+  type Anime,
+  type EpisodeInfo,
+  type AnimeInfo,
+  type ServerInfo,
+  type HomePage,
+  type Airing,
+  type TopAnime,
+} from './types.js';
+import {
+  extractSearchResults,
+  extractAnimeInfo,
+  extractEpisodesList,
+  extractServerData,
+  extractHomePage,
+  extractTopAiring,
+  extractAtoZlist,
+} from './scraper.js';
 import MegaCloud from '../../../source-extractors/megacloud.js';
 import { type ASource, SubOrDub } from '../../../types/types.js';
 import { FetchClient } from '../../../config/client.js';
@@ -93,7 +110,7 @@ export interface AnimeInfoError {
   error: string;
 }
 export type ZoroAnimeInfo = AnimeInfoSuccess | AnimeInfoError;
-export async function fetchAnimeInfo(animeId: string): Promise<ZoroAnimeInfo> {
+export async function fetchAnimeInfo(animeId: string) {
   if (!animeId.trim())
     return {
       data: null,
@@ -122,6 +139,7 @@ export async function fetchAnimeInfo(animeId: string): Promise<ZoroAnimeInfo> {
         data: null,
       };
     }
+
     return { data: res };
   } catch (error) {
     return {
@@ -341,6 +359,376 @@ export async function fetchEpisodeSources(
         Referer: null,
       },
       error: error instanceof Error ? error.message : 'Fatal Error',
+    };
+  }
+}
+export interface SuccessHomeRes {
+  data: HomePage;
+}
+export interface ErrorHomeRes {
+  data: null;
+  error: string;
+}
+export type HomeRes = SuccessHomeRes | ErrorHomeRes;
+export async function _fetchHomePage(): Promise<HomeRes> {
+  try {
+    const response = await client.get(`${zoroBaseUrl}/home`, {
+      headers: {
+        Referer: zoroBaseUrl,
+      },
+    });
+    if (!response.data) {
+      return {
+        error: response.statusText || 'Received empty response from server',
+        data: null,
+      };
+    }
+    const data$: cheerio.CheerioAPI = cheerio.load(response.data);
+    const homepage = extractHomePage(data$);
+
+    return { data: homepage };
+  } catch (error) {
+    return { data: null, error: error instanceof Error ? error.message : 'Unknown Error' };
+  }
+}
+export interface SuccessRepetiveRes {
+  data: Airing[];
+  topAnime?: { daily: TopAnime[]; weekly: TopAnime[]; monthly: TopAnime[] };
+  hasNextPage: boolean;
+  currentPage: number;
+  lastPage: number;
+}
+export interface ErrorRepetiveRes {
+  data: null;
+  error: string;
+  hasNextPage: boolean;
+  currentPage: number;
+  lastPage: number;
+}
+export type HianimeRepetitiveSections = SuccessRepetiveRes | ErrorRepetiveRes;
+export async function _fetchTopAiring(page: number): Promise<HianimeRepetitiveSections> {
+  try {
+    const response = await client.get(`${zoroBaseUrl}/top-airing`, {
+      params: {
+        page: String(page) || '1',
+      },
+    });
+    if (!response.data) {
+      return {
+        hasNextPage: false,
+        currentPage: 0,
+        lastPage: 0,
+        error: response.statusText || 'Received empty response from server',
+        data: null,
+      };
+    }
+
+    const data$ = cheerio.load(response.data);
+    const res = extractTopAiring(data$);
+    if (!Array.isArray(res.data) || res.data.length === 0) {
+      return {
+        hasNextPage: false,
+        currentPage: 0,
+        lastPage: 0,
+        error: 'Cheerio Error: No  results found',
+        data: null,
+      };
+    }
+    return {
+      hasNextPage: res.hasNextPage,
+      currentPage: res.currentPage as number,
+      lastPage: res.totalPages as number,
+      data: res.data,
+      topAnime: res.topAnime,
+    };
+  } catch (error) {
+    return {
+      data: null,
+      hasNextPage: false,
+      currentPage: 0,
+      lastPage: 0,
+      error: error instanceof Error ? error.message : 'Unknown Error',
+    };
+  }
+}
+export async function _fetchMostPopular(page: number): Promise<HianimeRepetitiveSections> {
+  try {
+    const response = await client.get(`${zoroBaseUrl}/most-popular`, {
+      params: {
+        page: String(page) || '1',
+      },
+    });
+    if (!response.data) {
+      return {
+        hasNextPage: false,
+        currentPage: 0,
+        lastPage: 0,
+        error: response.statusText || 'Received empty response from server',
+        data: null,
+      };
+    }
+
+    const data$ = cheerio.load(response.data);
+    const res = extractTopAiring(data$);
+    if (!Array.isArray(res.data) || res.data.length === 0) {
+      return {
+        hasNextPage: false,
+        currentPage: 0,
+        lastPage: 0,
+        error: 'Cheerio Error: No results found',
+        data: null,
+      };
+    }
+    return {
+      hasNextPage: res.hasNextPage,
+      currentPage: res.currentPage as number,
+      lastPage: res.totalPages as number,
+      data: res.data,
+      topAnime: res.topAnime,
+    };
+  } catch (error) {
+    return {
+      data: null,
+      hasNextPage: false,
+      currentPage: 0,
+      lastPage: 0,
+      error: error instanceof Error ? error.message : 'Unknown Error',
+    };
+  }
+}
+export async function _fetchFavourites(page: number): Promise<HianimeRepetitiveSections> {
+  try {
+    const response = await client.get(`${zoroBaseUrl}/most-favorite`, {
+      params: {
+        page: String(page) || '1',
+      },
+    });
+    if (!response.data) {
+      return {
+        hasNextPage: false,
+        currentPage: 0,
+        lastPage: 0,
+        error: response.statusText || 'Received empty response from server',
+        data: null,
+      };
+    }
+
+    const data$ = cheerio.load(response.data);
+    const res = extractTopAiring(data$);
+    if (!Array.isArray(res.data) || res.data.length === 0) {
+      return {
+        hasNextPage: false,
+        currentPage: 0,
+        lastPage: 0,
+        error: 'Cheerio Error: No  results found',
+        data: null,
+      };
+    }
+    return {
+      hasNextPage: res.hasNextPage,
+      currentPage: res.currentPage as number,
+      lastPage: res.totalPages as number,
+      data: res.data,
+      topAnime: res.topAnime,
+    };
+  } catch (error) {
+    return {
+      data: null,
+      hasNextPage: false,
+      currentPage: 0,
+      lastPage: 0,
+      error: error instanceof Error ? error.message : 'Unknown Error',
+    };
+  }
+}
+export async function _fetchRecentlyCompleted(page: number): Promise<HianimeRepetitiveSections> {
+  try {
+    const response = await client.get(`${zoroBaseUrl}/completed`, {
+      params: {
+        page: String(page) || '1',
+      },
+    });
+    if (!response.data) {
+      return {
+        hasNextPage: false,
+        currentPage: 0,
+        lastPage: 0,
+        error: response.statusText || 'Received empty response from server',
+        data: null,
+      };
+    }
+
+    const data$ = cheerio.load(response.data);
+    const res = extractTopAiring(data$);
+    if (!Array.isArray(res.data) || res.data.length === 0) {
+      return {
+        hasNextPage: false,
+        currentPage: 0,
+        lastPage: 0,
+        error: 'Cheerio Error: No  results found',
+        data: null,
+      };
+    }
+    return {
+      hasNextPage: res.hasNextPage,
+      currentPage: res.currentPage as number,
+      lastPage: res.totalPages as number,
+      data: res.data,
+      topAnime: res.topAnime,
+    };
+  } catch (error) {
+    return {
+      data: null,
+      hasNextPage: false,
+      currentPage: 0,
+      lastPage: 0,
+      error: error instanceof Error ? error.message : 'Unknown Error',
+    };
+  }
+}
+
+export async function _fetchRecentlyAdded(page: number): Promise<HianimeRepetitiveSections> {
+  try {
+    const response = await client.get(`${zoroBaseUrl}/recently-added`, {
+      params: {
+        page: String(page) || '1',
+      },
+    });
+    if (!response.data) {
+      return {
+        hasNextPage: false,
+        currentPage: 0,
+        lastPage: 0,
+        error: response.statusText || 'Received empty response from server',
+        data: null,
+      };
+    }
+
+    const data$ = cheerio.load(response.data);
+    const res = extractTopAiring(data$);
+    if (!Array.isArray(res.data) || res.data.length === 0) {
+      return {
+        hasNextPage: false,
+        currentPage: 0,
+        lastPage: 0,
+        error: 'Cheerio Error: No  results found',
+        data: null,
+      };
+    }
+    return {
+      hasNextPage: res.hasNextPage,
+      currentPage: res.currentPage as number,
+      lastPage: res.totalPages as number,
+      data: res.data,
+      topAnime: res.topAnime,
+    };
+  } catch (error) {
+    return {
+      data: null,
+      hasNextPage: false,
+      currentPage: 0,
+      lastPage: 0,
+      error: error instanceof Error ? error.message : 'Unknown Error',
+    };
+  }
+}
+export async function _fetchRecentlyUpdated(page: number): Promise<HianimeRepetitiveSections> {
+  try {
+    const response = await client.get(`${zoroBaseUrl}/recently-updated`, {
+      params: {
+        page: String(page) || '1',
+      },
+    });
+    if (!response.data) {
+      return {
+        hasNextPage: false,
+        currentPage: 0,
+        lastPage: 0,
+        error: response.statusText || 'Received empty response from server',
+        data: null,
+      };
+    }
+
+    const data$ = cheerio.load(response.data);
+    const res = extractTopAiring(data$);
+    if (!Array.isArray(res.data) || res.data.length === 0) {
+      return {
+        hasNextPage: false,
+        currentPage: 0,
+        lastPage: 0,
+        error: 'Cheerio Error: No  results found',
+        data: null,
+      };
+    }
+    return {
+      hasNextPage: res.hasNextPage,
+      currentPage: res.currentPage as number,
+      lastPage: res.totalPages as number,
+      data: res.data,
+      topAnime: res.topAnime,
+    };
+  } catch (error) {
+    return {
+      data: null,
+      hasNextPage: false,
+      currentPage: 0,
+      lastPage: 0,
+      error: error instanceof Error ? error.message : 'Unknown Error',
+    };
+  }
+}
+
+export async function _fetchAtoZList(sort?: any): Promise<HianimeRepetitiveSections> {
+  //
+  const sortValue = String(sort ?? '').trim();
+
+  const sortCategory = !sortValue
+    ? undefined
+    : !Number.isNaN(Number(sortValue))
+      ? '0-9'
+      : sortValue.length === 1
+        ? sortValue.toUpperCase()
+        : 'other';
+
+  const url = sortCategory ? `${zoroBaseUrl}/az-list/${sortCategory}` : `${zoroBaseUrl}/az-list`;
+
+  try {
+    const response = await client.get(url);
+    if (!response.data) {
+      return {
+        hasNextPage: false,
+        currentPage: 0,
+        lastPage: 0,
+        error: response.statusText || 'Received empty response from server',
+        data: null,
+      };
+    }
+
+    const data$ = cheerio.load(response.data);
+    const res = extractAtoZlist(data$);
+
+    if (!Array.isArray(res.data) || res.data.length === 0) {
+      return {
+        hasNextPage: false,
+        currentPage: 0,
+        lastPage: 0,
+        error: 'Cheerio Error: No results found',
+        data: null,
+      };
+    }
+    return {
+      hasNextPage: res.hasNextPage,
+      currentPage: res.currentPage as number,
+      lastPage: res.totalPages as number,
+      data: res.data,
+    };
+  } catch (error) {
+    return {
+      data: null,
+      hasNextPage: false,
+      currentPage: 0,
+      lastPage: 0,
+      error: error instanceof Error ? error.message : 'Unknown Error',
     };
   }
 }

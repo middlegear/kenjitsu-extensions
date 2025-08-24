@@ -1043,7 +1043,7 @@ async function getZoroProviderId(id: number): Promise<AnilistProviderId> {
           result.data?.map((item: any) => ({
             animeId: item.id,
             name: item.name,
-            romaji: item.romanji,
+            romaji: item.romaji,
             providerName: 'HiAnime',
           })) || []
         );

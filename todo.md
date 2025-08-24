@@ -26,3 +26,7 @@
 2. have a unified m3u8 format type 
 3. move all types to a folder called types 
 4. refactor error handling   
+
+// scraping hianime
+on the search page include mostpopular section
+rework on types

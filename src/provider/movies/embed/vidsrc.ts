@@ -18,7 +18,7 @@ async function _getRCP(hash: string) {
       },
     });
     /// shida  iko hapa
-    console.log(rcp.data);
+    // console.log(rcp.data);
 
     const frame$ = cheerio.load(rcp.data);
     const iframe = getFrame(frame$);

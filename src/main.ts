@@ -16,6 +16,15 @@ import {
   AnimeProvider,
 } from './types/index.js';
 import { getAnilistMapping } from './provider/meta/anizip/index.js';
+import {
+  _fetchAtoZList,
+  _fetchFavourites,
+  _fetchMostPopular,
+  _fetchRecentlyAdded,
+  _fetchRecentlyCompleted,
+  _fetchRecentlyUpdated,
+  _fetchTopAiring,
+} from './provider/anime/hianime/hianime.js';
 
 export {
   Seasons,
@@ -32,9 +41,11 @@ export {
   AnimeProvider,
 };
 
-// const zoro = new HiAnime();
-// const data = await zoro.fetchSources('dan-da-dan-season-2-19793-episode-141568', 'hd-2');
+const zoro = new HiAnime();
+const data = await zoro.fetchInfo('magical-project-s-4650');
 // console.log(JSON.stringify(data));
 
-export { Anime, Meta, Anilist, Jikan, HiAnime, AnimeKai, FlixHQ, TheMovieDatabase, TvMaze };
+// export { Anime, Meta, Anilist, Jikan, HiAnime, AnimeKai, FlixHQ, TheMovieDatabase, TvMaze };
 // episode-1019968
+// const data = await _fetchAtoZList();
+console.log(data);
