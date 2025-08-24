@@ -41,11 +41,11 @@ export {
   AnimeProvider,
 };
 
-const zoro = new HiAnime();
-const data = await zoro.fetchSources('solo-leveling-18718-episode-119497', HiAnimeServers.HD2, SubOrDub.DUB);
-console.log(JSON.stringify(data.syncData));
+// const zoro = new HiAnime();
+// const data = await zoro.fetchSources('solo-leveling-18718-episode-119497', HiAnimeServers.HD2, SubOrDub.DUB);
+// console.log(JSON.stringify(data.syncData));
 
-// export { Anime, Meta, Anilist, Jikan, HiAnime, AnimeKai, FlixHQ, TheMovieDatabase, TvMaze };
+export { Anime, Meta, Anilist, Jikan, HiAnime, AnimeKai, FlixHQ, TheMovieDatabase, TvMaze };
 // episode-1019968
 // const data = await _fetchAtoZList();
-console.log(data);
+// console.log(data);
