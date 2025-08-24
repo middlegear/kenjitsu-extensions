@@ -8,6 +8,9 @@ import {
   type HomePage,
   type Airing,
   type TopAnime,
+  type HRelatedAnime,
+  type HCharacters,
+  type RelatedSeasons,
 } from './types.js';
 import {
   extractSearchResults,
@@ -104,17 +107,32 @@ export async function searchAnime(query: string, page: number): Promise<SearchRe
 }
 export interface AnimeInfoSuccess {
   data: AnimeInfo;
+  recommendedAnime: Airing[];
+  mostPopular: HRelatedAnime[];
+  relatedAnime: HRelatedAnime[];
+  relatedSeasons: RelatedSeasons[]; //can be empty
+  characters: HCharacters[];
 }
 export interface AnimeInfoError {
   data: null;
+  recommendedAnime: [];
+  mostPopular: [];
+  relatedAnime: [];
+  relatedSeasons: []; //can be empty
+  characters: [];
   error: string;
 }
 export type ZoroAnimeInfo = AnimeInfoSuccess | AnimeInfoError;
-export async function fetchAnimeInfo(animeId: string) {
+export async function fetchAnimeInfo(animeId: string): Promise<ZoroAnimeInfo> {
   if (!animeId.trim())
     return {
       data: null,
       error: 'Missing required params :animeId',
+      recommendedAnime: [],
+      mostPopular: [],
+      relatedAnime: [],
+      relatedSeasons: [],
+      characters: [],
     };
 
   try {
@@ -124,22 +142,44 @@ export async function fetchAnimeInfo(animeId: string) {
       return {
         error: response.statusText || 'Server returned an empty response',
         data: null,
+        recommendedAnime: [],
+        mostPopular: [],
+        relatedAnime: [],
+        relatedSeasons: [], //can be empty
+        characters: [],
       };
 
     const $animeData = cheerio.load(response.data);
-    const { res } = extractAnimeInfo($animeData);
+    const { res, recomendations, mostPopular, relatedAnime, relatedSeasons, characters } = extractAnimeInfo($animeData);
     if (!res) {
       return {
         error: 'Scraper error: No AnimeInfo found',
         data: null,
+        recommendedAnime: [],
+        mostPopular: [],
+        relatedAnime: [],
+        relatedSeasons: [],
+        characters: [],
       };
     }
 
-    return { data: res };
+    return {
+      data: res,
+      recommendedAnime: recomendations,
+      mostPopular: mostPopular,
+      relatedAnime: relatedAnime,
+      relatedSeasons: relatedSeasons, //can be empty
+      characters: characters, // can be empty
+    };
   } catch (error) {
     return {
       data: null,
       error: error instanceof Error ? error.message : 'Fatal error',
+      recommendedAnime: [],
+      mostPopular: [],
+      relatedAnime: [],
+      relatedSeasons: [], //can be empty
+      characters: [],
     };
   }
 }
