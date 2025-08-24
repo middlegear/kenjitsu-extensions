@@ -42,8 +42,8 @@ export {
 };
 
 const zoro = new HiAnime();
-const data = await zoro.fetchInfo('jujutsu-kaisen-2nd-season-18413');
-// console.log(JSON.stringify(data));
+const data = await zoro.fetchSources('solo-leveling-18718-episode-119497', HiAnimeServers.HD2, SubOrDub.DUB);
+console.log(JSON.stringify(data.syncData));
 
 // export { Anime, Meta, Anilist, Jikan, HiAnime, AnimeKai, FlixHQ, TheMovieDatabase, TvMaze };
 // episode-1019968

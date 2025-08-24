@@ -292,16 +292,27 @@ export interface SuccessSourceRes {
   headers: {
     Referer: string;
   };
+  syncData?: {
+    anilistId?: string;
+    malId?: string;
+    name?: string;
+  };
 }
 export interface ErrorSourceRes {
   data: null;
   headers: {
     Referer: null;
   };
-
   error: string;
+  syncData?: {
+    anilistId?: string;
+    malId?: string;
+    name?: string;
+  };
 }
+
 export type HianimeSourceResponse = SuccessSourceRes | ErrorSourceRes;
+
 export async function fetchEpisodeSources(
   episodeId: string,
   server: HiAnimeServers,
@@ -332,12 +343,8 @@ export async function fetchEpisodeSources(
         };
     }
   }
-  try {
-    // console.log(link, mediadataId);
-    // const id = link.split('/').at(-1);
-    // console.log(id);
-    // const sources = puppeteer(id);
 
+  try {
     const findServerId = (servers: ServerInfo, category: SubOrDub, server: HiAnimeServers) => {
       const availableCategories: string[] = [];
       if (servers.sub?.length > 0) availableCategories.push('sub');
@@ -367,36 +374,63 @@ export async function fetchEpisodeSources(
     };
 
     const fetchedServers = (await fetchServers(episodeId)).data as ServerInfo;
+    if ('error' in fetchedServers) throw new Error(fetchedServers.error as string);
 
-    if ('error' in fetchedServers) {
-      throw new Error(fetchedServers.error as string);
-    }
     const serverId = findServerId(fetchedServers, category, server);
-
     const newId = episodeId.split('-').pop() as string;
 
-    const response = await client.get(`${zoroBaseUrl}/ajax/v2/episode/sources`, {
-      params: {
-        id: String(serverId),
-      },
+    const sourcesReq = client.get(`${zoroBaseUrl}/ajax/v2/episode/sources`, {
+      params: { id: String(serverId) },
       headers: {
         'X-Requested-With': 'XMLHttpRequest',
         Referer: `${zoroBaseUrl}/watch/?ep=${newId}`,
       },
     });
+
+    const newepisodeId = episodeId.replace(/-episode-\d+$/, '?ep=');
+    const baseId = episodeId.replace(/-episode-\d+$/, '');
+
+    const syncDataReq = client.get(`${zoroBaseUrl}/watch/${newepisodeId}`, {
+      headers: { Referer: `${zoroBaseUrl}/${baseId}` },
+    });
+
+    const [sourcesResult, syncResult] = await Promise.allSettled([sourcesReq, syncDataReq]);
+
+    if (sourcesResult.status === 'rejected') throw new Error(sourcesResult.reason);
+
+    const response = sourcesResult.value;
     if (!response.data) throw new Error(response.statusText);
 
-    return await fetchEpisodeSources(response.data.link, server, category);
+    let syncData: { anilistId?: string; malId?: string; name?: string } = {};
+    if (syncResult.status === 'fulfilled') {
+      const match = syncResult.value.data.match(/<script id="syncData" type="application\/json">([\s\S]*?)<\/script>/);
+      if (match) {
+        try {
+          const parsed = JSON.parse(match[1]);
+          syncData = {
+            anilistId: parsed.anilist_id,
+            malId: parsed.mal_id,
+            name: parsed.name,
+          };
+        } catch {
+          // ignore parse error, leave syncData empty
+        }
+      }
+    }
+
+    return {
+      ...(await fetchEpisodeSources(response.data.link, server, category)),
+      syncData,
+    };
   } catch (error) {
     return {
       data: null,
-      headers: {
-        Referer: null,
-      },
+      headers: { Referer: null },
       error: error instanceof Error ? error.message : 'Fatal Error',
     };
   }
 }
+
 export interface SuccessHomeRes {
   data: HomePage;
 }
