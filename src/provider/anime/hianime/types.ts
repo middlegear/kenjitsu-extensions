@@ -57,6 +57,13 @@ export type HRelatedAnime = {
   episodes: { sub: number | null; dub: number | null };
   totalEpisodes: number | null;
 };
+export type RelatedSeasons = {
+  id: string | null;
+  name: string | null;
+  season: string | null;
+  seasonPoster: string | null;
+};
+
 export type EpisodeInfo = {
   episodeId: string | null;
   episodeNumber: number | null;

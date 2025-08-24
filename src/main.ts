@@ -42,7 +42,7 @@ export {
 };
 
 const zoro = new HiAnime();
-const data = await zoro.fetchInfo('magical-project-s-4650');
+const data = await zoro.fetchInfo('jujutsu-kaisen-2nd-season-18413');
 // console.log(JSON.stringify(data));
 
 // export { Anime, Meta, Anilist, Jikan, HiAnime, AnimeKai, FlixHQ, TheMovieDatabase, TvMaze };

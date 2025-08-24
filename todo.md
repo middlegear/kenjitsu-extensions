@@ -21,12 +21,12 @@
 // console.log(data.data?.sources);
 
 
+// to do
 
-1. Fix errors that show missing valid params episodeId eg tales of god case for dub category(mostlikely in serverId)
 2. have a unified m3u8 format type 
 3. move all types to a folder called types 
-4. refactor error handling   
-
-// scraping hianime
-on the search page include mostpopular section
-rework on types
+4. refactor types for hianime new sections
+//jujutsu-kaisen-2nd-season-18413
+Bugs
+1. Most popular page inst being scraped for this animeid magical-project-s-4650'. This was caused by headers
+2.

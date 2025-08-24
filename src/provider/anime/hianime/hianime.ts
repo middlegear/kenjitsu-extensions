@@ -118,12 +118,7 @@ export async function fetchAnimeInfo(animeId: string) {
     };
 
   try {
-    const response = await client.get(`${zoroBaseUrl}/${animeId}`, {
-      headers: {
-        'X-Requested-With': 'XMLHttpRequest',
-        Referer: `${zoroBaseUrl}/watch/${animeId}`,
-      },
-    });
+    const response = await client.get(`${zoroBaseUrl}/${animeId}`);
 
     if (!response.data)
       return {

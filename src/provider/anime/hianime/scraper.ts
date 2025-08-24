@@ -7,6 +7,7 @@ import type {
   Featured,
   HCharacters,
   HRelatedAnime,
+  RelatedSeasons,
   ServerInfo,
   Spotlight,
   TopAnime,
@@ -170,7 +171,6 @@ export function extractAnimeInfo($: cheerio.CheerioAPI) {
     });
   });
 
-  //related anime
   const relatedAnime: HRelatedAnime[] = [];
   const relatedAnimeSelector: cheerio.SelectorType =
     '#main-sidebar section.block_area.block_area_sidebar.block_area-realtime:has(h2.cat-heading:contains("Related")) div.anif-block-ul > ul.ulclear > li';
@@ -200,27 +200,24 @@ export function extractAnimeInfo($: cheerio.CheerioAPI) {
     });
   });
 
-  //mostpopular broken
   const mostPopular: HRelatedAnime[] = [];
   const mostPopularSelector: cheerio.SelectorType =
-    '#main-sidebar section.block_area.block_area_sidebar.block_area-realtime div.anif-block-ul > ul.ulclear > li';
+    '#main-sidebar section.block_area.block_area_sidebar.block_area-realtime:has(.bah-heading > h2.cat-heading:contains("Most Popular")) div.anif-block-ul > ul.ulclear > li';
 
   $(mostPopularSelector).each((_, element) => {
     mostPopular.push({
       id: $(element).find('h3.film-name a.dynamic-name').attr('href')?.split('/').at(1) || null,
       name: $(element).find('h3.film-name a.dynamic-name').text().trim() || null,
       romaji: $(element).find('div.film-detail a.dynamic-name').attr('data-jname') || null,
-
       type:
         $(element)
           .find('div.fd-infor.mt-2 > div.tick')
           .contents()
           .filter(function () {
-            return this.type === 'text'; // only direct text node like "TV", "Movie", etc.
+            return this.type === 'text';
           })
           .text()
           .trim() || null,
-
       posterImage: $(element).find('div.film-poster img.film-poster-img').attr('data-src') || null,
       episodes: {
         sub: Number($(element).find('div.tick > div.tick-sub:has(.fa-closed-captioning)').text().trim()) || null,
@@ -229,9 +226,20 @@ export function extractAnimeInfo($: cheerio.CheerioAPI) {
       totalEpisodes: Number($(element).find('div.tick > div.tick-eps').text().trim()) || null,
     });
   });
-  console.log(mostPopular, relatedAnime);
 
-  return { res };
+  const relatedSeasonsSelector: cheerio.SelectorType =
+    'div.container > div#main-content > section.block_area.block_area-seasons div.os-list';
+  const relatedSeasons: RelatedSeasons[] = [];
+  $(relatedSeasonsSelector).each((_, element) => {
+    relatedSeasons.push({
+      id: $(element).find('a.os-item').attr('href')?.split('/').at(1) || null,
+      name: $(element).find('a.os-item').attr('title') || null,
+      season: $(element).find('div.title').text() || null,
+      seasonPoster: $(element).find('div.season-poster').attr('style') || null,
+    });
+  });
+
+  return { res, recomendations, mostPopular, relatedAnime, relatedSeasons, characters };
 }
 
 export function extractEpisodesList($: cheerio.CheerioAPI, selector: cheerio.SelectorType) {
