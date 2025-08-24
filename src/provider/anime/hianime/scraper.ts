@@ -1,23 +1,21 @@
 import * as cheerio from 'cheerio';
 import type {
-  Airing,
-  Anime,
-  AnimeInfo,
   EpisodeInfo,
-  Featured,
+  IFeatured,
   HCharacters,
-  HRelatedAnime,
+  IAnime,
+  IAnimeInfo,
+  ISpotlight,
+  ITopAnime,
+  ITrending,
   RelatedSeasons,
   ServerInfo,
-  Spotlight,
-  TopAnime,
-  Trending,
 } from './types.js';
 import { SubOrDub } from '../../index.js';
 import { zoroBaseUrl } from './hianime.js';
 
 export function extractSearchResults($: cheerio.CheerioAPI, selector: cheerio.SelectorType) {
-  const anime: Anime[] = [];
+  const anime: IAnime[] = [];
 
   $(selector).each((_, element) => {
     const id = $(element)
@@ -33,14 +31,18 @@ export function extractSearchResults($: cheerio.CheerioAPI, selector: cheerio.Se
       name: $(element).find('.film-detail .film-name .dynamic-name').text().trim() || null,
       romaji: $(element).find('.film-detail .film-name .dynamic-name').attr('data-jname') || null,
       posterImage: $(element).find(' .film-poster .film-poster-img').attr('data-src') || null,
-      url: $(element).find('.film-detail .film-name .dynamic-name').attr('href') || null,
+      url: `${zoroBaseUrl}${$(element).find('.film-detail .film-name .dynamic-name').attr('href')}` || null,
       duration: $(element).find('.fd-infor .fdi-item.fdi-duration').text().trim() || null,
       type: $(element).find('.fd-infor .fdi-item:nth-of-type(1)').text().trim() || null,
       rating: $(element).find('.film-poster .tick.tick-rate').text().trim() || null,
       episodes: {
-        sub: Number($(element).find('.film-poster .tick .tick-sub').text()),
-        dub: Number($(element).find('.film-poster .tick .tick-dub').text()),
+        sub: Number($(element).find('.film-poster .tick .tick-sub').text()) || null,
+        dub:
+          Number($(element).find('.film-poster .tick .tick-dub').text()) ||
+          Number($(element).find('.film-poster .tick .tick-sub').text()) ||
+          null,
       },
+      totalEpisodes: Number($(element).find('.film-poster .tick .tick-eps').text() || null),
     });
   });
 
@@ -64,9 +66,10 @@ export function extractSearchResults($: cheerio.CheerioAPI, selector: cheerio.Se
 }
 
 export function extractAnimeInfo($: cheerio.CheerioAPI) {
-  const res: AnimeInfo = {
-    animeId: null,
+  const res: IAnimeInfo = {
+    id: null,
     name: null,
+    url: null,
     romaji: null,
     anilistId: null,
     malId: null,
@@ -74,7 +77,7 @@ export function extractAnimeInfo($: cheerio.CheerioAPI) {
     quality: null,
     altnames: null,
     japanese: null,
-    airDate: null,
+    startDate: null,
     studios: null,
     malScore: null,
     producers: null,
@@ -93,7 +96,7 @@ export function extractAnimeInfo($: cheerio.CheerioAPI) {
   const selector: cheerio.SelectorType = '.ani_detail-stage .anis-content ';
   const section = $(selector);
 
-  res.animeId = section?.find('.film-buttons .btn')?.attr('href')?.split('/')?.at(-1) || null;
+  res.id = section?.find('.film-buttons .btn')?.attr('href')?.split('/')?.at(-1) || null;
   res.name = $(selector)?.find('.anisc-detail .film-name.dynamic-name')?.text()?.trim() || null;
   res.japanese = $(selector).find('div.item.item-title  span.name:first').text().trim() || null;
   res.romaji = $(selector).find('h2.film-name.dynamic-name').attr('data-jname') || null;
@@ -101,7 +104,7 @@ export function extractAnimeInfo($: cheerio.CheerioAPI) {
   res.rating = $(selector).find('div.tick-item.tick-pg').text().trim() || null;
   res.producers = $(selector).find('div.film-text.m-hide  a.name strong').text().trim() || null;
   res.altnames = $(selector).find('div.item.item-title  span.name:eq(1)').text().trim() || null;
-  res.airDate = $(selector).find('div.item.item-title  span.name:eq(2)').text().trim() || null;
+  res.startDate = $(selector).find('div.item.item-title  span.name:eq(2)').text().trim() || null;
   res.status = $(selector).find('div.item.item-title  span.name:eq(5)').text().trim() || null;
   res.malScore = $(selector).find('div.item.item-title  span.name:last').text().trim() || null; /// check this though
   const { mal_id, anilist_id } = JSON.parse($('#syncData').text().trim());
@@ -124,7 +127,8 @@ export function extractAnimeInfo($: cheerio.CheerioAPI) {
   res.totalEpisodes = Number(section?.find('.tick .tick-item.tick-eps')?.text().trim() || res.episodes.sub || null);
   res.type = $('span.item').last().prev().prev().text().toUpperCase().trim() || null;
   const duration = $('span.item').last().text().trim();
-  res.duration = parseInt(duration);
+  res.duration = duration;
+  res.url = `${zoroBaseUrl}${section?.find('.film-buttons .btn')?.attr('href')}` || null;
 
   const characters: HCharacters[] = [];
   const charactersSelector = 'div.block-actors-content > div.bac-list-wrap > div.bac-item';
@@ -149,14 +153,14 @@ export function extractAnimeInfo($: cheerio.CheerioAPI) {
     });
   });
 
-  //recomendations - works fine
-  const recomendations: Airing[] = [];
+  const recomendations: IAnime[] = [];
   const recommendationsSelector: cheerio.SelectorType =
     'section.block_area.block_area_category div.tab-content div.film_list-wrap > div.flw-item';
 
   $(recommendationsSelector).each((_, element) => {
     recomendations.push({
       id: $(element).find('a.film-poster-ahref').attr('href')?.split('/').at(2) || null,
+      url: `${zoroBaseUrl}${$(element).find('a.film-poster-ahref').attr('href')}` || null,
       name: $(element).find('a.film-poster-ahref').attr('title') || null,
       romaji: $(element).find('div.film-detail  a.dynamic-name').attr('data-jname') || null,
       type: $(element).find('div.fd-infor span.fdi-item:first').text().trim() || null,
@@ -167,11 +171,14 @@ export function extractAnimeInfo($: cheerio.CheerioAPI) {
         sub: Number($(element).find('div.tick > div.tick-sub:has(.fa-closed-captioning)').text().trim()) || null,
         dub: Number($(element).find('div.tick > div.tick-dub:has(.fa-microphone)').text().trim()) || null,
       },
-      totalEpisodes: Number($(element).find('div.tick > div.tick-eps').text().trim()) || null,
+      totalEpisodes:
+        Number($(element).find('div.tick > div.tick-eps').text().trim()) ||
+        Number($(element).find('div.tick > div.tick-sub:has(.fa-closed-captioning)').text().trim()) ||
+        null,
     });
   });
 
-  const relatedAnime: HRelatedAnime[] = [];
+  const relatedAnime: IFeatured[] = [];
   const relatedAnimeSelector: cheerio.SelectorType =
     '#main-sidebar section.block_area.block_area_sidebar.block_area-realtime:has(h2.cat-heading:contains("Related")) div.anif-block-ul > ul.ulclear > li';
 
@@ -180,7 +187,7 @@ export function extractAnimeInfo($: cheerio.CheerioAPI) {
       id: $(element).find('h3.film-name a.dynamic-name').attr('href')?.split('/').at(1) || null,
       name: $(element).find('h3.film-name a.dynamic-name').text().trim() || null,
       romaji: $(element).find('div.film-detail a.dynamic-name').attr('data-jname') || null,
-
+      url: `${zoroBaseUrl}${$(element).find('h3.film-name a.dynamic-name').attr('href')}` || null,
       type:
         $(element)
           .find('div.fd-infor.mt-2 > div.tick')
@@ -196,11 +203,14 @@ export function extractAnimeInfo($: cheerio.CheerioAPI) {
         sub: Number($(element).find('div.tick > div.tick-sub:has(.fa-closed-captioning)').text().trim()) || null,
         dub: Number($(element).find('div.tick > div.tick-dub:has(.fa-microphone)').text().trim()) || null,
       },
-      totalEpisodes: Number($(element).find('div.tick > div.tick-eps').text().trim()) || null,
+      totalEpisodes:
+        Number($(element).find('div.tick > div.tick-eps').text().trim()) ||
+        Number($(element).find('div.tick > div.tick-sub:has(.fa-closed-captioning)').text().trim()) ||
+        null,
     });
   });
 
-  const mostPopular: HRelatedAnime[] = [];
+  const mostPopular: IFeatured[] = [];
   const mostPopularSelector: cheerio.SelectorType =
     '#main-sidebar section.block_area.block_area_sidebar.block_area-realtime:has(.bah-heading > h2.cat-heading:contains("Most Popular")) div.anif-block-ul > ul.ulclear > li';
 
@@ -209,6 +219,7 @@ export function extractAnimeInfo($: cheerio.CheerioAPI) {
       id: $(element).find('h3.film-name a.dynamic-name').attr('href')?.split('/').at(1) || null,
       name: $(element).find('h3.film-name a.dynamic-name').text().trim() || null,
       romaji: $(element).find('div.film-detail a.dynamic-name').attr('data-jname') || null,
+      url: `${zoroBaseUrl}${$(element).find('h3.film-name a.dynamic-name').attr('href')}` || null,
       type:
         $(element)
           .find('div.fd-infor.mt-2 > div.tick')
@@ -221,7 +232,10 @@ export function extractAnimeInfo($: cheerio.CheerioAPI) {
       posterImage: $(element).find('div.film-poster img.film-poster-img').attr('data-src') || null,
       episodes: {
         sub: Number($(element).find('div.tick > div.tick-sub:has(.fa-closed-captioning)').text().trim()) || null,
-        dub: Number($(element).find('div.tick > div.tick-dub:has(.fa-microphone)').text().trim()) || null,
+        dub:
+          Number($(element).find('div.tick > div.tick-dub:has(.fa-microphone)').text().trim()) ||
+          Number($(element).find('div.tick > div.tick-sub:has(.fa-closed-captioning)').text().trim()) ||
+          null,
       },
       totalEpisodes: Number($(element).find('div.tick > div.tick-eps').text().trim()) || null,
     });
@@ -239,7 +253,7 @@ export function extractAnimeInfo($: cheerio.CheerioAPI) {
     });
   });
 
-  return { res, recomendations, mostPopular, relatedAnime, relatedSeasons, characters };
+  return { res, recomendations, mostPopular, relatedSeasons, relatedAnime, characters };
 }
 
 export function extractEpisodesList($: cheerio.CheerioAPI, selector: cheerio.SelectorType) {
@@ -306,12 +320,15 @@ export function extractAnimeServerId($: cheerio.CheerioAPI, servernumber: Number
 
 export function extractHomePage($: cheerio.CheerioAPI) {
   const selector: cheerio.SelectorType = 'div#slider  div.deslide-item';
-  const spotlight: Spotlight[] = [];
+  const spotlight: ISpotlight[] = [];
   $(selector).each((_, element) => {
     spotlight.push({
       spotlight: $(element).find('div.deslide-item-content > div.desi-sub-text').text().trim() || null,
       id:
         $(element).find('div.deslide-item-content > div.desi-buttons > a.btn-secondary').attr('href')?.split('/').at(1) ||
+        null,
+      url:
+        `${zoroBaseUrl}${$(element).find('div.deslide-item-content > div.desi-buttons > a.btn-secondary').attr('href')}` ||
         null,
       name: $(element).find('div.deslide-item-content > div.desi-head-title').text().trim() || null,
       romaji: $(element).find('div.deslide-item-content > div.desi-head-title').attr('data-jname') || null,
@@ -347,17 +364,27 @@ export function extractHomePage($: cheerio.CheerioAPI) {
       totalEpisodes:
         Number(
           $(element).find('div.deslide-item-content > div.sc-detail > div.scd-item > div.tick > div.tick-eps').text().trim(),
-        ) || null,
+        ) ||
+        Number(
+          $(element)
+            .find(
+              'div.deslide-item-content > div.sc-detail > div.scd-item > div.tick > div.tick-sub:has(.fa-closed-captioning)',
+            )
+            .text()
+            .trim(),
+        ) ||
+        null ||
+        null,
     });
   });
 
-  const trending: Trending[] = [];
+  const trending: ITrending[] = [];
   const trendingSelector: cheerio.SelectorType = 'div#anime-trending .swiper-slide';
 
   $(trendingSelector).each((_, element) => {
     trending.push({
       id: $(element).find('a.film-poster').attr('href')?.split('/').at(1) || null,
-      number: Number($(element).find('div.number > span').text().trim()) || null,
+      // number: Number($(element).find('div.number > span').text().trim()) || null,
       name: $(element).find('div.film-title').text().trim() || null,
       romaji: $(element).find('div.film-title').attr('data-jname') || null,
       posterImage: $(element).find('a.film-poster > img.film-poster-img').attr('data-src') || null,
@@ -365,7 +392,7 @@ export function extractHomePage($: cheerio.CheerioAPI) {
   });
 
   // Featured section
-  const topAiring: Featured[] = [];
+  const topAiring: IFeatured[] = [];
 
   const topAiringSelector: cheerio.SelectorType = 'div#anime-featured .anif-block-01 li';
 
@@ -374,15 +401,20 @@ export function extractHomePage($: cheerio.CheerioAPI) {
       id: $(element).find('div.film-poster > a').attr('href')?.split('/').at(1) || null,
       name: $(element).find('div.film-detail  a.dynamic-name').text().trim() || null,
       romaji: $(element).find('div.film-detail a.dynamic-name').attr('data-jname') || null,
+      url: `${zoroBaseUrl}${$(element).find('div.film-poster > a').attr('href')}` || null,
       posterImage: $(element).find('div.film-poster  img.film-poster-img').attr('data-src') || null,
       type: $(element).find(' div.tick span.fdi-item').text().trim() || null,
       episodes: {
         sub: Number($(element).find('div.tick > div.tick-sub:has(.fa-closed-captioning)').text().trim()) || null,
-        dub: Number($(element).find('div.tick > div.tick-dub:has(.fa-microphone)').text().trim()) || null,
+        dub:
+          Number($(element).find('div.tick > div.tick-dub:has(.fa-microphone)').text().trim()) ||
+          Number($(element).find('div.tick > div.tick-sub:has(.fa-closed-captioning)').text().trim()) ||
+          null,
       },
+      totalEpisodes: Number($(element).find('div.tick > div.tick-eps').text().trim()) || null,
     });
   });
-  const mostPopular: Featured[] = [];
+  const mostPopular: IFeatured[] = [];
 
   const mostPopularSelector: cheerio.SelectorType = 'div#anime-featured .anif-block-03 li';
 
@@ -391,15 +423,20 @@ export function extractHomePage($: cheerio.CheerioAPI) {
       id: $(element).find('div.film-poster > a').attr('href')?.split('/').at(1) || null,
       name: $(element).find('div.film-detail  a.dynamic-name').text().trim() || null,
       romaji: $(element).find('div.film-detail a.dynamic-name').attr('data-jname') || null,
+      url: `${zoroBaseUrl}${$(element).find('div.film-poster > a').attr('href')}` || null,
       posterImage: $(element).find('div.film-poster  img.film-poster-img').attr('data-src') || null,
       type: $(element).find(' div.tick span.fdi-item').text().trim() || null,
       episodes: {
         sub: Number($(element).find('div.tick > div.tick-sub:has(.fa-closed-captioning)').text().trim()) || null,
         dub: Number($(element).find('div.tick > div.tick-dub:has(.fa-microphone)').text().trim()) || null,
       },
+      totalEpisodes:
+        Number($(element).find('div.tick > div.tick-eps').text().trim()) ||
+        Number($(element).find('div.tick > div.tick-sub:has(.fa-closed-captioning)').text().trim()) ||
+        null,
     });
   });
-  const favourites: Featured[] = [];
+  const favourites: IFeatured[] = [];
 
   const favouritesSelector: cheerio.SelectorType = 'div#anime-featured .anif-block-02:first li';
 
@@ -408,16 +445,21 @@ export function extractHomePage($: cheerio.CheerioAPI) {
       id: $(element).find('div.film-poster > a').attr('href')?.split('/').at(1) || null,
       name: $(element).find('div.film-detail  a.dynamic-name').text().trim() || null,
       romaji: $(element).find('div.film-detail a.dynamic-name').attr('data-jname') || null,
+      url: `${zoroBaseUrl}${$(element).find('div.film-poster > a').attr('href')}` || null,
       posterImage: $(element).find('div.film-poster  img.film-poster-img').attr('data-src') || null,
       type: $(element).find(' div.tick span.fdi-item').text().trim() || null,
       episodes: {
         sub: Number($(element).find('div.tick > div.tick-sub:has(.fa-closed-captioning)').text().trim()) || null,
         dub: Number($(element).find('div.tick > div.tick-dub:has(.fa-microphone)').text().trim()) || null,
       },
+      totalEpisodes:
+        Number($(element).find('div.tick > div.tick-eps').text().trim()) ||
+        Number($(element).find('div.tick > div.tick-sub:has(.fa-closed-captioning)').text().trim()) ||
+        null,
     });
   });
 
-  const recentlyCompleted: Featured[] = [];
+  const recentlyCompleted: IFeatured[] = [];
   const completedSelector: cheerio.SelectorType = 'div#anime-featured .anif-block-02:last li';
 
   $(completedSelector).each((_, element) => {
@@ -425,16 +467,21 @@ export function extractHomePage($: cheerio.CheerioAPI) {
       id: $(element).find('div.film-poster > a').attr('href')?.split('/').at(1) || null,
       name: $(element).find('div.film-detail  a.dynamic-name').text().trim() || null,
       romaji: $(element).find('div.film-detail a.dynamic-name').attr('data-jname') || null,
+      url: `${zoroBaseUrl}${$(element).find('div.film-poster > a').attr('href')}` || null,
       posterImage: $(element).find('div.film-poster  img.film-poster-img').attr('data-src') || null,
       type: $(element).find(' div.tick span.fdi-item').text().trim() || null,
       episodes: {
         sub: Number($(element).find('div.tick > div.tick-sub:has(.fa-closed-captioning)').text().trim()) || null,
         dub: Number($(element).find('div.tick > div.tick-dub:has(.fa-microphone)').text().trim()) || null,
       },
+      totalEpisodes:
+        Number($(element).find('div.tick > div.tick-eps').text().trim()) ||
+        Number($(element).find('div.tick > div.tick-sub:has(.fa-closed-captioning)').text().trim()) ||
+        null,
     });
   });
 
-  const recentlyUpdated: Featured[] = [];
+  const recentlyUpdated: IAnime[] = [];
 
   const recentlyUpdatedSelector: cheerio.SelectorType =
     'div#main-content section.block_area:first div.tab-content div.flw-item ';
@@ -447,15 +494,19 @@ export function extractHomePage($: cheerio.CheerioAPI) {
       type: $(element).find('div.fd-infor span.fdi-item:first').text().trim() || null,
       duration: $(element).find('div.fd-infor span.fdi-duration').text().trim() || null,
       posterImage: $(element).find('div.film-poster  img.film-poster-img').attr('data-src') || null,
-      href: `${zoroBaseUrl}${$(element).find('div.film-poster  a.film-poster-ahref ').attr('href')}` || null,
+      url: `${zoroBaseUrl}${$(element).find('div.film-poster  a.film-poster-ahref ').attr('href')}` || null,
       episodes: {
         sub: Number($(element).find('div.tick > div.tick-sub:has(.fa-closed-captioning)').text().trim()) || null,
         dub: Number($(element).find('div.tick > div.tick-dub:has(.fa-microphone)').text().trim()) || null,
       },
+      totalEpisodes:
+        Number($(element).find('div.tick > div.tick-eps').text().trim()) ||
+        Number($(element).find('div.tick > div.tick-sub:has(.fa-closed-captioning)').text().trim()) ||
+        null,
     });
   });
 
-  const topUpcoming: Featured[] = [];
+  const topUpcoming: IAnime[] = [];
 
   const topUpcomingSelector: cheerio.SelectorType = 'div#main-content section.block_area:last div.tab-content div.flw-item ';
 
@@ -467,15 +518,19 @@ export function extractHomePage($: cheerio.CheerioAPI) {
       type: $(element).find('div.fd-infor span.fdi-item:first').text().trim() || null,
       duration: $(element).find('div.fd-infor span.fdi-duration').text().trim() || null,
       posterImage: $(element).find('div.film-poster  img.film-poster-img').attr('data-src') || null,
-      href: `${zoroBaseUrl}${$(element).find('div.film-poster  a.film-poster-ahref ').attr('href')}` || null,
+      url: `${zoroBaseUrl}${$(element).find('div.film-poster  a.film-poster-ahref ').attr('href')}` || null,
       episodes: {
         sub: Number($(element).find('div.tick > div.tick-sub:has(.fa-closed-captioning)').text().trim()) || null,
         dub: Number($(element).find('div.tick > div.tick-dub:has(.fa-microphone)').text().trim()) || null,
       },
+      totalEpisodes:
+        Number($(element).find('div.tick > div.tick-eps').text().trim()) ||
+        Number($(element).find('div.tick > div.tick-sub:has(.fa-closed-captioning)').text().trim()) ||
+        null,
     });
   });
 
-  const recentlyAdded: Featured[] = [];
+  const recentlyAdded: IAnime[] = [];
 
   const recentlyAddedSelector: cheerio.SelectorType =
     'div#main-content section.block_area:eq(1) div.tab-content div.flw-item ';
@@ -488,17 +543,21 @@ export function extractHomePage($: cheerio.CheerioAPI) {
       type: $(element).find('div.fd-infor span.fdi-item:first').text().trim() || null,
       duration: $(element).find('div.fd-infor span.fdi-duration').text().trim() || null,
       posterImage: $(element).find('div.film-poster  img.film-poster-img').attr('data-src') || null,
-      href: `${zoroBaseUrl}${$(element).find('div.film-poster  a.film-poster-ahref ').attr('href')}` || null,
+      url: `${zoroBaseUrl}${$(element).find('div.film-poster  a.film-poster-ahref ').attr('href')}` || null,
       episodes: {
         sub: Number($(element).find('div.tick > div.tick-sub:has(.fa-closed-captioning)').text().trim()) || null,
         dub: Number($(element).find('div.tick > div.tick-dub:has(.fa-microphone)').text().trim()) || null,
       },
+      totalEpisodes:
+        Number($(element).find('div.tick > div.tick-eps').text().trim()) ||
+        Number($(element).find('div.tick > div.tick-sub:has(.fa-closed-captioning)').text().trim()) ||
+        null,
     });
   });
 
-  const topDailyAnime: TopAnime[] = [];
-  const topWeeklyAnime: TopAnime[] = [];
-  const topMonthlyAnime: TopAnime[] = [];
+  const topDailyAnime: ITopAnime[] = [];
+  const topWeeklyAnime: ITopAnime[] = [];
+  const topMonthlyAnime: ITopAnime[] = [];
 
   const topDailySelector: cheerio.SelectorType = 'div#main-sidebar div#top-viewed-day li';
   const topWeeklySelector: cheerio.SelectorType = 'div#main-sidebar div#top-viewed-week li';
@@ -506,7 +565,7 @@ export function extractHomePage($: cheerio.CheerioAPI) {
 
   $(topDailySelector).each((_, element) => {
     topDailyAnime.push({
-      number: Number($(element).find('div.film-number span').text().trim()) || null,
+      // number: Number($(element).find('div.film-number span').text().trim()) || null,
       id: $(element).find('div.film-detail  a.dynamic-name').attr('href')?.split('/').at(1) || null,
       name: $(element).find('div.film-detail  a.dynamic-name').text().trim() || null,
       romaji: $(element).find('div.film-detail  a.dynamic-name').attr('data-jname') || null,
@@ -515,11 +574,15 @@ export function extractHomePage($: cheerio.CheerioAPI) {
         sub: Number($(element).find('div.tick > div.tick-sub:has(.fa-closed-captioning)').text().trim()) || null,
         dub: Number($(element).find('div.tick > div.tick-dub:has(.fa-microphone)').text().trim()) || null,
       },
+      totalEpisodes:
+        Number($(element).find('div.tick > div.tick-eps').text().trim()) ||
+        Number($(element).find('div.tick > div.tick-sub:has(.fa-closed-captioning)').text().trim()) ||
+        null,
     });
   });
   $(topWeeklySelector).each((_, element) => {
     topWeeklyAnime.push({
-      number: Number($(element).find('div.film-number span').text().trim()) || null,
+      // number: Number($(element).find('div.film-number span').text().trim()) || null,
       id: $(element).find('div.film-detail  a.dynamic-name').attr('href')?.split('/').at(1) || null,
       name: $(element).find('div.film-detail  a.dynamic-name').text().trim() || null,
       romaji: $(element).find('div.film-detail  a.dynamic-name').attr('data-jname') || null,
@@ -528,11 +591,15 @@ export function extractHomePage($: cheerio.CheerioAPI) {
         sub: Number($(element).find('div.tick > div.tick-sub:has(.fa-closed-captioning)').text().trim()) || null,
         dub: Number($(element).find('div.tick > div.tick-dub:has(.fa-microphone)').text().trim()) || null,
       },
+      totalEpisodes:
+        Number($(element).find('div.tick > div.tick-eps').text().trim()) ||
+        Number($(element).find('div.tick > div.tick-sub:has(.fa-closed-captioning)').text().trim()) ||
+        null,
     });
   });
   $(topMonthlySelector).each((_, element) => {
     topMonthlyAnime.push({
-      number: Number($(element).find('div.film-number span').text().trim()) || null,
+      // number: Number($(element).find('div.film-number span').text().trim()) || null,
       id: $(element).find('div.film-detail  a.dynamic-name').attr('href')?.split('/').at(1) || null,
       name: $(element).find('div.film-detail  a.dynamic-name').text().trim() || null,
       romaji: $(element).find('div.film-detail  a.dynamic-name').attr('data-jname') || null,
@@ -541,6 +608,10 @@ export function extractHomePage($: cheerio.CheerioAPI) {
         sub: Number($(element).find('div.tick > div.tick-sub:has(.fa-closed-captioning)').text().trim()) || null,
         dub: Number($(element).find('div.tick > div.tick-dub:has(.fa-microphone)').text().trim()) || null,
       },
+      totalEpisodes:
+        Number($(element).find('div.tick > div.tick-eps').text().trim()) ||
+        Number($(element).find('div.tick > div.tick-sub:has(.fa-closed-captioning)').text().trim()) ||
+        null,
     });
   });
 
@@ -566,21 +637,25 @@ export function extractHomePage($: cheerio.CheerioAPI) {
 export function extractTopAiring($: cheerio.CheerioAPI) {
   //
   const topAiringSelector: cheerio.SelectorType = 'div#main-content section.block_area_category div.flw-item';
-  const data: Airing[] = [];
+  const data: IAnime[] = [];
 
   $(topAiringSelector).each((_, element) => {
     data.push({
       id: $(element).find('a.film-poster-ahref').attr('href')?.split('/').at(1) || null,
       name: $(element).find('a.film-poster-ahref').attr('title') || null,
       romaji: $(element).find('div.film-detail  a.dynamic-name').attr('data-jname') || null,
+      url: `${zoroBaseUrl}${$(element).find('a.film-poster-ahref').attr('href')}` || null,
       type: $(element).find('div.fd-infor span.fdi-item:first').text().trim() || null,
       duration: $(element).find('div.fd-infor span.fdi-duration').text().trim() || null,
       posterImage: $(element).find('div.film-poster  img.film-poster-img').attr('data-src') || null,
-      synopsis: $(element).find('div.description').text().trim() || null,
+      // synopsis: $(element).find('div.description').text().trim() || null,
       rating: $(element).find('div.tick-rate').text().trim() || null,
       episodes: {
         sub: Number($(element).find('div.tick > div.tick-sub:has(.fa-closed-captioning)').text().trim()) || null,
-        dub: Number($(element).find('div.tick > div.tick-dub:has(.fa-microphone)').text().trim()) || null,
+        dub:
+          Number($(element).find('div.tick > div.tick-dub:has(.fa-microphone)').text().trim()) ||
+          Number($(element).find('div.tick > div.tick-sub:has(.fa-closed-captioning)').text().trim()) ||
+          null,
       },
       totalEpisodes: Number($(element).find('div.tick > div.tick-eps').text().trim()) || null,
     });
@@ -597,9 +672,9 @@ export function extractTopAiring($: cheerio.CheerioAPI) {
     Number(paginationElement.find('a.page-link[title="Last"]').attr('href')?.split('page=').at(-1) || 1) || null;
 
   //sidebar
-  const topDailyAnime: TopAnime[] = [];
-  const topWeeklyAnime: TopAnime[] = [];
-  const topMonthlyAnime: TopAnime[] = [];
+  const topDailyAnime: ITopAnime[] = [];
+  const topWeeklyAnime: ITopAnime[] = [];
+  const topMonthlyAnime: ITopAnime[] = [];
 
   const topDailySelector: cheerio.SelectorType = 'div#main-sidebar div#top-viewed-day li';
   const topWeeklySelector: cheerio.SelectorType = 'div#main-sidebar div#top-viewed-week li';
@@ -607,7 +682,7 @@ export function extractTopAiring($: cheerio.CheerioAPI) {
 
   $(topDailySelector).each((_, element) => {
     topDailyAnime.push({
-      number: Number($(element).find('div.film-number span').text().trim()) || null,
+      // number: Number($(element).find('div.film-number span').text().trim()) || null,
       id: $(element).find('div.film-detail  a.dynamic-name').attr('href')?.split('/').at(1) || null,
       name: $(element).find('div.film-detail  a.dynamic-name').text().trim() || null,
       romaji: $(element).find('div.film-detail  a.dynamic-name').attr('data-jname') || null,
@@ -616,11 +691,15 @@ export function extractTopAiring($: cheerio.CheerioAPI) {
         sub: Number($(element).find('div.tick > div.tick-sub:has(.fa-closed-captioning)').text().trim()) || null,
         dub: Number($(element).find('div.tick > div.tick-dub:has(.fa-microphone)').text().trim()) || null,
       },
+      totalEpisodes:
+        Number($(element).find('div.tick > div.tick-eps').text().trim()) ||
+        Number($(element).find('div.tick > div.tick-sub:has(.fa-closed-captioning)').text().trim()) ||
+        null,
     });
   });
   $(topWeeklySelector).each((_, element) => {
     topWeeklyAnime.push({
-      number: Number($(element).find('div.film-number span').text().trim()) || null,
+      // number: Number($(element).find('div.film-number span').text().trim()) || null,
       id: $(element).find('div.film-detail  a.dynamic-name').attr('href')?.split('/').at(1) || null,
       name: $(element).find('div.film-detail  a.dynamic-name').text().trim() || null,
       romaji: $(element).find('div.film-detail  a.dynamic-name').attr('data-jname') || null,
@@ -629,11 +708,15 @@ export function extractTopAiring($: cheerio.CheerioAPI) {
         sub: Number($(element).find('div.tick > div.tick-sub:has(.fa-closed-captioning)').text().trim()) || null,
         dub: Number($(element).find('div.tick > div.tick-dub:has(.fa-microphone)').text().trim()) || null,
       },
+      totalEpisodes:
+        Number($(element).find('div.tick > div.tick-eps').text().trim()) ||
+        Number($(element).find('div.tick > div.tick-sub:has(.fa-closed-captioning)').text().trim()) ||
+        null,
     });
   });
   $(topMonthlySelector).each((_, element) => {
     topMonthlyAnime.push({
-      number: Number($(element).find('div.film-number span').text().trim()) || null,
+      // number: Number($(element).find('div.film-number span').text().trim()) || null,
       id: $(element).find('div.film-detail  a.dynamic-name').attr('href')?.split('/').at(1) || null,
       name: $(element).find('div.film-detail  a.dynamic-name').text().trim() || null,
       romaji: $(element).find('div.film-detail  a.dynamic-name').attr('data-jname') || null,
@@ -642,6 +725,10 @@ export function extractTopAiring($: cheerio.CheerioAPI) {
         sub: Number($(element).find('div.tick > div.tick-sub:has(.fa-closed-captioning)').text().trim()) || null,
         dub: Number($(element).find('div.tick > div.tick-dub:has(.fa-microphone)').text().trim()) || null,
       },
+      totalEpisodes:
+        Number($(element).find('div.tick > div.tick-eps').text().trim()) ||
+        Number($(element).find('div.tick > div.tick-sub:has(.fa-closed-captioning)').text().trim()) ||
+        null,
     });
   });
 
@@ -663,22 +750,26 @@ export function extractTopAiring($: cheerio.CheerioAPI) {
 export function extractAtoZlist($: cheerio.CheerioAPI) {
   const atozSelector: cheerio.SelectorType = 'div#main-wrapper section.block_area_category div.flw-item';
 
-  const data: Airing[] = [];
+  const data: IAnime[] = [];
   $(atozSelector).each((_, element) => {
     data.push({
       id: $(element).find('a.film-poster-ahref').attr('href')?.split('/').at(1) || null,
       name: $(element).find('a.film-poster-ahref').attr('title') || null,
       romaji: $(element).find('div.film-detail  a.dynamic-name').attr('data-jname') || null,
+      url: `${zoroBaseUrl}${$(element).find('a.film-poster-ahref').attr('href')}` || null,
       type: $(element).find('div.fd-infor span.fdi-item:first').text().trim() || null,
       duration: $(element).find('div.fd-infor span.fdi-duration').text().trim() || null,
       posterImage: $(element).find('div.film-poster  img.film-poster-img').attr('data-src') || null,
-      synopsis: $(element).find('div.description').text().trim() || null,
+      // synopsis: $(element).find('div.description').text().trim() || null,
       rating: $(element).find('div.tick-rate').text().trim() || null,
       episodes: {
         sub: Number($(element).find('div.tick > div.tick-sub:has(.fa-closed-captioning)').text().trim()) || null,
         dub: Number($(element).find('div.tick > div.tick-dub:has(.fa-microphone)').text().trim()) || null,
       },
-      totalEpisodes: Number($(element).find('div.tick > div.tick-eps').text().trim()) || null,
+      totalEpisodes:
+        Number($(element).find('div.tick > div.tick-eps').text().trim()) ||
+        Number($(element).find('div.tick > div.tick-sub:has(.fa-closed-captioning)').text().trim()) ||
+        null,
     });
   });
   const paginationElement = $('.pre-pagination .pagination .page-item');

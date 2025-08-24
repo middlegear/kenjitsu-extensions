@@ -1,16 +1,15 @@
 import * as cheerio from 'cheerio';
 import {
   HiAnimeServers,
-  type Anime,
   type EpisodeInfo,
-  type AnimeInfo,
   type ServerInfo,
-  type HomePage,
-  type Airing,
-  type TopAnime,
-  type HRelatedAnime,
   type HCharacters,
   type RelatedSeasons,
+  type IAnime,
+  type IAnimeInfo,
+  type ITopAnime,
+  type IFeatured,
+  type ITrending,
 } from './types.js';
 import {
   extractSearchResults,
@@ -30,7 +29,7 @@ export const zoroBaseUrl = 'https://hianime.to' as const;
 const client = new FetchClient();
 
 export interface SuccessSearchResponse {
-  data: Anime[];
+  data: IAnime[];
   hasNextPage: boolean;
   currentPage: number;
   lastPage: number;
@@ -106,11 +105,11 @@ export async function searchAnime(query: string, page: number): Promise<SearchRe
   }
 }
 export interface AnimeInfoSuccess {
-  data: AnimeInfo;
-  recommendedAnime: Airing[];
-  mostPopular: HRelatedAnime[];
-  relatedAnime: HRelatedAnime[];
-  relatedSeasons: RelatedSeasons[]; //can be empty
+  data: IAnimeInfo;
+  recommendedAnime: IAnime[];
+  mostPopular: IFeatured[];
+  relatedAnime: IFeatured[];
+  relatedSeasons: RelatedSeasons[];
   characters: HCharacters[];
 }
 export interface AnimeInfoError {
@@ -145,7 +144,7 @@ export async function fetchAnimeInfo(animeId: string): Promise<ZoroAnimeInfo> {
         recommendedAnime: [],
         mostPopular: [],
         relatedAnime: [],
-        relatedSeasons: [], //can be empty
+        relatedSeasons: [],
         characters: [],
       };
 
@@ -165,11 +164,11 @@ export async function fetchAnimeInfo(animeId: string): Promise<ZoroAnimeInfo> {
 
     return {
       data: res,
+      relatedSeasons: relatedSeasons,
       recommendedAnime: recomendations,
       mostPopular: mostPopular,
       relatedAnime: relatedAnime,
-      relatedSeasons: relatedSeasons, //can be empty
-      characters: characters, // can be empty
+      characters: characters,
     };
   } catch (error) {
     return {
@@ -178,7 +177,7 @@ export async function fetchAnimeInfo(animeId: string): Promise<ZoroAnimeInfo> {
       recommendedAnime: [],
       mostPopular: [],
       relatedAnime: [],
-      relatedSeasons: [], //can be empty
+      relatedSeasons: [],
       characters: [],
     };
   }
@@ -292,22 +291,23 @@ export interface SuccessSourceRes {
   headers: {
     Referer: string;
   };
-  syncData?: {
-    anilistId?: string;
-    malId?: string;
-    name?: string;
+  syncData: {
+    anilistId: string | null;
+    malId: string | null;
+    name: string | null;
   };
 }
+
 export interface ErrorSourceRes {
   data: null;
   headers: {
     Referer: null;
   };
   error: string;
-  syncData?: {
-    anilistId?: string;
-    malId?: string;
-    name?: string;
+  syncData: {
+    anilistId: string | null;
+    malId: string | null;
+    name: string | null;
   };
 }
 
@@ -320,9 +320,19 @@ export async function fetchEpisodeSources(
 ): Promise<HianimeSourceResponse> {
   if (!episodeId || episodeId.includes('ep=')) {
     if (episodeId.includes('ep=')) {
-      throw new Error("Invalid format! Please use the ' - episode - ' format instead of ?ep=.");
+      return {
+        data: null,
+        headers: { Referer: null },
+        error: "Invalid format! Please use the ' - episode - ' format instead of ?ep=.",
+        syncData: { anilistId: null, malId: null, name: null },
+      };
     }
-    throw new Error('Missing required params: valid episodeId!');
+    return {
+      data: null,
+      headers: { Referer: null },
+      error: 'Missing required params: valid episodeId!',
+      syncData: { anilistId: null, malId: null, name: null },
+    };
   }
 
   if (episodeId.startsWith('http')) {
@@ -334,12 +344,13 @@ export async function fetchEpisodeSources(
         return {
           headers: { Referer: `${serverUrl.origin}/` },
           data: (await new MegaCloud().extract(serverUrl)) as ASource,
+          syncData: { anilistId: null, malId: null, name: null },
         };
-
       default:
         return {
           headers: { Referer: `${serverUrl.origin}/` },
           data: (await new MegaCloud().extract(serverUrl)) as ASource,
+          syncData: { anilistId: null, malId: null, name: null },
         };
     }
   }
@@ -356,7 +367,6 @@ export async function fetchEpisodeSources(
           availableCategories.length > 0
             ? ` Available categories: ${availableCategories.join(' or ')}.`
             : ' No servers available in any category right now.';
-
         throw new Error(`Category '${category}' has no servers.${suggestionMessage}`);
       }
 
@@ -374,7 +384,14 @@ export async function fetchEpisodeSources(
     };
 
     const fetchedServers = (await fetchServers(episodeId)).data as ServerInfo;
-    if ('error' in fetchedServers) throw new Error(fetchedServers.error as string);
+    if ('error' in fetchedServers) {
+      return {
+        data: null,
+        headers: { Referer: null },
+        error: fetchedServers.error as string,
+        syncData: { anilistId: null, malId: null, name: null },
+      };
+    }
 
     const serverId = findServerId(fetchedServers, category, server);
     const newId = episodeId.split('-').pop() as string;
@@ -396,24 +413,42 @@ export async function fetchEpisodeSources(
 
     const [sourcesResult, syncResult] = await Promise.allSettled([sourcesReq, syncDataReq]);
 
-    if (sourcesResult.status === 'rejected') throw new Error(sourcesResult.reason);
+    if (sourcesResult.status === 'rejected') {
+      return {
+        data: null,
+        headers: { Referer: null },
+        error: sourcesResult.reason,
+        syncData: { anilistId: null, malId: null, name: null },
+      };
+    }
 
     const response = sourcesResult.value;
-    if (!response.data) throw new Error(response.statusText);
+    if (!response.data) {
+      return {
+        data: null,
+        headers: { Referer: null },
+        error: response.statusText,
+        syncData: { anilistId: null, malId: null, name: null },
+      };
+    }
 
-    let syncData: { anilistId?: string; malId?: string; name?: string } = {};
+    let syncData: { anilistId: string | null; malId: string | null; name: string | null } = {
+      anilistId: null,
+      malId: null,
+      name: null,
+    };
     if (syncResult.status === 'fulfilled') {
       const match = syncResult.value.data.match(/<script id="syncData" type="application\/json">([\s\S]*?)<\/script>/);
       if (match) {
         try {
           const parsed = JSON.parse(match[1]);
           syncData = {
-            anilistId: parsed.anilist_id,
-            malId: parsed.mal_id,
-            name: parsed.name,
+            anilistId: parsed.anilist_id ?? null,
+            malId: parsed.mal_id ?? null,
+            name: parsed.name ?? null,
           };
         } catch {
-          // ignore parse error, leave syncData empty
+          // Ignore parse error, return default syncData with nulls
         }
       }
     }
@@ -427,19 +462,35 @@ export async function fetchEpisodeSources(
       data: null,
       headers: { Referer: null },
       error: error instanceof Error ? error.message : 'Fatal Error',
+      syncData: { anilistId: null, malId: null, name: null },
     };
   }
 }
-
 export interface SuccessHomeRes {
-  data: HomePage;
+  spotlight: IAnime[];
+  trending: ITrending[];
+  topAiring: IFeatured[];
+  mostPopular: IFeatured[];
+  favourites: IFeatured[];
+  recentlyCompleted: IFeatured[];
+  topAnime: { daily: ITopAnime[]; weekly: ITopAnime[]; monthly: ITopAnime[] };
+  recentlyAdded: IFeatured[];
+  recentlyUpdated: IFeatured[];
 }
 export interface ErrorHomeRes {
-  data: null;
+  spotlight: [];
+  trending: [];
+  topAiring: [];
+  mostPopular: [];
+  favourites: [];
+  recentlyCompleted: [];
+  topAnime: { daily: []; weekly: []; monthly: [] };
+  recentlyAdded: [];
+  recentlyUpdated: [];
   error: string;
 }
-export type HomeRes = SuccessHomeRes | ErrorHomeRes;
-export async function _fetchHomePage(): Promise<HomeRes> {
+export type Home = SuccessHomeRes | ErrorHomeRes;
+export async function _fetchHomePage(): Promise<Home> {
   try {
     const response = await client.get(`${zoroBaseUrl}/home`, {
       headers: {
@@ -449,26 +500,66 @@ export async function _fetchHomePage(): Promise<HomeRes> {
     if (!response.data) {
       return {
         error: response.statusText || 'Received empty response from server',
-        data: null,
+        spotlight: [],
+        trending: [],
+        topAiring: [],
+        mostPopular: [],
+        favourites: [],
+        recentlyCompleted: [],
+        topAnime: { daily: [], weekly: [], monthly: [] },
+        recentlyAdded: [],
+        recentlyUpdated: [],
       };
     }
     const data$: cheerio.CheerioAPI = cheerio.load(response.data);
-    const homepage = extractHomePage(data$);
+    const {
+      spotlight,
+      trending,
+      topAiring,
+      mostPopular,
+      favourites,
+      recentlyCompleted,
+      topAnime,
+      recentlyUpdated,
+      recentlyAdded,
+    } = extractHomePage(data$);
 
-    return { data: homepage };
+    return {
+      spotlight,
+      trending,
+      topAiring,
+      mostPopular,
+      favourites,
+      recentlyCompleted,
+      topAnime,
+      recentlyUpdated,
+      recentlyAdded,
+    };
   } catch (error) {
-    return { data: null, error: error instanceof Error ? error.message : 'Unknown Error' };
+    return {
+      spotlight: [],
+      trending: [],
+      topAiring: [],
+      mostPopular: [],
+      favourites: [],
+      recentlyCompleted: [],
+      topAnime: { daily: [], weekly: [], monthly: [] },
+      recentlyAdded: [],
+      recentlyUpdated: [],
+      error: error instanceof Error ? error.message : 'Unknown Error',
+    };
   }
 }
 export interface SuccessRepetiveRes {
-  data: Airing[];
-  topAnime?: { daily: TopAnime[]; weekly: TopAnime[]; monthly: TopAnime[] };
+  data: IAnime[];
+  topAnime: { daily: ITopAnime[]; weekly: ITopAnime[]; monthly: ITopAnime[] };
   hasNextPage: boolean;
   currentPage: number;
   lastPage: number;
 }
 export interface ErrorRepetiveRes {
-  data: null;
+  data: [];
+  topAnime: { daily: []; weekly: []; monthly: [] };
   error: string;
   hasNextPage: boolean;
   currentPage: number;
@@ -488,7 +579,8 @@ export async function _fetchTopAiring(page: number): Promise<HianimeRepetitiveSe
         currentPage: 0,
         lastPage: 0,
         error: response.statusText || 'Received empty response from server',
-        data: null,
+        data: [],
+        topAnime: { daily: [], weekly: [], monthly: [] },
       };
     }
 
@@ -500,7 +592,8 @@ export async function _fetchTopAiring(page: number): Promise<HianimeRepetitiveSe
         currentPage: 0,
         lastPage: 0,
         error: 'Cheerio Error: No  results found',
-        data: null,
+        data: [],
+        topAnime: { daily: [], weekly: [], monthly: [] },
       };
     }
     return {
@@ -512,7 +605,8 @@ export async function _fetchTopAiring(page: number): Promise<HianimeRepetitiveSe
     };
   } catch (error) {
     return {
-      data: null,
+      data: [],
+      topAnime: { daily: [], weekly: [], monthly: [] },
       hasNextPage: false,
       currentPage: 0,
       lastPage: 0,
@@ -533,7 +627,8 @@ export async function _fetchMostPopular(page: number): Promise<HianimeRepetitive
         currentPage: 0,
         lastPage: 0,
         error: response.statusText || 'Received empty response from server',
-        data: null,
+        data: [],
+        topAnime: { daily: [], weekly: [], monthly: [] },
       };
     }
 
@@ -545,7 +640,8 @@ export async function _fetchMostPopular(page: number): Promise<HianimeRepetitive
         currentPage: 0,
         lastPage: 0,
         error: 'Cheerio Error: No results found',
-        data: null,
+        data: [],
+        topAnime: { daily: [], weekly: [], monthly: [] },
       };
     }
     return {
@@ -557,7 +653,8 @@ export async function _fetchMostPopular(page: number): Promise<HianimeRepetitive
     };
   } catch (error) {
     return {
-      data: null,
+      data: [],
+      topAnime: { daily: [], weekly: [], monthly: [] },
       hasNextPage: false,
       currentPage: 0,
       lastPage: 0,
@@ -578,7 +675,8 @@ export async function _fetchFavourites(page: number): Promise<HianimeRepetitiveS
         currentPage: 0,
         lastPage: 0,
         error: response.statusText || 'Received empty response from server',
-        data: null,
+        data: [],
+        topAnime: { daily: [], weekly: [], monthly: [] },
       };
     }
 
@@ -590,7 +688,8 @@ export async function _fetchFavourites(page: number): Promise<HianimeRepetitiveS
         currentPage: 0,
         lastPage: 0,
         error: 'Cheerio Error: No  results found',
-        data: null,
+        data: [],
+        topAnime: { daily: [], weekly: [], monthly: [] },
       };
     }
     return {
@@ -602,7 +701,8 @@ export async function _fetchFavourites(page: number): Promise<HianimeRepetitiveS
     };
   } catch (error) {
     return {
-      data: null,
+      data: [],
+      topAnime: { daily: [], weekly: [], monthly: [] },
       hasNextPage: false,
       currentPage: 0,
       lastPage: 0,
@@ -623,7 +723,8 @@ export async function _fetchRecentlyCompleted(page: number): Promise<HianimeRepe
         currentPage: 0,
         lastPage: 0,
         error: response.statusText || 'Received empty response from server',
-        data: null,
+        data: [],
+        topAnime: { daily: [], weekly: [], monthly: [] },
       };
     }
 
@@ -635,7 +736,8 @@ export async function _fetchRecentlyCompleted(page: number): Promise<HianimeRepe
         currentPage: 0,
         lastPage: 0,
         error: 'Cheerio Error: No  results found',
-        data: null,
+        data: [],
+        topAnime: { daily: [], weekly: [], monthly: [] },
       };
     }
     return {
@@ -647,7 +749,8 @@ export async function _fetchRecentlyCompleted(page: number): Promise<HianimeRepe
     };
   } catch (error) {
     return {
-      data: null,
+      data: [],
+      topAnime: { daily: [], weekly: [], monthly: [] },
       hasNextPage: false,
       currentPage: 0,
       lastPage: 0,
@@ -669,7 +772,8 @@ export async function _fetchRecentlyAdded(page: number): Promise<HianimeRepetiti
         currentPage: 0,
         lastPage: 0,
         error: response.statusText || 'Received empty response from server',
-        data: null,
+        data: [],
+        topAnime: { daily: [], weekly: [], monthly: [] },
       };
     }
 
@@ -681,7 +785,8 @@ export async function _fetchRecentlyAdded(page: number): Promise<HianimeRepetiti
         currentPage: 0,
         lastPage: 0,
         error: 'Cheerio Error: No  results found',
-        data: null,
+        data: [],
+        topAnime: { daily: [], weekly: [], monthly: [] },
       };
     }
     return {
@@ -693,7 +798,8 @@ export async function _fetchRecentlyAdded(page: number): Promise<HianimeRepetiti
     };
   } catch (error) {
     return {
-      data: null,
+      data: [],
+      topAnime: { daily: [], weekly: [], monthly: [] },
       hasNextPage: false,
       currentPage: 0,
       lastPage: 0,
@@ -714,7 +820,8 @@ export async function _fetchRecentlyUpdated(page: number): Promise<HianimeRepeti
         currentPage: 0,
         lastPage: 0,
         error: response.statusText || 'Received empty response from server',
-        data: null,
+        data: [],
+        topAnime: { daily: [], weekly: [], monthly: [] },
       };
     }
 
@@ -726,7 +833,8 @@ export async function _fetchRecentlyUpdated(page: number): Promise<HianimeRepeti
         currentPage: 0,
         lastPage: 0,
         error: 'Cheerio Error: No  results found',
-        data: null,
+        data: [],
+        topAnime: { daily: [], weekly: [], monthly: [] },
       };
     }
     return {
@@ -738,7 +846,8 @@ export async function _fetchRecentlyUpdated(page: number): Promise<HianimeRepeti
     };
   } catch (error) {
     return {
-      data: null,
+      data: [],
+      topAnime: { daily: [], weekly: [], monthly: [] },
       hasNextPage: false,
       currentPage: 0,
       lastPage: 0,
@@ -746,8 +855,21 @@ export async function _fetchRecentlyUpdated(page: number): Promise<HianimeRepeti
     };
   }
 }
-
-export async function _fetchAtoZList(sort?: any): Promise<HianimeRepetitiveSections> {
+export interface SuccessAtoZRes {
+  data: IAnime[];
+  hasNextPage: boolean;
+  currentPage: number;
+  lastPage: number;
+}
+export interface ErrorAtoZRes {
+  data: [];
+  hasNextPage: boolean;
+  currentPage: number;
+  lastPage: number;
+  error: string;
+}
+export type AtoZRes = SuccessAtoZRes | ErrorAtoZRes;
+export async function _fetchAtoZList(sort?: any): Promise<AtoZRes> {
   //
   const sortValue = String(sort ?? '').trim();
 
@@ -769,7 +891,7 @@ export async function _fetchAtoZList(sort?: any): Promise<HianimeRepetitiveSecti
         currentPage: 0,
         lastPage: 0,
         error: response.statusText || 'Received empty response from server',
-        data: null,
+        data: [],
       };
     }
 
@@ -782,7 +904,7 @@ export async function _fetchAtoZList(sort?: any): Promise<HianimeRepetitiveSecti
         currentPage: 0,
         lastPage: 0,
         error: 'Cheerio Error: No results found',
-        data: null,
+        data: [],
       };
     }
     return {
@@ -793,7 +915,7 @@ export async function _fetchAtoZList(sort?: any): Promise<HianimeRepetitiveSecti
     };
   } catch (error) {
     return {
-      data: null,
+      data: [],
       hasNextPage: false,
       currentPage: 0,
       lastPage: 0,

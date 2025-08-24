@@ -25,8 +25,11 @@
 
 2. have a unified m3u8 format type 
 3. move all types to a folder called types 
-4. refactor types for hianime new sections
-//jujutsu-kaisen-2nd-season-18413
-Bugs
-1. Most popular page inst being scraped for this animeid magical-project-s-4650'. This was caused by headers
-2.
+
+
+Hianime
+1. Add search Suggestions
+2. Filters for search(new method advanced search)
+3. Scrape the genre page
+4. Write new tests for all new sections
+5. 
