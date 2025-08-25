@@ -52,6 +52,16 @@ export type HomePage = {
   recentlyAdded: IFeatured[];
   recentlyUpdated: IFeatured[];
 };
+
+export interface ISearchSuggestions {
+  id: string | null;
+  name: string | null;
+  romaji: string | null;
+  posterImage: string | null;
+  startDate: string | null;
+  type: string | null;
+  duration: string | null;
+}
 export type HCharacters = {
   id: string | null;
   name: string | null;

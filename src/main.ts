@@ -1,4 +1,4 @@
-import { AnimeKai, FlixHQ, Jikan, Meta, TheMovieDatabase, TvMaze, Anilist } from './provider/index.js';
+import { FlixHQ, Jikan, Meta, TheMovieDatabase, TvMaze, Anilist } from './provider/index.js';
 import { HiAnime } from './provider/anime/hianime/index.js';
 import { Anime } from './provider/anime/anime.js';
 import {
@@ -16,16 +16,6 @@ import {
   AnimeProvider,
 } from './types/index.js';
 
-import {
-  _fetchAtoZList,
-  _fetchFavourites,
-  _fetchMostPopular,
-  _fetchRecentlyAdded,
-  _fetchRecentlyCompleted,
-  _fetchRecentlyUpdated,
-  _fetchTopAiring,
-} from './provider/anime/hianime/hianime.js';
-
 export {
   Seasons,
   SubOrDub,
@@ -41,4 +31,4 @@ export {
   AnimeProvider,
 };
 
-export { Anime, Meta, Anilist, Jikan, HiAnime, AnimeKai, FlixHQ, TheMovieDatabase, TvMaze };
+export { Anime, Meta, Anilist, Jikan, HiAnime, FlixHQ, TheMovieDatabase, TvMaze };

@@ -11,6 +11,7 @@ import {
   fetchEpisodeSources,
   fetchServers,
   getEpisodes,
+  getSearchSuggestions,
   searchAnime,
 } from './hianime.js';
 import type {
@@ -22,6 +23,7 @@ import type {
   Home,
   HianimeRepetitiveSections,
   AtoZRes,
+  SearchSuggestionsResponse,
 } from './hianime.js';
 import { HiAnimeServers } from './types.js';
 import { SubOrDub } from '../../index.js';
@@ -39,6 +41,15 @@ export class HiAnime {
    */
   async search(query: string, page: number = 1): Promise<SearchResponse> {
     return searchAnime(query, page);
+  }
+
+  /**
+   * Searches for anime based on the provided query string(suggestions).
+   * @param {string} query - The search query string (required).
+   * @returns {Promise<SearchResponse>} A promise that resolves to an object containing an array of anime titles, or an error message.
+   */
+  async searchSuggestions(query: string): Promise<SearchSuggestionsResponse> {
+    return getSearchSuggestions(query);
   }
 
   /**

@@ -10,6 +10,7 @@ import type {
   ITrending,
   RelatedSeasons,
   ServerInfo,
+  ISearchSuggestions,
 } from './types.js';
 import { SubOrDub } from '../../index.js';
 import { zoroBaseUrl } from './hianime.js';
@@ -64,7 +65,31 @@ export function extractSearchResults($: cheerio.CheerioAPI, selector: cheerio.Se
     anime,
   };
 }
-
+export function extractSearchSuggestions($: cheerio.CheerioAPI) {
+  const anime: ISearchSuggestions[] = [];
+  $('a.nav-item').each((_, element) => {
+    const info = $(element).find('div.film-infor');
+    anime.push({
+      id: $(element).attr('href')?.split('/').at(1) || null,
+      name: $(element).find('div.srp-detail h3.film-name').text().trim() || null,
+      romaji: $(element).find('div.srp-detail h3.film-name').attr('data-jname') || null,
+      posterImage: $(element).find('img.film-poster-img').attr('data-src') || null,
+      startDate: $(element).find('div.film-infor > span:first').text().trim() || null,
+      type:
+        info
+          .contents()
+          .filter(function () {
+            return this.nodeType === 3 && this.nodeValue.trim() !== '';
+          })
+          .eq(0)
+          .text()
+          .trim() || null,
+      duration: $(element).find('div.film-infor > span:last').text().trim() || null,
+    });
+  });
+  anime.pop();
+  return { anime };
+}
 export function extractAnimeInfo($: cheerio.CheerioAPI) {
   const res: IAnimeInfo = {
     id: null,

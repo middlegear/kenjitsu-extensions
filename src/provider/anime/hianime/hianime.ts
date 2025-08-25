@@ -10,6 +10,7 @@ import {
   type ITopAnime,
   type IFeatured,
   type ITrending,
+  type ISearchSuggestions,
 } from './types.js';
 import {
   extractSearchResults,
@@ -19,6 +20,7 @@ import {
   extractHomePage,
   extractTopAiring,
   extractAtoZlist,
+  extractSearchSuggestions,
 } from './scraper.js';
 import MegaCloud from '../../../source-extractors/megacloud.js';
 import { type ASource, SubOrDub } from '../../../types/types.js';
@@ -99,6 +101,52 @@ export async function searchAnime(query: string, page: number): Promise<SearchRe
       hasNextPage: false,
       currentPage: 0,
       lastPage: 0,
+      error: error instanceof Error ? error.message : 'Unknown Error',
+      data: [],
+    };
+  }
+}
+
+export interface SuccessResSearchSuggestions {
+  data: ISearchSuggestions[];
+}
+export interface ErrorResSearchSuggestion {
+  data: [];
+  error: string;
+}
+export type SearchSuggestionsResponse = SuccessResSearchSuggestions | ErrorResSearchSuggestion;
+export async function getSearchSuggestions(query: string): Promise<SearchSuggestionsResponse> {
+  if (!query) {
+    return {
+      data: [],
+      error: 'Missing required Params : a query string',
+    };
+  }
+
+  query = query.trim();
+  try {
+    const response = await client.get(`${zoroBaseUrl}/ajax/search/suggest`, {
+      params: { keyword: query },
+      headers: { Accept: '*/*', Referer: `${zoroBaseUrl}/home` },
+    });
+    if (!response.data) {
+      return {
+        error: response.statusText || 'Received empty response from server',
+        data: [],
+      };
+    }
+    const data$ = cheerio.load(response.data.html);
+    const { anime } = extractSearchSuggestions(data$);
+    if (!Array.isArray(anime) || anime.length === 0) {
+      return {
+        error: 'Cheerio Error: No search results found',
+        data: [],
+      };
+    }
+
+    return { data: anime };
+  } catch (error) {
+    return {
       error: error instanceof Error ? error.message : 'Unknown Error',
       data: [],
     };
