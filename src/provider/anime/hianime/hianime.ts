@@ -1275,8 +1275,8 @@ export class HiAnime extends BaseClass {
    * @param {number} page - Page number for pagination (default: 1)
    *@returns {  Promise<IAnimePaginated<IAnime[] | []>>} Promise resolving to an object  with alphabetically sorted anime and pagination details
    */
-  async fetchAtoZList(sort: any, page: number = 1): Promise<IAnimePaginated<IAnime[] | []>> {
-    const sortValue = String(sort ?? '').trim();
+  async fetchAtoZList(sort?: any, page: number = 1): Promise<IAnimePaginated<IAnime[] | []>> {
+    const sortValue = (sort ?? '').toString().trim();
 
     const sortCategory = !sortValue
       ? undefined
