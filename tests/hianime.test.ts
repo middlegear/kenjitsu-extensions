@@ -1,7 +1,5 @@
 import { test, expect } from 'vitest';
 import { Anime } from '../src/provider/anime/anime.js';
-import { SubOrDub } from '../src/provider/index.js';
-import { HiAnimeServers } from '../src/provider/anime/hianime/types.js';
 
 const zoro = new Anime.HiAnime();
 const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
@@ -15,7 +13,7 @@ test('returns an array based on search query', async () => {
 });
 
 test('retuns an object containing anime info', async () => {
-  const data = await zoro.fetchInfo('demon-slayer-kimetsu-no-yaiba-swordsmith-village-arc-18056');
+  const data = await zoro.fetchAnimeInfo('demon-slayer-kimetsu-no-yaiba-swordsmith-village-arc-18056');
 
   expect(data.data).not.toBeNull();
 
@@ -31,7 +29,7 @@ test('returns an array of episodes', async () => {
 });
 
 test('return an object containing serverInfo', async () => {
-  const data = await zoro.fetchEpisodeServers('solo-leveling-18718-episode-119497');
+  const data = await zoro.fetchServers('solo-leveling-18718-episode-119497');
 
   expect(data.data).not.toBeNull();
   expect(Array.isArray(data.data?.dub)).toBe(true);
@@ -40,7 +38,7 @@ test('return an object containing serverInfo', async () => {
 });
 
 test('returns an object containing streaming sources', async () => {
-  const data = await zoro.fetchSources('solo-leveling-18718-episode-119497', HiAnimeServers.HD2, SubOrDub.DUB);
+  const data = await zoro.fetchSources('solo-leveling-18718-episode-119497', 'hd-2', 'sub');
 
   expect(data.data).not.toBeNull();
 
