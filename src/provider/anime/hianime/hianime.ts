@@ -25,6 +25,7 @@ import {
 import MegaCloud from '../../../source-extractors/megacloud.js';
 import { type ASource, SubOrDub } from '../../../types/types.js';
 import { FetchClient } from '../../../config/client.js';
+import type { IAnimePaginated } from '../../../models/types.js';
 
 export const zoroBaseUrl = 'https://hianime.to' as const;
 
@@ -44,7 +45,7 @@ export interface SearchErrorResponse {
   currentPage: number;
 }
 export type SearchResponse = SuccessSearchResponse | SearchErrorResponse;
-export async function searchAnime(query: string, page: number): Promise<SearchResponse> {
+export async function searchAnime(query: string, page: number): Promise<IAnimePaginated<IAnime[]>> {
   if (!query) {
     return {
       hasNextPage: false,

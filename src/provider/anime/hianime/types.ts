@@ -25,7 +25,7 @@ export interface IAnime extends IFeatured {
 export interface ISpotlight extends IAnime {
   synopsis: string | null;
   startDate: string | null;
-  spotlight?: string | null; /// for only spotlight
+  spotlight?: string | null;
   quality: string | null;
 }
 export interface IAnimeInfo extends ISpotlight {

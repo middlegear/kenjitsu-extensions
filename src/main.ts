@@ -15,6 +15,7 @@ import {
   HiAnimeServers,
   AnimeProvider,
 } from './types/index.js';
+import { zoro } from './provider/anime/hianime/class.js';
 
 export {
   Seasons,
@@ -31,4 +32,8 @@ export {
   AnimeProvider,
 };
 
-export { Anime, Meta, Anilist, Jikan, HiAnime, FlixHQ, TheMovieDatabase, TvMaze };
+// export { Anime, Meta, Anilist, Jikan, HiAnime, FlixHQ, TheMovieDatabase, TvMaze };
+
+const ani = new zoro();
+const data = await ani.fetchEpisodes('bleach-806');
+console.log(data);

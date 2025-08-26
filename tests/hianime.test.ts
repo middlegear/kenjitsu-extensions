@@ -5,7 +5,7 @@ import { HiAnimeServers } from '../src/provider/anime/hianime/types.js';
 
 const zoro = new Anime.HiAnime();
 const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
-
+// fetchAnimeInfo('bleach-806')
 test('returns an array based on search query', async () => {
   const data = await zoro.search('bleach', 1);
 

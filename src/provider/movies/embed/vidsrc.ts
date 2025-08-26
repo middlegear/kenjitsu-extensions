@@ -48,7 +48,6 @@ async function _getMovieHash(tmdbId: number, server: EmbedServers = EmbedServers
 
     const serverId = servers[index].hash;
     const rcpData = await _getRCP(serverId);
-    console.log(rcpData);
 
     if (!rcpData) {
       throw new Error('Failed to retrieve rcp data').message;
@@ -104,8 +103,6 @@ export async function _getVidSrcMovieUrl(tmdbId: number): Promise<EmbedSrcRespon
   }
   try {
     const data = await _getMovieHash(tmdbId);
-
-    console.log(data);
 
     const data$: cheerio.CheerioAPI = cheerio.load(data);
 
