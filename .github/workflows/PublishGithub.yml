@@ -34,13 +34,9 @@ jobs:
       - name: Generate unique version
         id: version_generator
         run: |
-          
           VERSION_DATE=$(date +%Y.%m.%d)
-          VERSION_HOUR=$(date +%H)
-          
-
-
-          echo "NEW_VERSION=${VERSION_DATE}-${VERSION_HOUR}" >> $GITHUB_ENV
+          VERSION_TIME=$(date +%H%M)
+          echo "NEW_VERSION=${VERSION_DATE}-${VERSION_TIME}" >> $GITHUB_ENV
 
       - name: Update package.json with the new version
         run: |
