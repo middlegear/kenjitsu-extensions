@@ -1,6 +1,6 @@
 import { FetchClient } from '../config/client.js';
 
-export abstract class BaseAnime {
+export abstract class BaseClass {
   protected readonly client: FetchClient;
 
   constructor() {

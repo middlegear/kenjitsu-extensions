@@ -1,7 +1,7 @@
 import { AnimeProvider, Format, Seasons, JikanStatus } from '../../../types/types.js';
 import { bestTitleMatch } from '../../../utils/mapper.js';
 import { getMalMapping } from '../anizip/index.js';
-import { HiAnime } from '../../anime/hianime/index.js';
+import { HiAnime } from '../../anime/hianime/hianime.js';
 import { AnimeKai } from '../../anime/animekai/index.js';
 import { normalizeLowerCaseSeason, normalizeLowerCaseFormat, createSlug } from '../../../utils/normalize.js';
 import { FetchClient } from '../../../config/client.js';

@@ -94,19 +94,38 @@ export interface IHomeResponse<T> extends IResponse<T> {
   recentlyAdded: IAnime[];
   recentlyUpdated: IAnime[];
 }
+export interface HISourceResponse<T> extends IResponse<T> {
+  headers: {
+    Referer: string | null;
+  };
+  syncData: {
+    anilistId: string | null;
+    malId: string | null;
+    name: string | null;
+  };
+}
 
-////   not ready yet
-// interface ISubtitles {
-//   url: string | null;
-//   lang: string | null;
-//   default: boolean | null;
-// }
-
-// interface ISource {
-//   url: string | null;
-//   isM3U8: boolean | null;
-//   type: string | null;
-// }
+interface ISubtitles {
+  url: string | null;
+  lang: string | null;
+  default?: boolean | null;
+}
+interface IOutro {
+  start: number | null;
+  end: number | null;
+}
+export interface IVideoSource {
+  intro?: IOutro;
+  outro?: IOutro;
+  subtitles: ISubtitles[];
+  sources: ISource[];
+  download?: string;
+}
+interface ISource {
+  url: string | null;
+  isM3U8: boolean | null;
+  type: string | null;
+}
 export interface ISubServers {
   serverId: number | null;
   serverName: string | null;
@@ -121,6 +140,12 @@ export interface HIServerInfo {
   raw: IRawServers[];
   episodeNumber: number | null;
 }
+export const HISubOrDub = {
+  SUB: 'sub',
+  DUB: 'dub',
+  RAW: 'raw',
+} as const;
+export type HISubOrDub = (typeof HISubOrDub)[keyof typeof HISubOrDub];
 
 export const HiAnimeServers = {
   HD1: 'hd-1',

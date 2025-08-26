@@ -20,7 +20,7 @@ export type ASource = {
   };
   subtitles: Subtitles[];
   sources: Source[];
-  download?: string;
+  download?: string | null;
 };
 
 export const SubOrDub = {

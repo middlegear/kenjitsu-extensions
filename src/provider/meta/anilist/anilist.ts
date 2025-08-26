@@ -15,7 +15,7 @@ import { AnimeProvider, Charactersort, Format, MediaType, Seasons, Sort, Anilist
 import { getAnilistMapping } from '../anizip/index.js';
 
 import { AnimeKai } from '../../anime/animekai/index.js';
-import { HiAnime } from '../../anime/hianime/index.js';
+import { HiAnime } from '../../anime/hianime/hianime.js';
 import { FetchClient } from '../../../config/client.js';
 import { createSlug } from '../../../utils/normalize.js';
 
