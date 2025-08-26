@@ -316,7 +316,10 @@ export class HiAnime extends BaseClass {
         id: $(element).find('a.os-item').attr('href')?.split('/').at(1) || null,
         name: $(element).find('a.os-item').attr('title') || null,
         season: $(element).find('div.title').text() || null,
-        seasonPoster: $(element).find('div.season-poster').attr('style') || null,
+        seasonPoster: (() => {
+          const style = $(element).find('div.season-poster').attr('style') || null;
+          return style ? style.match(/url\(["']?(.*?)["']?\)/)?.[1] || null : null;
+        })(),
       });
     });
 
