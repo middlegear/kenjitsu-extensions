@@ -12,7 +12,6 @@ import {
   AnilistStatus,
   Format,
   Charactersort,
-  HiAnimeServers,
   AnimeProvider,
 } from './types/index.js';
 import { HiAnime } from './provider/anime/hianime/hianime.js';
@@ -25,7 +24,6 @@ export {
   Format,
   Charactersort,
   AnimeKaiServers,
-  HiAnimeServers,
   TimeWindow,
   StreamingServers,
   AnimeProvider,
