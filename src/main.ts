@@ -31,9 +31,9 @@ export {
   AnimeProvider,
 };
 
-const hianime = new HiAnime();
-const data = await hianime.fetchSources('solo-leveling-18718-episode-119497', HiAnimeServers.HD2, SubOrDub.DUB);
+// const hianime = new HiAnime();
+// const data = await hianime.fetchSources('solo-leveling-18718-episode-119497', HiAnimeServers.HD2, SubOrDub.DUB);
 
-console.log(JSON.stringify(data));
-console.log(data);
-// export { Anime, Meta, Anilist, Jikan, HiAnime, FlixHQ, TheMovieDatabase, TvMaze };
+// console.log(JSON.stringify(data));
+// console.log(data);
+export { Anime, Meta, Anilist, Jikan, HiAnime, FlixHQ, TheMovieDatabase, TvMaze };
