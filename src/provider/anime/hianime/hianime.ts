@@ -1269,9 +1269,10 @@ export class HiAnime extends BaseClass {
   /**
    * Fetches a list of anime titles sorted alphabetically, optionally filtered by a starting character.
    * @param {any} sort Optional letter (A-Z) or "0-9" to filter anime
+   * @param {number} page - Page number for pagination (default: 1)
    *@returns {  Promise<IAnimePaginated<IAnime[] | []>>} Promise resolving to an object  with alphabetically sorted anime and pagination details
    */
-  async fetchAtoZList(sort?: any): Promise<IAnimePaginated<IAnime[] | []>> {
+  async fetchAtoZList(sort: any, page: number = 1): Promise<IAnimePaginated<IAnime[] | []>> {
     const sortValue = String(sort ?? '').trim();
 
     const sortCategory = !sortValue
@@ -1285,7 +1286,11 @@ export class HiAnime extends BaseClass {
     const url = sortCategory ? `${this.baseUrl}/az-list/${sortCategory}` : `${this.baseUrl}/az-list`;
 
     try {
-      const response = await this.client.get(url);
+      const response = await this.client.get(url, {
+        params: {
+          page: String(page),
+        },
+      });
       if (!response.data) {
         return {
           hasNextPage: false,
@@ -1313,9 +1318,10 @@ export class HiAnime extends BaseClass {
   /**
    * Fetches a list of anime by genre.
    * @param {string} genre -The genre to filter anime by
+   * @param {number} page - Page number for pagination (default: 1)
    * @returns {  Promise<IAnimePaginated<IAnime[] | []>>} Promise resolving to an object with genre-specific anime and pagination details
    */
-  async fetchGenre(genre: HIGenres): Promise<IAnimePaginated<IAnime[] | []>> {
+  async fetchGenre(genre: HIGenres, page: number = 1): Promise<IAnimePaginated<IAnime[] | []>> {
     if (!genre) {
       return {
         hasNextPage: false,
@@ -1326,7 +1332,11 @@ export class HiAnime extends BaseClass {
       };
     }
     try {
-      const response = await this.client.get(`${this.baseUrl}/genre/${genre}`);
+      const response = await this.client.get(`${this.baseUrl}/genre/${genre}`, {
+        params: {
+          page: String(page),
+        },
+      });
       if (!response.data) {
         return {
           hasNextPage: false,
