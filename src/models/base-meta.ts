@@ -2,7 +2,7 @@ import { FetchClient } from '../config/client.js';
 import { HiAnime } from '../provider/anime/hianime/hianime.js';
 
 import { findBestMatch } from '../utils/string-similarity.js';
-import type { IAnimePaginated, IMetaAnime, ITitle } from './types.js';
+import type { ITitle } from './types.js';
 
 type AnimeSearchResults = {
   id: string;

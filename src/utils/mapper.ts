@@ -1,16 +1,10 @@
 import { findBestMatch } from './string-similarity.js';
 
-export type Title = {
+type Title = {
   english: string;
   romaji: string;
 };
 
-type AnimeSearchResults = {
-  animeId: string;
-  name: string;
-  romaji: string;
-  providerName: string;
-};
 type TvSearchResults = {
   name: string;
   tmdbId: number;
@@ -24,42 +18,6 @@ export type ProviderSearchResults = {
   releaseDate?: number;
   quality: string;
 };
-
-export function bestTitleMatch(title: Title, results: AnimeSearchResults[]) {
-  if (!results.length) return null;
-
-  const normalizedResults = results.map(item => ({
-    ...item,
-    _name: item.name,
-    _romaji: item.romaji,
-  }));
-
-  const englishMatch = findBestMatch(
-    title.english,
-    normalizedResults.map(r => r._name),
-  );
-
-  const romajiMatch = findBestMatch(
-    title.romaji,
-    normalizedResults.map(r => r._romaji),
-  );
-
-  // Pick better of the two
-  const best =
-    englishMatch.bestMatch.rating >= romajiMatch.bestMatch.rating ? englishMatch.bestMatch : romajiMatch.bestMatch;
-
-  const match = normalizedResults.find(r => r._name === best.target || r._romaji === best.target);
-
-  return match
-    ? {
-        animeId: match.animeId,
-        name: match.name || null,
-        romaji: match.romaji || null,
-        providerName: match.providerName || null,
-        score: best.rating,
-      }
-    : null;
-}
 
 export function tmdbTitle(title: string, results: TvSearchResults[]) {
   if (!results.length) return null;

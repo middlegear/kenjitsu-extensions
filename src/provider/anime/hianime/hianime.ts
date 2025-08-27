@@ -777,6 +777,7 @@ export class HiAnime extends BaseClass {
       episodesList.push({
         episodeId: $(element)?.attr('href')?.split('/')?.at(2)?.trim()?.replace('?ep=', '-episode-') || null,
         title: $(element)?.attr('title')?.trim() || null,
+        romaji: $(element).find('div.ep-name.e-dynamic-name').attr('data-jname') || null,
         episodeNumber: Number($(element).attr('data-number')),
       });
     });

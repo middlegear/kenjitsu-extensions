@@ -63,6 +63,7 @@ export interface IPromotionVIds {
 export interface IEpisodes {
   episodeId: string | null;
   episodeNumber: number | null;
+  romaji: string | null;
   title: string | null;
 }
 
@@ -229,8 +230,8 @@ export type Sort = (typeof Sort)[number];
 export const Seasons = ['WINTER', 'SPRING', 'SUMMER', 'FALL'] as const;
 export type Seasons = (typeof Seasons)[number];
 
-export const JikanStatus = ['airing', 'bypopularity', 'upcoming', 'favorite'] as const;
-export type JikanStatus = (typeof JikanStatus)[number];
+export const JSort = ['airing', 'bypopularity', 'upcoming', 'favorite', 'rating'] as const;
+export type JSort = (typeof JSort)[number];
 
 export const AnilistStatus = ['NOT_YET_RELEASED', 'RELEASING'] as const;
 export type AnilistStatus = (typeof AnilistStatus)[number];
@@ -288,7 +289,7 @@ export interface IAnilistCharacters {
 }
 export const AnimeProvider = {
   HiAnime: 'hianime',
-  Animekai: 'animekai',
+  // Animekai: 'animekai',
 } as const;
 export type AnimeProvider = (typeof AnimeProvider)[keyof typeof AnimeProvider];
 export interface IProviderId {
@@ -314,4 +315,18 @@ interface MetaProviderEpisodes {
 }
 export interface IMetaProviderEpisodesResponse<T> extends IResponse<T> {
   providerEpisodes: MetaProviderEpisodes[] | [];
+}
+export interface IMetaEpisodes {
+  number: number;
+  title: {
+    english: string;
+    romaji: string;
+    japanese: string;
+  };
+  filler: boolean;
+  duration?: number | null;
+  synopsis?: string;
+  recap: boolean;
+  score?: number;
+  url: string;
 }

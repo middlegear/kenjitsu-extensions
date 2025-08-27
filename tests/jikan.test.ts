@@ -1,6 +1,6 @@
 import { test, expect } from 'vitest';
 import { AnimeProvider, Seasons } from '../src/types/types.js';
-import { Jikan } from '../src/provider/index.js';
+import { Jikan } from '../src/provider/meta/jikan.js';
 
 const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 const RATE_LIMIT_MS = 800;
@@ -36,14 +36,14 @@ test('returns an array of most popular anime', async () => {
 });
 
 test('return an array of  top anime movies category', async () => {
-  const data = await jikan.fetchTopMovies(1, 20, 'bypopularity', 'OVA');
+  const data = await jikan.fetchTopMovies(1, 20, 'OVA');
   expect(Array.isArray(data.data)).toBe(true);
   expect(data.data.length).toBeGreaterThan(0);
   await wait(RATE_LIMIT_MS);
 });
 
 test('return an array of anime by season', async () => {
-  const data = await jikan.fetchSeason(Seasons.FALL, 2022, 'MOVIE');
+  const data = await jikan.fetchSeasonalAnime('FALL', 2022, 'MOVIE');
   expect(Array.isArray(data.data)).toBe(true);
   expect(data.data.length).toBeGreaterThan(0);
   await wait(RATE_LIMIT_MS);
@@ -76,9 +76,9 @@ test('returns an object containing detailed episode info', async () => {
 });
 
 test('returns an object containing provider anime ID with animeinfo', async () => {
-  const data = await jikan.fetchProviderAnimeId(52299, AnimeProvider.HiAnime);
+  const data = await jikan.fetchProviderId(52299);
   expect(data.data).not.toBeNull();
-  expect(data.animeProvider).not.toBeNull();
+  expect(data.provider).not.toBeNull();
   await wait(RATE_LIMIT_MS);
 });
 
@@ -90,7 +90,7 @@ test('returns an array of the current season anime', async () => {
 });
 
 test('returns an object containing  AnimeProvider episodes and animeinfo', async () => {
-  const data = await jikan.fetchAnimeProviderEpisodes(52299, AnimeProvider.HiAnime);
+  const data = await jikan.fetchAnimeProviderEpisodes(52299);
   expect(data.data).not.toBeNull();
   expect(Array.isArray(data.providerEpisodes)).toBe(true);
   expect(data.providerEpisodes.length).toBeGreaterThan(0);

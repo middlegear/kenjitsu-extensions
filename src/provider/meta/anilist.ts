@@ -426,9 +426,9 @@ export class Anilist extends MetaAnime {
   }
   /**
    * Fetches a list of the top-rated anime.
-   * @param {number} [page=1] - The page number for pagination (optional, defaults to 1).
-   * @param {number} [perPage=20] - The number of results per page (optional, defaults to 20).
-   * @param {Format} [format=Format.TV] - The anime format to filter by (optional, defaults to TV).
+   * @param {number} [page] - The page number for pagination (optional, defaults to 1).
+   * @param {number} [perPage] - The number of results per page (optional, defaults to 20).
+   * @param {Format} [format] - The anime format to filter by (optional, defaults to TV).
    * @param {Sort} [sort]  - The sorting order for results.(optional, defaults to SCORE_DESC )
    * @returns  A promise that resolves to an object containing an array of top-rated anime.
    */
@@ -764,15 +764,14 @@ export class Anilist extends MetaAnime {
   /**
    * Fetches anime information along with a provider-specific anime ID. Kind of depends on provider availability
    * This is useful for linking Anilist entries to external streaming provider IDs.
-   * @param {number} id - The unique Anilist anime ID (required).
-   * @param {AnimeProvider} provider The anime provider to fetch the ID for (optional, defaults to HiAnime).
+   * @param {number} anilistId - The unique Anilist anime ID (required).
    * @returns  A promise that resolves to an object containing the provider-specific anime ID and core anime info.
    */
   async fetchProviderId(
-    id: number,
+    anilistId: number,
     // provider: AnimeProvider = 'hianime',
   ): Promise<IMetaProviderIdResponse<IMetaAnime | null>> {
-    if (!id) {
+    if (!anilistId) {
       return {
         error: 'Invalid or missing required parameter: anilistId!',
         data: null,
@@ -780,7 +779,7 @@ export class Anilist extends MetaAnime {
       };
     }
     try {
-      const anilist = await this.fetchInfo(id);
+      const anilist = await this.fetchInfo(anilistId);
       const titles = anilist.data?.title as ITitle;
       const userPref = titles?.english || titles?.romaji || titles?.native;
       const titleSlug = this.createSlug(userPref as string);

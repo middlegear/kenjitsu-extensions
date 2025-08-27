@@ -28,13 +28,10 @@
 
 
 Hianime
-1. Add search Suggestions
+
 2. Filters for search(new method advanced search)
-3. Scrape the genre page
+
 4. Write new tests for all new sections
 
 
 /// when switching to classes 
-1. I can have cheerio methods as private methods (reuse repetitive methods )
-2. Move the decryptors into the class extractor(decrypt needs to be public while the other remain private)
-3. Refactor parsers after switching to classes(i)
