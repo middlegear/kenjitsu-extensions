@@ -936,7 +936,6 @@ export class HiAnime extends BaseClass {
     try {
       const response = await this.client.get(`${this.baseUrl}/ajax/search/suggest`, {
         params: { keyword: query },
-        headers: { Accept: '*/*', Referer: `${this.baseUrl}/home` },
       });
       if (!response.data) {
         return {
@@ -1455,8 +1454,8 @@ export class HiAnime extends BaseClass {
 
   async fetchSources(
     episodeId: string,
-    server: HiAnimeServers = HiAnimeServers.HD2,
-    category: HISubOrDub = HISubOrDub.SUB,
+    server: HiAnimeServers = 'hd-2',
+    category: HISubOrDub = 'sub',
   ): Promise<HISourceResponse<IVideoSource | null>> {
     if (!episodeId || episodeId.includes('ep=')) {
       if (episodeId.includes('ep=')) {
@@ -1478,9 +1477,9 @@ export class HiAnime extends BaseClass {
     if (episodeId.startsWith('http')) {
       const serverUrl = new URL(episodeId);
       switch (server) {
-        case HiAnimeServers.HD1:
-        case HiAnimeServers.HD2:
-        case HiAnimeServers.HD3:
+        case 'hd-1':
+        case 'hd-2':
+        case 'hd-3':
           return {
             headers: { Referer: `${serverUrl.origin}/` },
             data: await new MegaCloud().extract(serverUrl),

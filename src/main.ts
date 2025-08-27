@@ -1,6 +1,5 @@
-import { FlixHQ, Jikan, Meta, TheMovieDatabase, TvMaze, Anilist } from './provider/index.js';
+import { FlixHQ, Jikan, Meta, TheMovieDatabase, TvMaze } from './provider/index.js';
 
-import { Anime } from './provider/anime/anime.js';
 import {
   AnimeKaiServers,
   Seasons,
@@ -15,6 +14,8 @@ import {
   AnimeProvider,
 } from './types/index.js';
 import { HiAnime } from './provider/anime/hianime/hianime.js';
+import { Anilist } from './provider/meta/anilist.js';
+
 export {
   Seasons,
   SubOrDub,
@@ -28,5 +29,3 @@ export {
   StreamingServers,
   AnimeProvider,
 };
-
-export { Anime, Meta, Anilist, Jikan, HiAnime, FlixHQ, TheMovieDatabase, TvMaze };

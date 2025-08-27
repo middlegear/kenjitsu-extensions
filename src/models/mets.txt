@@ -1,0 +1,27 @@
+import { FetchClient } from "../config/client.js";
+import { NineAnime } from "./NineAnime.js";
+import { HiAnime } from "./HiAnime.js";
+
+export abstract class MetaAnime {
+  protected readonly client: FetchClient;
+  protected readonly providers: Record<string, any>;
+
+  constructor() {
+    this.client = new FetchClient();
+    this.client.setProfile("normal-fetch");
+
+    // Hard-coded providers
+    this.providers = {
+      nineanime: new NineAnime(),
+      hianime: new HiAnime(),
+    };
+  }
+
+  async search(title: string, site: "nineanime" | "hianime" = "nineanime") {
+    return this.providers[site].search(title);
+  }
+
+  async fetchEpisodes(id: string, site: "nineanime" | "hianime" = "nineanime") {
+    return this.providers[site].fetchEpisodes(id);
+  }
+}

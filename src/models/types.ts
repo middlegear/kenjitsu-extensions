@@ -4,7 +4,11 @@ export interface IBaseAnime {
   romaji: string | null;
   posterImage: string | null;
 }
-
+export interface ITitle {
+  native?: string;
+  english: string;
+  romaji: string;
+}
 export interface IAnime extends IBaseAnime {
   episodes: {
     sub: number | null;
@@ -72,6 +76,8 @@ export interface IAnimePaginated<T> extends IResponse<T> {
   hasNextPage: boolean;
   currentPage: number;
   lastPage: number;
+  perPage?: number;
+  totalResults?: number;
 }
 export interface IRepetitiveSections<T> extends IAnimePaginated<T> {
   topAnime: { daily: IAnime[]; weekly: IAnime[]; monthly: IAnime[] };
@@ -140,19 +146,11 @@ export interface HIServerInfo {
   raw: IRawServers[];
   episodeNumber: number | null;
 }
-export const HISubOrDub = {
-  SUB: 'sub',
-  DUB: 'dub',
-  RAW: 'raw',
-} as const;
-export type HISubOrDub = (typeof HISubOrDub)[keyof typeof HISubOrDub];
+export const HISubOrDub = ['sub', 'dub', 'raw'] as const;
+export type HISubOrDub = (typeof HISubOrDub)[number];
 
-export const HiAnimeServers = {
-  HD1: 'hd-1',
-  HD2: 'hd-2',
-  HD3: 'hd-3',
-} as const;
-export type HiAnimeServers = (typeof HiAnimeServers)[keyof typeof HiAnimeServers];
+export const HiAnimeServers = ['hd-1', 'hd-2', 'hd-3'] as const;
+export type HiAnimeServers = (typeof HiAnimeServers)[number];
 export const HIGenres = [
   'action',
   'adventure',
@@ -198,3 +196,122 @@ export const HIGenres = [
 ] as const;
 
 export type HIGenres = (typeof HIGenres)[number];
+
+export interface IMetaAnime {
+  malId: number;
+  anilistId?: number;
+  image: string;
+  color?: string;
+  bannerImage: string;
+  title: {
+    romaji: string;
+    english: string;
+    native: string;
+  };
+  trailer: string;
+  format: string;
+  status: string;
+  duration: number;
+  score: number;
+  genres: string[];
+  episodes: number;
+  synopsis: string;
+  season: string;
+  startDate: string;
+  endDate: string;
+  studio: string;
+  producers: string[];
+}
+
+export const Sort = ['SCORE_DESC', 'POPULARITY_DESC'] as const;
+export type Sort = (typeof Sort)[number];
+
+export const Seasons = ['WINTER', 'SPRING', 'SUMMER', 'FALL'] as const;
+export type Seasons = (typeof Seasons)[number];
+
+export const JikanStatus = ['airing', 'bypopularity', 'upcoming', 'favorite'] as const;
+export type JikanStatus = (typeof JikanStatus)[number];
+
+export const AnilistStatus = ['NOT_YET_RELEASED', 'RELEASING'] as const;
+export type AnilistStatus = (typeof AnilistStatus)[number];
+
+export const Format = {
+  TV: 'TV',
+  MOVIE: 'MOVIE',
+  SPECIAL: 'SPECIAL',
+  OVA: 'OVA',
+  ONA: 'ONA',
+  MUSIC: 'MUSIC',
+} as const;
+export type Format = (typeof Format)[keyof typeof Format];
+
+export const Charactersort = {
+  RELEVANCE: 'RELEVANCE',
+} as const;
+export type Charactersort = (typeof Charactersort)[keyof typeof Charactersort];
+export interface IRelatedAnilistData {
+  anilistId: number;
+  malId: number;
+  title: {
+    romaji: string;
+    english: string;
+    native: string;
+  };
+  type: string;
+  score: number;
+  image: string;
+  bannerImage: string;
+  color: string;
+}
+export interface IMetaCharacters {
+  role: string;
+  id: number;
+  name: string;
+  image: string;
+  voiceActors: voiceActors[];
+}
+type voiceActors = {
+  name: string;
+  image: string;
+  language: string;
+};
+
+export interface IAnilistCharacters {
+  anilistId: number;
+  malId: number;
+  title: {
+    romaji: string;
+    english: string;
+    native: string;
+  };
+  characters: IMetaCharacters[];
+}
+export const AnimeProvider = {
+  HiAnime: 'hianime',
+  Animekai: 'animekai',
+} as const;
+export type AnimeProvider = (typeof AnimeProvider)[keyof typeof AnimeProvider];
+export interface IProviderId {
+  id: string | null;
+  name: string | null;
+  romaji: string | null;
+  provider: string | null;
+  score: number | null;
+}
+export interface IMetaProviderIdResponse<T> extends IResponse<T> {
+  provider: IProviderId | null;
+}
+
+interface MetaProviderEpisodes {
+  episodeNumber: number | null;
+  rating: number | null;
+  aired: boolean | null;
+  episodeId: string | null;
+  title: string | null;
+  overview: string | null;
+  thumbnail: string | null;
+  provider: string | null;
+}
+export interface IMetaProviderEpisodesResponse<T> extends IResponse<T> {
+  providerEpisodes: MetaProviderEpisodes[] | [];
+}

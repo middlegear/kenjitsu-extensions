@@ -1,4 +1,4 @@
-import { Anilist } from './anilist/index.js';
+import { Anilist } from './anilist.js';
 import { Jikan } from './jikan/index.js';
 import { TheMovieDatabase } from './tmdb/index.js';
 import { TvMaze } from './tvmaze/index.js';

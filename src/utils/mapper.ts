@@ -2,9 +2,7 @@ import { findBestMatch } from './string-similarity.js';
 
 export type Title = {
   english: string;
-  tvTitle?: string;
-  romaji?: string;
-  // movieTitle?: string;
+  romaji: string;
 };
 
 type AnimeSearchResults = {
@@ -26,29 +24,23 @@ export type ProviderSearchResults = {
   releaseDate?: number;
   quality: string;
 };
-function normalizeTitle(title?: string) {
-  return title?.toLowerCase().trim() || '';
-}
 
 export function bestTitleMatch(title: Title, results: AnimeSearchResults[]) {
   if (!results.length) return null;
 
-  const normRomaji = normalizeTitle(title.romaji);
-  const normEnglish = normalizeTitle(title.english);
-
   const normalizedResults = results.map(item => ({
     ...item,
-    _name: normalizeTitle(item.name),
-    _romaji: normalizeTitle(item.romaji),
+    _name: item.name,
+    _romaji: item.romaji,
   }));
 
   const englishMatch = findBestMatch(
-    normEnglish,
+    title.english,
     normalizedResults.map(r => r._name),
   );
 
   const romajiMatch = findBestMatch(
-    normRomaji,
+    title.romaji,
     normalizedResults.map(r => r._romaji),
   );
 
@@ -72,15 +64,13 @@ export function bestTitleMatch(title: Title, results: AnimeSearchResults[]) {
 export function tmdbTitle(title: string, results: TvSearchResults[]) {
   if (!results.length) return null;
 
-  const normTvtitle = normalizeTitle(title);
-
   const normalizedResults = results.map(item => ({
     ...item,
-    _name: normalizeTitle(item.name),
+    _name: item.name,
   }));
 
   const findTitle = findBestMatch(
-    normTvtitle,
+    title,
     normalizedResults.map(r => r._name),
   );
   const best = findTitle.bestMatch;
@@ -93,60 +83,22 @@ export function tmdbTitle(title: string, results: TvSearchResults[]) {
       }
     : null;
 }
-// export function bestTvShowTitle(title: string, results: ProviderSearchResults[]) {
-//   if (!results.length) return null;
 
-//   const normTvtitle = normalizeTitle(title);
-
-//   const normalizedResults = results.map(item => ({
-//     ...item,
-//     _title: normalizeTitle(item.title),
-//     _id: normalizeTitle(item.id),
-//   }));
-
-//   const findTitle = findBestMatch(
-//     normTvtitle,
-//     normalizedResults.map(r => r._title),
-//   );
-//   const findId = findBestMatch(
-//     normTvtitle,
-//     normalizedResults.map(r => r._id),
-//   );
-
-//   // const best = findTitle.bestMatch;
-//   // Pick better of the two
-//   const best = findTitle.bestMatch.rating >= findId.bestMatch.rating ? findTitle.bestMatch : findId.bestMatch;
-
-//   const match = normalizedResults.find(r => r._title === best.target || r._id === best.target);
-//   // const match = normalizedResults.find(r => r._title === best.target);
-//   return match
-//     ? {
-//         id: match.id || null,
-//         title: match.title || null,
-//         quality: match.quality || null,
-//         url: match.url || null,
-//         score: best.rating,
-//       }
-//     : null;
-// }
-//
 export function bestTvShowTitle(title: string, results: ProviderSearchResults[]) {
   if (!results.length) return null;
 
-  const normTvtitle = normalizeTitle(title);
-
   const normalizedResults = results.map(item => ({
     ...item,
-    _title: normalizeTitle(item.title),
-    _id: normalizeTitle(item.id),
+    _title: item.title,
+    _id: item.id,
   }));
 
   const findTitle = findBestMatch(
-    normTvtitle,
+    title,
     normalizedResults.map(r => r._title),
   );
   const findId = findBestMatch(
-    normTvtitle,
+    title,
     normalizedResults.map(r => r._id),
   );
 
@@ -192,20 +144,18 @@ export function bestTvShowTitle(title: string, results: ProviderSearchResults[])
 export function bestMovieTitle(title: string, results: ProviderSearchResults[]) {
   if (!results.length) return null;
 
-  const normTvtitle = normalizeTitle(title);
-
   const normalizedResults = results.map(item => ({
     ...item,
-    _title: normalizeTitle(item.title),
-    _id: normalizeTitle(item.id),
+    _title: item.title,
+    _id: item.id,
   }));
 
   const findTitle = findBestMatch(
-    normTvtitle,
+    title,
     normalizedResults.map(r => r._title),
   );
   const findId = findBestMatch(
-    normTvtitle,
+    title,
     normalizedResults.map(r => r._id),
   );
 

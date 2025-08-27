@@ -1,7 +1,7 @@
 import { test, expect } from 'vitest';
 
 import { AnimeProvider, Seasons } from '../src/types/types.js';
-import { Anilist } from '../src/provider/index.js';
+import { Anilist } from '../src/provider/meta/anilist/anilist.js';
 
 const anilist = new Anilist();
 
@@ -12,7 +12,7 @@ test('returns an array of anime related to search query', async () => {
 });
 
 test('returns an array containing airing anime', async () => {
-  const data = await anilist.fetchAiring(1, 25);
+  const data = await anilist.fetchTopAiring(1, 25);
   expect(Array.isArray(data.data)).toBe(true);
   expect(data.data.length).toBeGreaterThan(0);
 });
@@ -35,8 +35,8 @@ test('returns an array of trending anime', async () => {
 });
 
 test('returns an object that contains both providerId and animeinfo', async () => {
-  const data = await anilist.fetchProviderAnimeId(169755, AnimeProvider.HiAnime);
-  expect(data.animeProvider).not.toBeNull();
+  const data = await anilist.fetchProviderId(169755);
+  expect(data.provider).not.toBeNull();
   expect(data.data).not.toBeNull();
 });
 
@@ -58,7 +58,7 @@ test('returns an array of top rated anime', async () => {
 });
 
 test('returns an array containing seasonal anime', async () => {
-  const data = await anilist.fetchSeasonalAnime(Seasons.WINTER, 2025, 'ONA', 1, 10);
+  const data = await anilist.fetchSeasonalAnime(Seasons.WINTER, 2025, 1, 10, 'ONA');
   expect(Array.isArray(data.data)).toBe(true);
   expect(data.data.length).toBeGreaterThan(0);
 });
@@ -70,7 +70,7 @@ test('returns an array of upcoming anime', async () => {
 });
 
 test('returns an object has anime info and provider episodes array', async () => {
-  const data = await anilist.fetchAnimeProviderEpisodes(159322, AnimeProvider.HiAnime);
+  const data = await anilist.fetchAnimeProviderEpisodes(159322);
   expect(Array.isArray(data.providerEpisodes)).toBe(true);
   expect(data.providerEpisodes.length).toBeGreaterThan(0);
   expect(data.data).not.toBeNull();
