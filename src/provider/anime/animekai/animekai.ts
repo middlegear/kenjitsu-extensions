@@ -129,10 +129,12 @@ export async function getAnimeInfo(animeId: string): Promise<AnimeInfoKai> {
 
     const data$ = cheerio.load(response.data);
     const { animeInfo } = extractAnimeInfo(data$);
-    // console.log(animeInfo);
+    console.log(animeInfo);
 
     // Fetch episodes list
     const ani_id = data$('.rate-box#anime-rating').attr('data-id');
+    console.log(ani_id);
+
     if (!ani_id) {
       return {
         error: 'Scraper Error: anime ID not found',

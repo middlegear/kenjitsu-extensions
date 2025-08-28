@@ -1,4 +1,5 @@
-import { HiAnime } from './provider/anime/hianime/hianime.js';
+import { HiAnime } from './provider/anime/hianime.js';
+import { AnimeKai } from './provider/index.js';
 import {
   AnimeKaiServers,
   Seasons,
@@ -26,3 +27,6 @@ import {
 //   StreamingServers,
 //   AnimeProvider,
 // };
+const animekai = new HiAnime();
+const data = await animekai.fetchAnimeCategory('SPECIALS');
+console.log(data);

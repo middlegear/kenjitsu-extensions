@@ -1,6 +1,7 @@
-import { BaseClass } from '../../../models/base-anime.js';
-import { HiAnimeServers, HISubOrDub } from '../../../models/types.js';
 import * as cheerio from 'cheerio';
+import { BaseClass } from '../../models/base-anime.js';
+import type { HISubOrDub, HiAnimeServers, IAnimeCategory } from '../../models/types.js';
+import MegaCloud from '../../source-extractors/megacloud.js';
 import type {
   IAnime,
   IAnimePaginated,
@@ -19,8 +20,7 @@ import type {
   HIServerInfo,
   HISourceResponse,
   IVideoSource,
-} from '../../../models/types.js';
-import MegaCloud from '../../../source-extractors/megacloud.js';
+} from '../../models/types.js';
 
 /**
  * A class for interacting with the HiAnime platform (hianime.to) to search for anime, fetch detailed information,
@@ -1437,17 +1437,39 @@ export class HiAnime extends BaseClass {
   }
 
   /**
-   * Fetches a list of TV anime.
-   * @param {number} page - Page number for pagination (default: 1)
-   * @returns {  Promise<IAnimePaginated<IAnime[] | []>>} Promise resolving to an object with TV anime and pagination details
+   * Fetches a list of anime by category.
+   * @param { IAnimeCategory} category - The category of anime to fetch (MOVIE, TV, ONA, OVA, SPECIALS).
+   * @param {number} [page=1] - The page number for pagination (default: 1).
+   * @returns {Promise<IAnimePaginated<IAnime[] | []>>} - Promise resolving to paginated anime results.
    */
-  async fetchTvAnime(page: number = 1): Promise<IAnimePaginated<IAnime[] | []>> {
+  async fetchAnimeCategory(category: IAnimeCategory, page: number = 1): Promise<IAnimePaginated<IAnime[] | []>> {
     try {
-      const response = await this.client.get(`${this.baseUrl}/tv`, {
-        params: {
-          page: String(page),
-        },
+      let endpoint: string;
+
+      switch (category) {
+        case 'MOVIE':
+          endpoint = '/movie';
+          break;
+        case 'TV':
+          endpoint = '/tv';
+          break;
+        case 'ONA':
+          endpoint = '/ona';
+          break;
+        case 'OVA':
+          endpoint = '/ova';
+          break;
+        case 'SPECIALS':
+          endpoint = '/special';
+          break;
+        default:
+          throw new Error(`Invalid category: ${category}`);
+      }
+
+      const response = await this.client.get(`${this.baseUrl}${endpoint}`, {
+        params: { page: String(page) },
       });
+
       if (!response.data) {
         return {
           hasNextPage: false,
@@ -1460,114 +1482,7 @@ export class HiAnime extends BaseClass {
 
       const data$ = cheerio.load(response.data);
       const selector: cheerio.SelectorType = 'div#main-wrapper section.block_area_category div.flw-item';
-      return this.parsePaginatedResults(data$, selector);
-    } catch (error) {
-      return {
-        data: [],
-        hasNextPage: false,
-        currentPage: 0,
-        lastPage: 0,
-        error: error instanceof Error ? error.message : 'Unknown Error',
-      };
-    }
-  }
 
-  /**
-   * Fetches a list of ONA anime.
-   * @param {number} page - Page number for pagination (default: 1)
-   * @returns {  Promise<IAnimePaginated<IAnime[] | []>>} Promise resolving to an object with ONA anime and pagination details
-   */
-  async fetchOna(page: number = 1): Promise<IAnimePaginated<IAnime[] | []>> {
-    try {
-      const response = await this.client.get(`${this.baseUrl}/ona`, {
-        params: {
-          page: String(page),
-        },
-      });
-      if (!response.data) {
-        return {
-          hasNextPage: false,
-          currentPage: 0,
-          lastPage: 0,
-          error: response.statusText || 'Received empty response from server',
-          data: [],
-        };
-      }
-
-      const data$ = cheerio.load(response.data);
-      const selector: cheerio.SelectorType = 'div#main-wrapper section.block_area_category div.flw-item';
-      return this.parsePaginatedResults(data$, selector);
-    } catch (error) {
-      return {
-        data: [],
-        hasNextPage: false,
-        currentPage: 0,
-        lastPage: 0,
-        error: error instanceof Error ? error.message : 'Unknown Error',
-      };
-    }
-  }
-
-  /**
-   * Fetches a list of OVA anime.
-   * @param {number} page - Page number for pagination (default: 1)
-   * @returns {  Promise<IAnimePaginated<IAnime[] | []>>} Promise resolving to an object with OVA anime and pagination details
-   */
-  async fetchOva(page: number = 1): Promise<IAnimePaginated<IAnime[] | []>> {
-    try {
-      const response = await this.client.get(`${this.baseUrl}/ova`, {
-        params: {
-          page: String(page),
-        },
-      });
-      if (!response.data) {
-        return {
-          hasNextPage: false,
-          currentPage: 0,
-          lastPage: 0,
-          error: response.statusText || 'Received empty response from server',
-          data: [],
-        };
-      }
-
-      const data$ = cheerio.load(response.data);
-      const selector: cheerio.SelectorType = 'div#main-wrapper section.block_area_category div.flw-item';
-      return this.parsePaginatedResults(data$, selector);
-    } catch (error) {
-      return {
-        data: [],
-        hasNextPage: false,
-        currentPage: 0,
-        lastPage: 0,
-        error: error instanceof Error ? error.message : 'Unknown Error',
-      };
-    }
-  }
-
-  /**
-   * Fetches a list of anime in the specials category.
-   * @param {number} page - Page number for pagination (default: 1)
-   * @returns {  Promise<IAnimePaginated<IAnime[] | []>>} Promise resolving to an object with anime in the specials category and pagination details
-   */
-  async fetchSpecials(page: number = 1): Promise<IAnimePaginated<IAnime[] | []>> {
-    try {
-      const response = await this.client.get(`${this.baseUrl}/special`, {
-        params: {
-          page: String(page),
-        },
-      });
-      if (!response.data) {
-        return {
-          hasNextPage: false,
-          currentPage: 0,
-          lastPage: 0,
-          error: response.statusText || 'Received empty response from server',
-          data: [],
-        };
-      }
-
-      const data$ = cheerio.load(response.data);
-      const selector: cheerio.SelectorType = 'div#main-wrapper section.block_area_category div.flw-item';
       return this.parsePaginatedResults(data$, selector);
     } catch (error) {
       return {
@@ -1772,9 +1687,9 @@ export class HiAnime extends BaseClass {
           try {
             const parsed = JSON.parse(match[1]);
             syncData = {
-              anilistId: parsed.anilist_id ?? null,
-              malId: parsed.mal_id ?? null,
-              name: parsed.name ?? null,
+              anilistId: parsed.anilist_id || null,
+              malId: parsed.mal_id || null,
+              name: parsed.name || null,
             };
           } catch {
             // Ignore parse error, return default syncData with nulls

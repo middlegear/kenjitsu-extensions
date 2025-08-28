@@ -9,6 +9,7 @@ export interface ITitle {
   english: string;
   romaji: string;
 }
+export type IAnimeCategory = 'MOVIE' | 'TV' | 'ONA' | 'OVA' | 'SPECIALS';
 export interface IAnime extends IBaseAnime {
   episodes: {
     sub: number | null;
