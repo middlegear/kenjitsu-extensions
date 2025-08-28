@@ -1,3 +1,4 @@
+import { HiAnime } from './provider/anime/hianime/hianime.js';
 import {
   AnimeKaiServers,
   Seasons,
