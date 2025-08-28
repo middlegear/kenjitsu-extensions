@@ -300,12 +300,12 @@ export class HiAnime extends BaseClass {
         posterImage: $(element).find('div.film-poster img.film-poster-img').attr('data-src') || null,
         episodes: {
           sub: Number($(element).find('div.tick > div.tick-sub:has(.fa-closed-captioning)').text().trim()) || null,
-          dub:
-            Number($(element).find('div.tick > div.tick-dub:has(.fa-microphone)').text().trim()) ||
-            Number($(element).find('div.tick > div.tick-sub:has(.fa-closed-captioning)').text().trim()) ||
-            null,
+          dub: Number($(element).find('div.tick > div.tick-dub:has(.fa-microphone)').text().trim()) || null,
         },
-        totalEpisodes: Number($(element).find('div.tick > div.tick-eps').text().trim()) || null,
+        totalEpisodes:
+          Number($(element).find('div.tick > div.tick-eps').text().trim()) ||
+          Number($(element).find('div.tick > div.tick-sub:has(.fa-closed-captioning)').text().trim()) ||
+          null,
       });
     });
     const relatedSeasonsSelector: cheerio.SelectorType =
@@ -435,12 +435,12 @@ export class HiAnime extends BaseClass {
         type: $(element).find(' div.tick span.fdi-item').text().trim() || null,
         episodes: {
           sub: Number($(element).find('div.tick > div.tick-sub:has(.fa-closed-captioning)').text().trim()) || null,
-          dub:
-            Number($(element).find('div.tick > div.tick-dub:has(.fa-microphone)').text().trim()) ||
-            Number($(element).find('div.tick > div.tick-sub:has(.fa-closed-captioning)').text().trim()) ||
-            null,
+          dub: Number($(element).find('div.tick > div.tick-dub:has(.fa-microphone)').text().trim()) || null,
         },
-        totalEpisodes: Number($(element).find('div.tick > div.tick-eps').text().trim()) || null,
+        totalEpisodes:
+          Number($(element).find('div.tick > div.tick-eps').text().trim()) ||
+          Number($(element).find('div.tick > div.tick-sub:has(.fa-closed-captioning)').text().trim()) ||
+          null,
       });
     });
 
@@ -672,12 +672,12 @@ export class HiAnime extends BaseClass {
         posterImage: $(element).find('div.film-poster  img.film-poster-img').attr('data-src') || null,
         episodes: {
           sub: Number($(element).find('div.tick > div.tick-sub:has(.fa-closed-captioning)').text().trim()) || null,
-          dub:
-            Number($(element).find('div.tick > div.tick-dub:has(.fa-microphone)').text().trim()) ||
-            Number($(element).find('div.tick > div.tick-sub:has(.fa-closed-captioning)').text().trim()) ||
-            null,
+          dub: Number($(element).find('div.tick > div.tick-dub:has(.fa-microphone)').text().trim()) || null,
         },
-        totalEpisodes: Number($(element).find('div.tick > div.tick-eps').text().trim()) || null,
+        totalEpisodes:
+          Number($(element).find('div.tick > div.tick-eps').text().trim()) ||
+          Number($(element).find('div.tick > div.tick-sub:has(.fa-closed-captioning)').text().trim()) ||
+          null,
       });
     });
     const paginationElement = $('.pre-pagination .pagination .page-item');
