@@ -824,13 +824,24 @@ export class Anilist extends MetaAnime {
           providerEpisodes: [],
         };
       }
-      const [hianime, anizipEpisodes] = await Promise.all([
+
+      const [hianimeResult, anizipResult] = await Promise.allSettled([
         this.fetchZoroEpisodes(initialResponse.provider?.id as string),
         this.anilistAnizip(anilistId),
       ]);
-      const aniZipMap = new Map((anizipEpisodes.episodes || []).map(item => [item.episodeAnizipNumber, item]));
 
-      // merge provider episodes with AniZip metadata
+      if (hianimeResult.status === 'rejected') {
+        return {
+          error: `Failed to fetch provider episodes: ${hianimeResult.reason}`,
+          data: initialResponse.data,
+          providerEpisodes: [],
+        };
+      }
+
+      const hianime = hianimeResult.value;
+      const anizipEpisodes = anizipResult.status === 'fulfilled' ? anizipResult.value.episodes : [];
+      const aniZipMap = new Map((anizipEpisodes || []).map(item => [item.episodeAnizipNumber, item]));
+
       const enrichedEpisodes = hianime.map((episode: any) => {
         const aniZipEpisode = aniZipMap.get(episode.episodeNumber);
         return this.mergeEpisodeData(episode, aniZipEpisode);
