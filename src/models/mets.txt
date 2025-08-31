@@ -25,3 +25,93 @@ export abstract class MetaAnime {
     return this.providers[site].fetchEpisodes(id);
   }
 }
+
+build a video extractor base class  that is extended to fetch keys 
+
+
+action
+adventure
+avant-garde
+Boys Love
+Comedy
+Demons
+Drama
+Ecchi
+Fantasy
+Girls Love
+Gourmet
+Harem
+Horror
+Isekai
+Iyashikei
+Josei
+Kids
+Magic
+Mahou Shoujo
+Martial Arts
+Mecha
+Military
+Music
+Mystery
+Parody
+Psychological
+Reverse Harem
+Romance
+School
+Sci-Fi
+Seinen
+Shoujo
+Shounen
+Slice of Life
+Space
+Sports
+Super Power
+Supernatural
+Suspense
+Thriller
+Vampire
+
+
+const genres = [
+  "action",
+  "adventure",
+  "avant-garde",
+  "boys-love",
+  "comedy",
+  "demons",
+  "drama",
+  "ecchi",
+  "fantasy",
+  "girls-love",
+  "gourmet",
+  "harem",
+  "horror",
+  "isekai",
+  "iyashikei",
+  "josei",
+  "kids",
+  "magic",
+  "mahou-shoujo",
+  "martial-arts",
+  "mecha",
+  "military",
+  "music",
+  "mystery",
+  "parody",
+  "psychological",
+  "reverse-harem",
+  "romance",
+  "school",
+  "sci-fi",
+  "seinen",
+  "shoujo",
+  "shounen",
+  "slice-of-life",
+  "space",
+  "sports",
+  "super-power",
+  "supernatural",
+  "suspense",
+  "thriller",
+  "vampire"
+];

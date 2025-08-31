@@ -17,6 +17,7 @@ export interface IAnime extends IBaseAnime {
   };
   totalEpisodes: number | null;
   duration?: string | null;
+  rating?: string | null;
   type?: string | null;
   synopsis?: string | null;
   startDate?: string | null;
@@ -33,15 +34,12 @@ export interface IAnimeInfo extends IAnime {
   malId: number | null;
   altnames: string | null;
   japanese: string | null;
-  rating: string | null;
   status: string | null;
   score: string | null;
   genres: string[] | null;
   studios: string[] | null;
-  producers: string | null;
-  synopsis: string | null;
+  producers: string | string[] | null;
   startDate: string | null;
-  quality: string | null;
 }
 export interface ICharacters {
   id: string | null;
@@ -54,6 +52,7 @@ export interface IRelatedSeasons {
   id: string | null;
   name: string | null;
   season: string | null;
+  totalEpisodes?: number | null;
   seasonPoster: string | null;
 }
 export interface IPromotionVIds {
@@ -92,16 +91,24 @@ export interface IAnimeInfoResponse<T> extends IResponse<T> {
   relatedAnime: IAnime[];
   characters: ICharacters[];
 }
-export interface IHomeResponse<T> extends IResponse<T> {
+export interface IHomeResponse<T> extends IBaseHomeResponse<T> {
   trending: IBaseAnime[];
   topAiring: IAnime[];
   mostPopular: IAnime[];
   favourites: IAnime[];
-  recentlyCompleted: IAnime[];
   topAnime: { daily: IAnime[]; weekly: IAnime[]; monthly: IAnime[] };
-  recentlyAdded: IAnime[];
-  recentlyUpdated: IAnime[];
 }
+export interface IBaseHomeResponse<T> extends IResponse<T> {
+  recentlyUpdated: IAnime[];
+  recentlyCompleted: IAnime[];
+  recentlyAdded: IAnime[];
+}
+
+export interface IAHomeResponse<T> extends IBaseHomeResponse<T> {
+  trending: { now: IAnime[]; daily: IAnime[]; weekly: IAnime[]; monthly: IAnime[] };
+  upcoming: IAnime[];
+}
+
 export interface HISourceResponse<T> extends IResponse<T> {
   headers: {
     Referer: string | null;
@@ -198,7 +205,51 @@ export const HIGenres = [
 ] as const;
 
 export type HIGenres = (typeof HIGenres)[number];
+const AKGenres = [
+  'action',
+  'adventure',
+  'avant-garde',
+  'boys-love',
+  'comedy',
+  'demons',
+  'drama',
+  'ecchi',
+  'fantasy',
+  'girls-love',
+  'gourmet',
+  'harem',
+  'horror',
+  'isekai',
+  'iyashikei',
+  'josei',
+  'kids',
+  'magic',
+  'mahou-shoujo',
+  'martial-arts',
+  'mecha',
+  'military',
+  'music',
+  'mystery',
+  'parody',
+  'psychological',
+  'reverse-harem',
+  'romance',
+  'school',
+  'sci-fi',
+  'seinen',
+  'shoujo',
+  'shounen',
+  'slice-of-life',
+  'space',
+  'sports',
+  'super-power',
+  'supernatural',
+  'suspense',
+  'thriller',
+  'vampire',
+] as const;
 
+export type AKGenres = (typeof AKGenres)[number];
 export interface IMetaAnime {
   malId: number;
   anilistId?: number;

@@ -133,7 +133,6 @@ export async function getAnimeInfo(animeId: string): Promise<AnimeInfoKai> {
 
     // Fetch episodes list
     const ani_id = data$('.rate-box#anime-rating').attr('data-id');
-    console.log(ani_id);
 
     if (!ani_id) {
       return {
