@@ -9,6 +9,10 @@ type AnimeSearchResults = {
   name: string;
   romaji: string;
   provider: string;
+  episodes: {
+    sub: number;
+    dub: number;
+  };
 };
 
 export abstract class MetaAnime {
@@ -67,6 +71,7 @@ export abstract class MetaAnime {
           name: match.name || null,
           romaji: match.romaji || null,
           provider: match.provider || null,
+          episodes: match.episodes || null,
           score: best.rating,
         }
       : null;
@@ -83,6 +88,7 @@ export abstract class MetaAnime {
           id: item.id,
           name: item.name,
           romaji: item.romaji,
+          episodes: item.episodes,
           provider: 'hianime',
         })) || []
       );
