@@ -355,7 +355,7 @@ export interface IMetaProviderIdResponse<T> extends IResponse<T> {
   provider: IProviderId | null;
 }
 
-interface MetaProviderEpisodes {
+interface IMetaProviderEpisodes {
   episodeNumber: number | null;
   rating: number | null;
   aired: boolean | null;
@@ -366,7 +366,7 @@ interface MetaProviderEpisodes {
   provider: string | null;
 }
 export interface IMetaProviderEpisodesResponse<T> extends IResponse<T> {
-  providerEpisodes: MetaProviderEpisodes[] | [];
+  providerEpisodes: IMetaProviderEpisodes[] | [];
 }
 export interface IMetaEpisodes {
   number: number;
@@ -381,4 +381,100 @@ export interface IMetaEpisodes {
   recap: boolean;
   score?: number;
   url: string;
+}
+
+export interface IMetaMovie {
+  tmdbId: number;
+  name: string;
+  posterImage: {
+    small: string;
+    medium: string;
+    large: string;
+    original: string;
+  };
+  coverImage: {
+    small: string;
+    medium: string;
+    large: string;
+    original: string;
+  };
+  country?: string;
+  language: string;
+  startDate: string;
+  summary: string;
+  genres: string;
+  rating: string;
+}
+
+export interface IMetaMovieInfo extends IMetaMovie {
+  lastAired: string;
+  seasons: number;
+  latestEpisode: {
+    episodeId: string;
+    title: string;
+    episodeNumber: number;
+    episodeType: string;
+    season: number;
+    summary: string;
+    rating: number;
+    airDate: string;
+  } | null;
+  nextEpisode: {
+    episodeId: number;
+    title: string;
+    episodeType: string;
+    episodeNumber: number;
+    season: number;
+    summary: string;
+    rating: number;
+    airDate: string;
+  } | null;
+}
+export interface IMetaMovieSeasons {
+  airDate: string;
+  id: string;
+  name: string;
+  rating: string;
+  summary: string;
+  seasonNumber: string;
+  posterImage: {
+    small: string;
+    medium: string;
+    large: string;
+    original: string;
+  };
+}
+export interface IMetaInfoResponse<T> extends IResponse<T> {
+  seasons: IMetaMovieSeasons[] | [];
+}
+
+export interface IMetaMovieEpisodes {
+  airDate: string | null;
+  episodeNumber: number | null;
+  episodeType?: string | null;
+  tmdbEpisodeId: number | null;
+  title: string | null;
+  summary: string | null;
+  rating: number | null;
+  seasonNumber: number | null;
+  tmdbId?: number | null;
+  runtime: string | null;
+  images: {
+    small: string;
+    medium: string;
+    large: string;
+    original: string;
+  };
+}
+
+export interface IMovieProviderResults {
+  id: string;
+  title: string;
+  url: string;
+  seasons?: number;
+  releaseDate?: number;
+  quality: string;
+}
+export interface IMetaMovieIdResponse<T> extends IResponse<T> {
+  provider: IMovieProviderResults[] | [];
 }

@@ -1,13 +1,11 @@
 import { Anilist } from './anilist.js';
 import { Jikan } from './jikan.js';
-import { TheMovieDatabase } from './tmdb/index.js';
-import { TvMaze } from './tvmaze/index.js';
+import { TheMovieDatabase } from './tmdb.js';
 
 class Meta {
   static Anilist = Anilist;
   static Jikan = Jikan;
   static TheMovieDatabase = TheMovieDatabase;
-  static TvMaze = TvMaze;
 }
 
 export { Meta };

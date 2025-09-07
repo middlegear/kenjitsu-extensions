@@ -8,10 +8,6 @@
 // console.log(JSON.stringify(data.data?.sources));
 
 
-// const tmdb = new TheMovieDatabase();
-// const data = await tmdb.fetchTvSources(119051, 1, 3);
-// const data = await tmdb.fetchMovieSources(38700);
-// console.log(data);
 
 
 // const hianime = new HiAnime();
@@ -21,17 +17,17 @@
 // console.log(data.data?.sources);
 
 
-// to do
-
-2. have a unified m3u8 format type 
-3. move all types to a folder called types 
-
 
 Hianime
 
 2. Filters for search(new method advanced search)
 
-4. Write new tests for all new sections
+
+FlixHq 
+1. Scrape new sections
+
+Tmdb 
+1. Since mapping flixhq isnt accurate  ill temporarily remove it until a solution is implemented
+2. Mapping will be filtered by type then ill need more parameters 
 
 
-/// when switching to classes 

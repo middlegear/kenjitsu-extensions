@@ -1,8 +1,8 @@
 import { FetchClient } from '../config/client.js';
 import { HiAnime } from '../provider/anime/hianime.js';
-
 import { findBestMatch } from '../utils/string-similarity.js';
-import type { ITitle } from './types.js';
+import type { IMovieProviderResults, ITitle } from './types.js';
+import { FlixHQ } from '../provider/movies/flixhq/index.js';
 
 type AnimeSearchResults = {
   id: string;
@@ -15,16 +15,16 @@ type AnimeSearchResults = {
   };
 };
 
-export abstract class MetaAnime {
+export abstract class Meta {
   protected readonly client: FetchClient;
   protected readonly provider: HiAnime;
+  protected readonly flixhq: FlixHQ;
 
-  protected constructor(provider: HiAnime = new HiAnime()) {
+  protected constructor(provider: HiAnime = new HiAnime(), flixhq: FlixHQ = new FlixHQ()) {
     this.client = new FetchClient();
     this.client.setProfile('normal-fetch');
-
-    // provider injection (default = HiAnime)
     this.provider = provider;
+    this.flixhq = flixhq;
   }
 
   // ------------------------
@@ -39,6 +39,50 @@ export abstract class MetaAnime {
       .replace(/[^\w\s-]/g, '')
       .replace(/[\s_-]+/g, '-')
       .replace(/^-+|-+$/g, '');
+  }
+
+  protected mapMovies(title: string, results: IMovieProviderResults[]) {
+    if (!results.length) return null;
+
+    const normalizedResults = results.map(item => ({
+      ...item,
+      _title: item.title,
+      _id: item.id,
+    }));
+
+    const findTitle = findBestMatch(
+      title,
+      normalizedResults.map(r => r._title),
+    );
+    const findId = findBestMatch(
+      title,
+      normalizedResults.map(r => r._id),
+    );
+
+    const bestOverallMatch = findTitle.bestMatch.rating >= findId.bestMatch.rating ? findTitle.bestMatch : findId.bestMatch;
+
+    if (bestOverallMatch.rating === 0) {
+      return [];
+    }
+
+    const matches = normalizedResults.filter(r => {
+      const isTitleMatch = r._title === bestOverallMatch.target && findTitle.bestMatch.rating === bestOverallMatch.rating;
+      const isIdMatch = r._id === bestOverallMatch.target && findId.bestMatch.rating === bestOverallMatch.rating;
+      return isTitleMatch || isIdMatch;
+    });
+
+    if (matches.length > 0) {
+      return matches.map(match => ({
+        id: match.id || null,
+        title: match.title || null,
+        quality: match.quality || null,
+        url: match.url || null,
+        releaseDate: match.releaseDate || null,
+        score: bestOverallMatch.rating,
+      }));
+    } else {
+      return null;
+    }
   }
 
   protected mapAnimeId(title: ITitle, results: AnimeSearchResults[]) {
@@ -111,8 +155,47 @@ export abstract class MetaAnime {
     }
   }
 
-  // Anizip integration
+  // ------------------------
+  // FlixHQ integration
+  // ------------------------
+  protected async searchFlixTv(query: string) {
+    try {
+      const result = await this.flixhq.search(query);
 
+      return result.data
+        .filter((item: any) => item.type === 'TV')
+        .map((item: any) => ({
+          id: item.id,
+          title: item.title,
+          url: item.url,
+          seasons: item.seasons,
+          quality: item.quality,
+        }));
+    } catch (error) {
+      throw new Error(error instanceof Error ? error.message : String(error));
+    }
+  }
+
+  protected async searchFlixMovies(query: string) {
+    try {
+      const result = await this.flixhq.search(query);
+
+      return result.data
+        .filter((item: any) => item.type === 'Movie')
+        .map((item: any) => ({
+          id: item.id,
+          title: item.title,
+          url: item.url,
+          releaseDate: item.releaseDate,
+          quality: item.quality,
+        }));
+    } catch (error) {
+      throw new Error(error instanceof Error ? error.message : String(error));
+    }
+  }
+  // ------------------------
+  // Anizip integration
+  // ------------------------
   protected formatAnizipData(data: any) {
     if (!data || !data.episodes) {
       return { animeTitles: {}, mappings: {}, episodes: [] };

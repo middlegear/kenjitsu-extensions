@@ -1,4 +1,4 @@
-import { MetaAnime } from '../../models/base-meta.js';
+import { Meta } from '../../models/base-meta.js';
 import type {
   IAnimePaginated,
   IMetaAnime,
@@ -18,7 +18,7 @@ import type {
  * fetch detailed information, retrieve various top lists (airing, movies, popular, upcoming),
  * seasonal anime, character details, and episode information  from MyAnimeList.
  */
-export class Jikan extends MetaAnime {
+export class Jikan extends Meta {
   private readonly baseUrl: string = 'https://api.jikan.moe/v4';
   constructor() {
     super();

@@ -1,4 +1,4 @@
-import { TheMovieDatabase } from '../src/provider';
+import { TheMovieDatabase } from '../src/provider/meta/tmdb';
 import { test, expect } from 'vitest';
 
 const tmdb = new TheMovieDatabase();
@@ -53,8 +53,8 @@ test('returns an array of airing tv', async () => {
 
 test('returns an object containing providerId and tv show info ', async () => {
   const data = await tmdb.fetchTvProviderId(119051);
-  expect(Array.isArray(data.providerResult)).toBe(true);
-  expect(data.providerResult?.length).toBeGreaterThan(0);
+  expect(Array.isArray(data.provider)).toBe(true);
+  expect(data.provider?.length).toBeGreaterThan(0);
   expect(data.data).not.toBe(null);
 });
 
@@ -66,7 +66,7 @@ test('returns an object containing array of tv streaming sources', async () => {
 });
 
 test('returns an array containing movie search results', async () => {
-  const data = await tmdb.searchMovies('badboys', 1);
+  const data = await tmdb.searchMovie('badboys', 1);
   expect(Array.isArray(data.data)).toBe(true);
   expect(data.data.length).toBeGreaterThan(0);
 });
@@ -108,8 +108,8 @@ test('returns an array of releasing movies', async () => {
 
 test('returns an object containing providerId and movie info ', async () => {
   const data = await tmdb.fetchMovieProviderId(38700);
-  expect(Array.isArray(data.providerResult)).toBe(true);
-  expect(data.providerResult?.length).toBeGreaterThan(0);
+  expect(Array.isArray(data.provider)).toBe(true);
+  expect(data.provider?.length).toBeGreaterThan(0);
   expect(data.data).not.toBe(null);
 });
 

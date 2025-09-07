@@ -1,6 +1,6 @@
 import { test, expect } from 'vitest';
 
-import { AnimeProvider, Seasons } from '../src/types/types.js';
+import { Seasons } from '../src/types/types.js';
 import { Anilist } from '../src/provider/meta/anilist.js';
 
 const anilist = new Anilist();

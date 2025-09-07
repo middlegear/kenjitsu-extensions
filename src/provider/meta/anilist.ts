@@ -1,4 +1,4 @@
-import { MetaAnime } from '../../models/base-meta.js';
+import { Meta } from '../../models/base-meta.js';
 import type {
   AnilistStatus,
   Format,
@@ -29,7 +29,7 @@ import {
  * retrieve various lists (trending, popular, top-rated, seasonal, upcoming), and get character
  * and episode information from specific providers.
  */
-export class Anilist extends MetaAnime {
+export class Anilist extends Meta {
   private readonly baseUrl: string = 'https://graphql.anilist.co';
   constructor() {
     super();
@@ -768,10 +768,7 @@ export class Anilist extends MetaAnime {
    * @param {number} anilistId - The unique Anilist anime ID (required).
    * @returns  A promise that resolves to an object containing the provider-specific anime ID and core anime info.
    */
-  async fetchProviderId(
-    anilistId: number,
-    // provider: AnimeProvider = 'hianime',
-  ): Promise<IMetaProviderIdResponse<IMetaAnime | null>> {
+  async fetchProviderId(anilistId: number): Promise<IMetaProviderIdResponse<IMetaAnime | null>> {
     if (!anilistId) {
       return {
         error: 'Invalid or missing required parameter: anilistId!',
