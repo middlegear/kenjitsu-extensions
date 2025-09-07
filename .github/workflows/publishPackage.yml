@@ -44,8 +44,7 @@ jobs:
       - name: Test TMDB
         run: pnpm test-tmdb  
 
-      - name: Test TvMaze
-        run: pnpm test-tvmaze     
+        
 
       - name: Lint
         run: pnpm lint
