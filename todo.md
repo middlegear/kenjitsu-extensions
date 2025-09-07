@@ -19,8 +19,13 @@
 
 
 Hianime
-
+1. build out airing schedule.
 2. Filters for search(new method advanced search)
+
+
+Animekai
+1. Fix the episodes
+2. fix servers and sources
 
 
 FlixHq 

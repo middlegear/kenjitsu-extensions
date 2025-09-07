@@ -1,363 +1,363 @@
-import * as cheerio from 'cheerio';
-import { extractAnimeInfo, extractsearchresults } from './scraper.js';
+// import * as cheerio from 'cheerio';
+// import { extractAnimeInfo, extractsearchresults } from './scraper.js';
 
-import { type ASource, SubOrDub } from '../../../types/types.js';
-import { type Info, type searchRes, AnimeKaiServers } from './types.js';
+// import { type ASource, SubOrDub } from '../../../types/types.js';
+// import { type Info, type searchRes, AnimeKaiServers } from './types.js';
 
-import { AnimekaiDecoder } from '../../../source-extractors/megaup.js';
-import { FetchClient } from '../../../config/client.js';
+// import { AnimekaiDecoder } from '../../../source-extractors/megaup.js';
+// import { FetchClient } from '../../../config/client.js';
 
-const animekaiBaseUrl = 'https://animekai.to' as const;
-const client = new FetchClient();
-client.setProfile('librewolf-desktop');
-export const headers = {
-  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:134.0) Gecko/20100101 Firefox/134.0',
-  Accept: 'text/html, */*; q=0.01',
-  'Accept-Language': 'en-US,en;q=0.5',
-  'Sec-GPC': '1',
-  'Sec-Fetch-Dest': 'empty',
-  'Sec-Fetch-Mode': 'cors',
-  'Sec-Fetch-Site': 'same-origin',
-  Priority: 'u=0',
-  Pragma: 'no-cache',
-  'Cache-Control': 'no-cache',
-  referer: 'https://animekai.to/',
-  Cookie:
-    'usertype=guest; session=hxYne0BNXguMc8zK1FHqQKXPmmoANzBBOuNPM64a; cf_clearance=WfGWV1bKGAaNySbh.yzCyuobBOtjg0ncfPwMhtsvsrs-1737611098-1.2.1.1-zWHcaytuokjFTKbCAxnSPDc_BWAeubpf9TAAVfuJ2vZuyYXByqZBXAZDl_VILwkO5NOLck8N0C4uQr4yGLbXRcZ_7jfWUvfPGayTADQLuh.SH.7bvhC7DmxrMGZ8SW.hGKEQzRJf8N7h6ZZ27GMyqOfz1zfrOiu9W30DhEtW2N7FAXUPrdolyKjCsP1AK3DqsDtYOiiPNLnu47l.zxK80XogfBRQkiGecCBaeDOJHenjn._Zgykkr.F_2bj2C3AS3A5mCpZSlWK5lqhV6jQSQLF9wKWitHye39V.6NoE3RE',
-};
+// const animekaiBaseUrl = 'https://animekai.to' as const;
+// const client = new FetchClient();
+// client.setProfile('librewolf-desktop');
+// export const headers = {
+//   'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:134.0) Gecko/20100101 Firefox/134.0',
+//   Accept: 'text/html, */*; q=0.01',
+//   'Accept-Language': 'en-US,en;q=0.5',
+//   'Sec-GPC': '1',
+//   'Sec-Fetch-Dest': 'empty',
+//   'Sec-Fetch-Mode': 'cors',
+//   'Sec-Fetch-Site': 'same-origin',
+//   Priority: 'u=0',
+//   Pragma: 'no-cache',
+//   'Cache-Control': 'no-cache',
+//   referer: 'https://animekai.to/',
+//   Cookie:
+//     'usertype=guest; session=hxYne0BNXguMc8zK1FHqQKXPmmoANzBBOuNPM64a; cf_clearance=WfGWV1bKGAaNySbh.yzCyuobBOtjg0ncfPwMhtsvsrs-1737611098-1.2.1.1-zWHcaytuokjFTKbCAxnSPDc_BWAeubpf9TAAVfuJ2vZuyYXByqZBXAZDl_VILwkO5NOLck8N0C4uQr4yGLbXRcZ_7jfWUvfPGayTADQLuh.SH.7bvhC7DmxrMGZ8SW.hGKEQzRJf8N7h6ZZ27GMyqOfz1zfrOiu9W30DhEtW2N7FAXUPrdolyKjCsP1AK3DqsDtYOiiPNLnu47l.zxK80XogfBRQkiGecCBaeDOJHenjn._Zgykkr.F_2bj2C3AS3A5mCpZSlWK5lqhV6jQSQLF9wKWitHye39V.6NoE3RE',
+// };
 
-export interface SuccessSearchResponse {
-  data: searchRes[];
-  hasNextPage: boolean;
-  currentPage: number;
-  lastPage: number;
-}
-export interface SearchErrorResponse {
-  data: [];
-  hasNextPage: boolean;
-  lastPage: number;
-  currentPage: number;
-  error: string;
-}
+// export interface SuccessSearchResponse {
+//   data: searchRes[];
+//   hasNextPage: boolean;
+//   currentPage: number;
+//   lastPage: number;
+// }
+// export interface SearchErrorResponse {
+//   data: [];
+//   hasNextPage: boolean;
+//   lastPage: number;
+//   currentPage: number;
+//   error: string;
+// }
 
-export type SearchResponse = SuccessSearchResponse | SearchErrorResponse;
-export async function searchanime(query: string, page: number = 1): Promise<SearchResponse> {
-  if (0 >= page) {
-    page = 1;
-  }
-  if (!query.trim()) {
-    return {
-      hasNextPage: false,
-      currentPage: 0,
-      lastPage: 0,
-      data: [],
-      error: 'Missing required parameter: query',
-    };
-  }
+// export type SearchResponse = SuccessSearchResponse | SearchErrorResponse;
+// export async function searchanime(query: string, page: number = 1): Promise<SearchResponse> {
+//   if (0 >= page) {
+//     page = 1;
+//   }
+//   if (!query.trim()) {
+//     return {
+//       hasNextPage: false,
+//       currentPage: 0,
+//       lastPage: 0,
+//       data: [],
+//       error: 'Missing required parameter: query',
+//     };
+//   }
 
-  try {
-    const response = await client.get(`${animekaiBaseUrl}/browser`, {
-      params: {
-        keyword: encodeURIComponent(query.trim()),
-        page: String(page),
-      },
-    });
+//   try {
+//     const response = await client.get(`${animekaiBaseUrl}/browser`, {
+//       params: {
+//         keyword: encodeURIComponent(query.trim()),
+//         page: String(page),
+//       },
+//     });
 
-    if (!response.data) {
-      return {
-        hasNextPage: false,
-        currentPage: 0,
-        lastPage: 0,
-        data: [],
-        error: response.statusText,
-      };
-    }
+//     if (!response.data) {
+//       return {
+//         hasNextPage: false,
+//         currentPage: 0,
+//         lastPage: 0,
+//         data: [],
+//         error: response.statusText,
+//       };
+//     }
 
-    const data$ = cheerio.load(response.data);
-    const { res, searchresults } = extractsearchresults(data$);
+//     const data$ = cheerio.load(response.data);
+//     const { res, searchresults } = extractsearchresults(data$);
 
-    return {
-      hasNextPage: res.hasNextPage ?? false,
-      currentPage: res.currentPage ?? 0,
-      lastPage: res.totalPages ?? 0,
-      data: searchresults,
-    };
-  } catch (error) {
-    return {
-      hasNextPage: false,
-      currentPage: 0,
-      lastPage: 0,
-      data: [],
-      error: error instanceof Error ? error.message : 'Unknown error occurred',
-    };
-  }
-}
+//     return {
+//       hasNextPage: res.hasNextPage ?? false,
+//       currentPage: res.currentPage ?? 0,
+//       lastPage: res.totalPages ?? 0,
+//       data: searchresults,
+//     };
+//   } catch (error) {
+//     return {
+//       hasNextPage: false,
+//       currentPage: 0,
+//       lastPage: 0,
+//       data: [],
+//       error: error instanceof Error ? error.message : 'Unknown error occurred',
+//     };
+//   }
+// }
 
-type episodes = {
-  episodeId: string | null;
-  episodeNumber: number;
-  title: string | null;
-};
-export interface AnimeInfoSuccess {
-  data: Info;
-  providerEpisodes: episodes[];
-}
-export interface AnimeInfoError {
-  data: null;
-  providerEpisodes: [];
-  error: string;
-}
-export type AnimeInfoKai = AnimeInfoSuccess | AnimeInfoError;
-export async function getAnimeInfo(animeId: string): Promise<AnimeInfoKai> {
-  if (!animeId.trim()) {
-    return {
-      error: 'Missing required Params: animeId',
-      data: null,
-      providerEpisodes: [],
-    };
-  }
-  ///appropiate headers are needed including cookies basically everything from here onwards is broken
-  try {
-    // Fetch anime info
-    const response = await client.get(`${animekaiBaseUrl}/watch/${encodeURIComponent(animeId.trim())}`, {
-      headers,
-    });
+// type episodes = {
+//   episodeId: string | null;
+//   episodeNumber: number;
+//   title: string | null;
+// };
+// export interface AnimeInfoSuccess {
+//   data: Info;
+//   providerEpisodes: episodes[];
+// }
+// export interface AnimeInfoError {
+//   data: null;
+//   providerEpisodes: [];
+//   error: string;
+// }
+// export type AnimeInfoKai = AnimeInfoSuccess | AnimeInfoError;
+// export async function getAnimeInfo(animeId: string): Promise<AnimeInfoKai> {
+//   if (!animeId.trim()) {
+//     return {
+//       error: 'Missing required Params: animeId',
+//       data: null,
+//       providerEpisodes: [],
+//     };
+//   }
+//   ///appropiate headers are needed including cookies basically everything from here onwards is broken
+//   try {
+//     // Fetch anime info
+//     const response = await client.get(`${animekaiBaseUrl}/watch/${encodeURIComponent(animeId.trim())}`, {
+//       headers,
+//     });
 
-    if (!response.data) {
-      throw new Error(response.statusText).message;
-    }
+//     if (!response.data) {
+//       throw new Error(response.statusText).message;
+//     }
 
-    const data$ = cheerio.load(response.data);
-    const { animeInfo } = extractAnimeInfo(data$);
-    console.log(animeInfo);
+//     const data$ = cheerio.load(response.data);
+//     const { animeInfo } = extractAnimeInfo(data$);
+//     console.log(animeInfo);
 
-    // Fetch episodes list
-    const ani_id = data$('.rate-box#anime-rating').attr('data-id');
+//     // Fetch episodes list
+//     const ani_id = data$('.rate-box#anime-rating').attr('data-id');
 
-    if (!ani_id) {
-      return {
-        error: 'Scraper Error: anime ID not found',
-        data: null,
-        providerEpisodes: [],
-      };
-    }
+//     if (!ani_id) {
+//       return {
+//         error: 'Scraper Error: anime ID not found',
+//         data: null,
+//         providerEpisodes: [],
+//       };
+//     }
 
-    const tokenInstance = new AnimekaiDecoder();
-    const token = await tokenInstance.GenerateToken(ani_id);
-    // console.log(token);
+//     const tokenInstance = new AnimekaiDecoder();
+//     const token = await tokenInstance.GenerateToken(ani_id);
+//     // console.log(token);
 
-    const episodesResponse = await client.get(`${animekaiBaseUrl}/ajax/episodes/list?ani_id=${ani_id}&_=${token}`, {
-      headers: {
-        'X-Requested-With': 'XMLHttpRequest',
-        ...headers,
-      },
-    });
-    // console.log(episodesResponse.body);
+//     const episodesResponse = await client.get(`${animekaiBaseUrl}/ajax/episodes/list?ani_id=${ani_id}&_=${token}`, {
+//       headers: {
+//         'X-Requested-With': 'XMLHttpRequest',
+//         ...headers,
+//       },
+//     });
+//     // console.log(episodesResponse.body);
 
-    if (!episodesResponse.data) {
-      throw new Error(episodesResponse.statusText).message;
-    }
+//     if (!episodesResponse.data) {
+//       throw new Error(episodesResponse.statusText).message;
+//     }
 
-    const episodes$: cheerio.CheerioAPI = cheerio.load(JSON.parse(episodesResponse.data).result);
-    const episodes: {
-      episodeId: string | null;
-      episodeNumber: number;
-      title: string | null;
-    }[] = [];
-    episodes$('div.eplist > ul > li > a').each((i, el) => {
-      const episodeIdwithToken = `${animeId}$ep=${episodes$(el).attr('num')}$token=${episodes$(el).attr('token')}` || null;
-      const episodeNumber = Number(episodes$(el).attr('num')!);
-      const title = episodes$(el).children('span').text().trim() || null;
+//     const episodes$: cheerio.CheerioAPI = cheerio.load(JSON.parse(episodesResponse.data).result);
+//     const episodes: {
+//       episodeId: string | null;
+//       episodeNumber: number;
+//       title: string | null;
+//     }[] = [];
+//     episodes$('div.eplist > ul > li > a').each((i, el) => {
+//       const episodeIdwithToken = `${animeId}$ep=${episodes$(el).attr('num')}$token=${episodes$(el).attr('token')}` || null;
+//       const episodeNumber = Number(episodes$(el).attr('num')!);
+//       const title = episodes$(el).children('span').text().trim() || null;
 
-      episodes.push({
-        episodeId: episodeIdwithToken,
-        episodeNumber,
-        title,
-      });
-    });
+//       episodes.push({
+//         episodeId: episodeIdwithToken,
+//         episodeNumber,
+//         title,
+//       });
+//     });
 
-    if (episodes.length === 0) {
-      return {
-        error: 'Scraper Error: No results found',
-        data: null,
-        providerEpisodes: [],
-      };
-    }
+//     if (episodes.length === 0) {
+//       return {
+//         error: 'Scraper Error: No results found',
+//         data: null,
+//         providerEpisodes: [],
+//       };
+//     }
 
-    return {
-      data: animeInfo,
-      providerEpisodes: episodes,
-    };
-  } catch (error) {
-    return {
-      data: null,
-      providerEpisodes: [],
-      error: error instanceof Error ? error.message : 'Unknown error occurred',
-    };
-  }
-}
+//     return {
+//       data: animeInfo,
+//       providerEpisodes: episodes,
+//     };
+//   } catch (error) {
+//     return {
+//       data: null,
+//       providerEpisodes: [],
+//       error: error instanceof Error ? error.message : 'Unknown error occurred',
+//     };
+//   }
+// }
 
-type Intro = {
-  start: number;
-  end: number;
-};
-type Outro = {
-  start: number;
-  end: number;
-};
-export type serverInfo = {
-  name: string;
-  url: string;
-  intro: Intro;
-  outro: Outro;
-  download: string;
-};
-export interface SuccessServerInfo {
-  data: serverInfo[];
-}
-export interface ErrorServerInfo {
-  data: [];
-  error: string;
-}
+// type Intro = {
+//   start: number;
+//   end: number;
+// };
+// type Outro = {
+//   start: number;
+//   end: number;
+// };
+// export type serverInfo = {
+//   name: string;
+//   url: string;
+//   intro: Intro;
+//   outro: Outro;
+//   download: string;
+// };
+// export interface SuccessServerInfo {
+//   data: serverInfo[];
+// }
+// export interface ErrorServerInfo {
+//   data: [];
+//   error: string;
+// }
 
-export type ServerInfoResponse = SuccessServerInfo | ErrorServerInfo;
-export async function getEpisodeServers(episodeId: string, category: SubOrDub): Promise<ServerInfoResponse> {
-  if (!episodeId.trim()) {
-    return {
-      data: [],
-      error: 'Missing required params episodeId',
-    };
-  }
-  // undefined can really give 404
-  //my id   'solo-leveling-season-2-arise-from-the-shadow-x7rq$ep=5$token=O9jut_zlt0e70m9Qj5SD
-  const tokenstuff = episodeId.split('$token=')[1];
-  const token = new AnimekaiDecoder();
-  const gentoken = await token.GenerateToken(tokenstuff);
-  if (tokenstuff) episodeId = `${animekaiBaseUrl}/ajax/links/list?token=${tokenstuff}&_=${gentoken}`;
-  try {
-    const { data } = await client.get(episodeId, {
-      headers: {
-        ...headers,
-      },
-    });
-    if (!data) {
-      return {
-        error: data.statusText || 'Scraper Error: No ServerUrl  found',
-        data: [],
-      };
-    }
-    const $ = cheerio.load(data.result);
-    const servers: serverInfo[] = [];
-    const serverItems = $(`.server-items.lang-group[data-id="${category}"] .server`);
-    await Promise.all(
-      serverItems.map(async (i, server) => {
-        const id = $(server).attr('data-lid');
-        const { data } = await client.get(
-          `${animekaiBaseUrl}/ajax/links/view?id=${id}&_=${new AnimekaiDecoder().GenerateToken(id!)}`,
-          {
-            headers: headers,
-          },
-        );
-        const decodedData = JSON.parse(new AnimekaiDecoder().DecodeIframeData(data.result) as unknown as string);
-        servers.push({
-          name: `MegaUp ${$(server).text().trim()}`!,
-          url: decodedData.url,
-          intro: {
-            start: decodedData?.skip.intro[0],
-            end: decodedData?.skip.intro[1],
-          },
-          outro: {
-            start: decodedData?.skip.outro[0],
-            end: decodedData?.skip.outro[1],
-          },
-          download: decodedData.url.replace(/\/e\//, '/download/'),
-        });
-      }),
-    );
-    return {
-      data: data.result.data,
-    };
-  } catch (error) {
-    return {
-      data: [],
-      error: error instanceof Error ? ` Request failed: ${error.message}` : 'Contact dev if you see this',
-    };
-  }
-}
-export interface SuccessSourceRes {
-  data: ASource;
-  headers: {
-    Referer: string;
-  };
-}
-export interface ErrorSourceRes {
-  data: null;
-  headers: {
-    Referer: null;
-  };
-  error: string;
-}
-export type SourceResponse = SuccessSourceRes | ErrorSourceRes;
-export async function getEpisodeSources(
-  episodeId: string,
-  category: SubOrDub,
-  server: AnimeKaiServers = AnimeKaiServers.MegaUp,
-): Promise<SourceResponse> {
-  if (!episodeId.trim) {
-    return {
-      data: null,
-      headers: {
-        Referer: null,
-      },
-      error: 'Missing required params episodeId',
-    };
-  }
-  if (episodeId.startsWith('http')) {
-    const serverUrl = new URL(episodeId);
-    switch (server) {
-      case AnimeKaiServers.MegaUp:
-        return {
-          headers: { Referer: `${serverUrl.href}` },
-          data: (await new AnimekaiDecoder().extract(serverUrl)) as unknown as ASource,
-        };
+// export type ServerInfoResponse = SuccessServerInfo | ErrorServerInfo;
+// export async function getEpisodeServers(episodeId: string, category: SubOrDub): Promise<ServerInfoResponse> {
+//   if (!episodeId.trim()) {
+//     return {
+//       data: [],
+//       error: 'Missing required params episodeId',
+//     };
+//   }
+//   // undefined can really give 404
+//   //my id   'solo-leveling-season-2-arise-from-the-shadow-x7rq$ep=5$token=O9jut_zlt0e70m9Qj5SD
+//   const tokenstuff = episodeId.split('$token=')[1];
+//   const token = new AnimekaiDecoder();
+//   const gentoken = await token.GenerateToken(tokenstuff);
+//   if (tokenstuff) episodeId = `${animekaiBaseUrl}/ajax/links/list?token=${tokenstuff}&_=${gentoken}`;
+//   try {
+//     const { data } = await client.get(episodeId, {
+//       headers: {
+//         ...headers,
+//       },
+//     });
+//     if (!data) {
+//       return {
+//         error: data.statusText || 'Scraper Error: No ServerUrl  found',
+//         data: [],
+//       };
+//     }
+//     const $ = cheerio.load(data.result);
+//     const servers: serverInfo[] = [];
+//     const serverItems = $(`.server-items.lang-group[data-id="${category}"] .server`);
+//     await Promise.all(
+//       serverItems.map(async (i, server) => {
+//         const id = $(server).attr('data-lid');
+//         const { data } = await client.get(
+//           `${animekaiBaseUrl}/ajax/links/view?id=${id}&_=${new AnimekaiDecoder().GenerateToken(id!)}`,
+//           {
+//             headers: headers,
+//           },
+//         );
+//         const decodedData = JSON.parse(new AnimekaiDecoder().DecodeIframeData(data.result) as unknown as string);
+//         servers.push({
+//           name: `MegaUp ${$(server).text().trim()}`!,
+//           url: decodedData.url,
+//           intro: {
+//             start: decodedData?.skip.intro[0],
+//             end: decodedData?.skip.intro[1],
+//           },
+//           outro: {
+//             start: decodedData?.skip.outro[0],
+//             end: decodedData?.skip.outro[1],
+//           },
+//           download: decodedData.url.replace(/\/e\//, '/download/'),
+//         });
+//       }),
+//     );
+//     return {
+//       data: data.result.data,
+//     };
+//   } catch (error) {
+//     return {
+//       data: [],
+//       error: error instanceof Error ? ` Request failed: ${error.message}` : 'Contact dev if you see this',
+//     };
+//   }
+// }
+// export interface SuccessSourceRes {
+//   data: ASource;
+//   headers: {
+//     Referer: string;
+//   };
+// }
+// export interface ErrorSourceRes {
+//   data: null;
+//   headers: {
+//     Referer: null;
+//   };
+//   error: string;
+// }
+// export type SourceResponse = SuccessSourceRes | ErrorSourceRes;
+// export async function getEpisodeSources(
+//   episodeId: string,
+//   category: SubOrDub,
+//   server: AnimeKaiServers = AnimeKaiServers.MegaUp,
+// ): Promise<SourceResponse> {
+//   if (!episodeId.trim) {
+//     return {
+//       data: null,
+//       headers: {
+//         Referer: null,
+//       },
+//       error: 'Missing required params episodeId',
+//     };
+//   }
+//   if (episodeId.startsWith('http')) {
+//     const serverUrl = new URL(episodeId);
+//     switch (server) {
+//       case AnimeKaiServers.MegaUp:
+//         return {
+//           headers: { Referer: `${serverUrl.href}` },
+//           data: (await new AnimekaiDecoder().extract(serverUrl)) as unknown as ASource,
+//         };
 
-      default:
-        return {
-          headers: { Referer: `${serverUrl.href}` },
-          data: (await new AnimekaiDecoder().extract(serverUrl)) as unknown as ASource,
-        };
-    }
-  }
+//       default:
+//         return {
+//           headers: { Referer: `${serverUrl.href}` },
+//           data: (await new AnimekaiDecoder().extract(serverUrl)) as unknown as ASource,
+//         };
+//     }
+//   }
 
-  try {
-    const servers = await getEpisodeServers(episodeId, category);
-    const urlIndex = servers.data.findIndex(s => s.name.toLowerCase().includes(server));
-    if (urlIndex === -1) {
-      return {
-        data: null,
-        headers: {
-          Referer: null,
-        },
-        error: `Server ${server} not found check the class `,
-      };
-    }
+//   try {
+//     const servers = await getEpisodeServers(episodeId, category);
+//     const urlIndex = servers.data.findIndex(s => s.name.toLowerCase().includes(server));
+//     if (urlIndex === -1) {
+//       return {
+//         data: null,
+//         headers: {
+//           Referer: null,
+//         },
+//         error: `Server ${server} not found check the class `,
+//       };
+//     }
 
-    const serverUrl: URL = new URL(servers.data[urlIndex].url);
+//     const serverUrl: URL = new URL(servers.data[urlIndex].url);
 
-    const sources = await getEpisodeSources(serverUrl.href, category, server);
-    if (sources.data) {
-      sources.data.intro = servers.data[urlIndex]?.intro as Intro;
-      sources.data.outro = servers.data[urlIndex]?.outro as Outro;
-    }
+//     const sources = await getEpisodeSources(serverUrl.href, category, server);
+//     if (sources.data) {
+//       sources.data.intro = servers.data[urlIndex]?.intro as Intro;
+//       sources.data.outro = servers.data[urlIndex]?.outro as Outro;
+//     }
 
-    return sources;
-  } catch (error) {
-    return {
-      data: null,
-      headers: {
-        Referer: null,
-      },
-      error: error instanceof Error ? error.message : 'Broken ',
-    };
-  }
-}
+//     return sources;
+//   } catch (error) {
+//     return {
+//       data: null,
+//       headers: {
+//         Referer: null,
+//       },
+//       error: error instanceof Error ? error.message : 'Broken ',
+//     };
+//   }
+// }

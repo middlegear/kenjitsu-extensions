@@ -1,6 +1,5 @@
 import { test, expect } from 'vitest';
 
-import { Seasons } from '../src/types/types.js';
 import { Anilist } from '../src/provider/meta/anilist.js';
 
 const anilist = new Anilist();
@@ -58,7 +57,7 @@ test('returns an array of top rated anime', async () => {
 });
 
 test('returns an array containing seasonal anime', async () => {
-  const data = await anilist.fetchSeasonalAnime(Seasons.WINTER, 2025, 1, 10, 'ONA');
+  const data = await anilist.fetchSeasonalAnime('WINTER', 2025, 1, 10, 'ONA');
   expect(Array.isArray(data.data)).toBe(true);
   expect(data.data.length).toBeGreaterThan(0);
 });

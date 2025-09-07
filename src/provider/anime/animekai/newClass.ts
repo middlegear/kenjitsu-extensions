@@ -12,7 +12,7 @@ import type {
   IRelatedSeasons,
   IResponse,
 } from '../../../models/types.js';
-import { AnimekaiDecoder } from '../../../source-extractors/megaup.js';
+// import { AnimekaiDecoder } from '../../../source-extractors/megaup.js';
 
 const animekaiheaders = {
   'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:134.0) Gecko/20100101 Firefox/134.0',
@@ -747,26 +747,26 @@ export class NewAnimekai extends BaseClass {
 
       const ani_id = rateBox.dataId as string; ///required to generate token which fetches episodes list
 
-      const tokenInstance = new AnimekaiDecoder();
-      const token = await tokenInstance.GenerateToken(ani_id);
-      console.log(token);
+      // const tokenInstance = new AnimekaiDecoder();
+      // const token = await tokenInstance.GenerateToken(ani_id);
+      // console.log(token);
 
-      const episodesList = await this.client.get(`${this.baseUrl}/ajax/episodes/list?ani_id=${ani_id}&_=${token}`, {
-        headers: {
-          'X-Requested-With': 'XMLHttpRequest',
-          ...this.headers,
-        },
-      });
-      if (!episodesList.data) {
-        return {
-          data: animeInfo,
-          relatedSeasons: relatedSeasons,
-          recommendedAnime: recommendedAnime,
-          relatedAnime: relatedAnime,
-          error: `Cannot fetch provider episodes: ${response.statusText}`,
-          providerEpisodes: [],
-        };
-      }
+      // const episodesList = await this.client.get(`${this.baseUrl}/ajax/episodes/list?ani_id=${ani_id}&_=${token}`, {
+      //   headers: {
+      //     'X-Requested-With': 'XMLHttpRequest',
+      //     ...this.headers,
+      //   },
+      // });
+      // if (!episodesList.data) {
+      //   return {
+      //     data: animeInfo,
+      //     relatedSeasons: relatedSeasons,
+      //     recommendedAnime: recommendedAnime,
+      //     relatedAnime: relatedAnime,
+      //     error: `Cannot fetch provider episodes: ${response.statusText}`,
+      //     providerEpisodes: [],
+      //   };
+      // }
     } catch (error) {
       return {
         data: null,

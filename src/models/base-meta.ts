@@ -17,22 +17,20 @@ type AnimeSearchResults = {
 
 export abstract class Meta {
   protected readonly client: FetchClient;
-  protected readonly provider: HiAnime;
+  protected readonly hianime: HiAnime;
   protected readonly flixhq: FlixHQ;
 
-  protected constructor(provider: HiAnime = new HiAnime(), flixhq: FlixHQ = new FlixHQ()) {
+  protected constructor() {
     this.client = new FetchClient();
     this.client.setProfile('normal-fetch');
-    this.provider = provider;
-    this.flixhq = flixhq;
+    this.hianime = new HiAnime();
+    this.flixhq = new FlixHQ();
   }
 
   // ------------------------
   // Utilities
   // ------------------------
   protected createSlug(text: string): string {
-    if (text !== 'string' || text.trim() === '') return '';
-
     return text
       .toLowerCase()
       .trim()
@@ -126,7 +124,7 @@ export abstract class Meta {
   // ------------------------
   protected async searchZoro(title: string) {
     try {
-      const result = await this.provider.search(title);
+      const result = await this.hianime.search(title);
       return (
         result.data?.map((item: any) => ({
           id: item.id,
@@ -143,7 +141,7 @@ export abstract class Meta {
 
   protected async fetchZoroEpisodes(id: string) {
     try {
-      const result = await this.provider.fetchEpisodes(id);
+      const result = await this.hianime.fetchEpisodes(id);
       return result.data.map((item: any) => ({
         episodeId: item.episodeId,
         episodeNumber: item.episodeNumber,

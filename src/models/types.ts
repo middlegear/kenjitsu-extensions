@@ -478,3 +478,8 @@ export interface IMovieProviderResults {
 export interface IMetaMovieIdResponse<T> extends IResponse<T> {
   provider: IMovieProviderResults[] | [];
 }
+export const TimeWindow = {
+  Day: 'day',
+  Week: 'week',
+} as const;
+export type TimeWindow = (typeof TimeWindow)[keyof typeof TimeWindow];

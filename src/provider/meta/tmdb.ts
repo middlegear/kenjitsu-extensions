@@ -9,8 +9,9 @@ import type {
   IMetaMovieSeasons,
   IMovieProviderResults,
   IResponse,
+  TimeWindow,
 } from '../../models/types.js';
-import { TimeWindow } from '../../types/types.js';
+
 import { _getVidSrcMovieUrl, _getVidSrcTvUrl, type EmbedSrcResponse } from '../movies/embed/vidsrc.js';
 
 /**
@@ -616,7 +617,8 @@ export class TheMovieDatabase extends Meta {
       const tvShowData = await this.fetchShowInfo(tmdbId);
       const title = tvShowData.data?.name;
 
-      const flixResults = await this.searchFlixTv(title as string);
+      const titleSlug = this.createSlug(title as string);
+      const flixResults = await this.searchFlixTv(titleSlug);
 
       return {
         data: tvShowData.data,
@@ -637,8 +639,9 @@ export class TheMovieDatabase extends Meta {
     try {
       const movieData = await this.fetchMovieInfo(tmdbId);
       const title = movieData.data?.name;
+      const titleSlug = this.createSlug(title as string);
 
-      const flixResults = await this.searchFlixMovies(title as string);
+      const flixResults = await this.searchFlixMovies(titleSlug);
 
       return {
         data: movieData.data,

@@ -1589,8 +1589,8 @@ export class HiAnime extends BaseClass {
     server: HiAnimeServers = 'hd-2',
     category: HISubOrDub = 'sub',
   ): Promise<HISourceResponse<IVideoSource | null>> {
-    if (!episodeId || episodeId.includes('ep=')) {
-      if (episodeId.includes('ep=')) {
+    if (!episodeId || episodeId.includes('ep=') || episodeId.includes('$')) {
+      if (episodeId.includes('ep=') || episodeId.includes('$')) {
         return {
           data: null,
           headers: { Referer: null },
