@@ -348,6 +348,7 @@ export class Anilist extends MetaAnime {
         query: popularAnimeQuery,
         variables,
       });
+
       if (!response.data)
         return {
           error: response.statusText || 'Server returned an empty response',

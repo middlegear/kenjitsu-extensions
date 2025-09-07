@@ -19,7 +19,7 @@ export abstract class MetaAnime {
   protected readonly client: FetchClient;
   protected readonly provider: HiAnime;
 
-  constructor(provider: HiAnime = new HiAnime()) {
+  protected constructor(provider: HiAnime = new HiAnime()) {
     this.client = new FetchClient();
     this.client.setProfile('normal-fetch');
 
@@ -31,7 +31,7 @@ export abstract class MetaAnime {
   // Utilities
   // ------------------------
   protected createSlug(text: string): string {
-    if (typeof text !== 'string' || text.trim() === '') return '';
+    if (text !== 'string' || text.trim() === '') return '';
 
     return text
       .toLowerCase()
@@ -170,25 +170,6 @@ export abstract class MetaAnime {
     };
   }
 
-  private async fetchAnizipByMapping(type: 'anilist_id' | 'mal_id', id: number) {
-    if (!id) return { error: `Missing required param: ${type}`, data: null };
-
-    try {
-      const response = await this.client.get(`https://api.ani.zip/mappings?${type}=${id}`);
-      if (!response.data) throw new Error(response.statusText);
-
-      const results = this.formatAnizipData(response.data);
-      return {
-        images: results.images,
-        titles: results.titles,
-        episodes: results.episodes,
-        mapping: results.mappings,
-      };
-    } catch (error) {
-      throw new Error(error instanceof Error ? error.message : String(error));
-    }
-  }
-
   protected anilistAnizip(id: number) {
     return this.fetchAnizipByMapping('anilist_id', id);
   }
@@ -196,6 +177,7 @@ export abstract class MetaAnime {
   protected malAnizip(id: number) {
     return this.fetchAnizipByMapping('mal_id', id);
   }
+
   protected mergeEpisodeData(providerEp: any, aniZipEp?: any) {
     const episodeNumber = aniZipEp?.episodeAnizipNumber ?? providerEp?.episodeNumber ?? null;
     const rating = aniZipEp?.rating ?? null;
@@ -216,5 +198,24 @@ export abstract class MetaAnime {
       thumbnail,
       provider,
     };
+  }
+
+  private async fetchAnizipByMapping(type: 'anilist_id' | 'mal_id', id: number) {
+    if (!id) return { error: `Missing required param: ${type}`, data: null };
+
+    try {
+      const response = await this.client.get(`https://api.ani.zip/mappings?${type}=${id}`);
+      if (!response.data) throw new Error(response.statusText);
+
+      const results = this.formatAnizipData(response.data);
+      return {
+        images: results.images,
+        titles: results.titles,
+        episodes: results.episodes,
+        mapping: results.mappings,
+      };
+    } catch (error) {
+      throw new Error(error instanceof Error ? error.message : String(error));
+    }
   }
 }
