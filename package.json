@@ -36,12 +36,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/middlegear/hakai-extensions.git"
+    "url": "https://github.com/middlegear"
   },
   "publishConfig": {
     "registry": "https://registry.npmjs.org/"
   },
-  "homepage": "https://github.com/middlegear/hakai-extensions#readme",
+  "homepage": "https://github.com/middlegear",
   "devDependencies": {
     "@commitlint/cli": "^19.8.1",
     "@commitlint/config-conventional": "^19.8.1",
