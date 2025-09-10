@@ -13,7 +13,7 @@ export { Seasons, TimeWindow, Format };
 // GoDoALiHc82Jrmcmh bleach latest
 //LYKSutL2PaAjYyXWz jjk s2
 // 62RyEZ8rhyRQf4XM9 kaiju no 8
-const data = await new AllAnime().fetchSources('allanime-62RyEZ8rhyRQf4XM9-episode-1', 'okru');
+const data = await new AllAnime().fetchSources('allanime-GoDoALiHc82Jrmcmh-episode-1', 'dub');
 // const data = await new AllAnime().search('kaiju no 8', 1);
 console.log(data);
 console.log(JSON.stringify(data));

@@ -1,3 +1,7 @@
+/**
+ * AllAnime class for interacting with the AllAnime API to search for anime,
+ * fetch episodes, servers, and video sources.
+ */
 import { BaseClass } from '../../models/base-anime.js';
 import type {
   AllAnimeServers,
@@ -14,13 +18,38 @@ import FileMoon from '../../source-extractors/filemoon.js';
 import MP4Upload from '../../source-extractors/mp4upload.js';
 import Okru from '../../source-extractors/okru.js';
 
+type SourceResponseMap = {
+  [key in AllAnimeServers]?: AllAnimeSourceResponse<IVideoSource | null>;
+};
+
+/**
+ * Class to handle interactions with the AllAnime API.
+ * @extends BaseClass
+ */
 export class AllAnime extends BaseClass {
+  /**
+   * Base URL for the AllAnime API.
+   * @private
+   */
   private readonly baseUrl: string = 'https://api.allanime.day/api';
+
+  /**
+   * Initializes the AllAnime class.
+   */
   constructor() {
     super();
   }
 
+  /**
+   * Number of items per page for search results.
+   * @private
+   */
   private readonly pageSize: number = 26;
+
+  /**
+   * GraphQL query for searching anime shows.
+   * @private
+   */
   private SearchQuery = `
   query ($search: SearchInput, $limit: Int, $page: Int,  $countryOrigin: VaildCountryOriginEnumType) {
     shows(search: $search, limit: $limit, page: $page, countryOrigin: $countryOrigin) {
@@ -39,52 +68,52 @@ export class AllAnime extends BaseClass {
   }
 `;
 
+  /**
+   * GraphQL query for fetching episode details for a specific show.
+   * @private
+   */
   private EpisodesQuery = `
     query ($_id: String!) {
-        show(
-            _id: $_id
-        ) {
-            _id
-            availableEpisodesDetail
-        }
+      show(
+        _id: $_id
+      ) {
+        _id
+        availableEpisodesDetail
+      }
     }
 `;
 
+  /**
+   * GraphQL query for fetching streaming sources for a specific episode.
+   * @private
+   */
   private StreamsQuery = `
     query(
-        $showId: String!,
-        $translationType: VaildTranslationTypeEnumType!,
-        $episodeString: String!
+      $showId: String!,
+      $translationType: VaildTranslationTypeEnumType!,
+      $episodeString: String!
     ) {
-        episode(
-            showId: $showId
-            translationType: $translationType
-            episodeString: $episodeString
-        ) {
-            sourceUrls
-        }
+      episode(
+        showId: $showId
+        translationType: $translationType
+        episodeString: $episodeString
+      ) {
+        sourceUrls
+      }
     }
 `;
 
-  private findServerUrl(servers: IAllAnimeServers[], server: AllAnimeServers): string {
-    const availableServers = servers.map(s => s.serverId || 'unknown');
-
-    const match = servers.find(s => (s.serverId || '').toLowerCase() === server.toLowerCase());
-
-    if (!match) {
-      throw new Error(
-        `Server '${server}' not found. ` + `Try one of the available servers: ${availableServers.join(', ')}.`,
-      );
-    }
-
-    return match.serverUrl;
-  }
-
-  async search(query: string, page: number): Promise<IAnimePaginated<IAllSearch[] | []>> {
+  /**
+   * Searches for anime based on a query string and pagination.
+   * @param query - The search query string.
+   * @param page - The page number for paginated results (default: 1).
+   * @returns A promise resolving to paginated anime search results.
+   * @throws Error if the search query is empty.
+   */
+  async search(query: string, page: number = 1): Promise<IAnimePaginated<IAllSearch[] | []>> {
     if (query.length === 0) {
       throw new Error('Search query cannot be empty.');
     }
-
     const payload = {
       variables: {
         search: {
@@ -104,7 +133,6 @@ export class AllAnime extends BaseClass {
           'Content-Type': 'application/json',
         },
       });
-
       const anime = response.data.data.shows.edges.map((item: any) => ({
         id: item._id,
         title: {
@@ -115,7 +143,6 @@ export class AllAnime extends BaseClass {
         thumbnail: item.thumbnail,
         slugTime: item.slugTime,
       }));
-
       return {
         hasNextPage: response.data.data.shows.pageInfo.hasNextPage,
         currentPage: page,
@@ -131,27 +158,28 @@ export class AllAnime extends BaseClass {
     }
   }
 
+  /**
+   * Fetches episode details for a specific anime by its ID.
+   * @param id - The ID of the anime show.
+   * @returns A promise resolving to a list of episodes or an error.
+   * @throws Error if the ID is empty.
+   */
   async fetchEpisodes(id: string): Promise<IResponse<IAllAnimeEpisodes[] | []>> {
     if (id.length === 0) {
       throw new Error('id cannot be empty.');
     }
-
     const buildPayload = (query: string, variables: object) => ({
       query,
       variables,
     });
-
     try {
       const episodePayload = buildPayload(this.EpisodesQuery, { _id: id });
       const episodeResponse = await this.client.post(this.baseUrl, episodePayload);
       const available = episodeResponse.data.data.show.availableEpisodesDetail;
-
       if (!available) {
         return { data: [], error: 'No episodes available.' };
       }
-
       const allEpisodes = new Set([...(available.sub || []), ...(available.dub || []), ...(available.raw || [])]);
-
       const episodes = Array.from(allEpisodes)
         .sort((a, b) => parseInt(a) - parseInt(b))
         .map(ep => ({
@@ -161,7 +189,6 @@ export class AllAnime extends BaseClass {
           hasDub: available.dub?.includes(ep) || false,
           hasRaw: available.raw?.includes(ep) || false,
         }));
-
       return { data: episodes };
     } catch (error) {
       return {
@@ -170,31 +197,31 @@ export class AllAnime extends BaseClass {
       };
     }
   }
-  async fetchServers(id: string, category: HISubOrDub = 'sub'): Promise<IResponse<IAllAnimeServers[] | []>> {
-    const buildPayload = (query: string, variables: object) => {
-      return {
-        query,
-        variables,
-      };
-    };
 
+  /**
+   * Fetches available servers for a specific episode.
+   * @param id - The episode ID in the format 'allanime-<showId>-episode-<episodeNumber>'.
+   * @param category - The translation type (sub, dub, or raw, default: 'sub').
+   * @returns A promise resolving to a list of servers or an error.
+   */
+  async fetchServers(id: string, category: HISubOrDub = 'sub'): Promise<IResponse<IAllAnimeServers[] | []>> {
+    const buildPayload = (query: string, variables: object) => ({
+      query,
+      variables,
+    });
     const showId = id.split('-').at(1);
     const episode = id.split('-').at(-1);
-
     try {
       const serverPayload = buildPayload(this.StreamsQuery, {
         showId: showId,
         translationType: category,
         episodeString: String(episode),
       });
-
       const serverResponse = await this.client.post(this.baseUrl, serverPayload);
       let sourceUrls = serverResponse.data.data.episode.sourceUrls;
-
       if (!sourceUrls) {
         throw new Error(`No servers found for ${id}.`);
       }
-
       const serverIdMap: Record<string, string> = {
         ok: 'okru',
         'fm-hls': 'filemoon',
@@ -222,62 +249,48 @@ export class AllAnime extends BaseClass {
     }
   }
 
-  async fetchSources(
-    episodeId: string,
-    server: AllAnimeServers = 'mp4upload',
-    category: HISubOrDub = 'sub',
-  ): Promise<AllAnimeSourceResponse<IVideoSource | null>> {
-    //
-    if (episodeId.includes('http')) {
-      const serverUrl = new URL(episodeId);
-      switch (server) {
-        case 'mp4upload':
-          return {
-            headers: { Referer: `${serverUrl.origin}/` },
-            data: await new MP4Upload().extract(serverUrl),
-          };
-
-        case 'filemoon':
-          return {
-            headers: { Referer: `${serverUrl.origin}/` },
-            data: await new FileMoon().extract(serverUrl),
-          };
-        case 'okru':
-          return {
-            headers: { Referer: `${serverUrl.origin}/` },
-            data: await new Okru().extract(serverUrl),
-          };
-      }
+  /**
+   * Fetches video sources for a given episode from multiple servers.
+   * @param episodeId - The ID of the episode to fetch sources for.
+   * @param category - The translation category (sub, dub, or raw, default: 'sub').
+   * @returns A promise resolving to a map of server IDs to their video source responses.
+   */
+  async fetchSources(episodeId: string, category: HISubOrDub = 'sub'): Promise<SourceResponseMap> {
+    const { data, error } = await this.fetchServers(episodeId, category);
+    if (!data || error) {
+      return {}; // return an empty object that conforms to the type
     }
 
-    try {
-      const fetchservers = (await this.fetchServers(episodeId, category)).data;
+    const results = await Promise.all(
+      data.map(async ({ serverId, serverUrl }) => {
+        try {
+          const url = new URL(serverUrl);
+          const extractors: { [key: string]: () => Promise<IVideoSource | null> } = {
+            mp4upload: () => new MP4Upload().extract(url),
+            filemoon: () => new FileMoon().extract(url),
+            okru: () => new Okru().extract(url),
+          };
 
-      if ('error' in fetchservers) {
-        return {
-          data: null,
-          headers: { Referer: null },
-          error: fetchservers.error as string,
-        };
-      }
-      if (!Array.isArray(fetchservers)) {
-        return {
-          data: null,
-          headers: { Referer: null },
-          error: (fetchservers as any).error as string,
-        };
-      }
-      const serverUrl = this.findServerUrl(fetchservers, server);
+          const data = await (extractors[serverId as AllAnimeServers]?.() ?? null);
+          return {
+            serverId: serverId as AllAnimeServers,
+            value: data
+              ? { headers: { Referer: `${url.origin}/` }, data }
+              : { headers: { Referer: null }, data: null, error: `Unsupported server: ${serverId}` },
+          };
+        } catch (error) {
+          return {
+            serverId: serverId as AllAnimeServers,
+            value: {
+              headers: { Referer: null },
+              data: null,
+              error: error instanceof Error ? error.message : 'Unknown Error',
+            },
+          };
+        }
+      }),
+    );
 
-      return await this.fetchSources(serverUrl, server, category);
-    } catch (error) {
-      return {
-        data: null,
-        headers: {
-          Referer: null,
-        },
-        error: error instanceof Error ? error.message : 'Unknown Error',
-      };
-    }
+    return results.reduce((acc, { serverId, value }) => ({ ...acc, [serverId]: value }), {} as SourceResponseMap);
   }
 }

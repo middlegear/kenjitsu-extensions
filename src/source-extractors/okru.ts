@@ -1,4 +1,3 @@
-import { url } from 'inspector';
 import { FetchClient } from '../config/client.js';
 import type { IVideoSource } from '../models/types.js';
 import * as cheerio from 'cheerio';
@@ -13,7 +12,9 @@ class Okru {
   private ParseHtml($: cheerio.CheerioAPI) {
     const selector: cheerio.SelectorType = 'div.vid-card.vid-card__fullscreen.h-mod';
     const dataOptions = $(selector).find('div').attr('data-options');
-
+    if (!dataOptions) {
+      throw Error('Could not find a valid source url');
+    }
     return JSON.parse(dataOptions as string);
   }
 
