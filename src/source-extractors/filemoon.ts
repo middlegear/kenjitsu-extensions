@@ -49,7 +49,7 @@ class FileMoon {
         extractedData.posterImage = thumbnailMatch[1];
       }
 
-      extractedData.download = videoUrl.href.replace('/e/', '/d/');
+      extractedData.download = videoUrl.href.replace('/e/', '/download/').replace('.html', '');
 
       return extractedData;
     } catch (error) {

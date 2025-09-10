@@ -11,6 +11,8 @@ import type {
   IMetaProviderEpisodesResponse,
   Seasons,
   Format,
+  AnimeProvider,
+  HISubOrDub,
 } from '../../models/types.js';
 
 /**
@@ -22,6 +24,167 @@ export class Jikan extends Meta {
   private readonly baseUrl: string = 'https://api.jikan.moe/v4';
   constructor() {
     super();
+  }
+  private async fetchAllAnimeProviderEpisodes(malId: number): Promise<IMetaProviderEpisodesResponse<IMetaAnime | null>> {
+    if (!malId) {
+      return {
+        error: 'Invalid or missing required parameter: malId!',
+        data: null,
+        providerEpisodes: [],
+      };
+    }
+
+    try {
+      const initialResponse = await this.fetchAllAnimeProviderId(malId);
+      if (!initialResponse.provider?.id) {
+        return {
+          error: 'Provider not found for given MAL ID.',
+          data: initialResponse.data,
+          providerEpisodes: [],
+        };
+      }
+
+      const [allanimeResult, anizipResult] = await Promise.allSettled([
+        this.fetchAllAnimeEpisodes(initialResponse.provider?.id as string),
+        this.malAnizip(malId),
+      ]);
+
+      if (allanimeResult.status === 'rejected') {
+        return {
+          error: `Failed to fetch provider episodes: ${allanimeResult.reason}`,
+          data: initialResponse.data,
+          providerEpisodes: [],
+        };
+      }
+
+      const allanime = allanimeResult.value;
+      const anizipEpisodes = anizipResult.status === 'fulfilled' ? anizipResult.value.episodes : [];
+      const aniZipMap = new Map((anizipEpisodes || []).map(item => [item.episodeAnizipNumber, item]));
+
+      const enrichedEpisodes = allanime.map((episode: any) => {
+        const aniZipEpisode = aniZipMap.get(episode.episodeNumber);
+        return this.mergeEpisodeData(episode, aniZipEpisode);
+      });
+
+      return {
+        data: initialResponse.data,
+        providerEpisodes: enrichedEpisodes,
+      };
+    } catch (error) {
+      return {
+        data: null,
+        error: error instanceof Error ? error.message : 'Unknown Err',
+        providerEpisodes: [],
+      };
+    }
+  }
+  private async fetchZoroProviderEpisodes(malId: number): Promise<IMetaProviderEpisodesResponse<IMetaAnime | null>> {
+    if (!malId) {
+      return {
+        error: 'Invalid or missing required parameter: malId!',
+        data: null,
+        providerEpisodes: [],
+      };
+    }
+    try {
+      const initialResponse = await this.fetchZoroProviderId(malId);
+      if (!initialResponse.provider?.id) {
+        return {
+          error: 'Provider not found for given mal ID.',
+          data: initialResponse.data,
+          providerEpisodes: [],
+        };
+      }
+
+      const [hianimeResult, anizipResult] = await Promise.allSettled([
+        this.fetchZoroEpisodes(initialResponse.provider?.id as string),
+        this.malAnizip(malId),
+      ]);
+
+      if (hianimeResult.status === 'rejected') {
+        return {
+          error: `Failed to fetch provider episodes: ${hianimeResult.reason}`,
+          data: initialResponse.data,
+          providerEpisodes: [],
+        };
+      }
+
+      const hianime = hianimeResult.value;
+      const anizipEpisodes = anizipResult.status === 'fulfilled' ? anizipResult.value.episodes : [];
+      const aniZipMap = new Map((anizipEpisodes || []).map(item => [item.episodeAnizipNumber, item]));
+
+      const enrichedEpisodes = hianime.map((episode: any) => {
+        const aniZipEpisode = aniZipMap.get(episode.episodeNumber);
+        return this.mergeEpisodeData(episode, aniZipEpisode);
+      });
+
+      return {
+        data: initialResponse.data,
+        providerEpisodes: enrichedEpisodes,
+      };
+    } catch (error) {
+      return {
+        data: null,
+        error: error instanceof Error ? error.message : 'Unknown Err',
+        providerEpisodes: [],
+      };
+    }
+  }
+  private async fetchZoroProviderId(malId: number): Promise<IMetaProviderIdResponse<IMetaAnime | null>> {
+    if (!malId) {
+      return {
+        error: 'Invalid or missing required parameter: malId!',
+        data: null,
+        provider: null,
+      };
+    }
+    try {
+      const mal = await this.fetchInfo(malId);
+      const titles = mal.data?.title as ITitle;
+      const userPref = titles?.english || titles?.romaji || titles?.native;
+      const titleSlug = this.createSlug(userPref as string);
+
+      const zoroResults = await this.searchZoro(titleSlug);
+
+      return {
+        data: mal.data,
+        provider: this.mapAnimeId(titles, zoroResults),
+      };
+    } catch (error) {
+      return {
+        error: error instanceof Error ? error.message : 'Unknown error occurred',
+        data: null,
+        provider: null,
+      };
+    }
+  }
+
+  private async fetchAllAnimeProviderId(malId: number): Promise<IMetaProviderIdResponse<IMetaAnime | null>> {
+    if (!malId) {
+      return {
+        error: 'Invalid or missing required parameter: malId!',
+        data: null,
+        provider: null,
+      };
+    }
+    try {
+      const mal = await this.fetchInfo(malId);
+      const titles = mal.data?.title as ITitle;
+      const userPref = titles?.english || titles?.romaji || titles?.native;
+      const titleSlug = this.createSlug(userPref as string);
+      const allanimeResults = await this.searchAllAnime(titleSlug);
+
+      return {
+        data: mal.data,
+        provider: this.mapAnimeId(titles, allanimeResults),
+      };
+    } catch (error) {
+      return {
+        error: error instanceof Error ? error.message : 'Unknown error occurred',
+        data: null,
+        provider: null,
+      };
+    }
   }
   /**
    * Searches for anime titles based on the provided query string.
@@ -1001,11 +1164,15 @@ export class Jikan extends Meta {
 
   /**
    * Fetches anime information along with a provider-specific anime ID. Kind of depends on provider availability
-   * This is useful for linking  MyAnimeList (MAL)  entries to external streaming provider IDs.
-   * @param {number} malId - The unique MyAnimeList (MAL) ID for the anime (required).
+   * This is useful for linking MAL entries to external streaming provider IDs.
+   * @param {number} malId - The unique mal anime ID (required).
+   * @param {AnimeProvider} [provider] - The anime provider to fetch data from (optional, defaults to HiAnime)
    * @returns  A promise that resolves to an object containing the provider-specific anime ID and core anime info.
    */
-  async fetchProviderId(malId: number): Promise<IMetaProviderIdResponse<IMetaAnime | null>> {
+  async fetchProviderId(
+    malId: number,
+    provider: AnimeProvider = 'hianime',
+  ): Promise<IMetaProviderIdResponse<IMetaAnime | null>> {
     if (!malId) {
       return {
         error: 'Invalid or missing required parameter: malId!',
@@ -1014,17 +1181,20 @@ export class Jikan extends Meta {
       };
     }
     try {
-      const anilist = await this.fetchInfo(malId);
-      const titles = anilist.data?.title as ITitle;
-      const userPref = titles?.english || titles?.romaji || titles?.native;
-      const titleSlug = this.createSlug(userPref as string);
-
-      const zoroResults = await this.searchZoro(titleSlug);
-
-      return {
-        data: anilist.data,
-        provider: this.mapAnimeId(titles, zoroResults),
-      };
+      switch (provider) {
+        case 'hianime':
+          const zoro = await this.fetchZoroProviderId(malId);
+          if ('error' in zoro) {
+            throw new Error(zoro.error);
+          }
+          return { data: zoro.data, provider: zoro.provider };
+        case 'allanime':
+          const allanime = await this.fetchAllAnimeProviderId(malId);
+          if ('error ' in allanime) {
+            throw new Error(allanime.error);
+          }
+          return { data: allanime.data, provider: allanime.provider };
+      }
     } catch (error) {
       return {
         error: error instanceof Error ? error.message : 'Unknown error occurred',
@@ -1035,14 +1205,17 @@ export class Jikan extends Meta {
   }
 
   /**
-   * Fetches anime information along with provider-specific episode details using the  MyAnimeList (MAL) ID.
+   * Fetches anime information along with provider-specific episode details using the MAL ID.
    * This is used to get streamable episodes from a given provider.
-   * @param {number} malId - The unique MyAnimeList (MAL) ID for the anime (required).
-   * @param {AnimeProvider} [provider] - The anime provider to fetch episodes from (optional, defaults to HiAnime).The rest are dead
+   * @param {number} malId - The unique MAL ID of the anime (required).
+   * @param {AnimeProvider} [provider] - The anime provider to fetch episodes from (optional, defaults to HiAnime)
    * @returns  A promise that resolves to an object containing anime info and its episodes from the specified provider.
    */
 
-  async fetchAnimeProviderEpisodes(malId: number): Promise<IMetaProviderEpisodesResponse<IMetaAnime | null>> {
+  async fetchAnimeProviderEpisodes(
+    malId: number,
+    provider: AnimeProvider = 'hianime',
+  ): Promise<IMetaProviderEpisodesResponse<IMetaAnime | null>> {
     if (!malId) {
       return {
         error: 'Invalid or missing required parameter: malId!',
@@ -1050,43 +1223,21 @@ export class Jikan extends Meta {
         providerEpisodes: [],
       };
     }
-
     try {
-      const initialResponse = await this.fetchProviderId(malId);
-      if (!initialResponse.provider?.id) {
-        return {
-          error: 'Provider not found for given MAL ID.',
-          data: initialResponse.data,
-          providerEpisodes: [],
-        };
+      switch (provider) {
+        case 'hianime':
+          const zoro = await this.fetchZoroProviderEpisodes(malId);
+          if ('error' in zoro) {
+            throw new Error(zoro.error);
+          }
+          return { data: zoro.data, providerEpisodes: zoro.providerEpisodes };
+        case 'allanime':
+          const allanime = await this.fetchAllAnimeProviderEpisodes(malId);
+          if ('error ' in allanime) {
+            throw new Error(allanime.error);
+          }
+          return { data: allanime.data, providerEpisodes: allanime.providerEpisodes };
       }
-
-      const [hianimeResult, anizipResult] = await Promise.allSettled([
-        this.fetchZoroEpisodes(initialResponse.provider?.id as string),
-        this.malAnizip(malId),
-      ]);
-
-      if (hianimeResult.status === 'rejected') {
-        return {
-          error: `Failed to fetch provider episodes: ${hianimeResult.reason}`,
-          data: initialResponse.data,
-          providerEpisodes: [],
-        };
-      }
-
-      const hianime = hianimeResult.value;
-      const anizipEpisodes = anizipResult.status === 'fulfilled' ? anizipResult.value.episodes : [];
-      const aniZipMap = new Map((anizipEpisodes || []).map(item => [item.episodeAnizipNumber, item]));
-
-      const enrichedEpisodes = hianime.map((episode: any) => {
-        const aniZipEpisode = aniZipMap.get(episode.episodeNumber);
-        return this.mergeEpisodeData(episode, aniZipEpisode);
-      });
-
-      return {
-        data: initialResponse.data,
-        providerEpisodes: enrichedEpisodes,
-      };
     } catch (error) {
       return {
         data: null,
@@ -1094,5 +1245,14 @@ export class Jikan extends Meta {
         providerEpisodes: [],
       };
     }
+  }
+  /**
+   * Fetches video sources for a given episode from multiple servers.
+   * @param episodeId - The unique ID of the episode to fetch sources forgotten from providerEpisodes array .
+   * @param category - The translation category (sub, dub, or raw, default: 'sub').
+   * @returns A promise resolving  to an object containing video sources to stream.
+   */
+  async fetchSources(episodeId: string, category: HISubOrDub = 'sub') {
+    return await this.fetchAnimeSources(episodeId, category);
   }
 }

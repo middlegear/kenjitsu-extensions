@@ -2,6 +2,7 @@ export interface IBaseAnime {
   id: string | null;
   name: string | null;
   romaji: string | null;
+  native?: string | null;
   posterImage: string | null;
 }
 export interface ITitle {
@@ -109,11 +110,26 @@ export interface IAHomeResponse<T> extends IBaseHomeResponse<T> {
   upcoming: IAnime[];
 }
 
+export type AllAnimeSourceResponseMap = {
+  [key in AllAnimeServers]?: AllAnimeSourceResponse<IVideoSource | null>;
+};
+export interface HianimeSourceResponse {
+  headers: {
+    Referer: string | null;
+  };
+  syncData?: {
+    anilistId: string | null;
+    malId: string | null;
+    name: string | null;
+  };
+  data: IVideoSource;
+  error?: string;
+}
 export interface HISourceResponse<T> extends IResponse<T> {
   headers: {
     Referer: string | null;
   };
-  syncData: {
+  syncData?: {
     anilistId: string | null;
     malId: string | null;
     name: string | null;
@@ -177,16 +193,7 @@ export interface IAllAnimeServers {
   serverName: string;
   serverId: string;
 }
-export interface IAllSearch {
-  id: string;
-  title: {
-    romaji: string;
-    english: string;
-    native: string;
-  };
-  thumbnail: string;
-  slugTime: string;
-}
+
 export interface AllAnimeSourceResponse<T> extends IResponse<T> {
   headers: {
     Referer: string | null;
@@ -375,11 +382,13 @@ export interface IAnilistCharacters {
 export const AnimeProvider = {
   HiAnime: 'hianime',
   // Animekai: 'animekai',
+  AllAnime: 'allanime',
 } as const;
 export type AnimeProvider = (typeof AnimeProvider)[keyof typeof AnimeProvider];
 export interface IProviderId {
   id: string | null;
   name: string | null;
+  native?: string | null;
   romaji: string | null;
   provider: string | null;
   score: number | null;

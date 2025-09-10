@@ -2,12 +2,14 @@
  * Improved string similarity comparison focusing on TV show title matching
  */
 export function compareTwoStrings(first: string, second: string): number {
-  // Enhanced normalization for TV show titles
   const normalize = (str: string) => {
+    if (typeof str !== 'string') {
+      return '';
+    }
     return str
       .toLowerCase()
-      .replace(/[^\w\s]|_/g, ' ') // Replace punctuation with spaces
-      .replace(/\s+/g, ' ') // Collapse multiple spaces
+      .replace(/[^\w\s]|_/g, ' ')
+      .replace(/\s+/g, ' ')
       .trim();
   };
 
@@ -91,6 +93,9 @@ export function findBestMatch(main: string, targets: string[]) {
 }
 
 compareTwoStrings.normalize = (str: string) => {
+  if (typeof str !== 'string') {
+    return '';
+  }
   return str
     .toLowerCase()
     .replace(/[^\w\s]|_/g, ' ')

@@ -6,21 +6,18 @@ import { BaseClass } from '../../models/base-anime.js';
 import type {
   AllAnimeServers,
   AllAnimeSourceResponse,
+  AllAnimeSourceResponseMap,
   HISubOrDub,
   IAllAnimeEpisodes,
   IAllAnimeServers,
-  IAllSearch,
   IAnimePaginated,
+  IBaseAnime,
   IResponse,
   IVideoSource,
 } from '../../models/types.js';
 import FileMoon from '../../source-extractors/filemoon.js';
 import MP4Upload from '../../source-extractors/mp4upload.js';
 import Okru from '../../source-extractors/okru.js';
-
-type SourceResponseMap = {
-  [key in AllAnimeServers]?: AllAnimeSourceResponse<IVideoSource | null>;
-};
 
 /**
  * Class to handle interactions with the AllAnime API.
@@ -110,7 +107,7 @@ export class AllAnime extends BaseClass {
    * @returns A promise resolving to paginated anime search results.
    * @throws Error if the search query is empty.
    */
-  async search(query: string, page: number = 1): Promise<IAnimePaginated<IAllSearch[] | []>> {
+  async search(query: string, page: number = 1): Promise<IAnimePaginated<IBaseAnime[] | []>> {
     if (query.length === 0) {
       throw new Error('Search query cannot be empty.');
     }
@@ -133,15 +130,13 @@ export class AllAnime extends BaseClass {
           'Content-Type': 'application/json',
         },
       });
-      const anime = response.data.data.shows.edges.map((item: any) => ({
+      const anime: IBaseAnime[] = response.data.data.shows.edges.map((item: any) => ({
         id: item._id,
-        title: {
-          romaji: item.name,
-          english: item.englishName,
-          native: item.nativeName,
-        },
-        thumbnail: item.thumbnail,
-        slugTime: item.slugTime,
+        romaji: item.name,
+        name: item.englishName,
+        native: item.nativeName,
+        posterImage: item.thumbnail,
+        // slugTime: item.slugTime,
       }));
       return {
         hasNextPage: response.data.data.shows.pageInfo.hasNextPage,
@@ -204,7 +199,7 @@ export class AllAnime extends BaseClass {
    * @param category - The translation type (sub, dub, or raw, default: 'sub').
    * @returns A promise resolving to a list of servers or an error.
    */
-  async fetchServers(id: string, category: HISubOrDub = 'sub'): Promise<IResponse<IAllAnimeServers[] | []>> {
+  private async fetchServers(id: string, category: HISubOrDub = 'sub'): Promise<IResponse<IAllAnimeServers[] | []>> {
     const buildPayload = (query: string, variables: object) => ({
       query,
       variables,
@@ -255,7 +250,7 @@ export class AllAnime extends BaseClass {
    * @param category - The translation category (sub, dub, or raw, default: 'sub').
    * @returns A promise resolving to a map of server IDs to their video source responses.
    */
-  async fetchSources(episodeId: string, category: HISubOrDub = 'sub'): Promise<SourceResponseMap> {
+  async fetchSources(episodeId: string, category: HISubOrDub = 'sub'): Promise<AllAnimeSourceResponseMap> {
     const { data, error } = await this.fetchServers(episodeId, category);
     if (!data || error) {
       return {}; // return an empty object that conforms to the type
@@ -291,6 +286,6 @@ export class AllAnime extends BaseClass {
       }),
     );
 
-    return results.reduce((acc, { serverId, value }) => ({ ...acc, [serverId]: value }), {} as SourceResponseMap);
+    return results.reduce((acc, { serverId, value }) => ({ ...acc, [serverId]: value }), {} as AllAnimeSourceResponseMap);
   }
 }

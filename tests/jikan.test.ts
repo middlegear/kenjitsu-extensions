@@ -1,5 +1,6 @@
 import { test, expect } from 'vitest';
 import { Jikan } from '../src/provider/meta/jikan.js';
+import { AllAnimeSourceResponseMap, HianimeSourceResponse } from '../src/models/types.js';
 
 const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 const RATE_LIMIT_MS = 800;
@@ -74,8 +75,15 @@ test('returns an object containing detailed episode info', async () => {
   await wait(RATE_LIMIT_MS);
 });
 
-test('returns an object containing provider anime ID with animeinfo', async () => {
-  const data = await jikan.fetchProviderId(52299);
+test('returns an object containing provider anime ID with animeinfo for hianime', async () => {
+  const data = await jikan.fetchProviderId(52299, 'hianime');
+  expect(data.data).not.toBeNull();
+  expect(data.provider).not.toBeNull();
+  await wait(RATE_LIMIT_MS);
+});
+
+test('returns an object containing provider anime ID with animeinfo for allanime', async () => {
+  const data = await jikan.fetchProviderId(52299, 'allanime');
   expect(data.data).not.toBeNull();
   expect(data.provider).not.toBeNull();
   await wait(RATE_LIMIT_MS);
@@ -88,8 +96,16 @@ test('returns an array of the current season anime', async () => {
   await wait(RATE_LIMIT_MS);
 });
 
-test('returns an object containing  AnimeProvider episodes and animeinfo', async () => {
-  const data = await jikan.fetchAnimeProviderEpisodes(52299);
+test('returns an object containing  AnimeProvider episodes and animeinfo for hianime', async () => {
+  const data = await jikan.fetchAnimeProviderEpisodes(52299, 'hianime');
+  expect(data.data).not.toBeNull();
+  expect(Array.isArray(data.providerEpisodes)).toBe(true);
+  expect(data.providerEpisodes.length).toBeGreaterThan(0);
+  await wait(RATE_LIMIT_MS);
+});
+
+test('returns an object containing  AnimeProvider episodes and animeinfo for allanime', async () => {
+  const data = await jikan.fetchAnimeProviderEpisodes(52299, 'allanime');
   expect(data.data).not.toBeNull();
   expect(Array.isArray(data.providerEpisodes)).toBe(true);
   expect(data.providerEpisodes.length).toBeGreaterThan(0);
@@ -101,4 +117,19 @@ test('returns an array anime characters', async () => {
   expect(Array.isArray(data.data)).toBe(true);
   expect(data.data.length).toBeGreaterThan(0);
   await wait(RATE_LIMIT_MS);
+});
+
+test('returns an object containing streaming sources for allanime provider', async () => {
+  const data = (await jikan.fetchSources('allanime-GoDoALiHc82Jrmcmh-episode-1, sub')) as AllAnimeSourceResponseMap;
+
+  expect(data.okru?.data).not.toBeNull();
+  expect(data.filemoon?.data).not.toBeNull();
+  expect(data.mp4upload?.data).not.toBeNull();
+});
+
+test('returns an object containing streaming sources for hianime provider', async () => {
+  const data = (await jikan.fetchSources('hianime-solo-leveling-18718-episode-119497', 'sub')) as HianimeSourceResponse;
+  expect(data.data).not.toBeNull();
+  expect(Array.isArray(data.data?.sources)).toBe(true);
+  expect(data.data?.sources.length).toBeGreaterThan(0);
 });

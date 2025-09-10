@@ -1,30 +1,45 @@
 import { FetchClient } from '../config/client.js';
 import { HiAnime } from '../provider/anime/hianime.js';
 import { findBestMatch } from '../utils/string-similarity.js';
-import type { IMovieProviderResults, ITitle } from './types.js';
+import type {
+  AllAnimeSourceResponse,
+  AllAnimeSourceResponseMap,
+  HISourceResponse,
+  HISubOrDub,
+  IMovieProviderResults,
+  ITitle,
+  IVideoSource,
+} from './types.js';
 import { FlixHQ } from '../provider/movies/flixhq/index.js';
+import { AllAnime } from '../provider/anime/allanime.js';
 
 type AnimeSearchResults = {
   id: string;
   name: string;
   romaji: string;
   provider: string;
-  episodes: {
+  native?: string;
+  episodes?: {
     sub: number;
     dub: number;
   };
 };
 
+// Union type for the generic parameter
+
+type AnimeSourcesResult = AllAnimeSourceResponseMap | HISourceResponse<IVideoSource | null>;
 export abstract class Meta {
   protected readonly client: FetchClient;
   protected readonly hianime: HiAnime;
   protected readonly flixhq: FlixHQ;
+  protected readonly allanime: AllAnime;
 
   protected constructor() {
     this.client = new FetchClient();
     this.client.setProfile('normal-fetch');
     this.hianime = new HiAnime();
     this.flixhq = new FlixHQ();
+    this.allanime = new AllAnime();
   }
 
   // ------------------------
@@ -143,11 +158,23 @@ export abstract class Meta {
     try {
       const result = await this.hianime.fetchEpisodes(id);
       return result.data.map((item: any) => ({
-        episodeId: item.episodeId,
+        episodeId: `hianime-${item.episodeId}`,
         episodeNumber: item.episodeNumber,
         title: item.title,
         provider: 'hianime',
       }));
+    } catch (error) {
+      throw new Error(error instanceof Error ? error.message : String(error));
+    }
+  }
+
+  protected async fetchZoroSources(episodeId: string, category: HISubOrDub) {
+    try {
+      const result = await this.hianime.fetchSources(episodeId, 'hd-2', category);
+      if ('error' in result) {
+        throw new Error(result.error);
+      }
+      return result;
     } catch (error) {
       throw new Error(error instanceof Error ? error.message : String(error));
     }
@@ -187,6 +214,53 @@ export abstract class Meta {
           releaseDate: item.releaseDate,
           quality: item.quality,
         }));
+    } catch (error) {
+      throw new Error(error instanceof Error ? error.message : String(error));
+    }
+  }
+
+  // ------------------------
+  // AllAnime integration
+  // ------------------------
+
+  protected async searchAllAnime(title: string) {
+    try {
+      const result = await this.allanime.search(title);
+
+      return (
+        result.data?.map((item: any) => ({
+          id: item.id,
+          name: item.name,
+          romaji: item.romaji,
+          native: item.native,
+          provider: 'allanime',
+        })) || []
+      );
+    } catch (error) {
+      throw new Error(error instanceof Error ? error.message : String(error));
+    }
+  }
+
+  protected async fetchAllAnimeEpisodes(id: string) {
+    try {
+      const result = await this.allanime.fetchEpisodes(id);
+      return result.data.map((item: any) => ({
+        episodeId: item.episodeId,
+        episodeNumber: item.episodeNumber,
+        hasSub: item.hasSub,
+        hasDub: item.hasDub,
+        hasRaw: item.hasRaw,
+        provider: 'allanime',
+      }));
+    } catch (error) {
+      throw new Error(error instanceof Error ? error.message : String(error));
+    }
+  }
+  protected async fetchAllAnimeSources(episodeId: string, category: HISubOrDub = 'sub') {
+    try {
+      const result = await this.allanime.fetchSources(episodeId, category);
+
+      return result;
     } catch (error) {
       throw new Error(error instanceof Error ? error.message : String(error));
     }
@@ -268,6 +342,9 @@ export abstract class Meta {
     const overview = aniZipEp?.overview ?? null;
     const thumbnail = aniZipEp?.image ?? null;
     const provider = providerEp?.provider ?? null;
+    const hasDub = providerEp.hasDub || null;
+    const hasSub = providerEp.hasDub || null;
+    const hasRaw = providerEp.hasDub || null;
 
     return {
       episodeNumber,
@@ -278,10 +355,13 @@ export abstract class Meta {
       overview,
       thumbnail,
       provider,
+      hasDub,
+      hasSub,
+      hasRaw,
     };
   }
 
-  private async fetchAnizipByMapping(type: 'anilist_id' | 'mal_id', id: number) {
+  protected async fetchAnizipByMapping(type: 'anilist_id' | 'mal_id', id: number) {
     if (!id) return { error: `Missing required param: ${type}`, data: null };
 
     try {
@@ -297,6 +377,39 @@ export abstract class Meta {
       };
     } catch (error) {
       throw new Error(error instanceof Error ? error.message : String(error));
+    }
+  }
+
+  private detectProvider(episodeId: string): string {
+    if (episodeId.includes('allanime')) return 'allanime';
+    if (episodeId.includes('hianime')) return 'hianime';
+    return 'default';
+  }
+
+  protected async fetchAnimeSources(episodeId: string, category: HISubOrDub = 'sub'): Promise<AnimeSourcesResult> {
+    if (!episodeId) {
+      throw new Error('Missing a required episodeId parameter');
+    }
+
+    try {
+      const provider = this.detectProvider(episodeId);
+
+      switch (provider) {
+        case 'allanime':
+          const allAnimeData = await this.fetchAllAnimeSources(episodeId, category);
+          return allAnimeData;
+
+        case 'hianime':
+          const hiAnimeData = await this.fetchZoroSources(episodeId, category);
+          return hiAnimeData;
+
+        default:
+          console.warn(`No specific provider found for episodeId: ${episodeId}. Using default provider.`);
+          return await this.fetchZoroSources(episodeId, category);
+      }
+    } catch (error) {
+      console.error(`Failed to fetch sources for episodeId: ${episodeId}.`, error);
+      throw error;
     }
   }
 }
