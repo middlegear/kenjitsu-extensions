@@ -3,6 +3,7 @@ import type {
   AnilistStatus,
   AnimeProvider,
   Format,
+  HiAnimeServers,
   HISubOrDub,
   IAnilistCharacters,
   IAnimePaginated,
@@ -1014,7 +1015,18 @@ export class Anilist extends Meta {
    * @param category - The translation category (sub, dub, or raw, default: 'sub').
    * @returns A promise resolving  to an object containing video sources to stream.
    */
-  async fetchSources(episodeId: string, category: HISubOrDub = 'sub') {
-    return await this.fetchAnimeSources(episodeId, category);
+  async fetchAllAnimeProviderSources(episodeId: string, category: HISubOrDub = 'sub') {
+    return await this.fetchAllAnimeSources(episodeId, category);
+  }
+
+  /**
+   * Fetches video sources for a given episodeId.
+   * @param episodeId - The unique ID of the episode to fetch sources forgotten from providerEpisodes array .
+   * @param category - The translation category (sub, dub, or raw, default: 'sub').
+   * @param  server - The streaming server to use (optional, defaults to hd-2). Note: hd-1 may return a 403 error due to CORS restrictions; use a proxy or switch to hd-2 or hd-3
+   * @returns A promise resolving  to an object containing video sources to stream.
+   */
+  async fetchHianimeProviderSources(episodeId: string, category: HISubOrDub = 'sub', server: HiAnimeServers = 'hd-2') {
+    return await this.fetchZoroSources(episodeId, server, category);
   }
 }

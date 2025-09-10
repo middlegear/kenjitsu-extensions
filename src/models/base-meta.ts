@@ -4,6 +4,7 @@ import { findBestMatch } from '../utils/string-similarity.js';
 import type {
   AllAnimeSourceResponse,
   AllAnimeSourceResponseMap,
+  HiAnimeServers,
   HISourceResponse,
   HISubOrDub,
   IMovieProviderResults,
@@ -168,9 +169,9 @@ export abstract class Meta {
     }
   }
 
-  protected async fetchZoroSources(episodeId: string, category: HISubOrDub) {
+  protected async fetchZoroSources(episodeId: string, server: HiAnimeServers = 'hd-2', category: HISubOrDub = 'sub') {
     try {
-      const result = await this.hianime.fetchSources(episodeId, 'hd-2', category);
+      const result = await this.hianime.fetchSources(episodeId, server, category);
       if ('error' in result) {
         throw new Error(result.error);
       }
@@ -377,39 +378,6 @@ export abstract class Meta {
       };
     } catch (error) {
       throw new Error(error instanceof Error ? error.message : String(error));
-    }
-  }
-
-  private detectProvider(episodeId: string): string {
-    if (episodeId.includes('allanime')) return 'allanime';
-    if (episodeId.includes('hianime')) return 'hianime';
-    return 'default';
-  }
-
-  protected async fetchAnimeSources(episodeId: string, category: HISubOrDub = 'sub'): Promise<AnimeSourcesResult> {
-    if (!episodeId) {
-      throw new Error('Missing a required episodeId parameter');
-    }
-
-    try {
-      const provider = this.detectProvider(episodeId);
-
-      switch (provider) {
-        case 'allanime':
-          const allAnimeData = await this.fetchAllAnimeSources(episodeId, category);
-          return allAnimeData;
-
-        case 'hianime':
-          const hiAnimeData = await this.fetchZoroSources(episodeId, category);
-          return hiAnimeData;
-
-        default:
-          console.warn(`No specific provider found for episodeId: ${episodeId}. Using default provider.`);
-          return await this.fetchZoroSources(episodeId, category);
-      }
-    } catch (error) {
-      console.error(`Failed to fetch sources for episodeId: ${episodeId}.`, error);
-      throw error;
     }
   }
 }

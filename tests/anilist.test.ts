@@ -90,7 +90,7 @@ test('returns an object has anime info and provider episodes array for allanime'
 });
 
 test('returns an object containing streaming sources for allanime provider', async () => {
-  const data = (await anilist.fetchSources('allanime-GoDoALiHc82Jrmcmh-episode-1, sub')) as AllAnimeSourceResponseMap;
+  const data = await anilist.fetchAllAnimeProviderSources('allanime-GoDoALiHc82Jrmcmh-episode-1, sub');
 
   expect(data.okru?.data).not.toBeNull();
   expect(data.filemoon?.data).not.toBeNull();
@@ -98,7 +98,7 @@ test('returns an object containing streaming sources for allanime provider', asy
 });
 
 test('returns an object containing streaming sources for hianime provider', async () => {
-  const data = (await anilist.fetchSources('hianime-solo-leveling-18718-episode-119497', 'sub')) as HianimeSourceResponse;
+  const data = await anilist.fetchHianimeProviderSources('hianime-solo-leveling-18718-episode-119497', 'sub');
   expect(data.data).not.toBeNull();
   expect(Array.isArray(data.data?.sources)).toBe(true);
   expect(data.data?.sources.length).toBeGreaterThan(0);

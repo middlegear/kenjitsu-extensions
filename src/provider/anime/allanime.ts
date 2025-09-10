@@ -199,7 +199,7 @@ export class AllAnime extends BaseClass {
    * @param category - The translation type (sub, dub, or raw, default: 'sub').
    * @returns A promise resolving to a list of servers or an error.
    */
-  private async fetchServers(id: string, category: HISubOrDub = 'sub'): Promise<IResponse<IAllAnimeServers[] | []>> {
+  async fetchServers(id: string, category: HISubOrDub = 'sub'): Promise<IResponse<IAllAnimeServers[] | []>> {
     const buildPayload = (query: string, variables: object) => ({
       query,
       variables,
@@ -221,9 +221,9 @@ export class AllAnime extends BaseClass {
         ok: 'okru',
         'fm-hls': 'filemoon',
         mp4: 'mp4upload',
-        vg: 'listeamed',
+        // vg: 'listeamed', unsupported server
       };
-      const allowed = ['ok', 'fm-hls', 'mp4', 'vg'];
+      const allowed = ['ok', 'fm-hls', 'mp4'];
       const servers = sourceUrls
         .filter((src: { sourceName: string }) => allowed.includes(src.sourceName.toLowerCase()))
         .map((src: { sourceUrl: string; type: string; sourceName: string }) => {
@@ -253,13 +253,16 @@ export class AllAnime extends BaseClass {
   async fetchSources(episodeId: string, category: HISubOrDub = 'sub'): Promise<AllAnimeSourceResponseMap> {
     const { data, error } = await this.fetchServers(episodeId, category);
     if (!data || error) {
-      return {}; // return an empty object that conforms to the type
+      return {};
     }
 
     const results = await Promise.all(
       data.map(async ({ serverId, serverUrl }) => {
         try {
           const url = new URL(serverUrl);
+
+          const refererOrigin = serverId === 'mp4upload' ? `https://www.${url.hostname}/` : `${url.origin}/`;
+
           const extractors: { [key: string]: () => Promise<IVideoSource | null> } = {
             mp4upload: () => new MP4Upload().extract(url),
             filemoon: () => new FileMoon().extract(url),
@@ -270,7 +273,7 @@ export class AllAnime extends BaseClass {
           return {
             serverId: serverId as AllAnimeServers,
             value: data
-              ? { headers: { Referer: `${url.origin}/` }, data }
+              ? { headers: { Referer: refererOrigin }, data }
               : { headers: { Referer: null }, data: null, error: `Unsupported server: ${serverId}` },
           };
         } catch (error) {
