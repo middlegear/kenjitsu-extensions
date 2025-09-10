@@ -1,6 +1,5 @@
 import { test, expect } from 'vitest';
 import { Jikan } from '../src/provider/meta/jikan.js';
-import { AllAnimeSourceResponseMap, HianimeSourceResponse } from '../src/models/types.js';
 
 const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 const RATE_LIMIT_MS = 800;

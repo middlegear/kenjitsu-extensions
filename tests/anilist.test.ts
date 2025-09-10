@@ -1,7 +1,6 @@
 import { test, expect } from 'vitest';
 
 import { Anilist } from '../src/provider/meta/anilist.js';
-import { AllAnimeSourceResponseMap, HianimeSourceResponse } from '../src/models/types.js';
 
 const anilist = new Anilist();
 

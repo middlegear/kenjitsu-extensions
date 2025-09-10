@@ -1,16 +1,7 @@
 import { FetchClient } from '../config/client.js';
 import { HiAnime } from '../provider/anime/hianime.js';
 import { findBestMatch } from '../utils/string-similarity.js';
-import type {
-  AllAnimeSourceResponse,
-  AllAnimeSourceResponseMap,
-  HiAnimeServers,
-  HISourceResponse,
-  HISubOrDub,
-  IMovieProviderResults,
-  ITitle,
-  IVideoSource,
-} from './types.js';
+import type { HiAnimeServers, HISubOrDub, IMovieProviderResults, ITitle } from './types.js';
 import { FlixHQ } from '../provider/movies/flixhq/index.js';
 import { AllAnime } from '../provider/anime/allanime.js';
 
@@ -28,7 +19,6 @@ type AnimeSearchResults = {
 
 // Union type for the generic parameter
 
-type AnimeSourcesResult = AllAnimeSourceResponseMap | HISourceResponse<IVideoSource | null>;
 export abstract class Meta {
   protected readonly client: FetchClient;
   protected readonly hianime: HiAnime;
@@ -345,7 +335,7 @@ export abstract class Meta {
     const provider = providerEp?.provider ?? null;
     const hasDub = providerEp.hasDub || null;
     const hasSub = providerEp.hasDub || null;
-    const hasRaw = providerEp.hasDub || null;
+    // const hasRaw = providerEp.hasDub || null; disabled since i cant fetch raw sources from allanime
 
     return {
       episodeNumber,
@@ -358,7 +348,7 @@ export abstract class Meta {
       provider,
       hasDub,
       hasSub,
-      hasRaw,
+      // hasRaw,
     };
   }
 

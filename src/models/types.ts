@@ -113,18 +113,7 @@ export interface IAHomeResponse<T> extends IBaseHomeResponse<T> {
 export type AllAnimeSourceResponseMap = {
   [key in AllAnimeServers]?: AllAnimeSourceResponse<IVideoSource | null>;
 };
-export interface HianimeSourceResponse {
-  headers: {
-    Referer: string | null;
-  };
-  syncData?: {
-    anilistId: string | null;
-    malId: string | null;
-    name: string | null;
-  };
-  data: IVideoSource;
-  error?: string;
-}
+
 export interface HISourceResponse<T> extends IResponse<T> {
   headers: {
     Referer: string | null;
