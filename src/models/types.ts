@@ -125,7 +125,7 @@ export interface HISourceResponse<T> extends IResponse<T> {
   };
 }
 
-interface ISubtitles {
+export interface ISubtitles {
   url: string | null;
   lang: string | null;
   default?: boolean | null;
@@ -146,6 +146,7 @@ interface ISource {
   url: string | null;
   isM3U8: boolean | null;
   type: string | null;
+  quality?: string | null;
 }
 export interface ISubServers {
   serverId: number | null;
