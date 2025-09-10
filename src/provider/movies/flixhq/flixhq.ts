@@ -1,8 +1,9 @@
 import * as cheerio from 'cheerio';
 import { scrapeMediaInfo, scrapeSearch } from './scraper.js';
 import { type FLixepisodes, type MediaInfo, type searchTypes, type ServerRes, StreamingServers } from './types.js';
-import VidCloud, { type sources, type subtitles, type ExtractedData } from '../../../source-extractors/vidcloud.js';
+import VidCloud from '../../../source-extractors/vidcloud.js';
 import { FetchClient } from '../../../config/client.js';
+import type { IVideoSource } from '../../../models/types.js';
 
 export const flixhqBaseUrl = 'https://flixhq.to' as const;
 
@@ -213,10 +214,7 @@ export async function _getServers(episodeId: string): Promise<FlixServerRes> {
 }
 
 interface SuccessFlixSourceRes {
-  data: {
-    subtitles: subtitles[];
-    sources: sources[];
-  };
+  data: IVideoSource;
   headers: { Referer: string };
 }
 interface ErrorFlixSourcesRes {
@@ -236,12 +234,12 @@ export async function _getsources(episodeId: string, server: StreamingServers): 
       case StreamingServers.Akcloud:
         return {
           headers: { Referer: `${serverUrl.origin}/` },
-          data: (await new VidCloud().extract(serverUrl)) as ExtractedData,
+          data: await new VidCloud().extract(serverUrl),
         };
       default:
         return {
           headers: { Referer: `${serverUrl.origin}/` },
-          data: (await new VidCloud().extract(serverUrl)) as ExtractedData,
+          data: await new VidCloud().extract(serverUrl),
         };
     }
   }

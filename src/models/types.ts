@@ -76,7 +76,7 @@ export interface IResponse<T> {
 export interface IAnimePaginated<T> extends IResponse<T> {
   hasNextPage: boolean;
   currentPage: number;
-  lastPage: number;
+  lastPage?: number;
   perPage?: number;
   totalResults?: number;
 }
@@ -132,9 +132,10 @@ interface IOutro {
 export interface IVideoSource {
   intro?: IOutro;
   outro?: IOutro;
-  subtitles: ISubtitles[];
+  subtitles?: ISubtitles[];
   sources: ISource[];
-  download?: string;
+  download?: string | null;
+  posterImage?: string | null;
 }
 interface ISource {
   url: string | null;
@@ -159,6 +160,38 @@ export const HISubOrDub = ['sub', 'dub', 'raw'] as const;
 export type HISubOrDub = (typeof HISubOrDub)[number];
 
 export const HiAnimeServers = ['hd-1', 'hd-2', 'hd-3'] as const;
+///'streamwish', has been omited since the extractor method isnt ready and i dont know which referer headers work best
+export const AllAnimeServers = ['okru', 'filemoon', 'mp4upload'] as const;
+export type AllAnimeServers = (typeof AllAnimeServers)[number];
+
+export interface IAllAnimeEpisodes {
+  episodeNumber: number;
+  episodeId: string;
+  hasSub: boolean;
+  hasDub: boolean;
+  hasRaw: boolean;
+}
+export interface IAllAnimeServers {
+  serverUrl: string;
+  type: string;
+  serverName: string;
+  serverId: string;
+}
+export interface IAllSearch {
+  id: string;
+  title: {
+    romaji: string;
+    english: string;
+    native: string;
+  };
+  thumbnail: string;
+  slugTime: string;
+}
+export interface AllAnimeSourceResponse<T> extends IResponse<T> {
+  headers: {
+    Referer: string | null;
+  };
+}
 export type HiAnimeServers = (typeof HiAnimeServers)[number];
 export const HIGenres = [
   'action',

@@ -1,12 +1,15 @@
-import type { ExtractedData } from '../provider/movies/embed/types.js';
+import type { IVideoSource } from '../models/types.js';
+
 import { unpack } from '../utils/unpacker.js';
 
+// this class need to be refactored so i pass embed src url under the URL interface object for resuablity
+// this server has been omited from allanime
 class StreamWish {
   private readonly baseUrl: string = 'https://yesmovies.baby';
 
-  async extract(data: string): Promise<ExtractedData | string> {
+  async extract(data: string): Promise<IVideoSource | null> {
     //
-    const extractedData: ExtractedData = {
+    const extractedData: IVideoSource = {
       subtitles: [],
       sources: [],
     };
@@ -41,7 +44,7 @@ class StreamWish {
               url: url,
               isM3U8: url.includes('m3u8'),
               type: url.includes('m3u8') ? 'hls' : 'raise issue for investigation',
-              default: url.includes(domain),
+              // default: url.includes(domain),
             });
           }
         }
@@ -66,7 +69,7 @@ class StreamWish {
       });
       return extractedData;
     } catch (error) {
-      return error instanceof Error ? error.message : 'Fatal Error';
+      throw new Error(error as string).message;
     }
   }
 }

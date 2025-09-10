@@ -2,22 +2,6 @@ import { getClientKey } from '../utils/getClientKey.js';
 import { FetchClient } from '../config/client.js';
 import type { IVideoSource } from '../models/types.js';
 
-export type sources = {
-  url: string;
-  isM3U8: boolean;
-  type: string;
-};
-
-export type subtitles = {
-  url: string;
-  lang: string;
-  default?: boolean;
-};
-
-export type ExtractedData = {
-  subtitles: subtitles[];
-  sources: sources[];
-};
 const client = new FetchClient();
 class VidCloud {
   private DefaultCharacterSet: string[] = Array.from({ length: 95 }, (_, i) => String.fromCharCode(32 + i));
