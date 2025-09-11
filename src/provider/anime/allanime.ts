@@ -5,7 +5,6 @@
 import { BaseClass } from '../../models/base-anime.js';
 import type {
   AllAnimeServers,
-  AllAnimeSourceResponse,
   AllAnimeSourceResponseMap,
   HISubOrDub,
   IAllAnimeEpisodes,

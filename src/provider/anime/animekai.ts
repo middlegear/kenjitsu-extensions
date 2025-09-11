@@ -1,37 +1,34 @@
-import { BaseClass } from '../../../models/base-anime.js';
+import { BaseClass } from '../../models/base-anime.js';
 import * as cheerio from 'cheerio';
 import type {
   AKGenres,
+  AKserver,
   Format,
+  HIServerInfo,
+  HISubOrDub,
   IAHomeResponse,
+  IAllAnimeEpisodes,
   IAnime,
+  IAnimeBaseInfoResponse,
   IAnimeCategory,
   IAnimeInfo,
   IAnimePaginated,
-  IBaseAnime,
   IRelatedSeasons,
   IResponse,
-} from '../../../models/types.js';
-// import { AnimekaiDecoder } from '../../../source-extractors/megaup.js';
+  ISourceBaseResponse,
+  IVideoSource,
+} from '../../models/types.js';
+import { MegaUp } from '../../source-extractors/megaup.js';
 
-const animekaiheaders = {
-  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:134.0) Gecko/20100101 Firefox/134.0',
-  Accept: 'text/html, */*; q=0.01',
-  'Accept-Language': 'en-US,en;q=0.5',
-  'Sec-GPC': '1',
-  'Sec-Fetch-Dest': 'empty',
-  'Sec-Fetch-Mode': 'cors',
-  'Sec-Fetch-Site': 'same-origin',
-  Priority: 'u=0',
-  Pragma: 'no-cache',
-  'Cache-Control': 'no-cache',
-  referer: 'https://animekai.to/',
-  Cookie:
-    'usertype=guest; session=hxYne0BNXguMc8zK1FHqQKXPmmoANzBBOuNPM64a; cf_clearance=WfGWV1bKGAaNySbh.yzCyuobBOtjg0ncfPwMhtsvsrs-1737611098-1.2.1.1-zWHcaytuokjFTKbCAxnSPDc_BWAeubpf9TAAVfuJ2vZuyYXByqZBXAZDl_VILwkO5NOLck8N0C4uQr4yGLbXRcZ_7jfWUvfPGayTADQLuh.SH.7bvhC7DmxrMGZ8SW.hGKEQzRJf8N7h6ZZ27GMyqOfz1zfrOiu9W30DhEtW2N7FAXUPrdolyKjCsP1AK3DqsDtYOiiPNLnu47l.zxK80XogfBRQkiGecCBaeDOJHenjn._Zgykkr.F_2bj2C3AS3A5mCpZSlWK5lqhV6jQSQLF9wKWitHye39V.6NoE3RE',
-};
-
-export class NewAnimekai extends BaseClass {
+/**
+ * A class for interacting with the AnimeKai Provider.
+ *
+ * It aims to search for anime, fetch detailed information, retrieve available streaming servers,
+ * and obtain direct episode sources.
+ */
+class Animekai extends BaseClass {
   private readonly baseUrl: string = 'https://animekai.to';
+  private readonly megaup: MegaUp;
   private headers = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:134.0) Gecko/20100101 Firefox/134.0',
     Accept: 'text/html, */*; q=0.01',
@@ -50,6 +47,7 @@ export class NewAnimekai extends BaseClass {
   constructor() {
     super();
     this.client.setProfile('librewolf-desktop');
+    this.megaup = new MegaUp();
   }
 
   private scrapeUpdates($: cheerio.CheerioAPI, selector: cheerio.SelectorType) {
@@ -310,6 +308,89 @@ export class NewAnimekai extends BaseClass {
 
     return { animeInfo, rateBox, relatedSeasons, recommendedAnime, relatedAnime };
   }
+
+  private parseEpisodes($: cheerio.CheerioAPI, animeId: string) {
+    const selector: cheerio.SelectorType = 'div.eplist ul li';
+
+    const episodes: IAllAnimeEpisodes[] = [];
+    $(selector).each((_, element) => {
+      const language = $(element).find('a').attr('langs') || null;
+      let Dub;
+      let Sub;
+      if (language) {
+        Dub = Number(language) >= 3 ? true : false;
+        Sub = Number(language) >= 1 ? true : false;
+      }
+      episodes.push({
+        episodeId: `${animeId}-token-${$(element).find('a').attr('token')}` || null,
+        title: $(element).find('span').text().trim() || null,
+        episodeNumber:
+          Number(
+            $(element).find('a').attr('slug') || $(element).find('a').attr('num') || $(element).find('a').text().trim(),
+          ) || null,
+        hasDub: Dub || null,
+        hasSub: Sub || null,
+      });
+    });
+
+    return episodes;
+  }
+  private parseServers($: cheerio.CheerioAPI): IResponse<HIServerInfo | null> {
+    const subSelector: cheerio.SelectorType = 'div.server-wrap div.server-items[data-id="sub"] span.server';
+    const dubSelector: cheerio.SelectorType = 'div.server-wrap div.server-items[data-id="dub"] span.server';
+    const softSubSelector: cheerio.SelectorType = 'div.server-wrap div.server-items[data-id="softsub"] span.server'; /// this will be raw
+    const servers: HIServerInfo = {
+      sub: [],
+      dub: [],
+      raw: [],
+      episodeNumber: 0,
+    };
+    servers.episodeNumber = Number($('div.server-note').find('b').text().trim().replace(/\D+/g, '')) || null;
+    $(subSelector).each((_, element) => {
+      servers.sub.push({
+        serverId: Number($(element).attr('data-sid')) || null,
+        mediaId: $(element).attr('data-lid') || null,
+        eid: $(element).attr('data-eid') || null,
+        serverName: $(element).text().trim(),
+      });
+    });
+    $(dubSelector).each((_, element) => {
+      servers.dub.push({
+        serverId: Number($(element).attr('data-sid')) || null,
+        mediaId: $(element).attr('data-lid') || null,
+        eid: $(element).attr('data-eid') || null,
+        serverName: $(element).text().trim() || null,
+      });
+    });
+    $(softSubSelector).each((_, element) => {
+      servers.raw.push({
+        serverId: Number($(element).attr('data-sid')) || null,
+        mediaId: $(element).attr('data-lid') || null,
+        eid: $(element).attr('data-eid') || null,
+        serverName: $(element).text().trim() || null,
+      });
+    });
+
+    return { data: servers };
+  }
+
+  private findServerIds(servers: HIServerInfo, category: HISubOrDub): string[] {
+    const list = servers[category];
+    if (!list || list.length === 0) {
+      throw new Error(`No servers found for category '${category}'.`);
+    }
+
+    const mediaIds = list
+      .map(server => server.mediaId)
+      .filter((id): id is string => typeof id === 'string' && id.trim().length > 0);
+
+    if (mediaIds.length === 0) {
+      throw new Error(`No valid mediaIds found in category '${category}'.`);
+    }
+
+    return mediaIds;
+  }
+
   /**
    * Fetches curated lists from the Animekai homepage.
    * @returns Promise resolving to an object with various curated anime lists
@@ -605,7 +686,7 @@ export class NewAnimekai extends BaseClass {
       const response = await this.client.get(
         `${this.baseUrl}/browser?keyword=&type[]=${endpoint}&status[]=releasing&status[]=completed&sort=updated_date&page=${page}`,
       );
-      //                                                   browser?keyword=&type[]=tv&status[]=completed&sort=updated_date
+
       if (!response.data) {
         return {
           hasNextPage: false,
@@ -665,7 +746,7 @@ export class NewAnimekai extends BaseClass {
       const response = await this.client.get(
         `${this.baseUrl}/browser?keyword=&type[]=${endpoint}&status[]=completed&sort=updated_date&page=${page}`,
       );
-      //                                                   browser?keyword=&type[]=tv&status[]=completed&sort=updated_date
+
       if (!response.data) {
         return {
           hasNextPage: false,
@@ -722,11 +803,18 @@ export class NewAnimekai extends BaseClass {
       };
     }
   }
-
-  async getAnimeInfo(animeId: string) {
+  /**
+   * Fetches detailed information about a specific anime.
+   * @param {string} animeId - The unique identifier for the anime  (required).
+   * @returns  A promise that resolves to an object containing anime details, related seasons provider episodeslists ,recommendations, or an error message.
+   */
+  async fetchAnimeInfo(animeId: string): Promise<IAnimeBaseInfoResponse<IAnimeInfo | null>> {
     if (!animeId.trim()) {
       return {
         error: 'Missing required Params: animeId',
+        relatedSeasons: [],
+        recommendedAnime: [],
+        relatedAnime: [],
         data: null,
         providerEpisodes: [],
       };
@@ -745,34 +833,186 @@ export class NewAnimekai extends BaseClass {
         cheerio.load(response.data),
       );
 
-      const ani_id = rateBox.dataId as string; ///required to generate token which fetches episodes list
+      const ani_id = rateBox.dataId as string;
 
-      // const tokenInstance = new AnimekaiDecoder();
-      // const token = await tokenInstance.GenerateToken(ani_id);
-      // console.log(token);
+      const token = await this.megaup.GenerateToken(ani_id);
 
-      // const episodesList = await this.client.get(`${this.baseUrl}/ajax/episodes/list?ani_id=${ani_id}&_=${token}`, {
-      //   headers: {
-      //     'X-Requested-With': 'XMLHttpRequest',
-      //     ...this.headers,
-      //   },
-      // });
-      // if (!episodesList.data) {
-      //   return {
-      //     data: animeInfo,
-      //     relatedSeasons: relatedSeasons,
-      //     recommendedAnime: recommendedAnime,
-      //     relatedAnime: relatedAnime,
-      //     error: `Cannot fetch provider episodes: ${response.statusText}`,
-      //     providerEpisodes: [],
-      //   };
-      // }
+      const episodesList = await this.client.get(`${this.baseUrl}/ajax/episodes/list?ani_id=${ani_id}&_=${token}`, {
+        headers: {
+          'X-Requested-With': 'XMLHttpRequest',
+          ...this.headers,
+        },
+      });
+
+      const episodes = this.parseEpisodes(cheerio.load(episodesList.data.result), animeId);
+
+      if (!episodesList.data) {
+        return {
+          data: animeInfo,
+          relatedSeasons: relatedSeasons,
+          recommendedAnime: recommendedAnime,
+          relatedAnime: relatedAnime,
+          error: `Cannot fetch provider episodes: ${response.statusText}`,
+          providerEpisodes: [],
+        };
+      }
+
+      return {
+        data: animeInfo,
+        relatedSeasons: relatedSeasons,
+        recommendedAnime: recommendedAnime,
+        relatedAnime: relatedAnime,
+        providerEpisodes: episodes,
+      };
     } catch (error) {
       return {
         data: null,
+        relatedSeasons: [],
+        recommendedAnime: [],
+        relatedAnime: [],
         providerEpisodes: [],
         error: error instanceof Error ? error.message : 'Unknown error occurred',
       };
     }
   }
+
+  private async scrapefetchServers(episodeId: string): Promise<IResponse<HIServerInfo | null>> {
+    if (!episodeId) {
+      throw new Error('Missing required parameter: episodeId');
+    }
+
+    const token = episodeId.includes('-token-') ? episodeId.split('-token-').at(1) : null;
+    if (!token) {
+      throw new Error(`Invalid episodeId format: expected "-token-" part in "${episodeId}"`);
+    }
+
+    try {
+      const generatedToken = await this.megaup.GenerateToken(token);
+      if (!generatedToken) {
+        throw new Error('Failed to generate token');
+      }
+
+      const response = await this.client.get(`${this.baseUrl}/ajax/links/list?token=${token}&_=${generatedToken}`);
+
+      return this.parseServers(cheerio.load(response.data.result));
+    } catch (error) {
+      return {
+        data: null,
+        error: error instanceof Error ? error.message : 'Unknown error occurred',
+      };
+    }
+  }
+
+  /**
+   * Fetches available streaming servers for a specific anime episode.
+   * @param {string} episodeId - The unique identifier for the episode  (required).
+   * @param {HISubOrDub} category  - The audio category (Subtitled or Dubbed) (optional, defaults to Sub).
+   * @returns  A promise that resolves to an object containing available streaming server details (sub, dub, raw) or an error message.
+   */
+  async fetchServers(episodeId: string, category: HISubOrDub = 'sub'): Promise<IResponse<AKserver[] | []>> {
+    if (!episodeId) {
+      throw new Error('Missing required parameter: episodeId');
+    }
+
+    try {
+      const serverInfo = (await this.scrapefetchServers(episodeId)).data as HIServerInfo;
+      if ('error' in serverInfo) {
+        throw new Error(serverInfo.error as string);
+      }
+
+      const mediaIds = this.findServerIds(serverInfo, category);
+      const servers: Array<{
+        url: string;
+        intro: { start: number | null; end: number | null };
+        outro: { start: number | null; end: number | null };
+        download: string;
+      }> = [];
+
+      for (const mediaId of mediaIds) {
+        try {
+          const token = await this.megaup.GenerateToken(mediaId);
+
+          const { data } = await this.client.get(`${this.baseUrl}/ajax/links/view?id=${mediaId}&_=${token}`, {
+            headers: this.headers,
+          });
+
+          const decodedData = JSON.parse(await this.megaup.DecodeIframeData(data.result));
+
+          servers.push({
+            url: decodedData.url,
+            intro: {
+              start: decodedData?.skip?.intro?.[0] ?? null,
+              end: decodedData?.skip?.intro?.[1] ?? null,
+            },
+            outro: {
+              start: decodedData?.skip?.outro?.[0] ?? null,
+              end: decodedData?.skip?.outro?.[1] ?? null,
+            },
+            download: decodedData.url.replace(/\/e\//, '/download/'),
+          });
+        } catch {
+          continue;
+        }
+      }
+
+      if (servers.length === 0) {
+        throw new Error('No working servers found.');
+      }
+
+      return { data: servers };
+    } catch (error) {
+      return {
+        data: [],
+        error: error instanceof Error ? error.message : 'Unknown error occurred',
+      };
+    }
+  }
+
+  /**
+   * **⚠️ Intentionally disabled
+   * Fetches streaming sources for a given anime episode from a specified server and category.
+   * @param {string} episodeId - The unique identifier for the episode (required).
+   * @param {HISubOrDub} category  - The audio category (Subtitled or Dubbed) (optional, defaults to SubOrDub.SUB).
+   * @returns  A promise that resolves to an object containing streaming sources, headers, sync data (AniList/MAL IDs), or an error message.
+   */
+  async fetchSources(episodeId: string, category: HISubOrDub = 'sub'): Promise<ISourceBaseResponse<IVideoSource | null>> {
+    //
+    if (!episodeId) {
+      return {
+        data: null,
+        headers: { Referer: null },
+        error: 'Missing required param: episodeId',
+      };
+    }
+    if (episodeId) {
+      throw new Error('Method not implemented use the embeded server url link to stream').message;
+    }
+
+    if (episodeId.startsWith('http')) {
+      const serverUrl = new URL(episodeId);
+      return {
+        headers: { Referer: serverUrl.href },
+        data: await new MegaUp().extract(serverUrl),
+      };
+    }
+
+    try {
+      const servers = await this.fetchServers(episodeId, category);
+      if (!servers.data || servers.data.length === 0) {
+        throw new Error('No servers found');
+      }
+
+      const firstServer = servers.data[0];
+      const serverUrl = new URL(firstServer.url);
+
+      return await this.fetchSources(serverUrl.href, category);
+    } catch (error) {
+      return {
+        data: null,
+        headers: { Referer: null },
+        error: error instanceof Error ? error.message : 'Unknown error occurred',
+      };
+    }
+  }
 }
+export { Animekai };

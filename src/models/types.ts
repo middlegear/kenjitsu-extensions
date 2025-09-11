@@ -64,11 +64,10 @@ export interface IPromotionVIds {
 export interface IEpisodes {
   episodeId: string | null;
   episodeNumber: number | null;
-  romaji: string | null;
-  title: string | null;
+  romaji?: string | null;
+  title?: string | null;
 }
 
-///
 export interface IResponse<T> {
   data: T;
   error?: string;
@@ -84,12 +83,18 @@ export interface IAnimePaginated<T> extends IResponse<T> {
 export interface IRepetitiveSections<T> extends IAnimePaginated<T> {
   topAnime: { daily: IAnime[]; weekly: IAnime[]; monthly: IAnime[] };
 }
-export interface IAnimeInfoResponse<T> extends IResponse<T> {
+export interface IAnimeBaseInfoResponse<T> extends IResponse<T> {
   relatedSeasons: IRelatedSeasons[];
   recommendedAnime: IAnime[];
+  // mostPopular: IAnime[];
+  // promotionVideos: IPromotionVIds[];
+  relatedAnime: IAnime[];
+  // characters: ICharacters[];
+  providerEpisodes?: IAllAnimeEpisodes[];
+}
+export interface IAnimeInfoResponse<T> extends IAnimeBaseInfoResponse<T> {
   mostPopular: IAnime[];
   promotionVideos: IPromotionVIds[];
-  relatedAnime: IAnime[];
   characters: ICharacters[];
 }
 export interface IHomeResponse<T> extends IBaseHomeResponse<T> {
@@ -114,17 +119,18 @@ export type AllAnimeSourceResponseMap = {
   [key in AllAnimeServers]?: AllAnimeSourceResponse<IVideoSource | null>;
 };
 
-export interface HISourceResponse<T> extends IResponse<T> {
-  headers: {
-    Referer: string | null;
-  };
+export interface HISourceResponse<T> extends ISourceBaseResponse<T> {
   syncData?: {
     anilistId: string | null;
     malId: string | null;
     name: string | null;
   };
 }
-
+export interface ISourceBaseResponse<T> extends IResponse<T> {
+  headers: {
+    Referer: string | null;
+  };
+}
 export interface ISubtitles {
   url: string | null;
   lang: string | null;
@@ -151,7 +157,8 @@ interface ISource {
 export interface ISubServers {
   serverId: number | null;
   serverName: string | null;
-  mediaId: number | null;
+  mediaId: number | string | null;
+  eid?: string | null;
 }
 export type IDubServers = ISubServers;
 export type IRawServers = ISubServers;
@@ -162,6 +169,7 @@ export interface HIServerInfo {
   raw: IRawServers[];
   episodeNumber: number | null;
 }
+
 export const HISubOrDub = ['sub', 'dub', 'raw'] as const;
 export type HISubOrDub = (typeof HISubOrDub)[number];
 
@@ -169,13 +177,21 @@ export const HiAnimeServers = ['hd-1', 'hd-2', 'hd-3'] as const;
 ///'streamwish', has been omited since the extractor method isnt ready and i dont know which referer headers work best
 export const AllAnimeServers = ['okru', 'filemoon', 'mp4upload'] as const;
 export type AllAnimeServers = (typeof AllAnimeServers)[number];
+export const AnimeKaiServers = {
+  MegaUp: 'megaup',
+} as const;
+export type AnimeKaiServers = (typeof AnimeKaiServers)[keyof typeof AnimeKaiServers];
 
-export interface IAllAnimeEpisodes {
-  episodeNumber: number;
-  episodeId: string;
-  hasSub: boolean;
-  hasDub: boolean;
-  hasRaw: boolean;
+export type AKserver = {
+  url: string;
+  intro: { start: number | null; end: number | null };
+  outro: { start: number | null; end: number | null };
+  download: string;
+};
+export interface IAllAnimeEpisodes extends IEpisodes {
+  hasSub: boolean | null;
+  hasDub: boolean | null;
+  hasRaw?: boolean;
 }
 export interface IAllAnimeServers {
   serverUrl: string;
