@@ -18,7 +18,7 @@ class Okru {
     return JSON.parse(dataOptions as string);
   }
 
-  async extract(videoUrl: URL) {
+  async extract(videoUrl: URL): Promise<IVideoSource> {
     try {
       const extractedData: IVideoSource = {
         download: null,

@@ -38,7 +38,7 @@ export interface IAnimeInfo extends IAnime {
   status: string | null;
   score: string | null;
   genres: string[] | null;
-  studios: string[] | null;
+  studios: string[] | string | null;
   producers: string | string[] | null;
   startDate: string | null;
 }
@@ -64,6 +64,7 @@ export interface IPromotionVIds {
 export interface IEpisodes {
   episodeId: string | null;
   episodeNumber: number | null;
+  thumbnail?: string | null;
   romaji?: string | null;
   title?: string | null;
 }
@@ -155,7 +156,7 @@ interface ISource {
   quality?: string | null;
 }
 export interface ISubServers {
-  serverId: number | null;
+  serverId: number | string | null;
   serverName: string | null;
   mediaId: number | string | null;
   eid?: string | null;
@@ -188,6 +189,7 @@ export type AKserver = {
   outro: { start: number | null; end: number | null };
   download: string;
 };
+
 export interface IAllAnimeEpisodes extends IEpisodes {
   hasSub: boolean | null;
   hasDub: boolean | null;
@@ -296,6 +298,10 @@ const AKGenres = [
 ] as const;
 
 export type AKGenres = (typeof AKGenres)[number];
+
+export interface IPaheServersResponse<T> extends IResponse<T> {
+  download: HIServerInfo | null;
+}
 export interface IMetaAnime {
   malId: number;
   anilistId?: number;

@@ -220,7 +220,7 @@ export class AllAnime extends BaseClass {
         ok: 'okru',
         'fm-hls': 'filemoon',
         mp4: 'mp4upload',
-        // vg: 'listeamed', unsupported server
+        // vg: 'listeamed', unsupported server uses jsfuck (idk)
       };
       const allowed = ['ok', 'fm-hls', 'mp4'];
       const servers = sourceUrls
@@ -252,7 +252,7 @@ export class AllAnime extends BaseClass {
   async fetchSources(episodeId: string, category: HISubOrDub = 'sub'): Promise<AllAnimeSourceResponseMap> {
     const { data, error } = await this.fetchServers(episodeId, category);
     if (!data || error) {
-      return {};
+      throw Error(error);
     }
 
     const results = await Promise.all(
@@ -260,6 +260,7 @@ export class AllAnime extends BaseClass {
         try {
           const url = new URL(serverUrl);
 
+          // mp4 upload requires the referer headers to play while filemoon m3u8 plays only on the device that made the request
           const refererOrigin = serverId === 'mp4upload' ? `https://www.${url.hostname}/` : `${url.origin}/`;
 
           const extractors: { [key: string]: () => Promise<IVideoSource | null> } = {

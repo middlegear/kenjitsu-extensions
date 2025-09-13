@@ -969,7 +969,7 @@ class Animekai extends BaseClass {
   }
 
   /**
-   * **⚠️ Intentionally disabled
+   * **⚠️ .
    * Fetches streaming sources for a given anime episode from a specified server and category.
    * @param {string} episodeId - The unique identifier for the episode (required).
    * @param {HISubOrDub} category  - The audio category (Subtitled or Dubbed) (optional, defaults to SubOrDub.SUB).
