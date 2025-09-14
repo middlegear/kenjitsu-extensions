@@ -1616,13 +1616,13 @@ export class HiAnime extends BaseClass {
         case 'hd-3':
           return {
             headers: { Referer: `${serverUrl.origin}/` },
-            data: await new MegaCloud().extract(serverUrl),
+            data: await new MegaCloud().extract(serverUrl, `${this.baseUrl}/`),
             syncData: { anilistId: null, malId: null, name: null },
           };
         default:
           return {
             headers: { Referer: `${serverUrl.origin}/` },
-            data: await new MegaCloud().extract(serverUrl),
+            data: await new MegaCloud().extract(serverUrl, `${this.baseUrl}/`),
             syncData: { anilistId: null, malId: null, name: null },
           };
       }

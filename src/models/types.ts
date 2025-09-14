@@ -119,7 +119,7 @@ export interface IAHomeResponse<T> extends IBaseHomeResponse<T> {
 }
 
 export type AllAnimeSourceResponseMap = {
-  [key in AllAnimeServers]?: AllAnimeSourceResponse<IVideoSource | null>;
+  [key in AllAnimeServers]?: IVideoSourceResponse<IVideoSource | null>;
 };
 
 export interface HISourceResponse<T> extends ISourceBaseResponse<T> {
@@ -204,7 +204,7 @@ export interface IAllAnimeServers {
   serverId: string;
 }
 
-export interface AllAnimeSourceResponse<T> extends IResponse<T> {
+export interface IVideoSourceResponse<T> extends IResponse<T> {
   headers: {
     Referer: string | null;
   };
@@ -585,9 +585,23 @@ export interface IMovieEpisodes {
   seasonNumber: number | null;
   episodeNumber: number | null;
 }
+
+export interface IMovieServers {
+  serverId: string | null;
+  serverName: string | null;
+}
+
+export const IMovieStreamingServers = {
+  Upcloud: 'upcloud',
+  Megacloud: 'megacloud',
+  VidCloud: 'vidcloud',
+  Akcloud: 'akcloud',
+} as const;
+export type IMovieStreamingServers = (typeof IMovieStreamingServers)[keyof typeof IMovieStreamingServers];
 export interface IHomeResSpecialPages {
   error?: string;
 }
+
 export interface IHomeHIResponse<T> extends IHomeResSpecialPages {
   trending: {
     Movies: IMovieOrTv[] | [];

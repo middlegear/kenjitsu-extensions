@@ -8,10 +8,11 @@ import { Animekai } from './provider/anime/animekai.js';
 import { Animepahe } from './provider/anime/animepahe.js';
 import { Himovies } from './provider/himovies.js';
 
-export { Anilist, Jikan, TheMovieDatabase, HiAnime, Animekai, Animepahe, FlixHQ, Seasons, TimeWindow, Format };
-const data = await new Himovies().fetchMediaInfo('tv-the-boys-33895');
+export { Anilist, Jikan, TheMovieDatabase, HiAnime, Animekai, Animepahe, Himovies, FlixHQ, Seasons, TimeWindow, Format };
+// const data = await new Himovies().fetchSources('movie-bad-boys-18997', 'akcloud');
 // const data = await new Animepahe().fetchEpisodes('4d560dfd-e606-c21e-2eef-e48fd09f8188');
-
-console.log(data);
-// console.log(JSON.stringify(data)
+// movie-bad-boys-18997
+//tv-the-boys-33895-episode-1096681
+// console.log(data);
+// console.log(JSON.stringify(data));
 // console.log();

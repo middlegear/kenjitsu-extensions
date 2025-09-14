@@ -4,7 +4,7 @@ import type { IVideoSource } from '../models/types.js';
 
 const client = new FetchClient();
 
-class MegaCloud {
+class VideoStream {
   private readonly DEFAULT_CHARSET = Array.from({ length: 95 }, (_, i) => String.fromCharCode(i + 32));
 
   private deriveKey(secret: string, nonce: string): string {
@@ -83,8 +83,8 @@ class MegaCloud {
 
       const jsonData = await response.json();
 
-      if (typeof jsonData === 'object' && jsonData !== null && 'mega' in jsonData) {
-        const key = jsonData.mega;
+      if (typeof jsonData === 'object' && jsonData !== null && 'vidstr' in jsonData) {
+        const key = jsonData.vidstr;
         if (typeof key === 'string' && key.length > 0) {
           return key;
         }
@@ -228,4 +228,4 @@ class MegaCloud {
   }
 }
 
-export default MegaCloud;
+export default VideoStream;

@@ -5,6 +5,7 @@ import {
   HIMovieGenres,
   HIMoviesCountryID,
   HIMoviesGenreID,
+  IMovieStreamingServers,
   type IAnimePaginated,
   type IHomeHIResponse,
   type IMovie,
@@ -12,10 +13,14 @@ import {
   type IMovieInfo,
   type IMovieInfoResponse,
   type IMovieOrTv,
+  type IMovieServers,
   type IMovieTvBase,
   type IResponse,
   type ITvShow,
+  type IVideoSource,
+  type IVideoSourceResponse,
 } from '../models/types.js';
+import VideoStream from '../source-extractors/videostream.js';
 
 export class Himovies extends BaseClass {
   private readonly baseUrl = 'https://himovies.sx';
@@ -391,6 +396,30 @@ export class Himovies extends BaseClass {
       })
       .get();
   }
+
+  private parseServers($: cheerio.CheerioAPI) {
+    const servers: IMovieServers[] = [];
+    $('ul.nav > li.nav-item').each((_, element) => {
+      servers.push({
+        serverId: $(element).find('a').attr('data-id') || null,
+        serverName: $(element).find('a').text().trim().toLowerCase() || null,
+      });
+    });
+    return servers;
+  }
+
+  private findServerId(servers: IMovieServers[], server: IMovieStreamingServers): string {
+    const availableServers = servers.map(s => s.serverName || 'unknown');
+    const serverIndex = servers.findIndex(s => (s.serverName || '').toLowerCase() === server.toLowerCase());
+
+    if (serverIndex === -1) {
+      throw new Error(
+        `Server '${server}' not found '. ` + `Try one of the available servers: ${availableServers.join(', ')}.`,
+      );
+    }
+
+    return servers[serverIndex].serverId as string;
+  }
   private async fetchPaginated(path: string, page: number): Promise<IAnimePaginated<IMovieOrTv[] | []>> {
     try {
       let url;
@@ -630,8 +659,12 @@ export class Himovies extends BaseClass {
     return await this.fetchPaginated(`/country/${value}`, page);
   }
 
-  private buildAjaxUrl(id: string, kind: 'tv' | 'season'): string {
+  private buildAjaxUrl(id: string, kind: 'movie-server' | 'tv-server' | 'tv' | 'season'): string {
     switch (kind) {
+      case 'movie-server':
+        return `${this.baseUrl}/ajax/episode/list/${id}`;
+      case 'tv-server':
+        return `${this.baseUrl}/ajax/episode/servers/${id}`;
       case 'tv':
         return `${this.baseUrl}/ajax/season/episodes/${id}`; // fetch episodes per season
       case 'season':
@@ -645,6 +678,14 @@ export class Himovies extends BaseClass {
    * @returns { Promise<IMovieInfoResponse<IMovieInfo | null>>} A promise that resolves to an object containing detailed media information, recommendations, including episodes for TV shows.
    */
   async fetchMediaInfo(mediaId: string): Promise<IMovieInfoResponse<IMovieInfo | null>> {
+    if (!mediaId) {
+      return {
+        data: null,
+        providerEpisodes: [],
+        recommended: [],
+        error: 'missing required params: mediaId',
+      };
+    }
     try {
       const media = mediaId.replace('-', '/');
       const response = await this.client.get(`${this.baseUrl}/${media}`);
@@ -714,6 +755,112 @@ export class Himovies extends BaseClass {
         data: null,
         recommended: [],
         providerEpisodes: [],
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  }
+
+  /**
+   * Fetches available server information for a specific episodeId.
+   * @param {string} episodeId - The unique identifier for the episode/movie (required). Found in the episodes array.
+   * @returns  A promise that resolves to an object containing server information for the episode.
+   */
+  async fetchServers(episodeId: string): Promise<IResponse<IMovieServers[] | []>> {
+    if (!episodeId) {
+      return { data: [], error: 'Missing required params episodeId!' };
+    }
+
+    try {
+      let servers: IMovieServers[] = [];
+      if (episodeId && episodeId.includes('movie')) {
+        const mediaId = episodeId.split('-').at(-1) as string;
+
+        const response = await this.client.get(`${this.buildAjaxUrl(mediaId, 'movie-server')}`, {
+          headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            Referer: `${this.baseUrl}/${episodeId.replace('-', '/')}`,
+          },
+        });
+
+        const server = this.parseServers(cheerio.load(response.data));
+        servers.push(...server);
+      } else {
+        const mediaId = episodeId.split('-episode-');
+
+        const response = await this.client.get(`${this.buildAjaxUrl(String(mediaId.at(1)), 'tv-server')}`, {
+          headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            Referer: `${this.baseUrl}/${mediaId.at(0)?.replace('-', '/')}`,
+          },
+        });
+
+        const server = this.parseServers(cheerio.load(response.data));
+        servers.push(...server);
+      }
+
+      return { data: servers };
+    } catch (error) {
+      return {
+        data: [],
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  }
+  /**
+   * Fetches streaming sources for a selected media episode from a specified server.
+   * @param {string} episodeId - The unique identifier for the episode/movie (required). Found in the episodes array
+   * @param {IMovieStreamingServers} [server] - The server to use (optional, defaults to Megacloud). Note: Upcloud is CORS protected (Error 403). Use a proxy or switch to Megacloud or Akcloud(🤷) .
+   * @returns {Promise<IVideoSourceResponse<IVideoSource | null>>} A promise that resolves to an object containing streaming sources for the media.
+   */
+  async fetchSources(
+    episodeId: string,
+    server: IMovieStreamingServers = 'megacloud',
+  ): Promise<IVideoSourceResponse<IVideoSource | null>> {
+    if (episodeId.includes('https')) {
+      const serverUrl = new URL(episodeId);
+
+      switch (server) {
+        case IMovieStreamingServers.Megacloud:
+        case IMovieStreamingServers.Upcloud:
+        case IMovieStreamingServers.Akcloud:
+          return {
+            headers: { Referer: `${serverUrl.origin}/` },
+            data: await new VideoStream().extract(serverUrl, `${this.baseUrl}/`),
+          };
+        default:
+          return {
+            headers: { Referer: `${serverUrl.origin}/` },
+            data: await new VideoStream().extract(serverUrl, `${this.baseUrl}/`),
+          };
+      }
+    }
+    try {
+      const servers = await this.fetchServers(episodeId);
+      const serverId = this.findServerId(servers.data, server);
+
+      if ('error' in servers) {
+        throw new Error(servers.error);
+      }
+
+      let referer: string;
+
+      episodeId && episodeId.includes('movie')
+        ? (referer = `${this.baseUrl}/${episodeId.replace('-', '/')}`)
+        : (referer = `${this.baseUrl}/${episodeId.split('-episode-').at(0)?.replace('-', '/')}`);
+
+      const embed = await this.client.get(`${this.baseUrl}/ajax/episode/sources/${serverId}`, {
+        headers: {
+          'X-Requested-With': 'XMLHttpRequest',
+          Referer: `${referer}.${serverId}`,
+        },
+      });
+      return await this.fetchSources(embed.data.link, server);
+    } catch (error) {
+      return {
+        data: null,
+        headers: {
+          Referer: null,
+        },
         error: error instanceof Error ? error.message : 'Unknown error',
       };
     }
