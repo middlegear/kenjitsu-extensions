@@ -72,9 +72,10 @@ export class HiAnime extends BaseClass {
         $('.pagination li.active').length > 0 &&
         !$('.pagination > li').last().hasClass('active')) ||
       false;
-    const currentPage: number = Number($(paginationElement).find('.active .page-link').text().trim() || 1);
+    const currentPage: number = Number($(paginationElement).find('li[class="page-item active"]').text().trim() || 1);
     const lastPage: number = Number(
-      paginationElement.find('a.page-link[title="Last"]').attr('href')?.split('page=').at(-1) || 1,
+      paginationElement.find('a.page-link[title="Last"]').attr('href')?.split('page=').at(-1) ||
+        paginationElement.find('a.page-link:last').text().trim(),
     );
     if (!Array.isArray(anime) || anime.length === 0) {
       return {

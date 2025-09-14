@@ -6,4 +6,13 @@ export abstract class BaseClass {
   protected constructor() {
     this.client = new FetchClient();
   }
+
+  protected createSlug(text: string): string {
+    return text
+      .toLowerCase()
+      .trim()
+      .replace(/[^\w\s-]/g, '')
+      .replace(/[\s_-]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+  }
 }

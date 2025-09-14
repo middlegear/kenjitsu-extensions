@@ -37,11 +37,14 @@ Tmdb
 
 New Sites
 1. Kickass anime
-2. All Manga to 
-3. Animepahe
+
 4. HiMovies
 5. Check the animekai related movie sites  https://yflix.to/home and https://movhub.ws/home
 6. https://www.primewire.mov/
 7. https://projectfreetv.sx/
 8. https://www.downloads-anymovies.co/
 https://rentry.co/sflix#yflix-clones
+
+
+Critical 
+change startDate to releaseDate in extensions and api

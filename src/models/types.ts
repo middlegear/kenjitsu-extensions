@@ -99,19 +99,21 @@ export interface IAnimeInfoResponse<T> extends IAnimeBaseInfoResponse<T> {
   characters: ICharacters[];
 }
 export interface IHomeResponse<T> extends IBaseHomeResponse<T> {
+  data: IAnime[];
   trending: IBaseAnime[];
   topAiring: IAnime[];
   mostPopular: IAnime[];
   favourites: IAnime[];
   topAnime: { daily: IAnime[]; weekly: IAnime[]; monthly: IAnime[] };
 }
-export interface IBaseHomeResponse<T> extends IResponse<T> {
+export interface IBaseHomeResponse<T> extends IHomeResSpecialPages {
   recentlyUpdated: IAnime[];
   recentlyCompleted: IAnime[];
   recentlyAdded: IAnime[];
 }
 
 export interface IAHomeResponse<T> extends IBaseHomeResponse<T> {
+  data: IAnime[];
   trending: { now: IAnime[]; daily: IAnime[]; weekly: IAnime[]; monthly: IAnime[] };
   upcoming: IAnime[];
 }
@@ -537,3 +539,41 @@ export const TimeWindow = {
   Week: 'week',
 } as const;
 export type TimeWindow = (typeof TimeWindow)[keyof typeof TimeWindow];
+
+///// Movies and Tv
+export interface IMovieTvBase {
+  id: string | null;
+  name: string | null;
+  posterImage: string | null;
+  type: 'Movie' | 'TV' | null;
+  quality: string | null;
+}
+
+export interface IMovie extends IMovieTvBase {
+  type: 'Movie';
+  releaseDate: string | null;
+  duration: string | null;
+}
+
+export interface ITvShow extends IMovieTvBase {
+  type: 'TV';
+  seasons: number | null;
+  totalEpisodes: number | null;
+}
+
+export type IMovieOrTv = IMovie | ITvShow;
+
+export interface IHomeResSpecialPages {
+  error?: string;
+}
+export interface IHomeHIResponse<T> extends IHomeResSpecialPages {
+  trending: {
+    Movies: IMovieOrTv[] | [];
+    Tv: IMovieOrTv[] | [];
+  };
+  recentReleases: {
+    Movies: IMovieOrTv[] | [];
+    Tv: IMovieOrTv[] | [];
+  };
+  upcoming: IMovieOrTv[] | [];
+}

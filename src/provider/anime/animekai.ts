@@ -95,13 +95,13 @@ class Animekai extends BaseClass {
   private parseHome($: cheerio.CheerioAPI): IAHomeResponse<IAnime[] | []> {
     const selector: cheerio.SelectorType = 'section#featured div.swiper-wrapper > div.swiper-slide';
 
-    const slider: IAnime[] = [];
+    const data: IAnime[] = [];
 
     $(selector).each((_, element) => {
       const style = $(element).attr('style');
       const match = style?.match(/url\((['"]?)(.*?)\1\)/);
       const url = match ? match[2] : null;
-      slider.push({
+      data.push({
         id: $(element).find('div.swiper-ctrl > a').attr('href')?.split('/').at(2) || null,
         name: $(element).find('div.detail > p.title').text().trim() || null,
         romaji: $(element).find('div.detail > p.title').attr('data-jp') || null,
@@ -166,7 +166,7 @@ class Animekai extends BaseClass {
     const recentlyCompleted = this.scrapeUpdates($, recentlyCompletedSelector as cheerio.SelectorType);
 
     return {
-      data: slider,
+      data,
       trending,
       recentlyUpdated,
       recentlyAdded,
