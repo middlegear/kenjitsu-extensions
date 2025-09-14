@@ -6,7 +6,7 @@ import { BaseClass } from '../../models/base-anime.js';
 import type {
   AllAnimeServers,
   AllAnimeSourceResponseMap,
-  HISubOrDub,
+  ISubOrDub,
   IAllAnimeEpisodes,
   IAllAnimeServers,
   IAnimePaginated,
@@ -198,7 +198,7 @@ export class AllAnime extends BaseClass {
    * @param category - The translation type (sub, dub, or raw, default: 'sub').
    * @returns A promise resolving to a list of servers or an error.
    */
-  async fetchServers(id: string, category: HISubOrDub = 'sub'): Promise<IResponse<IAllAnimeServers[] | []>> {
+  async fetchServers(id: string, category: ISubOrDub = 'sub'): Promise<IResponse<IAllAnimeServers[] | []>> {
     const buildPayload = (query: string, variables: object) => ({
       query,
       variables,
@@ -249,7 +249,7 @@ export class AllAnime extends BaseClass {
    * @param category - The translation category (sub, dub, or raw, default: 'sub').
    * @returns A promise resolving to a map of server IDs to their video source responses.
    */
-  async fetchSources(episodeId: string, category: HISubOrDub = 'sub'): Promise<AllAnimeSourceResponseMap> {
+  async fetchSources(episodeId: string, category: ISubOrDub = 'sub'): Promise<AllAnimeSourceResponseMap> {
     const { data, error } = await this.fetchServers(episodeId, category);
     if (!data || error) {
       throw Error(error);

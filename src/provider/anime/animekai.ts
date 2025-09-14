@@ -5,7 +5,7 @@ import type {
   AKserver,
   Format,
   HIServerInfo,
-  HISubOrDub,
+  ISubOrDub,
   IAHomeResponse,
   IAllAnimeEpisodes,
   IAnime,
@@ -374,7 +374,7 @@ class Animekai extends BaseClass {
     return { data: servers };
   }
 
-  private findServerIds(servers: HIServerInfo, category: HISubOrDub): string[] {
+  private findServerIds(servers: HIServerInfo, category: ISubOrDub): string[] {
     const list = servers[category];
     if (!list || list.length === 0) {
       throw new Error(`No servers found for category '${category}'.`);
@@ -906,10 +906,10 @@ class Animekai extends BaseClass {
   /**
    * Fetches available streaming servers for a specific anime episode.
    * @param {string} episodeId - The unique identifier for the episode  (required).
-   * @param {HISubOrDub} category  - The audio category (Subtitled or Dubbed) (optional, defaults to Sub).
+   * @param {ISubOrDub} category  - The audio category (Subtitled or Dubbed) (optional, defaults to Sub).
    * @returns  A promise that resolves to an object containing available streaming server details (sub, dub, raw) or an error message.
    */
-  async fetchServers(episodeId: string, category: HISubOrDub = 'sub'): Promise<IResponse<AKserver[] | []>> {
+  async fetchServers(episodeId: string, category: ISubOrDub = 'sub'): Promise<IResponse<AKserver[] | []>> {
     if (!episodeId) {
       throw new Error('Missing required parameter: episodeId');
     }
@@ -975,7 +975,7 @@ class Animekai extends BaseClass {
    * @param {HISubOrDub} category  - The audio category (Subtitled or Dubbed) (optional, defaults to SubOrDub.SUB).
    * @returns  A promise that resolves to an object containing streaming sources, headers, sync data (AniList/MAL IDs), or an error message.
    */
-  async fetchSources(episodeId: string, category: HISubOrDub = 'sub'): Promise<ISourceBaseResponse<IVideoSource | null>> {
+  async fetchSources(episodeId: string, category: ISubOrDub = 'sub'): Promise<ISourceBaseResponse<IVideoSource | null>> {
     //
     if (!episodeId) {
       return {

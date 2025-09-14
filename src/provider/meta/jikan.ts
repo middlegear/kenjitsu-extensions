@@ -12,7 +12,7 @@ import type {
   Seasons,
   Format,
   AnimeProvider,
-  HISubOrDub,
+  ISubOrDub,
   HiAnimeServers,
 } from '../../models/types.js';
 
@@ -1253,7 +1253,7 @@ export class Jikan extends Meta {
    * @param category - The translation category (sub, dub, or raw, default: 'sub').
    * @returns A promise resolving  to an object containing video sources to stream.
    */
-  async fetchAllAnimeProviderSources(episodeId: string, category: HISubOrDub = 'sub') {
+  async fetchAllAnimeProviderSources(episodeId: string, category: ISubOrDub = 'sub') {
     return await this.fetchAllAnimeSources(episodeId, category);
   }
 
@@ -1264,7 +1264,7 @@ export class Jikan extends Meta {
    * @param  server - The streaming server to use (optional, defaults to hd-2). Note: hd-1 may return a 403 error due to CORS restrictions; use a proxy or switch to hd-2 or hd-3
    * @returns A promise resolving  to an object containing video sources to stream.
    */
-  async fetchHianimeProviderSources(episodeId: string, category: HISubOrDub = 'sub', server: HiAnimeServers = 'hd-2') {
+  async fetchHianimeProviderSources(episodeId: string, category: ISubOrDub = 'sub', server: HiAnimeServers = 'hd-2') {
     return await this.fetchZoroSources(episodeId, server, category);
   }
 }

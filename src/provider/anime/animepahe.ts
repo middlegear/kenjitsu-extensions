@@ -2,7 +2,7 @@ import { BaseClass } from '../../models/base-anime.js';
 import type {
   HIServerInfo,
   HISourceResponse,
-  HISubOrDub,
+  ISubOrDub,
   IAnime,
   IAnimeInfo,
   IAnimePaginated,
@@ -40,12 +40,14 @@ export class Animepahe extends BaseClass {
       name: $('header.anime-header').find('a.fa.fa-link.text-white').attr('title') || null,
       romaji: $('header.anime-header').find('h2.japanese').text().trim() || null,
       posterImage: $('div.anime-poster > a').attr('href') || null,
-      altnames: $('div.col-sm-4.anime-info').find('p:contains("Japanese")').text().trim().split(':').at(1)?.trim() || null,
-      japanese: $('div.col-sm-4.anime-info').find('p:contains("Japanese")').text().trim().split(':').at(1)?.trim() || null,
-      type: $('div.col-sm-4.anime-info').find('p:contains("Type")').text().trim().split(':').at(1)?.trim() || null,
-      status: $('div.col-sm-4.anime-info').find('p:contains("Status:")').text().trim().split(':').at(1)?.trim() || null,
-      startDate: $('div.col-sm-4.anime-info').find('p:contains("Aired:")').text().trim().split(':').at(1)?.trim() || null,
-      studios: $('div.col-sm-4.anime-info').find('p:contains("Studio:")').text().trim().split(':').at(1)?.trim() || null,
+      altnames: $('div.col-sm-4.anime-info').find('p:contains("Japanese")').text().split(':').at(1)?.trim() || null,
+      japanese: $('div.col-sm-4.anime-info').find('p:contains("Japanese")').text().split(':').at(1)?.trim() || null,
+      type: $('div.col-sm-4.anime-info').find('p:contains("Type")').text().split(':').at(1)?.trim() || null,
+      status: $('div.col-sm-4.anime-info').find('p:contains("Status:")').text().split(':').at(1)?.trim() || null,
+      startDate:
+        $('div.col-sm-4.anime-info').find('p:contains("Aired:")').text().split(':').at(1)?.trim().replace(/\s+/g, ' ') ||
+        null,
+      studios: $('div.col-sm-4.anime-info').find('p:contains("Studio:")').text().split(':').at(1)?.trim() || null,
       synopsis: $('div.anime-synopsis').text().trim() || null,
       score: null,
       producers: null,
@@ -124,7 +126,7 @@ export class Animepahe extends BaseClass {
   private findServerIds(
     servers: HIServerInfo,
     download: HIServerInfo,
-    category: HISubOrDub,
+    category: ISubOrDub,
   ): { serverId: string; serverName: string; downloadId: string | null }[] {
     const availableCategories: string[] = [];
     if (servers.sub?.length > 0) availableCategories.push('sub');
@@ -306,10 +308,10 @@ export class Animepahe extends BaseClass {
   /**
    * Fetches streaming sources for a given anime episode from a specified server and category.
    * @param {string} episodeId - The unique identifier for the episode (required).
-   * @param {HISubOrDub} category  - The audio category (Subtitled or Dubbed) (optional, defaults to SubOrDub.SUB).
+   * @param {ISubOrDub} category  - The audio category (Subtitled or Dubbed) (optional, defaults to SubOrDub.SUB).
    * @returns  A promise that resolves to an object containing streaming sources, headers,  or an error message.
    */
-  async fetchSources(episodeId: string, category: HISubOrDub = 'sub'): Promise<HISourceResponse<IVideoSource | null>> {
+  async fetchSources(episodeId: string, category: ISubOrDub = 'sub'): Promise<HISourceResponse<IVideoSource | null>> {
     try {
       const servers = await this.fetchServers(episodeId);
       if ('error' in servers) {

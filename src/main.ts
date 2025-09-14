@@ -2,16 +2,16 @@ import { HiAnime } from './provider/anime/hianime.js';
 import { Anilist } from './provider/meta/anilist.js';
 import { Jikan } from './provider/meta/jikan.js';
 import { TheMovieDatabase } from './provider/meta/tmdb.js';
-import { Seasons, TimeWindow, Format } from './models/types.js';
+import { Seasons, TimeWindow, Format, HIGenres, type AKGenres, JSort, AnimeProvider, ISubOrDub } from './models/types.js';
 import { FlixHQ } from './provider/movies/flixhq/index.js';
 import { Animekai } from './provider/anime/animekai.js';
 import { Animepahe } from './provider/anime/animepahe.js';
 import { Himovies } from './provider/himovies.js';
 
 export { Anilist, Jikan, TheMovieDatabase, HiAnime, Animekai, Animepahe, FlixHQ, Seasons, TimeWindow, Format };
-// const data = await new Himovies().fetchPopularTv(5);
+const data = await new Himovies().fetchMediaInfo('tv-the-boys-33895');
 // const data = await new Animepahe().fetchEpisodes('4d560dfd-e606-c21e-2eef-e48fd09f8188');
 
-// console.log(data);
-// console.log(JSON.stringify(data));
+console.log(data);
+// console.log(JSON.stringify(data)
 // console.log();

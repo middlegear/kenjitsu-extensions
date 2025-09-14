@@ -15,4 +15,11 @@ export abstract class BaseClass {
       .replace(/[\s_-]+/g, '-')
       .replace(/^-+|-+$/g, '');
   }
+
+  protected getMappedValue<T extends string, U extends string>(input: T, mapping: Record<T, U>): U {
+    if (!(input in mapping)) {
+      throw new Error(`Invalid: ${input}. Must be one of: ${Object.keys(mapping).join(', ')}`);
+    }
+    return mapping[input];
+  }
 }

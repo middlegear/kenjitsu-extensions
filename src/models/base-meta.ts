@@ -1,7 +1,7 @@
 import { FetchClient } from '../config/client.js';
 import { HiAnime } from '../provider/anime/hianime.js';
 import { findBestMatch } from '../utils/string-similarity.js';
-import type { HiAnimeServers, HISubOrDub, IMovieProviderResults, ITitle } from './types.js';
+import type { HiAnimeServers, ISubOrDub, IMovieProviderResults, ITitle } from './types.js';
 import { FlixHQ } from '../provider/movies/flixhq/index.js';
 import { AllAnime } from '../provider/anime/allanime.js';
 
@@ -159,7 +159,7 @@ export abstract class Meta {
     }
   }
 
-  protected async fetchZoroSources(episodeId: string, server: HiAnimeServers = 'hd-2', category: HISubOrDub = 'sub') {
+  protected async fetchZoroSources(episodeId: string, server: HiAnimeServers = 'hd-2', category: ISubOrDub = 'sub') {
     try {
       const result = await this.hianime.fetchSources(episodeId, server, category);
       if ('error' in result) {
@@ -247,7 +247,7 @@ export abstract class Meta {
       throw new Error(error instanceof Error ? error.message : String(error));
     }
   }
-  protected async fetchAllAnimeSources(episodeId: string, category: HISubOrDub = 'sub') {
+  protected async fetchAllAnimeSources(episodeId: string, category: ISubOrDub = 'sub') {
     try {
       const result = await this.allanime.fetchSources(episodeId, category);
 

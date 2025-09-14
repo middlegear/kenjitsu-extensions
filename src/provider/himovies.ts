@@ -1,13 +1,20 @@
 import { BaseClass } from '../models/base-anime.js';
 import * as cheerio from 'cheerio';
-import type {
-  IAnimePaginated,
-  IHomeHIResponse,
-  IMovie,
-  IMovieOrTv,
-  IMovieTvBase,
-  IResponse,
-  ITvShow,
+import {
+  HIMovieCountryCode,
+  HIMovieGenres,
+  HIMoviesCountryID,
+  HIMoviesGenreID,
+  type IAnimePaginated,
+  type IHomeHIResponse,
+  type IMovie,
+  type IMovieEpisodes,
+  type IMovieInfo,
+  type IMovieInfoResponse,
+  type IMovieOrTv,
+  type IMovieTvBase,
+  type IResponse,
+  type ITvShow,
 } from '../models/types.js';
 
 export class Himovies extends BaseClass {
@@ -154,7 +161,8 @@ export class Himovies extends BaseClass {
     const currentPage: number = Number($(paginationElement).find('li[class="page-item active"]').text().trim() || 1);
     const lastPage: number = Number(
       paginationElement.find('a.page-link[title="Last"]').attr('href')?.split('page=').at(-1) ||
-        paginationElement.find('a.page-link:last').text().trim(),
+        paginationElement.find('a.page-link:last').text().trim() ||
+        currentPage,
     );
     const items: IMovieOrTv[] = [];
 
@@ -260,14 +268,139 @@ export class Himovies extends BaseClass {
     return { data: items };
   }
 
+  private parseInfoRecommendedSection($: cheerio.CheerioAPI): IMovieOrTv[] {
+    const items: IMovieOrTv[] = [];
+    const selector: cheerio.SelectorType = 'div.block_area-content.block_area-list.film_list.film_list-grid div.flw-item';
+    $(selector).each((_, element) => {
+      const type = $(element).find('span.float-right.fdi-type').text().trim() as 'Movie' | 'TV';
+
+      const baseData: IMovieTvBase = {
+        id: $(element).find('a.film-poster-ahref.flw-item-tip').attr('href')?.slice(1).replace('/', '-') || null,
+        name: $(element).find('h3.film-name').text().trim() || null,
+        posterImage: $(element).find('img.film-poster-img.lazyload').attr('data-src') || null,
+        quality: $(element).find('div.pick.film-poster-quality').text().trim() || null,
+        type,
+      };
+
+      if (type === 'Movie') {
+        items.push({
+          ...baseData,
+          type: 'Movie',
+          releaseDate: $(element).find('div.fd-infor > span.fdi-item:first').text().trim() || null,
+          duration: $(element).find('div.fd-infor > span.fdi-duration').text().trim() || null,
+        } as IMovie);
+      } else if (type === 'TV') {
+        const seasonText = $(element).find('div.fd-infor > span.fdi-item:first').text().trim() || null;
+        // const seasonText = $(element).find('div.fd-infor > span.fdi-item').eq(1).text().trim();
+        const episodesText = $(element).find('div.fd-infor > span.fdi-item').eq(1).text().trim();
+
+        let seasons: number | null = null;
+        if (seasonText && seasonText.startsWith('SS')) {
+          const seasonNum = parseInt(seasonText.replace(/\D+/g, ''), 10);
+          seasons = Number.isNaN(seasonNum) ? null : seasonNum;
+        }
+
+        let totalEpisodes: number | null = null;
+        if (episodesText && episodesText.startsWith('EPS')) {
+          const episodesNum = parseInt(episodesText.replace(/\D+/g, ''), 10);
+          totalEpisodes = Number.isNaN(episodesNum) ? null : episodesNum;
+        }
+        items.push({
+          ...baseData,
+          type: 'TV',
+          seasons,
+          totalEpisodes,
+        } as ITvShow);
+      }
+    });
+
+    return items;
+  }
+
+  private parseInfo($: cheerio.CheerioAPI) {
+    const recommended = this.parseInfoRecommendedSection($);
+    const id = $('h2.heading-name > a').attr('href')?.slice(1).replace('/', '-') || null;
+    let type;
+    type = id?.includes('tv') ? (type = 'TV' as 'TV') : ('Movie' as 'Movie');
+
+    const mediaInfo: IMovieInfo = {
+      id: id,
+      name: $('h2.heading-name > a').text().trim() || null,
+      posterImage: $('div.film-poster.mb-2 > img.film-poster-img').attr('src') || null,
+      type: type || null,
+      quality: $('span.item.mr-1 > button.btn.btn-sm.btn-quality > strong').text().trim() || null,
+      releaseDate: $('.row-line:has(strong:contains("Released:"))').text().replace('Released:', '').trim() || null,
+      genre:
+        $('.row-line:has(strong:contains("Genre:")) a')
+          .map((i, el) => $(el).text().split('&'))
+          .get()
+          .map(v => v.trim()) || null,
+
+      casts:
+        $('.row-line:has(strong:contains("Casts:")) a')
+          .map((i, el) => $(el).text().trim())
+          .get() || null,
+      duration:
+        $('.row-line:has(strong:contains("Duration:"))').text().replace('Duration:', '').replace(/\s+/g, ' ').trim() || null,
+      score: Number($('span.item.mr-2 > button.btn.btn-sm.btn-imdb').text().replace('IMDB:', '').trim()) || null,
+      country:
+        $('.row-line:has(strong:contains("Country:")) a')
+          .map((i, el) => $(el).text().trim())
+          .get() || null,
+
+      production:
+        $('.row-line:has(strong:contains("Production:"))')
+          .text()
+          .replace('Production:', '')
+          .replace(/\s+/g, ' ')
+          .split(',')
+          .map(v => v.trim())
+          .filter(Boolean) || null,
+
+      trailer: $('iframe#iframe-trailer').attr('data-src') || null,
+      synopsis: $('.description').text().trim() || null,
+    };
+
+    return { data: mediaInfo, recommended };
+  }
+
+  private parseSeasons($: cheerio.CheerioAPI) {
+    return $('.dropdown-menu > a')
+      .map((_, el) => {
+        const seasonId = $(el).attr('data-id')!;
+        const label = $(el).text().trim();
+        const seasonNumber = parseInt(label.replace(/\D/g, ''), 10) || 1;
+        return { seasonId, seasonNumber };
+      })
+      .get();
+  }
+
+  private parseEpisodes($: cheerio.CheerioAPI, seasonNumber: number, media: string) {
+    return $('.nav > li')
+      .map((_, el) => {
+        const anchor = $(el).find('a');
+        const rawId = anchor.attr('id')!;
+        const title = anchor.attr('title')!;
+        const episodeTitle = title.split(':').at(1)?.trim() || null;
+        return {
+          episodeId: `${media}-episode-${rawId.split('-')[1]}` || null,
+          title: episodeTitle,
+          episodeNumber: parseInt(title.split(':')[0].slice(3).trim(), 10) || null,
+          seasonNumber: seasonNumber || null,
+        };
+      })
+      .get();
+  }
   private async fetchPaginated(path: string, page: number): Promise<IAnimePaginated<IMovieOrTv[] | []>> {
     try {
       let url;
-      /// i dont understand why fetch client isnt picking up or building the parameters but ill just hardcode it
+
       if (path.includes('top-imdb?type=movie')) {
         url = `${this.baseUrl}/top-imdb?type=movie&page=${page}`;
       } else if (path.includes('top-imdb?type=tv')) {
         url = `${this.baseUrl}/top-imdb?type=tv&page=${page}`;
+      } else if (path.includes('release_year')) {
+        url = `${this.baseUrl}/filter?type=${path}&page=${page}`;
       } else url = `${this.baseUrl}/${path}?page=${page}`;
 
       const response = await this.client.get(url);
@@ -362,11 +495,36 @@ export class Himovies extends BaseClass {
       };
     }
   }
+  /**
+   * Performs an advanced search with filters.
+   * @param {'all' | 'movie' | 'tv'} [type='all'] - The media type filter (default: 'all').
+   * @param {'all' | 'HD' | 'SD' | 'CAM'} [quality='all'] - The quality filter (default: 'all').
+   * @param {number | 'all'} [releaseYear='all'] - Release year filter (default: 'all').
+   * @param {HIMoviesGenreID} [genreId='All'] - Genre filter (default: 'All').
+   * @param {HIMoviesCountryID} [countryId='All'] - Country filter (default: 'All').
+   * @param {number} [page=1] - Page number for pagination (default: 1).
+   * @returns  Paginated filtered search results
+   */
+  async advancedSearch(
+    type: 'all' | 'movie' | 'tv' = 'all',
+    quality: 'all' | 'HD' | 'SD' | 'CAM' = 'all',
+    releaseYear: number | 'all' = 'all',
+    genreId: HIMoviesGenreID = 'All',
+    countryId: HIMoviesCountryID = 'All',
+    page: number = 1,
+  ): Promise<IAnimePaginated<IMovieOrTv[] | []>> {
+    const genreIdValue = this.getMappedValue(genreId, HIMoviesGenreID);
+    const countryIdValue = this.getMappedValue(countryId, HIMoviesCountryID);
+    const url = `${type}&quality=${quality}&release_year=${releaseYear}&genre=${genreIdValue}&country=${countryIdValue}`;
+    console.log(url);
+
+    return await this.fetchPaginated(url, page);
+  }
 
   /**
-   * Fetches search suggestions for a given query string from the Himovies platform.
+   * Fetches search suggestions for a query string.
    * @param {string} query - The search query string (required).
-   @returns A promise that resolves to an object containing an array of media titles or an error message.
+   * @returns {Promise<IResponse<IMovieOrTv[] | []>>} Search suggestions for autocomplete
    */
   async searchSuggestions(query: string): Promise<IResponse<IMovieOrTv[] | []>> {
     if (!query) {
@@ -406,37 +564,158 @@ export class Himovies extends BaseClass {
 
   /**
    * Fetches a paginated list of the most popular movies.
-   * @param {number} page - Page number for pagination (default: 1)
-   * @returns  Promise resolving to an object  with popular movies and pagination details
+   * @param {number} [page=1] - Page number for pagination (default: 1).
+   * @returns {Promise<IAnimePaginated<IMovieOrTv[] | []>>} Paginated popular movies
    */
   async fetchPopularMovies(page: number = 1): Promise<IAnimePaginated<IMovieOrTv[] | []>> {
     return await this.fetchPaginated('movie', page);
   }
 
   /**
-   * Fetches a paginated list of the most popular tv shows.
-   * @param {number} page - Page number for pagination (default: 1)
-   * @returns  Promise resolving to an object  with popular tv shows and pagination details
+   * Fetches a paginated list of the most popular TV shows.
+   * @param {number} [page=1] - Page number for pagination (default: 1).
+   * @returns {Promise<IAnimePaginated<IMovieOrTv[] | []>>} Paginated popular TV shows
    */
   async fetchPopularTv(page: number = 1): Promise<IAnimePaginated<IMovieOrTv[] | []>> {
     return await this.fetchPaginated('tv-show', page);
   }
 
   /**
-   * Fetches a paginated list of the top rated movies.
-   * @param {number} page - Page number for pagination (default: 1)
-   * @returns  Promise resolving to an object with movies and pagination details
+   * Fetches a paginated list of top rated movies.
+   * @param {number} [page=1] - Page number for pagination (default: 1).
+   * @returns {Promise<IAnimePaginated<IMovieOrTv[] | []>>} Paginated top-rated movies
    */
-  async fetchTopMovies(page: number = 1) {
+  async fetchTopMovies(page: number = 1): Promise<IAnimePaginated<IMovieOrTv[] | []>> {
     return await this.fetchPaginated('top-imdb?type=movie', page);
   }
 
   /**
-   * Fetches a paginated list of the top rated tv shows.
-   * @param {number} page - Page number for pagination (default: 1)
-   * @returns  Promise resolving to an object with tv and pagination details
+   * Fetches a paginated list of top rated TV shows.
+   * @param {number} [page=1] - Page number for pagination (default: 1).
+   * @returns {Promise<IAnimePaginated<IMovieOrTv[] | []>>} Paginated top-rated TV shows
    */
-  async fetchTopTv(page: number = 1) {
+  async fetchTopTv(page: number = 1): Promise<IAnimePaginated<IMovieOrTv[] | []>> {
     return await this.fetchPaginated('top-imdb?type=tv', page);
+  }
+  /**
+   * Fetches a paginated list of upcoming media to be added.
+   * @param {number} [page=1] - Page number for pagination (default: 1).
+   * @returns {Promise<IAnimePaginated<IMovieOrTv[] | []>>} Paginated media
+   */
+  async fetchUpcoming(page: number = 1): Promise<IAnimePaginated<IMovieOrTv[] | []>> {
+    return await this.fetchPaginated('coming-soon', page);
+  }
+
+  /**
+   * Fetches media by genre.
+   * @param {HIMovieGenres} genre - The genre to filter by.
+   * @param {number} [page=1] - Page number for pagination (default: 1).
+   * @returns {Promise<IAnimePaginated<IMovieOrTv[] | []>>} Paginated media by genre
+   */
+  async fetchGenre(genre: HIMovieGenres, page: number = 1): Promise<IAnimePaginated<IMovieOrTv[] | []>> {
+    const value = this.getMappedValue(genre, HIMovieGenres);
+
+    return await this.fetchPaginated(`/genre/${value}`, page);
+  }
+
+  /**
+   * Fetches media by country.
+   * @param {HIMovieCountryCode} country - The country code to filter by.
+   * @param {number} [page=1] - Page number for pagination (default: 1).
+   * @returns {Promise<IAnimePaginated<IMovieOrTv[] | []>>} Paginated media by country
+   */
+  async fetchByCountry(country: HIMovieCountryCode, page: number = 1): Promise<IAnimePaginated<IMovieOrTv[] | []>> {
+    const value = this.getMappedValue(country, HIMovieCountryCode);
+
+    return await this.fetchPaginated(`/country/${value}`, page);
+  }
+
+  private buildAjaxUrl(id: string, kind: 'tv' | 'season'): string {
+    switch (kind) {
+      case 'tv':
+        return `${this.baseUrl}/ajax/season/episodes/${id}`; // fetch episodes per season
+      case 'season':
+        return `${this.baseUrl}/ajax/season/list/${id}`; ///fetches season list
+    }
+  }
+
+  /**
+   * Fetches detailed information about a specific movie or TV show.
+   * @param {string} mediaId - The unique identifier for the movie or TV show (required).
+   * @returns { Promise<IMovieInfoResponse<IMovieInfo | null>>} A promise that resolves to an object containing detailed media information, recommendations, including episodes for TV shows.
+   */
+  async fetchMediaInfo(mediaId: string): Promise<IMovieInfoResponse<IMovieInfo | null>> {
+    try {
+      const media = mediaId.replace('-', '/');
+      const response = await this.client.get(`${this.baseUrl}/${media}`);
+      if (!response.data) {
+        return {
+          data: null,
+          providerEpisodes: [],
+          recommended: [],
+          error: response.statusText || 'Received empty response from server',
+        };
+      }
+
+      const { data, recommended } = this.parseInfo(cheerio.load(response.data));
+
+      let episodes: IMovieEpisodes[] = [];
+
+      const importantId = media.split('-').at(-1) as string;
+
+      if (data.type === 'TV') {
+        const seasonsres = await this.client.get(`${this.buildAjaxUrl(importantId, 'season')}`, {
+          headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            Referer: `${this.baseUrl}/${media}`,
+          },
+        });
+        if (!seasonsres.data) {
+          return {
+            data: null,
+            providerEpisodes: [],
+            recommended: [],
+            error: seasonsres.statusText || 'Received empty response from server',
+          };
+        }
+        const seasons = this.parseSeasons(cheerio.load(seasonsres.data));
+        for (const { seasonId, seasonNumber } of seasons) {
+          const seasonEpisodes = await this.client.get(`${this.buildAjaxUrl(seasonId, 'tv')}`, {
+            headers: {
+              'X-Requested-With': 'XMLHttpRequest',
+              Referer: `${this.baseUrl}/${media}`,
+            },
+          });
+          if (!seasonEpisodes.data) {
+            return {
+              data: null,
+              providerEpisodes: [],
+              recommended: [],
+              error: seasonEpisodes.statusText || 'Received empty response from server',
+            };
+          }
+          const episodeslist = this.parseEpisodes(cheerio.load(seasonEpisodes.data), seasonNumber, mediaId);
+          episodes.push(...episodeslist);
+        }
+      } else {
+        episodes = [
+          {
+            episodeId: mediaId,
+            title: data.name,
+            episodeNumber: 1,
+            seasonNumber: 0,
+          },
+        ];
+      }
+
+      return { data: data, providerEpisodes: episodes, recommended };
+    } catch (error) {
+      return {
+        data: null,
+        recommended: [],
+        providerEpisodes: [],
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
   }
 }

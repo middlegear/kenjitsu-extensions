@@ -173,8 +173,8 @@ export interface HIServerInfo {
   episodeNumber: number | null;
 }
 
-export const HISubOrDub = ['sub', 'dub', 'raw'] as const;
-export type HISubOrDub = (typeof HISubOrDub)[number];
+export const ISubOrDub = ['sub', 'dub', 'raw'] as const;
+export type ISubOrDub = (typeof ISubOrDub)[number];
 
 export const HiAnimeServers = ['hd-1', 'hd-2', 'hd-3'] as const;
 ///'streamwish', has been omited since the extractor method isnt ready and i dont know which referer headers work best
@@ -561,8 +561,30 @@ export interface ITvShow extends IMovieTvBase {
   totalEpisodes: number | null;
 }
 
+export interface IMovieInfo extends IMovieTvBase {
+  releaseDate: string | null;
+  synopsis: string | null;
+  duration: string | null;
+  production: string[] | null;
+  country: string[] | null;
+  casts: string[] | null;
+  trailer: string | null;
+  score: number | null;
+  genre: string[] | null;
+}
 export type IMovieOrTv = IMovie | ITvShow;
 
+export interface IMovieInfoResponse<T> extends IResponse<T> {
+  recommended: IMovieOrTv[] | [];
+  providerEpisodes: IMovieEpisodes[] | [];
+}
+
+export interface IMovieEpisodes {
+  title: string | null;
+  episodeId: string | null;
+  seasonNumber: number | null;
+  episodeNumber: number | null;
+}
 export interface IHomeResSpecialPages {
   error?: string;
 }
@@ -577,3 +599,156 @@ export interface IHomeHIResponse<T> extends IHomeResSpecialPages {
   };
   upcoming: IMovieOrTv[] | [];
 }
+
+export const HIMovieGenres = {
+  Action: 'action',
+  'Action & Adventure': 'action-adventure',
+  Adventure: 'adventure',
+  Animation: 'animation',
+  Biography: 'biography',
+  Comedy: 'comedy',
+  Crime: 'crime',
+  Documentary: 'documentary',
+  Drama: 'drama',
+  Family: 'family',
+  Fantasy: 'fantasy',
+  History: 'history',
+  Horror: 'horror',
+  Kids: 'kids',
+  Music: 'music',
+  Mystery: 'mystery',
+  News: 'news',
+  Reality: 'reality',
+  Romance: 'romance',
+  'Sci-Fi & Fantasy': 'sci-fi-fantasy',
+  'Science Fiction': 'science-fiction',
+  Soap: 'soap',
+  Talk: 'talk',
+  Thriller: 'thriller',
+  'TV Movie': 'tv-movie',
+  War: 'war',
+  'War & Politics': 'war-politics',
+  Western: 'western',
+} as const;
+
+export type HIMovieGenres = keyof typeof HIMovieGenres;
+
+export const HIMovieCountryCode = {
+  Argentina: 'AR',
+  Australia: 'AU',
+  Austria: 'AT',
+  Belgium: 'BE',
+  Brazil: 'BR',
+  Canada: 'CA',
+  China: 'CN',
+  CzechRepublic: 'CZ',
+  Denmark: 'DK',
+  Finland: 'FI',
+  France: 'FR',
+  Germany: 'DE',
+  HongKong: 'HK',
+  Hungary: 'HU',
+  India: 'IN',
+  Ireland: 'IE',
+  Israel: 'IL',
+  Italy: 'IT',
+  Japan: 'JP',
+  Luxembourg: 'LU',
+  Mexico: 'MX',
+  Netherlands: 'NL',
+  NewZealand: 'NZ',
+  Norway: 'NO',
+  Poland: 'PL',
+  Romania: 'RO',
+  Russia: 'RU',
+  SouthAfrica: 'ZA',
+  SouthKorea: 'KR',
+  Spain: 'ES',
+  Sweden: 'SE',
+  Switzerland: 'CH',
+  Taiwan: 'TW',
+  Thailand: 'TH',
+  UnitedKingdom: 'GB',
+  UnitedStates: 'US',
+} as const;
+
+export type HIMovieCountryCode = keyof typeof HIMovieCountryCode;
+
+export const HIMoviesCountryID = {
+  All: 'all',
+  Argentina: '11',
+  Australia: '151',
+  Austria: '4',
+  Belgium: '44',
+  Brazil: '190',
+  Canada: '147',
+  China: '101',
+  CzechRepublic: '231',
+  Denmark: '222',
+  Finland: '158',
+  France: '3',
+  Germany: '96',
+  HongKong: '93',
+  Hungary: '72',
+  India: '105',
+  Ireland: '196',
+  Israel: '24',
+  Italy: '205',
+  Japan: '173',
+  Luxembourg: '91',
+  Mexico: '40',
+  Netherlands: '172',
+  NewZealand: '122',
+  Norway: '219',
+  Poland: '23',
+  Romania: '170',
+  Russia: '109',
+  SouthAfrica: '200',
+  SouthKorea: '135',
+  Spain: '62',
+  Sweden: '114',
+  Switzerland: '41',
+  Taiwan: '119',
+  Thailand: '57',
+  UnitedKingdom: '180',
+  UnitedStates: '129',
+} as const;
+
+// Define type for country names (keys of CountryID)
+export type HIMoviesCountryID = keyof typeof HIMoviesCountryID;
+
+/// this is for serch filters
+export const HIMoviesGenreID = {
+  All: 'all',
+  Action: '10',
+  ActionAndAdventure: '24',
+  Adventure: '18',
+  Animation: '3',
+  Biography: '37',
+  Comedy: '7',
+  Crime: '2',
+  Documentary: '11',
+  Drama: '4',
+  Family: '9',
+  Fantasy: '13',
+  History: '19',
+  Horror: '14',
+  Kids: '27',
+  Music: '15',
+  Mystery: '1',
+  News: '34',
+  Reality: '22',
+  Romance: '12',
+  SciFiAndFantasy: '31',
+  ScienceFiction: '5',
+  Soap: '35',
+  Talk: '29',
+  Thriller: '16',
+  TVMovie: '8',
+  War: '17',
+  WarAndPolitics: '28',
+  Western: '6',
+} as const;
+
+// Define type for genre names (keys of GenreID)
+export type HIMoviesGenreID = keyof typeof HIMoviesGenreID;

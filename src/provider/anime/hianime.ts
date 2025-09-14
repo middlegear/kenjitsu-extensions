@@ -1,6 +1,6 @@
 import * as cheerio from 'cheerio';
 import { BaseClass } from '../../models/base-anime.js';
-import type { HISubOrDub, HiAnimeServers, IAnimeCategory } from '../../models/types.js';
+import type { ISubOrDub, HiAnimeServers, IAnimeCategory } from '../../models/types.js';
 import MegaCloud from '../../source-extractors/megacloud.js';
 import type {
   IAnime,
@@ -75,7 +75,8 @@ export class HiAnime extends BaseClass {
     const currentPage: number = Number($(paginationElement).find('li[class="page-item active"]').text().trim() || 1);
     const lastPage: number = Number(
       paginationElement.find('a.page-link[title="Last"]').attr('href')?.split('page=').at(-1) ||
-        paginationElement.find('a.page-link:last').text().trim(),
+        paginationElement.find('a.page-link:last').text().trim() ||
+        currentPage,
     );
     if (!Array.isArray(anime) || anime.length === 0) {
       return {
@@ -845,7 +846,7 @@ export class HiAnime extends BaseClass {
    * @returns The media ID of the matching server
    * @throws Error if the category or server is not found
    */
-  private findServerId(servers: HIServerInfo, category: HISubOrDub, server: HiAnimeServers): number {
+  private findServerId(servers: HIServerInfo, category: ISubOrDub, server: HiAnimeServers): number {
     const availableCategories: string[] = [];
     if (servers.sub?.length > 0) availableCategories.push('sub');
     if (servers.dub?.length > 0) availableCategories.push('dub');
@@ -1588,7 +1589,7 @@ export class HiAnime extends BaseClass {
   async fetchSources(
     episodeId: string,
     server: HiAnimeServers = 'hd-2',
-    category: HISubOrDub = 'sub',
+    category: ISubOrDub = 'sub',
   ): Promise<HISourceResponse<IVideoSource | null>> {
     if (!episodeId || episodeId.includes('ep=') || episodeId.includes('$')) {
       if (episodeId.includes('ep=') || episodeId.includes('$')) {
