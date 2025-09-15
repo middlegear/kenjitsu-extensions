@@ -2,24 +2,24 @@ import * as cheerio from 'cheerio';
 import { BaseClass } from '../../models/base-anime.js';
 import type { ISubOrDub, HiAnimeServers, IAnimeCategory } from '../../models/types.js';
 import MegaCloud from '../../source-extractors/megacloud.js';
-import type {
-  IAnime,
-  IAnimePaginated,
-  ISearchSuggestions,
-  IResponse,
-  IAnimeInfo,
-  ICharacters,
-  IRelatedSeasons,
-  IPromotionVIds,
-  IAnimeInfoResponse,
-  IBaseAnime,
-  IHomeResponse,
-  IRepetitiveSections,
+import {
+  type IAnime,
+  type IAnimePaginated,
+  type ISearchSuggestions,
+  type IResponse,
+  type IAnimeInfo,
+  type ICharacters,
+  type IRelatedSeasons,
+  type IPromotionVIds,
+  type IAnimeInfoResponse,
+  type IBaseAnime,
+  type IHomeResponse,
+  type IRepetitiveSections,
   HIGenres,
-  IEpisodes,
-  HIServerInfo,
-  HISourceResponse,
-  IVideoSource,
+  type IEpisodes,
+  type HIServerInfo,
+  type HISourceResponse,
+  type IVideoSource,
 } from '../../models/types.js';
 
 /**
@@ -1326,7 +1326,7 @@ export class HiAnime extends BaseClass {
    * @param {number} page - Page number for pagination (default: 1)
    * @returns {  Promise<IAnimePaginated<IAnime[] | []>>} Promise resolving to an object with genre-specific anime and pagination details
    */
-  async fetchGenre(genre: HIGenres, page: number = 1): Promise<IAnimePaginated<IAnime[] | []>> {
+  async fetchGenre(genre: string, page: number = 1): Promise<IAnimePaginated<IAnime[] | []>> {
     if (!genre) {
       return {
         hasNextPage: false,
@@ -1336,8 +1336,9 @@ export class HiAnime extends BaseClass {
         data: [],
       };
     }
+    const Igenre = this.getMappedValue(genre, HIGenres);
     try {
-      const response = await this.client.get(`${this.baseUrl}/genre/${genre}`, {
+      const response = await this.client.get(`${this.baseUrl}/genre/${Igenre}`, {
         params: {
           page: String(page),
         },

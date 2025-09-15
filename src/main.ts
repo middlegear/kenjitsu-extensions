@@ -11,15 +11,11 @@ import {
   Seasons,
   TimeWindow,
   Format,
-  HIGenres,
-  type AKGenres,
   JSort,
-  AnimeProvider,
-  ISubOrDub,
-  HIMovieCountryCode,
-  HIMoviesCountryID,
-  HIMovieGenres,
-  HIMoviesGenreID,
+  type IMovieCountry,
+  type IMovieGenre,
+  type KaiGenres,
+  type HIGenre,
 } from './models/types.js';
 
 export {
@@ -34,17 +30,13 @@ export {
   Seasons,
   TimeWindow,
   Format,
-  HIGenres,
-  type AKGenres,
+  type IMovieCountry,
+  type IMovieGenre,
+  type KaiGenres,
+  type HIGenre,
   JSort,
-  AnimeProvider,
-  ISubOrDub,
-  HIMovieCountryCode,
-  HIMoviesCountryID,
-  HIMovieGenres,
-  HIMoviesGenreID,
 };
-// const data = await new HiMovies().fetchSources('tv-the-boys-33895-episode-1096681');
+// const data = await new HiMovies().advancedSearch('all', 'all', 2025, 'action', 'unitedkingdom');
 // const data = await new Animepahe().fetchEpisodes('4d560dfd-e606-c21e-2eef-e48fd09f8188');
 // movie-bad-boys-18997
 //tv-the-boys-33895-episode-1096681

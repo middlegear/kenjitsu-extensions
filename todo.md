@@ -54,3 +54,7 @@ TESTS
 1. add tests for himovies 
 2. update tests for animekai and flixhq
 3. add tests for all anime and animepahe
+
+
+/// Normalize them first 
+1. everything to lowercase before accepting inputs

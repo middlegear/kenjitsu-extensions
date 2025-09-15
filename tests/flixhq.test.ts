@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest';
-import { FlixHQ } from '../src/provider/index.js';
+import { FlixHQ } from '../src/provider/movies/flixhq/index.js';
 
 const flixhq = new FlixHQ();
 

@@ -529,8 +529,8 @@ export class HiMovies extends BaseClass {
    * @param {'all' | 'movie' | 'tv'} [type='all'] - The media type filter (default: 'all').
    * @param {'all' | 'HD' | 'SD' | 'CAM'} [quality='all'] - The quality filter (default: 'all').
    * @param {number | 'all'} [releaseYear='all'] - Release year filter (default: 'all').
-   * @param {HIMoviesGenreID} [genreId='All'] - Genre filter (default: 'All').
-   * @param {HIMoviesCountryID} [countryId='All'] - Country filter (default: 'All').
+   * @param {HIMoviesGenreID} [genre='all'] - Genre filter (default: 'all').
+   * @param {HIMoviesCountryID} [country='all'] - Country filter (default: 'all').
    * @param {number} [page=1] - Page number for pagination (default: 1).
    * @returns  Paginated filtered search results
    */
@@ -538,14 +538,14 @@ export class HiMovies extends BaseClass {
     type: 'all' | 'movie' | 'tv' = 'all',
     quality: 'all' | 'HD' | 'SD' | 'CAM' = 'all',
     releaseYear: number | 'all' = 'all',
-    genreId: HIMoviesGenreID = 'All',
-    countryId: HIMoviesCountryID = 'All',
+    genre: string = 'all',
+    country: string = 'all',
     page: number = 1,
   ): Promise<IAnimePaginated<IMovieOrTv[] | []>> {
-    const genreIdValue = this.getMappedValue(genreId, HIMoviesGenreID);
-    const countryIdValue = this.getMappedValue(countryId, HIMoviesCountryID);
+    const genreIdValue = this.getMappedValue(genre, HIMoviesGenreID);
+    const countryIdValue = this.getMappedValue(country, HIMoviesCountryID);
     const url = `${type}&quality=${quality}&release_year=${releaseYear}&genre=${genreIdValue}&country=${countryIdValue}`;
-    console.log(url);
+    // console.log(url);
 
     return await this.fetchPaginated(url, page);
   }
@@ -637,11 +637,11 @@ export class HiMovies extends BaseClass {
 
   /**
    * Fetches media by genre.
-   * @param {HIMovieGenres} genre - The genre to filter by.
+   * @param {string} genre - The genre to filter by.
    * @param {number} [page=1] - Page number for pagination (default: 1).
    * @returns {Promise<IAnimePaginated<IMovieOrTv[] | []>>} Paginated media by genre
    */
-  async fetchGenre(genre: HIMovieGenres, page: number = 1): Promise<IAnimePaginated<IMovieOrTv[] | []>> {
+  async fetchGenre(genre: string, page: number = 1): Promise<IAnimePaginated<IMovieOrTv[] | []>> {
     const value = this.getMappedValue(genre, HIMovieGenres);
 
     return await this.fetchPaginated(`/genre/${value}`, page);
@@ -649,11 +649,11 @@ export class HiMovies extends BaseClass {
 
   /**
    * Fetches media by country.
-   * @param {HIMovieCountryCode} country - The country code to filter by.
+   * @param {string} country - The country code to filter by.
    * @param {number} [page=1] - Page number for pagination (default: 1).
    * @returns {Promise<IAnimePaginated<IMovieOrTv[] | []>>} Paginated media by country
    */
-  async fetchByCountry(country: HIMovieCountryCode, page: number = 1): Promise<IAnimePaginated<IMovieOrTv[] | []>> {
+  async fetchByCountry(country: string, page: number = 1): Promise<IAnimePaginated<IMovieOrTv[] | []>> {
     const value = this.getMappedValue(country, HIMovieCountryCode);
 
     return await this.fetchPaginated(`/country/${value}`, page);

@@ -1,22 +1,22 @@
 import { BaseClass } from '../../models/base-anime.js';
 import * as cheerio from 'cheerio';
-import type {
+import {
   AKGenres,
-  AKserver,
-  Format,
-  HIServerInfo,
-  ISubOrDub,
-  IAHomeResponse,
-  IAllAnimeEpisodes,
-  IAnime,
-  IAnimeBaseInfoResponse,
-  IAnimeCategory,
-  IAnimeInfo,
-  IAnimePaginated,
-  IRelatedSeasons,
-  IResponse,
-  ISourceBaseResponse,
-  IVideoSource,
+  type AKserver,
+  type Format,
+  type HIServerInfo,
+  type ISubOrDub,
+  type IAHomeResponse,
+  type IAllAnimeEpisodes,
+  type IAnime,
+  type IAnimeBaseInfoResponse,
+  type IAnimeCategory,
+  type IAnimeInfo,
+  type IAnimePaginated,
+  type IRelatedSeasons,
+  type IResponse,
+  type ISourceBaseResponse,
+  type IVideoSource,
 } from '../../models/types.js';
 import { MegaUp } from '../../source-extractors/megaup.js';
 
@@ -777,9 +777,10 @@ class Animekai extends BaseClass {
    * @returns { Promise<IRepetitiveSections<IAnime[] | []>>} Promise resolving to an object with anime curated by genre and pagination details
    */
 
-  async fetchGenres(genre: AKGenres, page: number = 1): Promise<IAnimePaginated<IAnime[] | []>> {
+  async fetchGenres(genre: string, page: number = 1): Promise<IAnimePaginated<IAnime[] | []>> {
     try {
-      const response = await this.client.get(`${this.baseUrl}/genres/${genre}`, { params: { page: String(page) } });
+      const Igenre = this.getMappedValue(genre, AKGenres);
+      const response = await this.client.get(`${this.baseUrl}/genres/${Igenre}`, { params: { page: String(page) } });
 
       if (!response.data) {
         return {

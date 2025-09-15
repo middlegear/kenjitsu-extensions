@@ -16,10 +16,19 @@ export abstract class BaseClass {
       .replace(/^-+|-+$/g, '');
   }
 
-  protected getMappedValue<T extends string, U extends string>(input: T, mapping: Record<T, U>): U {
-    if (!(input in mapping)) {
+  protected normalizeKey(input: string): string {
+    return input
+      .toLowerCase()
+      .trim()
+      .replace(/\s+/g, '')
+      .replace(/[^a-z0-9]/g, '');
+  }
+
+  protected getMappedValue<T extends string, U extends string>(input: T, mapping: Record<string, U>): U {
+    const normalized = this.normalizeKey(input);
+    if (!(normalized in mapping)) {
       throw new Error(`Invalid: ${input}. Must be one of: ${Object.keys(mapping).join(', ')}`);
     }
-    return mapping[input];
+    return mapping[normalized];
   }
 }
