@@ -32,7 +32,7 @@ test('retuns an object containing anime info', async () => {
   await wait(1000);
 });
 
-test('retuns an object containing anime info', async () => {
+test('retuns an object containing home page data', async () => {
   const data = await zoro.fetchHome();
   expect(Array.isArray(data.data)).toBe(true);
   expect(Array.isArray(data.topAiring)).toBe(true);

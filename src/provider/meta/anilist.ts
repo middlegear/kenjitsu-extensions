@@ -258,7 +258,7 @@ export class Anilist extends Meta {
         episodes: item.episodes,
         synopsis: item.description,
         season: item.season,
-        startDate:
+        releaseDate:
           item.startDate && item.startDate.year
             ? new Date(item.startDate.year, item.startDate.month - 1, item.startDate.day).toLocaleDateString('en-US', {
                 year: 'numeric',
@@ -353,7 +353,7 @@ export class Anilist extends Meta {
         episodes: response.data.data.Media.episodes,
         synopsis: response.data.data.Media.description,
         season: response.data.data.Media.season,
-        startDate:
+        releaseDate:
           response.data.data.Media.startDate && response.data.data.Media.startDate.year
             ? new Date(
                 response.data.data.Media.startDate.year,
@@ -443,7 +443,7 @@ export class Anilist extends Meta {
         status: item.status,
         genres: item.genres,
         synopsis: item.description,
-        startDate:
+        releaseDate:
           item.startDate && item.startDate.year
             ? new Date(item.startDate.year, item.startDate.month - 1, item.startDate.day).toLocaleDateString('en-US', {
                 year: 'numeric',
@@ -548,7 +548,7 @@ export class Anilist extends Meta {
         episodes: item.episodes,
         synopsis: item.description,
         season: item.season,
-        startDate:
+        releaseDate:
           item.startDate && item.startDate.year
             ? new Date(item.startDate.year, item.startDate.month - 1, item.startDate.day).toLocaleDateString('en-US', {
                 year: 'numeric',
@@ -683,7 +683,7 @@ export class Anilist extends Meta {
         episodes: item.episodes,
         synopsis: item.description,
         season: item.season,
-        startDate:
+        releaseDate:
           item.startDate && item.startDate.year
             ? new Date(item.startDate.year, item.startDate.month - 1, item.startDate.day).toLocaleDateString('en-US', {
                 year: 'numeric',
@@ -773,7 +773,7 @@ export class Anilist extends Meta {
         episodes: item.episodes,
         synopsis: item.description,
         season: item.season,
-        startDate:
+        releaseDate:
           item.startDate && item.startDate.year
             ? new Date(item.startDate.year, item.startDate.month - 1, item.startDate.day).toLocaleDateString('en-US', {
                 year: 'numeric',

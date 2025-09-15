@@ -119,7 +119,7 @@ test('returns an array anime characters', async () => {
 });
 
 test('returns an object containing streaming sources for allanime provider', async () => {
-  const data = await jikan.fetchAllAnimeProviderSources('allanime-GoDoALiHc82Jrmcmh-episode-1, sub');
+  const data = await jikan.fetchAllAnimeProviderSources('allanime-GoDoALiHc82Jrmcmh-episode-1', 'sub');
 
   expect(data.okru?.data).not.toBeNull();
   expect(data.filemoon?.data).not.toBeNull();

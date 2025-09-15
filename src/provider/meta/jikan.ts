@@ -242,7 +242,7 @@ export class Jikan extends Meta {
         bannerImage: item.images.jpg.large_image_url ?? item.images.webp.large_image_url,
         trailer: item.trailer.embed_url ?? item.trailer.url,
         episodes: item.episodes,
-        startDate:
+        releaseDate:
           item.aired.prop && item.aired.prop.from.year
             ? new Date(item.aired.prop.from.year, item.aired.prop.from.month - 1, item.aired.prop.from.day).toLocaleString(
                 'en-US',
@@ -328,7 +328,7 @@ export class Jikan extends Meta {
         trailer: response.data.data.trailer.embed_url ?? response.data.data.trailer.url,
         episodes: response.data.data.episodes,
 
-        startDate:
+        releaseDate:
           response.data.data.aired.prop && response.data.data.aired.prop.from.year
             ? new Date(
                 response.data.data.aired.prop.from.year,
@@ -480,7 +480,7 @@ export class Jikan extends Meta {
         bannerImage: item.images.jpg.large_image_url ?? item.images.webp.large_image_url,
         trailer: item.trailer.embed_url ?? item.trailer.url,
         episodes: item.episodes,
-        startDate:
+        releaseDate:
           item.aired.prop && item.aired.prop.from.year
             ? new Date(item.aired.prop.from.year, item.aired.prop.from.month - 1, item.aired.prop.from.day).toLocaleString(
                 'en-US',
@@ -598,7 +598,7 @@ export class Jikan extends Meta {
         bannerImage: item.images.jpg.large_image_url ?? item.images.webp.large_image_url,
         trailer: item.trailer.embed_url ?? item.trailer.url,
         episodes: item.episodes,
-        startDate:
+        releaseDate:
           item.aired.prop && item.aired.prop.from.year
             ? new Date(item.aired.prop.from.year, item.aired.prop.from.month - 1, item.aired.prop.from.day).toLocaleString(
                 'en-US',
@@ -720,7 +720,7 @@ export class Jikan extends Meta {
         trailer: item.trailer.embed_url ?? item.trailer.url,
         episodes: item.episodes,
 
-        startDate:
+        releaseDate:
           item.aired.prop && item.aired.prop.from.year
             ? new Date(item.aired.prop.from.year, item.aired.prop.from.month - 1, item.aired.prop.from.day).toLocaleString(
                 'en-US',
@@ -821,7 +821,7 @@ export class Jikan extends Meta {
         trailer: item.trailer.embed_url ?? item.trailer.url,
         episodes: item.episodes,
 
-        startDate:
+        releaseDate:
           item.aired.prop && item.aired.prop.from.year
             ? new Date(item.aired.prop.from.year, item.aired.prop.from.month - 1, item.aired.prop.from.day).toLocaleString(
                 'en-US',
@@ -933,7 +933,7 @@ export class Jikan extends Meta {
         trailer: item.trailer.embed_url ?? item.trailer.url,
         episodes: item.episodes,
 
-        startDate:
+        releaseDate:
           item.aired.prop && item.aired.prop.from.year
             ? new Date(item.aired.prop.from.year, item.aired.prop.from.month - 1, item.aired.prop.from.day).toLocaleString(
                 'en-US',

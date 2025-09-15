@@ -109,7 +109,7 @@ class Animekai extends BaseClass {
         type: $(element).find('.info > span > b').text().trim() || null,
         synopsis: $(element).find('p.desc').text().trim() || null,
         quality: $(element).find('div.mics span:last').text().trim() || null,
-        startDate: $(element).find('div.mics span:eq(1)').text().trim() || null,
+        releaseDate: $(element).find('div.mics span:eq(1)').text().trim() || null,
         rating: $(element).find('div.mics span:first').text().trim() || null,
         episodes: {
           sub: Number($(element).find('.info > span.sub').text().trim() || null),
@@ -255,7 +255,7 @@ class Animekai extends BaseClass {
       type: $('div.main-entity.collapse').find('div.info > span > b').text().trim() || null,
       japanese: $('li.breadcrumb-item.active').attr('data-jp') || null,
       status: $('.detail > div > div:contains("Status") span').text().trim() || null,
-      startDate: $('.detail > div > div:contains("Date aired")').text().replace('Date aired:', '').trim() || null,
+      releaseDate: $('.detail > div > div:contains("Date aired")').text().replace('Date aired:', '').trim() || null,
       synopsis: $('div.desc.text-expand').text().trim() || null,
       score: $('.detail > div > div:contains("MAL") span').first().text().trim().split(' ').at(0) || null,
       genres:

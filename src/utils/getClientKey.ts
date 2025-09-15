@@ -84,8 +84,8 @@ export async function getClientKey(embedUrl: string, Referer: string): Promise<s
       if (uniqueSalts.length > 0) {
         return uniqueSalts[0];
       }
-    } catch (err: unknown) {
-      return err instanceof Error ? err.message : 'Unknown error';
+    } catch (error) {
+      return error instanceof Error ? error.message : 'Unknown error';
     }
   }
 

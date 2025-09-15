@@ -1,4 +1,3 @@
-import { BaseClass } from '../models/base-anime.js';
 import * as cheerio from 'cheerio';
 import {
   HIMovieCountryCode,
@@ -19,10 +18,11 @@ import {
   type ITvShow,
   type IVideoSource,
   type IVideoSourceResponse,
-} from '../models/types.js';
-import VideoStream from '../source-extractors/videostream.js';
+} from '../../models/types.js';
+import VideoStream from '../../source-extractors/videostream.js';
+import { BaseClass } from '../../models/base-anime.js';
 
-export class Himovies extends BaseClass {
+export class HiMovies extends BaseClass {
   private readonly baseUrl = 'https://himovies.sx';
   constructor() {
     super();

@@ -21,12 +21,12 @@ export interface IAnime extends IBaseAnime {
   rating?: string | null;
   type?: string | null;
   synopsis?: string | null;
-  startDate?: string | null;
+  releaseDate?: string | null;
   spotlight?: string | null;
   quality?: string | null;
 }
 export interface ISearchSuggestions extends IBaseAnime {
-  startDate: string | null;
+  releaseDate: string | null;
   type: string | null;
   duration: string | null;
 }
@@ -40,7 +40,7 @@ export interface IAnimeInfo extends IAnime {
   genres: string[] | null;
   studios: string[] | string | null;
   producers: string | string[] | null;
-  startDate: string | null;
+  releaseDate: string | null;
 }
 export interface ICharacters {
   id: string | null;
@@ -324,7 +324,7 @@ export interface IMetaAnime {
   episodes: number;
   synopsis: string;
   season: string;
-  startDate: string;
+  releaseDate: string;
   endDate: string;
   studio: string;
   producers: string[];
@@ -456,7 +456,7 @@ export interface IMetaMovie {
   };
   country?: string;
   language: string;
-  startDate: string;
+  releaseDate: string;
   summary: string;
   genres: string;
   rating: string;

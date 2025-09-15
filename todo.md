@@ -21,15 +21,18 @@
 Hianime
 1. build out airing schedule.
 2. Filters for search(new method advanced search)
+3. Add watch together
 
 
 Animekai
 1. Fix the episodes
 2. fix servers and sources
+3. add watch together
+4. schedule
 
 
 FlixHq 
-1. Scrape new sections
+1. Scrape new sections to match himovies
 
 Tmdb 
 1. Since mapping flixhq isnt accurate  ill temporarily remove it until a solution is implemented
@@ -37,8 +40,6 @@ Tmdb
 
 New Sites
 1. Kickass anime
-
-4. HiMovies
 5. Check the animekai related movie sites  https://yflix.to/home and https://movhub.ws/home
 6. https://www.primewire.mov/
 7. https://projectfreetv.sx/
@@ -47,4 +48,9 @@ https://rentry.co/sflix#yflix-clones
 
 
 Critical 
-change startDate to releaseDate in extensions and api
+Refactor genres for hianime and animekai
+
+TESTS
+1. add tests for himovies 
+2. update tests for animekai and flixhq
+3. add tests for all anime and animepahe

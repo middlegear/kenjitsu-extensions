@@ -212,10 +212,12 @@ export class AllAnime extends BaseClass {
         episodeString: String(episode),
       });
       const serverResponse = await this.client.post(this.baseUrl, serverPayload);
+
       let sourceUrls = serverResponse.data.data.episode.sourceUrls;
       if (!sourceUrls) {
         throw new Error(`No servers found for ${id}.`);
       }
+
       const serverIdMap: Record<string, string> = {
         ok: 'okru',
         'fm-hls': 'filemoon',

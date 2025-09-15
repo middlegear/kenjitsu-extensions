@@ -80,7 +80,7 @@ export class TheMovieDatabase extends Meta {
         },
         country: item.origin_country || null,
         language: item.original_language || null,
-        startDate: item.first_air_date || null,
+        releaseDate: item.first_air_date || null,
         summary: item.overview || null,
         genres: item.genre_ids || null,
         rating: item.vote_average || null,
@@ -158,7 +158,7 @@ export class TheMovieDatabase extends Meta {
           original: item.backdrop_path ? `https://image.tmdb.org/t/p/original${item.backdrop_path}` : null,
         },
         language: item.original_language || null,
-        startDate: item.release_date || null,
+        releaseDate: item.release_date || null,
         summary: item.overview || null,
         genres: item.genre_ids || null,
         rating: item.vote_average || null,
@@ -257,7 +257,7 @@ export class TheMovieDatabase extends Meta {
         rating: response.data.vote_average || null,
         genres: response.data.genres || null,
         summary: response.data.overview || null,
-        startDate: response.data.first_air_date || null,
+        releaseDate: response.data.first_air_date || null,
         lastAired: response.data.last_air_date || null,
         latestEpisode: response.data.last_episode_to_air
           ? {
@@ -532,7 +532,7 @@ export class TheMovieDatabase extends Meta {
             }
           : null,
         summary: response.data.overview || null,
-        startDate: response.data.release_date || null,
+        releaseDate: response.data.release_date || null,
       };
       return { data: data as IMetaMovie };
     } catch (error) {

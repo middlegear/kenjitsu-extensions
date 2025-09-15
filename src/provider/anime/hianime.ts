@@ -110,7 +110,7 @@ export class HiAnime extends BaseClass {
         name: $(element).find('div.srp-detail h3.film-name').text().trim() || null,
         romaji: $(element).find('div.srp-detail h3.film-name').attr('data-jname') || null,
         posterImage: $(element).find('img.film-poster-img').attr('data-src') || null,
-        startDate: $(element).find('div.film-infor > span:first').text().trim() || null,
+        releaseDate: $(element).find('div.film-infor > span:first').text().trim() || null,
         type:
           info
             .contents()
@@ -150,7 +150,7 @@ export class HiAnime extends BaseClass {
       quality: null,
       altnames: null,
       japanese: null,
-      startDate: null,
+      releaseDate: null,
       studios: null,
       score: null,
       producers: null,
@@ -177,7 +177,7 @@ export class HiAnime extends BaseClass {
     animeInfo.rating = $(selector).find('div.tick-item.tick-pg').text().trim() || null;
     animeInfo.producers = $(selector).find('div.film-text.m-hide  a.name strong').text().trim() || null;
     animeInfo.altnames = $(selector).find('div.item.item-title  span.name:eq(1)').text().trim() || null;
-    animeInfo.startDate = $(selector).find('div.item.item-title  span.name:eq(2)').text().trim() || null;
+    animeInfo.releaseDate = $(selector).find('div.item.item-title  span.name:eq(2)').text().trim() || null;
     animeInfo.status = $(selector).find('div.item.item-title  span.name:eq(5)').text().trim() || null;
     animeInfo.score = $(selector).find('div.item.item-title  span.name:last').text().trim() || null;
     const { mal_id, anilist_id } = JSON.parse($('#syncData').text().trim());
@@ -368,7 +368,7 @@ export class HiAnime extends BaseClass {
           null,
         duration:
           $(element).find('div.deslide-item-content > div.sc-detail > div.scd-item:has(.fa-clock)').text().trim() || null,
-        startDate:
+        releaseDate:
           $(element).find('div.deslide-item-content > div.sc-detail > div.scd-item:has(.fa-calendar)').text().trim() || null,
         quality:
           $(element).find('div.deslide-item-content > div.sc-detail > div.scd-item:has(.quality)').text().trim() || null,

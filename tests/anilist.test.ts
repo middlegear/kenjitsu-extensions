@@ -89,7 +89,7 @@ test('returns an object has anime info and provider episodes array for allanime'
 });
 
 test('returns an object containing streaming sources for allanime provider', async () => {
-  const data = await anilist.fetchAllAnimeProviderSources('allanime-GoDoALiHc82Jrmcmh-episode-1, sub');
+  const data = await anilist.fetchAllAnimeProviderSources('allanime-GoDoALiHc82Jrmcmh-episode-1', 'sub');
 
   expect(data.okru?.data).not.toBeNull();
   expect(data.filemoon?.data).not.toBeNull();
