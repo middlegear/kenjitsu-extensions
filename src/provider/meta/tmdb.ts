@@ -9,7 +9,6 @@ import type {
   IMetaMovieSeasons,
   IMovieProviderResults,
   IResponse,
-  TimeWindow,
 } from '../../models/types.js';
 
 import { _getVidSrcMovieUrl, _getVidSrcTvUrl, type EmbedSrcResponse } from '../movies/embed/vidsrc.js';
@@ -405,7 +404,7 @@ export class TheMovieDatabase extends Meta {
    * @param {number} [page=1] - The page number for pagination (optional, defaults to 1).
    * @returns A promise that resolves to an object containing an array of trending TV shows.
    */
-  async fetchTrendingTv(timeWindow: TimeWindow = 'week', page: number = 1): Promise<IAnimePaginated<IMetaMovie[] | []>> {
+  async fetchTrendingTv(timeWindow: 'day' | 'week' = 'week', page: number = 1): Promise<IAnimePaginated<IMetaMovie[] | []>> {
     return this.fetchPaginatedData(`/trending/tv/${timeWindow}`, { page: String(page) });
   }
 
@@ -546,7 +545,10 @@ export class TheMovieDatabase extends Meta {
    * @param {number} [page=1] - The page number for pagination (optional, defaults to 1).
    * @returns A promise that resolves to an object containing an array of trending movies.
    */
-  async fetchTrendingMovies(timeWindow: TimeWindow = 'week', page: number = 1): Promise<IAnimePaginated<IMetaMovie[] | []>> {
+  async fetchTrendingMovies(
+    timeWindow: 'day' | 'week' = 'week',
+    page: number = 1,
+  ): Promise<IAnimePaginated<IMetaMovie[] | []>> {
     return this.fetchPaginatedMovieData(`/trending/movie/${timeWindow}`, { page: String(page) });
   }
 

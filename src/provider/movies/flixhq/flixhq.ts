@@ -224,14 +224,17 @@ interface ErrorFlixSourcesRes {
 }
 
 export type FLixSourcesRes = SuccessFlixSourceRes | ErrorFlixSourcesRes;
-export async function _getsources(episodeId: string, server: StreamingServers): Promise<FLixSourcesRes> {
+export async function _getsources(
+  episodeId: string,
+  server: 'upcloud' | 'vidcloud' | 'akcloud' = 'vidcloud',
+): Promise<FLixSourcesRes> {
   if (episodeId.includes('embed')) {
     const serverUrl = new URL(episodeId);
 
     switch (server) {
-      case StreamingServers.VidCloud:
-      case StreamingServers.Upcloud:
-      case StreamingServers.Akcloud:
+      case 'akcloud':
+      case 'vidcloud':
+      case 'upcloud':
         return {
           headers: { Referer: `${serverUrl.origin}/` },
           data: await new VidCloud().extract(serverUrl),

@@ -10,10 +10,9 @@ import type {
   ITitle,
   IMetaProviderEpisodesResponse,
   Seasons,
-  Format,
-  AnimeProvider,
   ISubOrDub,
   HiAnimeServers,
+  IMetaFormat,
 } from '../../models/types.js';
 
 /**
@@ -421,13 +420,13 @@ export class Jikan extends Meta {
    * Fetches the anime list for the current season.
    * @param {number} [page] - The page number for pagination (optional, defaults to 1).
    * @param {number} [perPage] - The number of results per page (optional, defaults to 20, maximum 25).
-   * @param {Format} [format] - The format type to filter by (optional, defaults to TV).
+   * @param {IMetaFormat} [format] - The format type to filter by (optional, defaults to TV).
    * @returns  A promise that resolves to an object containing the list of current seasonal anime.
    */
   async fetchCurrentSeason(
     page: number,
     perPage: number,
-    format: Format = 'TV',
+    format: IMetaFormat = 'TV',
   ): Promise<IAnimePaginated<IMetaAnime[] | []>> {
     if (!format) {
       return {
@@ -539,13 +538,13 @@ export class Jikan extends Meta {
    * Fetches the anime list for the upcoming season.
    * @param {number} [page] - The page number for pagination (optional, defaults to 1).
    * @param {number} [perPage] - The number of results per page (optional, defaults to 20, maximum 25).
-   * @param {Format} [format] - The format type to filter by (optional, defaults to TV).
+   * @param {IMetaFormat} [format] - The format type to filter by (optional, defaults to TV).
    * @returns A promise that resolves to an object containing the list of upcoming season's anime.
    */
   async fetchNextSeason(
     page: number = 1,
     perPage: number = 20,
-    format: Format = 'TV',
+    format: IMetaFormat = 'TV',
   ): Promise<IAnimePaginated<IMetaAnime[] | []>> {
     if (!format) {
       return {
@@ -656,7 +655,7 @@ export class Jikan extends Meta {
    * Fetches seasonal anime for a given year and season.
    * @param {Seasons} season - The target season (e.g., WINTER, SPRING, SUMMER, FALL) (required).
    * @param {number} year - The target year (e.g., 2023, 2024) (required).
-   * @param {Format} [format] - The anime format to filter by (optional, defaults to TV).
+   * @param {IMetaFormat} [format] - The anime format to filter by (optional, defaults to TV).
    * @param {number} [page] - The page number for pagination (optional, defaults to 1).
    * @param {number} [perPage] - The number of results per page (optional, defaults to 20, maximum 25).
    * @returns  A promise that resolves to an object containing the list of seasonal anime.
@@ -664,7 +663,7 @@ export class Jikan extends Meta {
   async fetchSeasonalAnime(
     season: Seasons,
     year: number,
-    format: Format = 'TV',
+    format: IMetaFormat = 'TV',
     page: number = 1,
     perPage: number = 20,
   ): Promise<IAnimePaginated<IMetaAnime[] | []>> {
@@ -886,7 +885,7 @@ export class Jikan extends Meta {
   async fetchTopAnime(
     page: number = 1,
     perPage: number = 20,
-    format: Format = 'TV',
+    format: IMetaFormat = 'TV',
     sort: JSort = 'rating',
   ): Promise<IAnimePaginated<IMetaAnime[] | []>> {
     try {
@@ -992,13 +991,13 @@ export class Jikan extends Meta {
    * Fetches a list of the top airing anime.
    * @param {number} [page] - The page number for pagination (optional, defaults to 1).
    * @param {number} [perPage] - The number of results per page (optional, defaults to 20, maximum 25).
-   * @param {Format} [format] - The format type to filter by (optional, defaults to TV).
+   * @param {IMetaFormat} [format] - The format type to filter by (optional, defaults to TV).
    * @returns A promise that resolves to an object containing the list of top airing anime.
    */
   async fetchTopAiring(
     page: number = 1,
     perPage: number = 20,
-    format: Format = 'TV',
+    format: IMetaFormat = 'TV',
     sort: JSort = 'airing',
   ): Promise<IAnimePaginated<IMetaAnime[] | []>> {
     return this.fetchTopAnime(page, perPage, format, sort);
@@ -1006,14 +1005,14 @@ export class Jikan extends Meta {
 
   /**
    * Fetches a list of the top  anime by category.
-   *  @param {Format} [format] - The anime format type to filter by (required).
+   *  @param {IMetaFormat} [format] - The anime format type to filter by (required).
    * @param {JSort} [sort] -  The sorting order for results (required).
    * @param {number} [page] - The page number for pagination (required).
    * @param {number} [perPage] - The number of results per page (required, maximum 25).
    * @returns A promise that resolves to an object containing the list of top anime by category.
    */
   async fetchTopCategory(
-    format: Format,
+    format: IMetaFormat,
     sort: JSort,
     page: number,
     perPage: number,
@@ -1031,7 +1030,7 @@ export class Jikan extends Meta {
   async fetchMostPopular(
     page: number = 1,
     perPage: number = 20,
-    format: Format = 'TV',
+    format: IMetaFormat = 'TV',
     sort: JSort = 'bypopularity',
   ): Promise<IAnimePaginated<IMetaAnime[] | []>> {
     return this.fetchTopAnime(page, perPage, format, sort);
@@ -1046,7 +1045,7 @@ export class Jikan extends Meta {
   async fetchTopMovies(
     page: number = 1,
     perPage: number = 20,
-    format: Format = 'MOVIE',
+    format: IMetaFormat = 'MOVIE',
     sort: JSort = 'bypopularity',
   ): Promise<IAnimePaginated<IMetaAnime[] | []>> {
     return this.fetchTopAnime(page, perPage, format, sort);
@@ -1172,7 +1171,7 @@ export class Jikan extends Meta {
    */
   async fetchProviderId(
     malId: number,
-    provider: AnimeProvider = 'hianime',
+    provider: 'allanime' | 'hianime' = 'hianime',
   ): Promise<IMetaProviderIdResponse<IMetaAnime | null>> {
     if (!malId) {
       return {
@@ -1209,13 +1208,13 @@ export class Jikan extends Meta {
    * Fetches anime information along with provider-specific episode details using the MAL ID.
    * This is used to get streamable episodes from a given provider.
    * @param {number} malId - The unique MAL ID of the anime (required).
-   * @param {AnimeProvider} [provider] - The anime provider to fetch episodes from (optional, defaults to HiAnime)
+   * @param  provider - The anime provider to fetch episodes from (optional, defaults to HiAnime)
    * @returns  A promise that resolves to an object containing anime info and its episodes from the specified provider.
    */
 
   async fetchAnimeProviderEpisodes(
     malId: number,
-    provider: AnimeProvider = 'hianime',
+    provider: 'allanime' | 'hianime' = 'hianime',
   ): Promise<IMetaProviderEpisodesResponse<IMetaAnime | null>> {
     if (!malId) {
       return {

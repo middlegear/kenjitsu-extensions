@@ -4,7 +4,6 @@ import {
   HIMovieGenres,
   HIMoviesCountryID,
   HIMoviesGenreID,
-  IMovieStreamingServers,
   type IAnimePaginated,
   type IHomeHIResponse,
   type IMovie,
@@ -408,7 +407,7 @@ export class HiMovies extends BaseClass {
     return servers;
   }
 
-  private findServerId(servers: IMovieServers[], server: IMovieStreamingServers): string {
+  private findServerId(servers: IMovieServers[], server: 'upcloud' | 'megacloud' | 'akcloud'): string {
     const availableServers = servers.map(s => s.serverName || 'unknown');
     const serverIndex = servers.findIndex(s => (s.serverName || '').toLowerCase() === server.toLowerCase());
 
@@ -526,26 +525,23 @@ export class HiMovies extends BaseClass {
   }
   /**
    * Performs an advanced search with filters.
-   * @param {'all' | 'movie' | 'tv'} [type='all'] - The media type filter (default: 'all').
-   * @param {'all' | 'HD' | 'SD' | 'CAM'} [quality='all'] - The quality filter (default: 'all').
-   * @param {number | 'all'} [releaseYear='all'] - Release year filter (default: 'all').
-   * @param {HIMoviesGenreID} [genre='all'] - Genre filter (default: 'all').
-   * @param {HIMoviesCountryID} [country='all'] - Country filter (default: 'all').
-   * @param {number} [page=1] - Page number for pagination (default: 1).
+   * @param {'all' | 'movie' | 'tv'} [type] - The media type filter (required).
+   * @param {'all' | 'HD' | 'SD' | 'CAM'} [quality] - The quality filter (required).
+   * @param {HIMoviesGenreID} [genre] - Genre filter (default ='all').
+   * @param {HIMoviesCountryID} [country] - Country filter (default ='all').
+   * @param {number} [page=1] - Page number for pagination (default ='all').
    * @returns  Paginated filtered search results
    */
   async advancedSearch(
-    type: 'all' | 'movie' | 'tv' = 'all',
-    quality: 'all' | 'HD' | 'SD' | 'CAM' = 'all',
-    releaseYear: number | 'all' = 'all',
+    type: 'all' | 'movie' | 'tv',
+    quality: 'all' | 'HD' | 'SD' | 'CAM',
     genre: string = 'all',
     country: string = 'all',
     page: number = 1,
   ): Promise<IAnimePaginated<IMovieOrTv[] | []>> {
     const genreIdValue = this.getMappedValue(genre, HIMoviesGenreID);
     const countryIdValue = this.getMappedValue(country, HIMoviesCountryID);
-    const url = `${type}&quality=${quality}&release_year=${releaseYear}&genre=${genreIdValue}&country=${countryIdValue}`;
-    // console.log(url);
+    const url = `${type}&quality=${quality}&release_year=all&genre=${genreIdValue}&country=${countryIdValue}`;
 
     return await this.fetchPaginated(url, page);
   }
@@ -814,15 +810,15 @@ export class HiMovies extends BaseClass {
    */
   async fetchSources(
     episodeId: string,
-    server: IMovieStreamingServers = 'megacloud',
+    server: 'upcloud' | 'megacloud' | 'akcloud' = 'megacloud',
   ): Promise<IVideoSourceResponse<IVideoSource | null>> {
     if (episodeId.includes('https')) {
       const serverUrl = new URL(episodeId);
 
       switch (server) {
-        case IMovieStreamingServers.Megacloud:
-        case IMovieStreamingServers.Upcloud:
-        case IMovieStreamingServers.Akcloud:
+        case 'akcloud':
+        case 'megacloud':
+        case 'upcloud':
           return {
             headers: { Referer: `${serverUrl.origin}/` },
             data: await new VideoStream().extract(serverUrl, `${this.baseUrl}/`),

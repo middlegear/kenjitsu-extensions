@@ -173,17 +173,12 @@ export interface HIServerInfo {
   episodeNumber: number | null;
 }
 
-export const ISubOrDub = ['sub', 'dub', 'raw'] as const;
-export type ISubOrDub = (typeof ISubOrDub)[number];
+export type ISubOrDub = 'sub' | 'dub' | 'raw';
 
-export const HiAnimeServers = ['hd-1', 'hd-2', 'hd-3'] as const;
-///'streamwish', has been omited since the extractor method isnt ready and i dont know which referer headers work best
-export const AllAnimeServers = ['okru', 'filemoon', 'mp4upload'] as const;
-export type AllAnimeServers = (typeof AllAnimeServers)[number];
-export const AnimeKaiServers = {
-  MegaUp: 'megaup',
-} as const;
-export type AnimeKaiServers = (typeof AnimeKaiServers)[keyof typeof AnimeKaiServers];
+export type HiAnimeServers = 'hd-1' | 'hd-2' | 'hd-3';
+
+///'streamwish', has been omited since the extractor method isnt ready a
+export type AllAnimeServers = 'okru' | 'filemoon' | 'mp4upload';
 
 export type AKserver = {
   url: string;
@@ -209,7 +204,7 @@ export interface IVideoSourceResponse<T> extends IResponse<T> {
     Referer: string | null;
   };
 }
-export type HiAnimeServers = (typeof HiAnimeServers)[number];
+
 export const HIGenres = {
   action: 'action',
   adventure: 'adventure',
@@ -331,32 +326,14 @@ export interface IMetaAnime {
   producers: string[];
 }
 
-export const Sort = ['SCORE_DESC', 'POPULARITY_DESC'] as const;
-export type Sort = (typeof Sort)[number];
-
 export const Seasons = ['WINTER', 'SPRING', 'SUMMER', 'FALL'] as const;
 export type Seasons = (typeof Seasons)[number];
 
 export const JSort = ['airing', 'bypopularity', 'upcoming', 'favorite', 'rating'] as const;
 export type JSort = (typeof JSort)[number];
 
-export const AnilistStatus = ['NOT_YET_RELEASED', 'RELEASING'] as const;
-export type AnilistStatus = (typeof AnilistStatus)[number];
+export type IMetaFormat = 'TV' | 'MOVIE' | 'SPECIAL' | 'OVA' | 'ONA' | 'MUSIC';
 
-export const Format = {
-  TV: 'TV',
-  MOVIE: 'MOVIE',
-  SPECIAL: 'SPECIAL',
-  OVA: 'OVA',
-  ONA: 'ONA',
-  MUSIC: 'MUSIC',
-} as const;
-export type Format = (typeof Format)[keyof typeof Format];
-
-export const Charactersort = {
-  RELEVANCE: 'RELEVANCE',
-} as const;
-export type Charactersort = (typeof Charactersort)[keyof typeof Charactersort];
 export interface IRelatedAnilistData {
   anilistId: number;
   malId: number;
@@ -394,12 +371,7 @@ export interface IAnilistCharacters {
   };
   characters: IMetaCharacters[];
 }
-export const AnimeProvider = {
-  HiAnime: 'hianime',
-  // Animekai: 'animekai',
-  AllAnime: 'allanime',
-} as const;
-export type AnimeProvider = (typeof AnimeProvider)[keyof typeof AnimeProvider];
+
 export interface IProviderId {
   id: string | null;
   name: string | null;
@@ -535,11 +507,6 @@ export interface IMovieProviderResults {
 export interface IMetaMovieIdResponse<T> extends IResponse<T> {
   provider: IMovieProviderResults[] | [];
 }
-export const TimeWindow = {
-  Day: 'day',
-  Week: 'week',
-} as const;
-export type TimeWindow = (typeof TimeWindow)[keyof typeof TimeWindow];
 
 ///// Movies and Tv
 export interface IMovieTvBase {
@@ -592,13 +559,6 @@ export interface IMovieServers {
   serverName: string | null;
 }
 
-export const IMovieStreamingServers = {
-  Upcloud: 'upcloud',
-  Megacloud: 'megacloud',
-  VidCloud: 'vidcloud',
-  Akcloud: 'akcloud',
-} as const;
-export type IMovieStreamingServers = (typeof IMovieStreamingServers)[keyof typeof IMovieStreamingServers];
 export interface IHomeResSpecialPages {
   error?: string;
 }

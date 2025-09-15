@@ -8,14 +8,21 @@ import { Animepahe } from './provider/anime/animepahe.js';
 import { HiMovies } from './provider/movies/himovies.js';
 
 import {
-  Seasons,
-  TimeWindow,
-  Format,
-  JSort,
   type IMovieCountry,
   type IMovieGenre,
   type KaiGenres,
   type HIGenre,
+  type IMetaFormat,
+  type Seasons,
+  type IAnimeCategory,
+  type IAnime,
+  type IMetaAnime,
+  type IMetaMovie,
+  type IAnimeInfo,
+  type IVideoSource,
+  type IMetaMovieInfo,
+  type IMovieOrTv,
+  type ISubOrDub,
 } from './models/types.js';
 
 export {
@@ -27,14 +34,21 @@ export {
   Animepahe,
   HiMovies,
   FlixHQ,
-  Seasons,
-  TimeWindow,
-  Format,
   type IMovieCountry,
   type IMovieGenre,
   type KaiGenres,
   type HIGenre,
-  JSort,
+  type IMetaFormat,
+  type Seasons,
+  type IAnimeCategory,
+  type IAnime,
+  type IMetaAnime,
+  type IMetaMovie,
+  type IAnimeInfo,
+  type IVideoSource,
+  type IMetaMovieInfo,
+  type IMovieOrTv,
+  type ISubOrDub,
 };
 // const data = await new HiMovies().advancedSearch('all', 'all', 2025, 'action', 'unitedkingdom');
 // const data = await new Animepahe().fetchEpisodes('4d560dfd-e606-c21e-2eef-e48fd09f8188');

@@ -3,7 +3,6 @@ import * as cheerio from 'cheerio';
 import {
   AKGenres,
   type AKserver,
-  type Format,
   type HIServerInfo,
   type ISubOrDub,
   type IAHomeResponse,
@@ -17,6 +16,7 @@ import {
   type IResponse,
   type ISourceBaseResponse,
   type IVideoSource,
+  type IMetaFormat,
 } from '../../models/types.js';
 import { MegaUp } from '../../source-extractors/megaup.js';
 
@@ -533,12 +533,12 @@ class Animekai extends BaseClass {
 
   /**
    * Fetches a paginated list of recently added anime.
-   * @param {Format} category - The format which to fetch anime (optional,  defaults to TV)
+   * @param {IMetaFormat} category - The format which to fetch anime (optional,  defaults to TV)
    * @param {number} page - Page number for pagination (default: 1)
    * @returns { Promise<IRepetitiveSections<IAnime[] | []>>} Promise resolving to an object with recently added anime and pagination details
    */
 
-  async fetchRecentlyAdded(category: Format, page: number = 1): Promise<IAnimePaginated<IAnime[] | []>> {
+  async fetchRecentlyAdded(category: IMetaFormat, page: number = 1): Promise<IAnimePaginated<IAnime[] | []>> {
     let endpoint: string;
 
     switch (category) {
@@ -592,12 +592,12 @@ class Animekai extends BaseClass {
   }
   /**
    * Fetches a paginated list of recently added anime.
-   * @param {Format} category - The format which to fetch anime (optional,  defaults to TV)
+   * @param {IMetaFormat} category - The format which to fetch anime (optional,  defaults to TV)
    * @param {number} page - Page number for pagination (default: 1)
    * @returns { Promise<IRepetitiveSections<IAnime[] | []>>} Promise resolving to an object with top airing anime and pagination details
    */
 
-  async fetchTopAiring(category: Format = 'TV', page: number = 1): Promise<IAnimePaginated<IAnime[] | []>> {
+  async fetchTopAiring(category: IMetaFormat = 'TV', page: number = 1): Promise<IAnimePaginated<IAnime[] | []>> {
     try {
       let endpoint: string;
 
@@ -652,12 +652,12 @@ class Animekai extends BaseClass {
 
   /**
    * Fetches a paginated list of recently updated anime.
-   * @param {Format} category - The format which to fetch anime (optional,  defaults to TV)
+   * @param {IMetaFormat} category - The format which to fetch anime (optional,  defaults to TV)
    * @param {number} page - Page number for pagination (default: 1)
    * @returns { Promise<IRepetitiveSections<IAnime[] | []>>} Promise resolving to an object with recently updated anime and pagination details
    */
 
-  async fetchRecentlyUpdated(category: Format = 'TV', page: number = 1): Promise<IAnimePaginated<IAnime[] | []>> {
+  async fetchRecentlyUpdated(category: IMetaFormat = 'TV', page: number = 1): Promise<IAnimePaginated<IAnime[] | []>> {
     try {
       let endpoint: string;
 
@@ -712,12 +712,12 @@ class Animekai extends BaseClass {
 
   /**
    * Fetches a paginated list of recently completed anime.
-   * @param {Format} category - The format which to fetch anime (optional,  defaults to TV)
+   * @param {IMetaFormat} category - The format which to fetch anime (optional,  defaults to TV)
    * @param {number} page - Page number for pagination (default: 1)
    * @returns { Promise<IRepetitiveSections<IAnime[] | []>>} Promise resolving to an object with recently completed anime and pagination details
    */
 
-  async fetchRecentlyCompleted(category: Format = 'TV', page: number = 1): Promise<IAnimePaginated<IAnime[] | []>> {
+  async fetchRecentlyCompleted(category: IMetaFormat = 'TV', page: number = 1): Promise<IAnimePaginated<IAnime[] | []>> {
     try {
       let endpoint: string;
 

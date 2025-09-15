@@ -1,8 +1,5 @@
 import { Meta } from '../../models/base-meta.js';
 import type {
-  AnilistStatus,
-  AnimeProvider,
-  Format,
   HiAnimeServers,
   ISubOrDub,
   IAnilistCharacters,
@@ -14,7 +11,7 @@ import type {
   IResponse,
   ITitle,
   Seasons,
-  Sort,
+  IMetaFormat,
 } from '../../models/types.js';
 import {
   characterQuery,
@@ -403,8 +400,8 @@ export class Anilist extends Meta {
   async fetchTopUpcoming(
     page: number = 1,
     perPage: number = 20,
-    sort: Sort = 'POPULARITY_DESC',
-    status: AnilistStatus = 'NOT_YET_RELEASED',
+    sort: 'SCORE_DESC' | 'POPULARITY_DESC' = 'POPULARITY_DESC',
+    status: 'NOT_YET_RELEASED' | 'RELEASING' = 'NOT_YET_RELEASED',
   ): Promise<IAnimePaginated<IMetaAnime[] | []>> {
     try {
       const variables = { page, perPage, type: 'ANIME', status, isAdult: false, sort };
@@ -484,8 +481,8 @@ export class Anilist extends Meta {
   async fetchTopAiring(
     page: number = 1,
     perPage: number = 20,
-    sort: Sort = 'POPULARITY_DESC',
-    status: AnilistStatus = 'RELEASING',
+    sort: 'SCORE_DESC' | 'POPULARITY_DESC' = 'POPULARITY_DESC',
+    status: 'NOT_YET_RELEASED' | 'RELEASING' = 'RELEASING',
   ): Promise<IAnimePaginated<IMetaAnime[] | []>> {
     return this.fetchTopUpcoming(page, perPage, sort, status);
   }
@@ -494,15 +491,15 @@ export class Anilist extends Meta {
    * Fetches a list of the most popular anime.
    * @param {number} [page] - The page number for pagination (optional, defaults to 1).
    * @param {number} [perPage] - The number of results per page (optional, defaults to 20).
-   * @param {Format} [format] - The anime format to filter by (optional, defaults to TV).
-   * @param {Sort} [sort]  - The sorting order for results.(optional, defaults to POPULARITY_DESC )
+   * @param {IMetaFormat} [format] - The anime format to filter by (optional, defaults to TV).
+   * @param  [sort]  - The sorting order for results.(optional, defaults to POPULARITY_DESC )
    * @returns A promise that resolves to an object containing an array of popular anime.
    */
   async fetchMostPopular(
     page: number = 1,
     perPage: number = 20,
-    format: Format = 'TV',
-    sort: Sort = 'POPULARITY_DESC',
+    format: IMetaFormat = 'TV',
+    sort: 'SCORE_DESC' | 'POPULARITY_DESC' = 'POPULARITY_DESC',
   ): Promise<IAnimePaginated<IMetaAnime[] | []>> {
     try {
       const variables = { page, perPage, type: 'ANIME', format, isAdult: false, sort };
@@ -592,14 +589,14 @@ export class Anilist extends Meta {
    * @param {number} [page] - The page number for pagination (optional, defaults to 1).
    * @param {number} [perPage] - The number of results per page (optional, defaults to 20).
    * @param {Format} [format] - The anime format to filter by (optional, defaults to TV).
-   * @param {Sort} [sort]  - The sorting order for results.(optional, defaults to SCORE_DESC )
+   * @param   [sort]  - The sorting order for results.(optional, defaults to SCORE_DESC )
    * @returns  A promise that resolves to an object containing an array of top-rated anime.
    */
   async fetchTopRatedAnime(
     page: number = 1,
     perPage: number = 20,
-    format: Format = 'TV',
-    sort: Sort = 'SCORE_DESC',
+    format: IMetaFormat = 'TV',
+    sort: 'SCORE_DESC' | 'POPULARITY_DESC' = 'SCORE_DESC',
   ): Promise<IAnimePaginated<IMetaAnime[] | []>> {
     return this.fetchMostPopular(page, perPage, format, sort);
   }
@@ -610,7 +607,7 @@ export class Anilist extends Meta {
    * @param {number} seasonYear - The target year (e.g., 2023, 2024) (required).
    * @param {number} [page=1] - The page number for pagination (optional, defaults to 1).
    * @param {number} [perPage=20] - The number of results per page (optional, defaults to 20).
-   * @param {Format} [format=Format.TV] - The anime format to filter by (optional, defaults to TV).
+   * @param {IMetaFormat} [format] - The anime format to filter by (optional, defaults to TV).
    * @returns  A promise that resolves to an object containing an array of seasonal anime.
    */
   async fetchSeasonalAnime(
@@ -618,7 +615,7 @@ export class Anilist extends Meta {
     seasonYear: number,
     page: number = 1,
     perPage: number = 20,
-    format: Format = 'TV',
+    format: IMetaFormat = 'TV',
   ): Promise<IAnimePaginated<IMetaAnime[] | []>> {
     if (!season || !seasonYear) {
       return {
@@ -928,12 +925,12 @@ export class Anilist extends Meta {
    * Fetches anime information along with a provider-specific anime ID. Kind of depends on provider availability
    * This is useful for linking Anilist entries to external streaming provider IDs.
    * @param {number} anilistId - The unique Anilist anime ID (required).
-   * @param {AnimeProvider} [provider] - The anime provider to fetch data from (optional, defaults to HiAnime)
+   * @param  [provider] - The anime provider to fetch data from (optional, defaults to HiAnime)
    * @returns  A promise that resolves to an object containing the provider-specific anime ID and core anime info.
    */
   async fetchProviderId(
     anilistId: number,
-    provider: AnimeProvider = 'hianime',
+    provider: 'allanime' | 'hianime' = 'hianime',
   ): Promise<IMetaProviderIdResponse<IMetaAnime | null>> {
     if (!anilistId) {
       return {
@@ -976,7 +973,7 @@ export class Anilist extends Meta {
 
   async fetchAnimeProviderEpisodes(
     anilistId: number,
-    provider: AnimeProvider = 'hianime',
+    provider: 'allanime' | 'hianime' = 'hianime',
   ): Promise<IMetaProviderEpisodesResponse<IMetaAnime | null>> {
     if (!anilistId) {
       return {
