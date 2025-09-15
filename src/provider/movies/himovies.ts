@@ -438,8 +438,8 @@ export class HiMovies extends BaseClass {
           hasNextPage: false,
           currentPage: 0,
           lastPage: 0,
-          error: response.statusText || 'Received empty response from server',
           data: [],
+          error: response.statusText || 'Received empty response from server',
         };
       }
 
@@ -492,8 +492,8 @@ export class HiMovies extends BaseClass {
         hasNextPage: false,
         currentPage: 0,
         lastPage: 0,
-        error: 'Missing required Params : a query string',
         data: [],
+        error: 'Missing required Params : a query string',
       };
     }
     try {
@@ -507,8 +507,8 @@ export class HiMovies extends BaseClass {
           hasNextPage: false,
           currentPage: 0,
           lastPage: 0,
-          error: response.statusText || 'Received empty response from server',
           data: [],
+          error: response.statusText || 'Received empty response from server',
         };
       }
       const selector: cheerio.SelectorType = 'div.block_area-content.block_area-list.film_list.film_list-grid div.flw-item';
@@ -581,8 +581,8 @@ export class HiMovies extends BaseClass {
       return this.parseSearchSuggestions(cheerio.load(response.data));
     } catch (error) {
       return {
-        data: [],
         error: error instanceof Error ? error.message : 'Unknown Error',
+        data: [],
       };
     }
   }
@@ -675,22 +675,17 @@ export class HiMovies extends BaseClass {
    */
   async fetchMediaInfo(mediaId: string): Promise<IMovieInfoResponse<IMovieInfo | null>> {
     if (!mediaId) {
-      return {
-        data: null,
-        providerEpisodes: [],
-        recommended: [],
-        error: 'missing required params: mediaId',
-      };
+      return { error: 'missing required params: mediaId', data: null, providerEpisodes: [], recommended: [] };
     }
     try {
       const media = mediaId.replace('-', '/');
       const response = await this.client.get(`${this.baseUrl}/${media}`);
       if (!response.data) {
         return {
+          error: response.statusText || 'Received empty response from server',
           data: null,
           providerEpisodes: [],
           recommended: [],
-          error: response.statusText || 'Received empty response from server',
         };
       }
 
@@ -709,10 +704,10 @@ export class HiMovies extends BaseClass {
         });
         if (!seasonsres.data) {
           return {
+            error: seasonsres.statusText || 'Received empty response from server',
             data: null,
             providerEpisodes: [],
             recommended: [],
-            error: seasonsres.statusText || 'Received empty response from server',
           };
         }
         const seasons = this.parseSeasons(cheerio.load(seasonsres.data));
@@ -748,10 +743,10 @@ export class HiMovies extends BaseClass {
       return { data: data, providerEpisodes: episodes, recommended };
     } catch (error) {
       return {
+        error: error instanceof Error ? error.message : 'Unknown error',
         data: null,
         recommended: [],
         providerEpisodes: [],
-        error: error instanceof Error ? error.message : 'Unknown error',
       };
     }
   }
@@ -763,7 +758,7 @@ export class HiMovies extends BaseClass {
    */
   async fetchServers(episodeId: string): Promise<IResponse<IMovieServers[] | []>> {
     if (!episodeId) {
-      return { data: [], error: 'Missing required params episodeId!' };
+      return { error: 'Missing required params episodeId!', data: [] };
     }
 
     try {
@@ -778,6 +773,9 @@ export class HiMovies extends BaseClass {
           },
         });
 
+        if (!response.data) {
+          return { error: response.statusText, data: [] };
+        }
         const server = this.parseServers(cheerio.load(response.data));
         servers.push(...server);
       } else {
@@ -789,17 +787,16 @@ export class HiMovies extends BaseClass {
             Referer: `${this.baseUrl}/${mediaId.at(0)?.replace('-', '/')}`,
           },
         });
-
+        if (!response.data) {
+          return { error: response.statusText, data: [] };
+        }
         const server = this.parseServers(cheerio.load(response.data));
         servers.push(...server);
       }
 
       return { data: servers };
     } catch (error) {
-      return {
-        data: [],
-        error: error instanceof Error ? error.message : 'Unknown error',
-      };
+      return { error: error instanceof Error ? error.message : 'Unknown error', data: [] };
     }
   }
   /**
@@ -850,14 +847,23 @@ export class HiMovies extends BaseClass {
           Referer: `${referer}.${serverId}`,
         },
       });
+      if (!embed.data) {
+        return {
+          error: embed.statusText || 'Unknown error',
+          data: null,
+          headers: {
+            Referer: null,
+          },
+        };
+      }
       return await this.fetchSources(embed.data.link, server);
     } catch (error) {
       return {
+        error: error instanceof Error ? error.message : 'Unknown error',
         data: null,
         headers: {
           Referer: null,
         },
-        error: error instanceof Error ? error.message : 'Unknown error',
       };
     }
   }

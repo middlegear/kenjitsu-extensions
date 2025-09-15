@@ -129,6 +129,10 @@ export class AllAnime extends BaseClass {
           'Content-Type': 'application/json',
         },
       });
+
+      if (!response.data) {
+        return { hasNextPage: false, currentPage: 0, data: [], error: response.statusText };
+      }
       const anime: IBaseAnime[] = response.data.data.shows.edges.map((item: any) => ({
         id: item._id,
         romaji: item.name,
@@ -170,9 +174,11 @@ export class AllAnime extends BaseClass {
       const episodePayload = buildPayload(this.EpisodesQuery, { _id: id });
       const episodeResponse = await this.client.post(this.baseUrl, episodePayload);
       const available = episodeResponse.data.data.show.availableEpisodesDetail;
-      if (!available) {
-        return { data: [], error: 'No episodes available.' };
+
+      if (!episodeResponse.data) {
+        return { error: episodeResponse.statusText || 'No episodes available.', data: [] };
       }
+
       const allEpisodes = new Set([...(available.sub || []), ...(available.dub || []), ...(available.raw || [])]);
       const episodes = Array.from(allEpisodes)
         .sort((a, b) => parseInt(a) - parseInt(b))
@@ -186,8 +192,8 @@ export class AllAnime extends BaseClass {
       return { data: episodes };
     } catch (error) {
       return {
-        data: [],
         error: error instanceof Error ? error.message : 'Unknown Error',
+        data: [],
       };
     }
   }
@@ -212,6 +218,10 @@ export class AllAnime extends BaseClass {
         episodeString: String(episode),
       });
       const serverResponse = await this.client.post(this.baseUrl, serverPayload);
+
+      if (!serverResponse.data) {
+        return { error: serverResponse.statusText, data: [] };
+      }
 
       let sourceUrls = serverResponse.data.data.episode.sourceUrls;
       if (!sourceUrls) {
@@ -238,10 +248,7 @@ export class AllAnime extends BaseClass {
         });
       return { data: servers };
     } catch (error) {
-      return {
-        data: [],
-        error: error instanceof Error ? error.message : 'Unknown Error',
-      };
+      return { error: error instanceof Error ? error.message : 'Unknown Error', data: [] };
     }
   }
 

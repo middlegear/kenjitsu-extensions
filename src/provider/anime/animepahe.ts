@@ -174,6 +174,17 @@ export class Animepahe extends BaseClass {
         headers: this.headers(false),
       });
 
+      if (!response.data) {
+        return {
+          hasNextPage: false,
+          currentPage: 0,
+          totalResults: 0,
+          perPage: 0,
+          lastPage: 0,
+          data: [],
+          error: response.statusText,
+        };
+      }
       const data: IAnime[] = response.data.data.map((item: any) => ({
         id: item.session,
         name: item.title,
@@ -183,8 +194,8 @@ export class Animepahe extends BaseClass {
       }));
       return {
         hasNextPage: response.data.last_page > 1,
-        perPage: response.data.per_page,
         currentPage: response.data.current_page,
+        perPage: response.data.per_page,
         totalResults: response.data.total,
         lastPage: response.data.last_page,
         data: data as IAnime[],
@@ -192,9 +203,10 @@ export class Animepahe extends BaseClass {
     } catch (error) {
       return {
         hasNextPage: false,
-        perPage: 0,
         currentPage: 0,
         totalResults: 0,
+        perPage: 0,
+        lastPage: 0,
         data: [],
         error: error instanceof Error ? error.message : 'Unknown Error',
       };
@@ -212,9 +224,12 @@ export class Animepahe extends BaseClass {
     }
     try {
       const response = await this.client.get(`${this.baseUrl}/anime/${animeId}`, { headers: this.headers(false) });
+      if (!response.data) {
+        return { error: response.statusText, data: null };
+      }
       return this.parseAnimeInfo(cheerio.load(response.data), animeId);
     } catch (error) {
-      return { data: null, error: error instanceof Error ? error.message : 'Unknown Error' };
+      return { error: error instanceof Error ? error.message : 'Unknown Error', data: null };
     }
   }
 
@@ -272,7 +287,7 @@ export class Animepahe extends BaseClass {
 
       return { data: episodes as IEpisodes[] };
     } catch (error) {
-      return { data: [], error: error instanceof Error ? error.message : 'Unknown Error' };
+      return { error: error instanceof Error ? error.message : 'Unknown Error', data: [] };
     }
   }
 
@@ -297,11 +312,14 @@ export class Animepahe extends BaseClass {
 
     try {
       const response = await this.client.get(`${this.baseUrl}/play/${url}`, { headers: this.headers(animeId) });
+      if (!response.data) {
+        return { error: response.statusText, data: null, download: null };
+      }
       const { servers, download } = this.parseServers(cheerio.load(response.data));
 
       return { data: servers, download };
     } catch (error) {
-      return { data: null, download: null, error: error instanceof Error ? error.message : 'Unknown Error' };
+      return { error: error instanceof Error ? error.message : 'Unknown Error', data: null, download: null };
     }
   }
 
@@ -352,11 +370,7 @@ export class Animepahe extends BaseClass {
         data: merged,
       };
     } catch (error) {
-      return {
-        data: null,
-        headers: { Referer: null },
-        error: error instanceof Error ? error.message : 'Fatal Error',
-      };
+      return { error: error instanceof Error ? error.message : 'Fatal Error', data: null, headers: { Referer: null } };
     }
   }
 }

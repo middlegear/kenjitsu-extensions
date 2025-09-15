@@ -207,8 +207,8 @@ class Animekai extends BaseClass {
     return {
       hasNextPage,
       currentPage,
-      lastPage,
       totalResults,
+      lastPage,
       data: results,
     };
   }
@@ -400,12 +400,12 @@ class Animekai extends BaseClass {
       const response = await this.client.get(`${this.baseUrl}/home`);
       if (!response.data) {
         return {
-          data: [],
           trending: { now: [], daily: [], weekly: [], monthly: [] },
           recentlyUpdated: [],
           upcoming: [],
           recentlyCompleted: [],
           recentlyAdded: [],
+          data: [],
           error: response.statusText || 'server returned an empty response',
         };
       }
@@ -413,12 +413,12 @@ class Animekai extends BaseClass {
       return this.parseHome(cheerio.load(response.data));
     } catch (error) {
       return {
-        data: [],
         trending: { now: [], daily: [], weekly: [], monthly: [] },
         recentlyUpdated: [],
         upcoming: [],
         recentlyCompleted: [],
         recentlyAdded: [],
+        data: [],
         error: error instanceof Error ? error.message : 'Unknown err',
       };
     }
@@ -462,9 +462,10 @@ class Animekai extends BaseClass {
         return {
           hasNextPage: false,
           currentPage: 0,
+          totalResults: 0,
           lastPage: 0,
-          error: response.statusText || 'Received empty response from server',
           data: [],
+          error: response.statusText || 'Received empty response from server',
         };
       }
 
@@ -474,10 +475,11 @@ class Animekai extends BaseClass {
       return this.parsePaginated(data$, selector);
     } catch (error) {
       return {
-        data: [],
         hasNextPage: false,
         currentPage: 0,
+        totalResults: 0,
         lastPage: 0,
+        data: [],
         error: error instanceof Error ? error.message : 'Unknown Error',
       };
     }
@@ -494,6 +496,7 @@ class Animekai extends BaseClass {
       return {
         hasNextPage: false,
         currentPage: 0,
+        totalResults: 0,
         lastPage: 0,
         data: [],
         error: 'Missing required parameter: query',
@@ -512,6 +515,7 @@ class Animekai extends BaseClass {
         return {
           hasNextPage: false,
           currentPage: 0,
+          totalResults: 0,
           lastPage: 0,
           data: [],
           error: response.statusText,
@@ -524,6 +528,7 @@ class Animekai extends BaseClass {
       return {
         hasNextPage: false,
         currentPage: 0,
+        totalResults: 0,
         lastPage: 0,
         data: [],
         error: error instanceof Error ? error.message : 'Unknown error occurred',
@@ -572,6 +577,7 @@ class Animekai extends BaseClass {
         return {
           hasNextPage: false,
           currentPage: 0,
+          totalResults: 0,
           lastPage: 0,
           data: [],
           error: response.statusText,
@@ -584,6 +590,7 @@ class Animekai extends BaseClass {
       return {
         hasNextPage: false,
         currentPage: 0,
+        totalResults: 0,
         lastPage: 0,
         data: [],
         error: error instanceof Error ? error.message : 'Unknown error occurred',
@@ -631,6 +638,7 @@ class Animekai extends BaseClass {
         return {
           hasNextPage: false,
           currentPage: 0,
+          totalResults: 0,
           lastPage: 0,
           data: [],
           error: response.statusText,
@@ -643,6 +651,7 @@ class Animekai extends BaseClass {
       return {
         hasNextPage: false,
         currentPage: 0,
+        totalResults: 0,
         lastPage: 0,
         data: [],
         error: error instanceof Error ? error.message : 'Unknown error occurred',
@@ -691,6 +700,7 @@ class Animekai extends BaseClass {
         return {
           hasNextPage: false,
           currentPage: 0,
+          totalResults: 0,
           lastPage: 0,
           data: [],
           error: response.statusText,
@@ -751,6 +761,7 @@ class Animekai extends BaseClass {
         return {
           hasNextPage: false,
           currentPage: 0,
+          totalResults: 0,
           lastPage: 0,
           data: [],
           error: response.statusText,
@@ -763,6 +774,7 @@ class Animekai extends BaseClass {
       return {
         hasNextPage: false,
         currentPage: 0,
+        totalResults: 0,
         lastPage: 0,
         data: [],
         error: error instanceof Error ? error.message : 'Unknown error occurred',
@@ -786,6 +798,7 @@ class Animekai extends BaseClass {
         return {
           hasNextPage: false,
           currentPage: 0,
+          totalResults: 0,
           lastPage: 0,
           data: [],
           error: response.statusText,
@@ -798,6 +811,7 @@ class Animekai extends BaseClass {
       return {
         hasNextPage: false,
         currentPage: 0,
+        totalResults: 0,
         lastPage: 0,
         data: [],
         error: error instanceof Error ? error.message : 'Unknown error occurred',
@@ -867,11 +881,11 @@ class Animekai extends BaseClass {
       };
     } catch (error) {
       return {
-        data: null,
         relatedSeasons: [],
         recommendedAnime: [],
         relatedAnime: [],
         providerEpisodes: [],
+        data: null,
         error: error instanceof Error ? error.message : 'Unknown error occurred',
       };
     }
@@ -962,10 +976,7 @@ class Animekai extends BaseClass {
 
       return { data: servers };
     } catch (error) {
-      return {
-        data: [],
-        error: error instanceof Error ? error.message : 'Unknown error occurred',
-      };
+      return { error: error instanceof Error ? error.message : 'Unknown error occurred', data: [] };
     }
   }
 

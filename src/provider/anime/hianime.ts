@@ -83,8 +83,8 @@ export class HiAnime extends BaseClass {
         hasNextPage: false,
         currentPage: 0,
         lastPage: 0,
-        error: 'Cheerio Error: No results found',
         data: [],
+        error: 'Cheerio Error: No results found',
       };
     }
     return {
@@ -885,8 +885,8 @@ export class HiAnime extends BaseClass {
         hasNextPage: false,
         currentPage: 0,
         lastPage: 0,
-        error: 'Missing required Params : a query string',
         data: [],
+        error: 'Missing required Params : a query string',
       };
     }
 
@@ -904,8 +904,8 @@ export class HiAnime extends BaseClass {
           hasNextPage: false,
           currentPage: 0,
           lastPage: 0,
-          error: response.statusText || 'Received empty response from server',
           data: [],
+          error: response.statusText || 'Received empty response from server',
         };
       }
       const $ = cheerio.load(response.data);
@@ -916,8 +916,8 @@ export class HiAnime extends BaseClass {
         hasNextPage: false,
         currentPage: 0,
         lastPage: 0,
-        error: error instanceof Error ? error.message : 'Unknown Error',
         data: [],
+        error: error instanceof Error ? error.message : 'Unknown Error',
       };
     }
   }
@@ -1066,9 +1066,9 @@ export class HiAnime extends BaseClass {
           hasNextPage: false,
           currentPage: 0,
           lastPage: 0,
-          error: response.statusText || 'Received empty response from server',
           data: [],
           topAnime: { daily: [], weekly: [], monthly: [] },
+          error: response.statusText || 'Received empty response from server',
         };
       }
 
@@ -1076,11 +1076,11 @@ export class HiAnime extends BaseClass {
       return this.parsePaginatedSections(data$);
     } catch (error) {
       return {
-        data: [],
-        topAnime: { daily: [], weekly: [], monthly: [] },
         hasNextPage: false,
         currentPage: 0,
         lastPage: 0,
+        data: [],
+        topAnime: { daily: [], weekly: [], monthly: [] },
         error: error instanceof Error ? error.message : 'Unknown Error',
       };
     }
@@ -1103,9 +1103,9 @@ export class HiAnime extends BaseClass {
           hasNextPage: false,
           currentPage: 0,
           lastPage: 0,
-          error: response.statusText || 'Received empty response from server',
           data: [],
           topAnime: { daily: [], weekly: [], monthly: [] },
+          error: response.statusText || 'Received empty response from server',
         };
       }
 
@@ -1113,11 +1113,11 @@ export class HiAnime extends BaseClass {
       return this.parsePaginatedSections(data$);
     } catch (error) {
       return {
-        data: [],
-        topAnime: { daily: [], weekly: [], monthly: [] },
         hasNextPage: false,
         currentPage: 0,
         lastPage: 0,
+        data: [],
+        topAnime: { daily: [], weekly: [], monthly: [] },
         error: error instanceof Error ? error.message : 'Unknown Error',
       };
     }
@@ -1140,9 +1140,9 @@ export class HiAnime extends BaseClass {
           hasNextPage: false,
           currentPage: 0,
           lastPage: 0,
-          error: response.statusText || 'Received empty response from server',
           data: [],
           topAnime: { daily: [], weekly: [], monthly: [] },
+          error: response.statusText || 'Received empty response from server',
         };
       }
 
@@ -1150,11 +1150,11 @@ export class HiAnime extends BaseClass {
       return this.parsePaginatedSections(data$);
     } catch (error) {
       return {
-        data: [],
-        topAnime: { daily: [], weekly: [], monthly: [] },
         hasNextPage: false,
         currentPage: 0,
         lastPage: 0,
+        data: [],
+        topAnime: { daily: [], weekly: [], monthly: [] },
         error: error instanceof Error ? error.message : 'Unknown Error',
       };
     }
@@ -1177,9 +1177,10 @@ export class HiAnime extends BaseClass {
           hasNextPage: false,
           currentPage: 0,
           lastPage: 0,
-          error: response.statusText || 'Received empty response from server',
+
           data: [],
           topAnime: { daily: [], weekly: [], monthly: [] },
+          error: response.statusText || 'Received empty response from server',
         };
       }
 
@@ -1187,11 +1188,11 @@ export class HiAnime extends BaseClass {
       return this.parsePaginatedSections(data$);
     } catch (error) {
       return {
-        data: [],
-        topAnime: { daily: [], weekly: [], monthly: [] },
         hasNextPage: false,
         currentPage: 0,
         lastPage: 0,
+        data: [],
+        topAnime: { daily: [], weekly: [], monthly: [] },
         error: error instanceof Error ? error.message : 'Unknown Error',
       };
     }
@@ -1214,9 +1215,9 @@ export class HiAnime extends BaseClass {
           hasNextPage: false,
           currentPage: 0,
           lastPage: 0,
-          error: response.statusText || 'Received empty response from server',
           data: [],
           topAnime: { daily: [], weekly: [], monthly: [] },
+          error: response.statusText || 'Received empty response from server',
         };
       }
 
@@ -1224,11 +1225,11 @@ export class HiAnime extends BaseClass {
       return this.parsePaginatedSections(data$);
     } catch (error) {
       return {
-        data: [],
-        topAnime: { daily: [], weekly: [], monthly: [] },
         hasNextPage: false,
         currentPage: 0,
         lastPage: 0,
+        data: [],
+        topAnime: { daily: [], weekly: [], monthly: [] },
         error: error instanceof Error ? error.message : 'Unknown Error',
       };
     }
@@ -1251,9 +1252,9 @@ export class HiAnime extends BaseClass {
           hasNextPage: false,
           currentPage: 0,
           lastPage: 0,
-          error: response.statusText || 'Received empty response from server',
-          data: [],
           topAnime: { daily: [], weekly: [], monthly: [] },
+          data: [],
+          error: response.statusText || 'Received empty response from server',
         };
       }
 
@@ -1261,11 +1262,11 @@ export class HiAnime extends BaseClass {
       return this.parsePaginatedSections(data$);
     } catch (error) {
       return {
-        data: [],
-        topAnime: { daily: [], weekly: [], monthly: [] },
         hasNextPage: false,
         currentPage: 0,
         lastPage: 0,
+        topAnime: { daily: [], weekly: [], monthly: [] },
+        data: [],
         error: error instanceof Error ? error.message : 'Unknown Error',
       };
     }
@@ -1311,10 +1312,10 @@ export class HiAnime extends BaseClass {
       return this.parsePaginatedResults(data$, selector);
     } catch (error) {
       return {
-        data: [],
         hasNextPage: false,
         currentPage: 0,
         lastPage: 0,
+        data: [],
         error: error instanceof Error ? error.message : 'Unknown Error',
       };
     }
@@ -1358,10 +1359,10 @@ export class HiAnime extends BaseClass {
       return this.parsePaginatedResults(data$, selector);
     } catch (error) {
       return {
-        data: [],
         hasNextPage: false,
         currentPage: 0,
         lastPage: 0,
+        data: [],
         error: error instanceof Error ? error.message : 'Unknown Error',
       };
     }
@@ -1394,10 +1395,10 @@ export class HiAnime extends BaseClass {
       return this.parsePaginatedResults(data$, selector);
     } catch (error) {
       return {
-        data: [],
         hasNextPage: false,
         currentPage: 0,
         lastPage: 0,
+        data: [],
         error: error instanceof Error ? error.message : 'Unknown Error',
       };
     }
@@ -1430,10 +1431,10 @@ export class HiAnime extends BaseClass {
       return this.parsePaginatedResults(data$, selector);
     } catch (error) {
       return {
-        data: [],
         hasNextPage: false,
         currentPage: 0,
         lastPage: 0,
+        data: [],
         error: error instanceof Error ? error.message : 'Unknown Error',
       };
     }
@@ -1489,10 +1490,10 @@ export class HiAnime extends BaseClass {
       return this.parsePaginatedResults(data$, selector);
     } catch (error) {
       return {
-        data: [],
         hasNextPage: false,
         currentPage: 0,
         lastPage: 0,
+        data: [],
         error: error instanceof Error ? error.message : 'Unknown Error',
       };
     }
@@ -1662,9 +1663,9 @@ export class HiAnime extends BaseClass {
 
       if (sourcesResult.status === 'rejected') {
         return {
+          error: sourcesResult.reason,
           data: null,
           headers: { Referer: null },
-          error: sourcesResult.reason,
           syncData: { anilistId: null, malId: null, name: null },
         };
       }
@@ -1672,9 +1673,9 @@ export class HiAnime extends BaseClass {
       const response = sourcesResult.value;
       if (!response.data) {
         return {
+          error: response.statusText,
           data: null,
           headers: { Referer: null },
-          error: response.statusText,
           syncData: { anilistId: null, malId: null, name: null },
         };
       }
@@ -1706,9 +1707,9 @@ export class HiAnime extends BaseClass {
       };
     } catch (error) {
       return {
+        error: error instanceof Error ? error.message : 'Fatal Error',
         data: null,
         headers: { Referer: null },
-        error: error instanceof Error ? error.message : 'Fatal Error',
         syncData: { anilistId: null, malId: null, name: null },
       };
     }

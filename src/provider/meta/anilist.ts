@@ -132,8 +132,8 @@ export class Anilist extends Meta {
       };
     } catch (error) {
       return {
-        data: null,
         error: error instanceof Error ? error.message : 'Unknown Err',
+        data: null,
         providerEpisodes: [],
       };
     }
@@ -209,7 +209,7 @@ export class Anilist extends Meta {
         lastPage: 0,
         perPage: 0,
         data: [],
-        error: 'Missing required fields : search query',
+        error: 'Missing required parameter: query',
       };
     }
     try {
@@ -220,12 +220,12 @@ export class Anilist extends Meta {
       });
       if (!response.data)
         return {
-          error: response.statusText || 'Server returned an empty response',
           hasNextPage: false,
-          data: [],
           currentPage: 0,
           lastPage: 0,
           perPage: 0,
+          data: [],
+          error: response.statusText || 'Server returned an empty response',
         };
       const pagination = {
         hasNextPage: response.data.data.Page.pageInfo.hasNextPage,
@@ -286,12 +286,12 @@ export class Anilist extends Meta {
       };
     } catch (error) {
       return {
-        error: error instanceof Error ? error.message : 'Internal Server Error ',
         hasNextPage: false,
         currentPage: 0,
         lastPage: 0,
         perPage: 0,
         data: [],
+        error: error instanceof Error ? error.message : 'Internal Server Error ',
       };
     }
   }
@@ -411,12 +411,12 @@ export class Anilist extends Meta {
       });
       if (!response.data)
         return {
-          error: response.statusText || 'Server returned an empty response',
-          data: [],
           hasNextPage: false,
           currentPage: 0,
           lastPage: 0,
           perPage: 0,
+          data: [],
+          error: response.statusText || 'Server returned an empty response',
         };
       const pagination = {
         hasNextPage: response.data.data.Page.pageInfo.hasNextPage,
@@ -462,12 +462,12 @@ export class Anilist extends Meta {
       };
     } catch (error) {
       return {
-        error: error instanceof Error ? error.message : 'Unknown Err',
         hasNextPage: false,
         currentPage: 0,
         lastPage: 0,
         perPage: 0,
         data: [],
+        error: error instanceof Error ? error.message : 'Unknown Err',
       };
     }
   }
@@ -510,12 +510,12 @@ export class Anilist extends Meta {
 
       if (!response.data)
         return {
-          error: response.statusText || 'Server returned an empty response',
           hasNextPage: false,
           currentPage: 0,
           lastPage: 0,
           perPage: 0,
           data: [],
+          error: response.statusText || 'Server returned an empty response',
         };
       const pagination = {
         hasNextPage: response.data.data.Page.pageInfo.hasNextPage,
@@ -619,12 +619,12 @@ export class Anilist extends Meta {
   ): Promise<IAnimePaginated<IMetaAnime[] | []>> {
     if (!season || !seasonYear) {
       return {
-        error: 'Missing a required param : season | seasonYear',
         hasNextPage: false,
         currentPage: 0,
         lastPage: 0,
         perPage: 0,
         data: [],
+        error: 'Missing a required parameter : season or  seasonYear',
       };
     }
 
@@ -645,12 +645,12 @@ export class Anilist extends Meta {
       });
       if (!response.data)
         return {
-          error: response.statusText || 'Server returned an empty response',
           hasNextPage: false,
           currentPage: 0,
           lastPage: 0,
           perPage: 0,
           data: [],
+          error: response.statusText || 'Server returned an empty response',
         };
       const pagination = {
         hasNextPage: response.data.data.Page.pageInfo.hasNextPage,
@@ -710,12 +710,12 @@ export class Anilist extends Meta {
       };
     } catch (error) {
       return {
-        error: error instanceof Error ? error.message : 'Unknown err',
         hasNextPage: false,
         currentPage: 0,
         lastPage: 0,
         perPage: 0,
         data: [],
+        error: error instanceof Error ? error.message : 'Unknown err',
       };
     }
   }
@@ -738,12 +738,12 @@ export class Anilist extends Meta {
       });
       if (!response.data)
         return {
-          error: response.statusText || 'Server returned an empty response',
           hasNextPage: false,
           currentPage: 0,
           lastPage: 0,
           perPage: 0,
           data: [],
+          error: response.statusText || 'Server returned an empty response',
         };
       const pagination = {
         hasNextPage: response.data.data.Page.pageInfo.hasNextPage,
@@ -800,12 +800,12 @@ export class Anilist extends Meta {
       };
     } catch (error) {
       return {
-        error: error instanceof Error ? error.message : 'Unknown err',
         hasNextPage: false,
         currentPage: 0,
         lastPage: 0,
         perPage: 0,
         data: [],
+        error: error instanceof Error ? error.message : 'Unknown err',
       };
     }
   }
@@ -999,8 +999,8 @@ export class Anilist extends Meta {
       }
     } catch (error) {
       return {
-        data: null,
         error: error instanceof Error ? error.message : 'Unknown Err',
+        data: null,
         providerEpisodes: [],
       };
     }

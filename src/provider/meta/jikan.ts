@@ -72,8 +72,8 @@ export class Jikan extends Meta {
       };
     } catch (error) {
       return {
-        data: null,
         error: error instanceof Error ? error.message : 'Unknown Err',
+        data: null,
         providerEpisodes: [],
       };
     }
@@ -124,8 +124,8 @@ export class Jikan extends Meta {
       };
     } catch (error) {
       return {
-        data: null,
         error: error instanceof Error ? error.message : 'Unknown Err',
+        data: null,
         providerEpisodes: [],
       };
     }
@@ -215,13 +215,13 @@ export class Jikan extends Meta {
       });
       if (!response.data)
         return {
-          error: 'Server returned an empty response',
           hasNextPage: false,
+          currentPage: 0,
           totalResults: 0,
           lastPage: 0,
-          currentPage: 0,
           perPage: 0,
           data: [],
+          error: response.statusText || 'Server returned an empty response',
         };
       const pagination = {
         hasNextPage: response.data.pagination.has_next_page,
@@ -277,21 +277,21 @@ export class Jikan extends Meta {
 
       return {
         hasNextPage: pagination.hasNextPage,
+        currentPage: pagination.currentPage,
         totalResults: pagination.total,
         lastPage: pagination.lastPage,
-        currentPage: pagination.currentPage,
         perPage: pagination.perPage,
         data: search as IMetaAnime[],
       };
     } catch (error) {
       return {
-        error: error instanceof Error ? error.message : 'Unknown err ',
         hasNextPage: false,
         totalResults: 0,
-        lastPage: 0,
         currentPage: 0,
+        lastPage: 0,
         perPage: 0,
         data: [],
+        error: error instanceof Error ? error.message : 'Unknown err ',
       };
     }
   }
@@ -430,13 +430,13 @@ export class Jikan extends Meta {
   ): Promise<IAnimePaginated<IMetaAnime[] | []>> {
     if (!format) {
       return {
-        error: 'Missing required parameter : Format!',
         hasNextPage: false,
+        currentPage: 0,
         totalResults: 0,
         lastPage: 0,
-        currentPage: 0,
         perPage: 0,
         data: [],
+        error: 'Missing required parameter : Format!',
       };
     }
 
@@ -451,13 +451,13 @@ export class Jikan extends Meta {
       });
       if (!response.data)
         return {
-          error: response.statusText || 'Server returned an empty response',
           hasNextPage: false,
+          currentPage: 0,
           totalResults: 0,
           lastPage: 0,
-          currentPage: 0,
           perPage: 0,
           data: [],
+          error: response.statusText || 'Server returned an empty response',
         };
 
       const res = response.data;
@@ -515,21 +515,21 @@ export class Jikan extends Meta {
 
       return {
         hasNextPage: pagination.hasNextPage,
+        currentPage: pagination.currentPage,
         totalResults: pagination.total,
         lastPage: pagination.lastPage,
-        currentPage: pagination.currentPage,
         perPage: pagination.perPage,
         data: currentSeason,
       };
     } catch (error) {
       return {
-        error: error instanceof Error ? error.message : 'Unknown err ',
         hasNextPage: false,
+        currentPage: 0,
         totalResults: 0,
         lastPage: 0,
-        currentPage: 0,
         perPage: 0,
         data: [],
+        error: error instanceof Error ? error.message : 'Unknown err ',
       };
     }
   }
@@ -548,13 +548,13 @@ export class Jikan extends Meta {
   ): Promise<IAnimePaginated<IMetaAnime[] | []>> {
     if (!format) {
       return {
-        error: 'Missing required parameter : Format!',
         hasNextPage: false,
+        currentPage: 0,
         totalResults: 0,
         lastPage: 0,
-        currentPage: 0,
         perPage: 0,
         data: [],
+        error: 'Missing required parameter : Format!',
       };
     }
 
@@ -569,13 +569,13 @@ export class Jikan extends Meta {
       });
       if (!response.data)
         return {
-          error: response.statusText || 'Server returned an empty response',
           hasNextPage: false,
+          currentPage: 0,
           totalResults: 0,
           lastPage: 0,
-          currentPage: 0,
           perPage: 0,
           data: [],
+          error: response.statusText || 'Server returned an empty response',
         };
       const res = response.data;
       const pagination = {
@@ -633,21 +633,21 @@ export class Jikan extends Meta {
 
       return {
         hasNextPage: pagination.hasNextPage,
+        currentPage: pagination.currentPage,
         totalResults: pagination.total,
         lastPage: pagination.lastPage,
-        currentPage: pagination.currentPage,
         perPage: pagination.perPage,
         data: NextSeason as IMetaAnime[],
       };
     } catch (error) {
       return {
-        error: error instanceof Error ? error.message : 'Unknown err ',
         hasNextPage: false,
+        currentPage: 0,
         totalResults: 0,
         lastPage: 0,
-        currentPage: 0,
         perPage: 0,
         data: [],
+        error: error instanceof Error ? error.message : 'Unknown err ',
       };
     }
   }
@@ -669,13 +669,13 @@ export class Jikan extends Meta {
   ): Promise<IAnimePaginated<IMetaAnime[] | []>> {
     if (!year || !season) {
       return {
-        error: 'Missing required parameter : year or season',
         hasNextPage: false,
+        currentPage: 0,
         totalResults: 0,
         lastPage: 0,
-        currentPage: 0,
         perPage: 0,
         data: [],
+        error: 'Missing required parameter : year or season',
       };
     }
     try {
@@ -689,13 +689,13 @@ export class Jikan extends Meta {
       });
       if (!response.data)
         return {
-          error: response.statusText || 'Server returned an empty response',
           hasNextPage: false,
+          currentPage: 0,
           totalResults: 0,
           lastPage: 0,
-          currentPage: 0,
           perPage: 0,
           data: [],
+          error: response.statusText || 'Server returned an empty response',
         };
 
       const res = response.data;
@@ -755,21 +755,21 @@ export class Jikan extends Meta {
 
       return {
         hasNextPage: pagination.hasNextPage,
+        currentPage: pagination.currentPage,
         totalResults: pagination.total,
         lastPage: pagination.lastPage,
-        currentPage: pagination.currentPage,
         perPage: pagination.perPage,
         data: Season as IMetaAnime[],
       };
     } catch (error) {
       return {
-        error: error instanceof Error ? error.message : 'Unknown err ',
         hasNextPage: false,
+        currentPage: 0,
         totalResults: 0,
         lastPage: 0,
-        currentPage: 0,
         perPage: 0,
         data: [],
+        error: error instanceof Error ? error.message : 'Unknown err ',
       };
     }
   }
@@ -791,13 +791,13 @@ export class Jikan extends Meta {
       });
       if (!response.data)
         return {
-          error: response.statusText || 'Server returned an empty response',
           hasNextPage: false,
+          currentPage: 0,
           totalResults: 0,
           lastPage: 0,
-          currentPage: 0,
           perPage: 0,
           data: [],
+          error: response.statusText || 'Server returned an empty response',
         };
       const res = response.data;
       const pagination = {
@@ -857,21 +857,21 @@ export class Jikan extends Meta {
 
       return {
         hasNextPage: pagination.hasNextPage,
+        currentPage: pagination.currentPage,
         totalResults: pagination.total,
         lastPage: pagination.lastPage,
-        currentPage: pagination.currentPage,
         perPage: pagination.perPage,
         data: topAnime as IMetaAnime[],
       };
     } catch (error) {
       return {
-        error: error instanceof Error ? error.message : 'Unknown err ',
         hasNextPage: false,
+        currentPage: 0,
         totalResults: 0,
         lastPage: 0,
-        currentPage: 0,
         perPage: 0,
         data: [],
+        error: error instanceof Error ? error.message : 'Unknown err ',
       };
     }
   }
@@ -903,13 +903,13 @@ export class Jikan extends Meta {
       const response = await this.client.get(`${this.baseUrl}/top/anime`, { params });
       if (!response.data)
         return {
-          error: response.statusText || 'Server returned an empty response',
           hasNextPage: false,
+          currentPage: 0,
           totalResults: 0,
           lastPage: 0,
-          currentPage: 0,
           perPage: 0,
           data: [],
+          error: response.statusText || 'Server returned an empty response',
         };
       const res = response.data;
       const pagination = {
@@ -968,21 +968,21 @@ export class Jikan extends Meta {
 
       return {
         hasNextPage: pagination.hasNextPage,
+        currentPage: pagination.currentPage,
         totalResults: pagination.total,
         lastPage: pagination.lastPage,
-        currentPage: pagination.currentPage,
         perPage: pagination.perPage,
         data: topAnime as IMetaAnime[],
       };
     } catch (error) {
       return {
-        error: error instanceof Error ? error.message : 'Unknown err ',
         hasNextPage: false,
+        currentPage: 0,
         totalResults: 0,
         lastPage: 0,
-        currentPage: 0,
         perPage: 0,
         data: [],
+        error: error instanceof Error ? error.message : 'Unknown err ',
       };
     }
   }
@@ -1076,11 +1076,11 @@ export class Jikan extends Meta {
       });
       if (!response.data)
         return {
-          error: response.statusText || 'Server returned an empty response',
-          data: [],
           hasNextPage: false,
           currentPage: 0,
           lastPage: 0,
+          data: [],
+          error: response.statusText || 'Server returned an empty response',
         };
       const pagination = {
         hasNextPage: response.data.pagination.has_next_page,
@@ -1108,11 +1108,11 @@ export class Jikan extends Meta {
       };
     } catch (error) {
       return {
-        error: error instanceof Error ? error.message : 'Unknown err ',
         hasNextPage: false,
-        lastPage: 0,
         currentPage: 0,
+        lastPage: 0,
         data: [],
+        error: error instanceof Error ? error.message : 'Unknown err ',
       };
     }
   }

@@ -46,11 +46,11 @@ export class TheMovieDatabase extends Meta {
 
       if (!response.data) {
         return {
-          data: [],
-          currentPage: 0,
           hasNextPage: false,
-          lastPage: 0,
+          currentPage: 0,
           totalResults: 0,
+          lastPage: 0,
+          data: [],
           error: response.statusText,
         };
       }
@@ -86,19 +86,19 @@ export class TheMovieDatabase extends Meta {
       }));
 
       return {
-        currentPage: pagination.currentPage,
         hasNextPage: pagination.hasNextPage,
-        lastPage: pagination.totalPages,
+        currentPage: pagination.currentPage,
         totalResults: pagination.totalResults,
+        lastPage: pagination.totalPages,
         data: data as IMetaMovie[],
       };
     } catch (error) {
       return {
-        data: [],
-        currentPage: 0,
         hasNextPage: false,
-        lastPage: 0,
+        currentPage: 0,
         totalResults: 0,
+        lastPage: 0,
+        data: [],
         error: error instanceof Error ? error.message : 'Unknown error',
       };
     }
@@ -125,11 +125,11 @@ export class TheMovieDatabase extends Meta {
 
       if (!response.data) {
         return {
-          data: [],
-          currentPage: 0,
           hasNextPage: false,
-          lastPage: 0,
+          currentPage: 0,
           totalResults: 0,
+          lastPage: 0,
+          data: [],
           error: response.statusText,
         };
       }
@@ -164,19 +164,19 @@ export class TheMovieDatabase extends Meta {
       }));
 
       return {
-        currentPage: pagination.currentPage,
         hasNextPage: pagination.hasNextPage,
-        lastPage: pagination.totalPages,
+        currentPage: pagination.currentPage,
         totalResults: pagination.totalResults,
+        lastPage: pagination.totalPages,
         data: data as IMetaMovie[],
       };
     } catch (error) {
       return {
-        data: [],
-        currentPage: 0,
         hasNextPage: false,
-        lastPage: 0,
+        currentPage: 0,
         totalResults: 0,
+        lastPage: 0,
+        data: [],
         error: error instanceof Error ? error.message : 'Unknown error',
       };
     }
@@ -191,11 +191,11 @@ export class TheMovieDatabase extends Meta {
   async searchShows(query: string, page: number = 1): Promise<IAnimePaginated<IMetaMovie[] | []>> {
     if (!query) {
       return {
-        data: [],
-        currentPage: 0,
         hasNextPage: false,
-        lastPage: 0,
+        currentPage: 0,
         totalResults: 0,
+        lastPage: 0,
+        data: [],
         error: 'Missing required parameter. Query',
       };
     }
@@ -299,7 +299,7 @@ export class TheMovieDatabase extends Meta {
       }));
       return { data: data as IMetaMovieInfo, seasons: seasons as IMetaMovieSeasons[] };
     } catch (error) {
-      return { data: null, seasons: [], error: error instanceof Error ? error.message : 'Unknown error' };
+      return { error: error instanceof Error ? error.message : 'Unknown error', data: null, seasons: [] };
     }
   }
 
@@ -311,7 +311,7 @@ export class TheMovieDatabase extends Meta {
    */
   async fetchTvEpisodes(tmdbId: number, season: number): Promise<IResponse<IMetaMovieEpisodes[] | []>> {
     if (!tmdbId) {
-      return { data: [], error: 'Missing required params: tmdbId!' };
+      return { error: 'Missing required params: tmdbId!', data: [] };
     }
     try {
       const response = await this.client.get(`${this.baseUrl}/tv/${tmdbId}/season/${season}`, {
@@ -320,11 +320,7 @@ export class TheMovieDatabase extends Meta {
         },
       });
 
-      if (!response.data)
-        return {
-          data: [],
-          error: response.statusText,
-        };
+      if (!response.data) return { error: response.statusText, data: [] };
       const episodes = response.data.episodes.map((item: any) => ({
         airDate: item.air_date || null,
         episodeNumber: item.episode_number || null,
@@ -345,7 +341,7 @@ export class TheMovieDatabase extends Meta {
       }));
       return { data: episodes as IMetaMovieEpisodes[] };
     } catch (error) {
-      return { data: [], error: error instanceof Error ? error.message : 'Unknown error' };
+      return { error: error instanceof Error ? error.message : 'Unknown error', data: [] };
     }
   }
 
@@ -367,11 +363,7 @@ export class TheMovieDatabase extends Meta {
           api_key: this.apiKey,
         },
       });
-      if (!response.data)
-        return {
-          data: null,
-          error: response.statusText,
-        };
+      if (!response.data) return { error: response.statusText, data: null };
       const episode = {
         airDate: response.data.air_date || null,
         title: response.data.name || null,
@@ -392,8 +384,8 @@ export class TheMovieDatabase extends Meta {
       };
     } catch (error) {
       return {
-        data: null,
         error: error instanceof Error ? error.message : 'Unknown error',
+        data: null,
       };
     }
   }
@@ -444,11 +436,11 @@ export class TheMovieDatabase extends Meta {
   async searchMovie(query: string, page: number = 1): Promise<IAnimePaginated<IMetaMovie[] | []>> {
     if (!query) {
       return {
-        data: [],
-        currentPage: 0,
         hasNextPage: false,
-        lastPage: 0,
+        currentPage: 0,
         totalResults: 0,
+        lastPage: 0,
+        data: [],
         error: 'Missing required parameter. Query',
       };
     }
@@ -474,7 +466,7 @@ export class TheMovieDatabase extends Meta {
           api_key: this.apiKey,
         },
       });
-
+      if (!response.data) return { error: response.statusText, data: null };
       const data = {
         tmdbId: response.data.id || null,
         name: response.data.original_title || response.data.title || null,
@@ -535,7 +527,7 @@ export class TheMovieDatabase extends Meta {
       };
       return { data: data as IMetaMovie };
     } catch (error) {
-      return { data: null, error: error instanceof Error ? error.message : 'Unknown error' };
+      return { error: error instanceof Error ? error.message : 'Unknown error', data: null };
     }
   }
 
@@ -627,7 +619,7 @@ export class TheMovieDatabase extends Meta {
         provider: this.mapMovies(title as string, flixResults) as IMovieProviderResults[],
       };
     } catch (error) {
-      return { data: null, provider: [], error: error instanceof Error ? error.message : 'Unknown error' };
+      return { error: error instanceof Error ? error.message : 'Unknown error', data: null, provider: [] };
     }
   }
 
@@ -650,7 +642,7 @@ export class TheMovieDatabase extends Meta {
         provider: this.mapMovies(title as string, flixResults) as IMovieProviderResults[],
       };
     } catch (error) {
-      return { data: null, provider: [], error: error instanceof Error ? error.message : 'Unknown error' };
+      return { error: error instanceof Error ? error.message : 'Unknown error', data: null, provider: [] };
     }
   }
 }
