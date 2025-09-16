@@ -24,6 +24,7 @@ import {
   type IMovieOrTv,
   type ISubOrDub,
 } from './models/types.js';
+import { AllAnime } from './provider/anime/allanime.js';
 
 export {
   Anilist,
@@ -50,13 +51,3 @@ export {
   type IMovieOrTv,
   type ISubOrDub,
 };
-// const data = await new HiMovies().advancedSearch('all', 'all', 2025, 'action', 'unitedkingdom');
-// const data = await new Animepahe().fetchEpisodes('4d560dfd-e606-c21e-2eef-e48fd09f8188');
-// movie-bad-boys-18997
-//tv-the-boys-33895-episode-1096681
-// console.log(data);
-// console.log(JSON.stringify(data));
-// console.log();
-
-// const data = await new AllAnime().fetchSources('allanime-GoDoALiHc82Jrmcmh-episode-1');
-// console.log(JSON.stringify(data));

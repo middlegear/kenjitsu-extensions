@@ -13,7 +13,7 @@ class Okru {
     const selector: cheerio.SelectorType = 'div.vid-card.vid-card__fullscreen.h-mod';
     const dataOptions = $(selector).find('div').attr('data-options');
     if (!dataOptions) {
-      throw Error('Could not find a valid source url');
+      throw new Error('This provider has no valid streaming source');
     }
     return JSON.parse(dataOptions as string);
   }
@@ -27,6 +27,11 @@ class Okru {
       };
 
       const response = await this.client.get(videoUrl.href);
+
+      if (!response.data) {
+        throw new Error(response.statusText);
+      }
+
       const json = this.ParseHtml(cheerio.load(response.data));
       const data = JSON.parse(json.flashvars.metadata);
 
@@ -68,7 +73,7 @@ class Okru {
 
       return extractedData;
     } catch (error) {
-      throw new Error((error as Error).message);
+      throw new Error(error as string);
     }
   }
 }

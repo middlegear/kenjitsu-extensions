@@ -17,8 +17,6 @@ async function _getRCP(hash: string) {
         Referer: 'https://vidsrc.io/',
       },
     });
-    /// shida  iko hapa
-    // console.log(rcp.data);
 
     const frame$ = cheerio.load(rcp.data);
     const iframe = getFrame(frame$);

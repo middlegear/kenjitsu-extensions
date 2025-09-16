@@ -17,6 +17,7 @@
     "test-flixhq": "vitest flixhq.test.ts --config vitest.config.ts",
     "test-tmdb": "vitest tmdb.test.ts --config vitest.config.ts",
     "test-himovies": "vitest himovies.test.ts --config vitest.config.ts",
+    "test-animepahe": "vitest animepahe.test.ts --config vitest.config.ts",
     "test": "vitest  --config vitest.config.ts",
     "lint": "tsc",
     "ci": "tsc && pnpm test && pnpm run build",

@@ -17,6 +17,7 @@ class FileMoon {
       };
 
       const response = await this.client.get(videoUrl.href);
+
       const iframeSrcMatch = response.data.match(/<iframe[^>]+src="([^"]+)"/);
 
       if (!iframeSrcMatch || !iframeSrcMatch[1]) {
@@ -30,10 +31,17 @@ class FileMoon {
         },
       });
 
+      if (!packerUrlResponse.data) {
+        throw new Error(packerUrlResponse.statusText);
+      }
       const finalScript = unpack(packerUrlResponse.data);
 
       const m3u8Regex = /file:"(https?:\/\/[^"]+\.m3u8[^"]*)"/;
       const m3u8Match = finalScript.match(m3u8Regex);
+
+      if (!m3u8Match) {
+        throw new Error('No valid m3u8 files found');
+      }
 
       if (m3u8Match && m3u8Match[1]) {
         extractedData.sources.push({
@@ -54,7 +62,7 @@ class FileMoon {
 
       return extractedData;
     } catch (error) {
-      throw new Error((error as Error).message);
+      throw new Error(error as string);
     }
   }
 }

@@ -23,10 +23,13 @@ Hianime
 2. Filters for search(new method advanced search)
 3. Add watch together
 
+anilist 
+1. trailer returns an object can it instead a url
 
+allanime
+1. sources need to throw error. Test case with servers fullalchemist the brotherhood
 Animekai
-1. Fix the episodes
-2. fix servers and sources
+
 3. add watch together
 4. schedule
 
@@ -47,8 +50,7 @@ New Sites
 https://rentry.co/sflix#yflix-clones
 
 
-Critical 
-Refactor genres for hianime and animekai
+
 
 TESTS
 1. add tests for himovies 
@@ -56,5 +58,3 @@ TESTS
 3. add tests for all anime and animepahe
 
 
-/// Normalize them first 
-1. everything to lowercase before accepting inputs

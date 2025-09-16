@@ -19,6 +19,9 @@ class MP4Upload {
       };
       const response = await this.client.get(videoUrl.href);
 
+      if (!response.data) {
+        throw new Error(response.statusText);
+      }
       const html = response.data;
 
       const playerSrcMatch = html.match(/player\.src\(\{\s*type:\s*"([^"]+)",\s*src:\s*"([^"]+)"\s*\}\)/);
@@ -28,6 +31,9 @@ class MP4Upload {
 
       const sourceUrl = playerSrcMatch ? { type: playerSrcMatch[1], src: playerSrcMatch[2] } : null;
 
+      if (!sourceUrl) {
+        throw new Error('No streaming source found');
+      }
       const posterImage = playerPosterMatch ? playerPosterMatch[1] : null;
 
       const download = downloadUrlMatch ? downloadUrlMatch[1] : null;
@@ -41,7 +47,7 @@ class MP4Upload {
       extractedData.posterImage = posterImage;
       return extractedData || null;
     } catch (error) {
-      throw new Error(error as string).message;
+      throw new Error(error as string);
     }
   }
 }

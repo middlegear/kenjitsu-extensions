@@ -251,7 +251,7 @@ export class Animepahe extends BaseClass {
       });
 
       let episodes = data.map((item: any) => ({
-        episodeId: `pahe-${animeId}/${item.session}`,
+        episodeId: `pahe-${animeId}-$session$-${item.session}`,
         episodeNumber: item.episode || null,
         title: item.title || null,
         thumbnail: item.snapshot || null,
@@ -274,7 +274,7 @@ export class Animepahe extends BaseClass {
         for (const res of responses) {
           episodes.push(
             ...res.data.data.map((item: any) => ({
-              episodeId: `pahe-${animeId}/${item.session}`,
+              episodeId: `pahe-${animeId}-$session$-${item.session}`,
               episodeNumber: item.episode || null,
               title: item.title || null,
               thumbnail: item.snapshot || null,
@@ -300,12 +300,20 @@ export class Animepahe extends BaseClass {
     if (!episodeId) {
       throw new Error('Missing required parameter: episodeId');
     }
-    const url = episodeId.includes('pahe') ? episodeId.split('pahe-').at(1) : null;
-    if (!url) {
-      throw new Error(`Invalid episodeId format: expected "pahe-" part in "${episodeId}"`);
+    const prefix = 'pahe-';
+
+    if (!episodeId.startsWith(prefix)) {
+      throw new Error(`Invalid episodeId format: expected to start with "${prefix}", got "${episodeId}"`);
     }
 
-    const animeId = url.split('/').at(0);
+    const id = episodeId.slice(prefix.length);
+
+    if (!id) {
+      throw new Error(`Invalid episodeId: missing identifier after "${prefix}" in "${episodeId}"`);
+    }
+
+    const animeId = id.split('-$session$-').at(0);
+    const url = id.replace('-$session$-', '/');
     if (!animeId) {
       throw new Error(`Invalid episodeId`);
     }

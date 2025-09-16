@@ -260,44 +260,65 @@ export class AllAnime extends BaseClass {
    */
   async fetchSources(episodeId: string, category: ISubOrDub = 'sub'): Promise<AllAnimeSourceResponseMap> {
     const { data, error } = await this.fetchServers(episodeId, category);
-    if (!data || error) {
-      throw Error(error);
+
+    if (!data) {
+      throw new Error(error ?? `No servers found for episode: ${episodeId}`);
     }
+
+    const extractors: Record<AllAnimeServers, (url: URL) => Promise<IVideoSource | null>> = {
+      mp4upload: url => new MP4Upload().extract(url),
+      filemoon: url => new FileMoon().extract(url),
+      okru: url => new Okru().extract(url),
+    };
 
     const results = await Promise.all(
       data.map(async ({ serverId, serverUrl }) => {
         try {
           const url = new URL(serverUrl);
-
-          // mp4 upload requires the referer headers to play while filemoon m3u8 plays only on the device that made the request
           const refererOrigin = serverId === 'mp4upload' ? `https://www.${url.hostname}/` : `${url.origin}/`;
 
-          const extractors: { [key: string]: () => Promise<IVideoSource | null> } = {
-            mp4upload: () => new MP4Upload().extract(url),
-            filemoon: () => new FileMoon().extract(url),
-            okru: () => new Okru().extract(url),
-          };
+          const extractor = extractors[serverId as AllAnimeServers];
+          if (!extractor) {
+            return {
+              serverId,
+              value: {
+                headers: { Referer: null },
+                data: null,
+                error: `Extractor not implemented for: ${serverId}`,
+              },
+            };
+          }
 
-          const data = await (extractors[serverId as AllAnimeServers]?.() ?? null);
+          const extracted = await extractor(url);
           return {
-            serverId: serverId as AllAnimeServers,
-            value: data
-              ? { headers: { Referer: refererOrigin }, data }
-              : { headers: { Referer: null }, data: null, error: `Unsupported server: ${serverId}` },
+            serverId,
+            value: extracted
+              ? { headers: { Referer: refererOrigin }, data: extracted }
+              : { headers: { Referer: null }, data: null, error: `No streams available for: ${serverId}` },
           };
-        } catch (error) {
+        } catch (err) {
           return {
-            serverId: serverId as AllAnimeServers,
+            serverId,
             value: {
               headers: { Referer: null },
               data: null,
-              error: error instanceof Error ? error.message : 'Unknown Error',
+              error: err instanceof Error ? err.message : 'Unknown Error',
             },
           };
         }
       }),
     );
 
-    return results.reduce((acc, { serverId, value }) => ({ ...acc, [serverId]: value }), {} as AllAnimeSourceResponseMap);
+    const response = results.reduce<AllAnimeSourceResponseMap>((acc, { serverId, value }) => {
+      acc[serverId as AllAnimeServers] = value;
+      return acc;
+    }, {} as AllAnimeSourceResponseMap);
+
+    const hasValidSource = Object.values(response).some(val => val.data !== null);
+    if (!hasValidSource) {
+      throw new Error(`No streams available for episode: ${episodeId}. Known Issue`).message;
+    }
+
+    return response;
   }
 }
