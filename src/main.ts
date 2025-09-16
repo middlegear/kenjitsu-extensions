@@ -51,8 +51,3 @@ export {
   type IMovieOrTv,
   type ISubOrDub,
 };
-
-// const data = await new Animepahe().fetchSources(
-//   'pahe-7e7e2276-8adc-3c2d-e655-9df8397d0ee3-$session$-5d08385463e07eeabb6e6d1d182ca6ff9619c920089a4dc84fe09718da3fef6a',
-// );
-// console.log(data);
