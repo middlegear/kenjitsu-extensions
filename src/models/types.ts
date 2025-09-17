@@ -499,7 +499,6 @@ export interface IMetaMovieEpisodes {
 export interface IMovieProviderResults {
   id: string;
   title: string;
-  url: string;
   seasons?: number;
   releaseDate?: number;
   quality: string;
@@ -514,12 +513,17 @@ export interface IMovieTvBase {
   name: string | null;
   posterImage: string | null;
   type: 'Movie' | 'TV' | null;
-  quality: string | null;
+  quality?: string | null;
 }
-
+export interface IMovieSlider extends IMovieTvBase {
+  synopsis: string | null;
+  score: number | null;
+  duration: string | null;
+  genre: string[] | null;
+}
 export interface IMovie extends IMovieTvBase {
   type: 'Movie';
-  releaseDate: string | null;
+  releaseDate: string | number | null;
   duration: string | null;
 }
 
@@ -564,6 +568,7 @@ export interface IHomeResSpecialPages {
 }
 
 export interface IHomeHIResponse<T> extends IHomeResSpecialPages {
+  featured?: IMovieSlider[] | [];
   trending: {
     Movies: IMovieOrTv[] | [];
     Tv: IMovieOrTv[] | [];

@@ -1,33 +1,127 @@
-import { expect, test } from 'vitest';
-import { FlixHQ } from '../src/provider/movies/flixhq/index.js';
+import { test, expect } from 'vitest';
+import { FlixHQ } from '../src/provider/movies/flixhq.js';
 
 const flixhq = new FlixHQ();
+const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
-test('returns search results for movie and TV shows', async () => {
-  const data = await flixhq.search('bad boys');
-
+test('returns an array of objects containing media related to search query', async () => {
+  const data = await flixhq.search('bad-boys', 1);
   expect(Array.isArray(data.data)).toBe(true);
   expect(data.data.length).toBeGreaterThan(0);
+  await wait(1000);
 });
 
-test('returns media information on movie / TV show', async () => {
-  const data = await flixhq.fetchMediaInfo('tv-watch-the-boys-33895');
+test('returns an array of objects related to suggestions query', async () => {
+  const data = await flixhq.searchSuggestions('bad-boys');
+  expect(Array.isArray(data.data)).toBe(true);
+  expect(data.data.length).toBeGreaterThan(0);
+  await wait(1000);
+});
 
+test('retuns an object containing media info with provider episodes', async () => {
+  const data = await flixhq.fetchMediaInfo('movie-bad-boys-ii-17900');
   expect(data.data).not.toBeNull();
-  expect(Array.isArray(data.episodes)).toBe(true);
-  expect(data.episodes.length).toBeGreaterThan(0);
+  expect(Array.isArray(data.providerEpisodes)).toBe(true);
+
+  expect(data.recommended.length).toBeGreaterThan(0);
+  expect(data.providerEpisodes.length).toBeGreaterThan(0);
+
+  await wait(1000);
 });
 
-test('return media servers', async () => {
-  const data = await flixhq.fetchMediaServers('episode-1019968');
+test('retuns an object containing home info media', async () => {
+  const data = await flixhq.fetchHome();
+  expect(Array.isArray(data.trending.Movies)).toBe(true);
+  expect(Array.isArray(data.trending.Tv)).toBe(true);
+  expect(Array.isArray(data.recentReleases.Movies)).toBe(true);
+  expect(Array.isArray(data.recentReleases.Tv)).toBe(true);
+  expect(Array.isArray(data.upcoming)).toBe(true);
+
+  await wait(1000);
+});
+
+test('returns an array of objects containing mostpopular tv', async () => {
+  const data = await flixhq.fetchPopularTv(1);
+  expect(Array.isArray(data.data)).toBe(true);
+
+  expect(data.data.length).toBeGreaterThan(0);
+  await wait(1000);
+});
+
+test('returns an array of objects containing mostpopular movies', async () => {
+  const data = await flixhq.fetchPopularMovies(1);
+  expect(Array.isArray(data.data)).toBe(true);
+  expect(data.data.length).toBeGreaterThan(0);
+  await wait(1000);
+});
+
+test('returns an array of objects containing top movies', async () => {
+  const data = await flixhq.fetchTopMovies(1);
+  expect(Array.isArray(data.data)).toBe(true);
+  expect(data.data.length).toBeGreaterThan(0);
+  await wait(1000);
+});
+
+test('returns an array of objects containing top tv', async () => {
+  const data = await flixhq.fetchTopTv(1);
+  expect(Array.isArray(data.data)).toBe(true);
+  expect(data.data.length).toBeGreaterThan(0);
+  await wait(1000);
+});
+
+test('returns an array of objects containing  upcoming media', async () => {
+  const data = await flixhq.fetchTopTv(1);
+  expect(Array.isArray(data.data)).toBe(true);
+  expect(data.data.length).toBeGreaterThan(0);
+  await wait(1000);
+});
+
+test('returns an array of objects containing media by country', async () => {
+  const data = await flixhq.fetchByCountry('UnitedStates', 1);
+  expect(Array.isArray(data.data)).toBe(true);
+  expect(data.data.length).toBeGreaterThan(0);
+  await wait(1000);
+});
+
+test('returns an array of objects containing media by genre', async () => {
+  const data = await flixhq.fetchGenre('Action', 1);
+  expect(Array.isArray(data.data)).toBe(true);
+  expect(data.data.length).toBeGreaterThan(0);
+  await wait(1000);
+});
+
+test('return an array containing object of available servers for a specific movie', async () => {
+  const data = await flixhq.fetchServers('movie-bad-boys-18997');
 
   expect(Array.isArray(data.data)).toBe(true);
   expect(data.data.length).toBeGreaterThan(0);
+
+  await wait(1000);
 });
 
-test('return media sources', async () => {
-  const data = await flixhq.fetchSources('episode-1019968');
+test('return an array containing object of available servers for a specific tv', async () => {
+  const data = await flixhq.fetchServers('tv-the-boys-33895-episode-1096681');
 
-  expect(data).not.toBeNull();
+  expect(Array.isArray(data.data)).toBe(true);
+  expect(data.data.length).toBeGreaterThan(0);
+
+  await wait(1000);
+});
+
+test('returns an object containing streaming sources for movie', async () => {
+  const data = await flixhq.fetchSources('movie-bad-boys-18997', 'akcloud');
+  expect(data.data).not.toBeNull();
+  expect(Array.isArray(data.data?.sources)).toBe(true);
   expect(data.data?.sources.length).toBeGreaterThan(0);
+
+  await wait(1000);
+});
+
+test('returns an object containing streaming sources for tv', async () => {
+  const data = await flixhq.fetchSources('tv-the-boys-33895-episode-1096681', 'vidcloud');
+  expect(data.data).not.toBeNull();
+  expect(Array.isArray(data.data?.sources)).toBe(true);
+  expect(data.data?.sources.length).toBeGreaterThan(0);
+
+  await wait(2000);
 });

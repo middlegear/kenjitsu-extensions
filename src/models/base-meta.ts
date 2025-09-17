@@ -2,7 +2,7 @@ import { FetchClient } from '../config/client.js';
 import { HiAnime } from '../provider/anime/hianime.js';
 import { findBestMatch } from '../utils/string-similarity.js';
 import type { HiAnimeServers, ISubOrDub, IMovieProviderResults, ITitle } from './types.js';
-import { FlixHQ } from '../provider/movies/flixhq/index.js';
+import { FlixHQ } from '../provider/movies/flixhq.js';
 import { AllAnime } from '../provider/anime/allanime.js';
 
 type AnimeSearchResults = {
@@ -80,7 +80,6 @@ export abstract class Meta {
         id: match.id || null,
         title: match.title || null,
         quality: match.quality || null,
-        url: match.url || null,
         releaseDate: match.releaseDate || null,
         score: bestOverallMatch.rating,
       }));
@@ -182,8 +181,7 @@ export abstract class Meta {
         .filter((item: any) => item.type === 'TV')
         .map((item: any) => ({
           id: item.id,
-          title: item.title,
-          url: item.url,
+          title: item.name,
           seasons: item.seasons,
           quality: item.quality,
         }));
@@ -200,8 +198,7 @@ export abstract class Meta {
         .filter((item: any) => item.type === 'Movie')
         .map((item: any) => ({
           id: item.id,
-          title: item.title,
-          url: item.url,
+          title: item.name,
           releaseDate: item.releaseDate,
           quality: item.quality,
         }));

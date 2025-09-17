@@ -1,3 +1,4 @@
+import { BaseClass } from '../../models/base-anime.js';
 import * as cheerio from 'cheerio';
 import {
   HIMovieCountryCode,
@@ -12,21 +13,20 @@ import {
   type IMovieInfoResponse,
   type IMovieOrTv,
   type IMovieServers,
+  type IMovieSlider,
   type IMovieTvBase,
   type IResponse,
   type ITvShow,
   type IVideoSource,
   type IVideoSourceResponse,
 } from '../../models/types.js';
-import VideoStream from '../../source-extractors/videostream.js';
-import { BaseClass } from '../../models/base-anime.js';
+import VidCloud from '../../source-extractors/vidcloud.js';
 
-export class HiMovies extends BaseClass {
-  private readonly baseUrl = 'https://himovies.sx';
+export class FlixHQ extends BaseClass {
+  private readonly baseUrl: string = 'https://flixhq.to';
   constructor() {
     super();
   }
-
   private parseItems($: cheerio.CheerioAPI, selector: cheerio.SelectorType) {
     const items: IMovieOrTv[] = [];
 
@@ -45,7 +45,7 @@ export class HiMovies extends BaseClass {
         items.push({
           ...baseData,
           type: 'Movie',
-          releaseDate: $(element).find('div.fd-infor > span.fdi-item:first').text().trim() || null,
+          releaseDate: Number($(element).find('div.fd-infor > span.fdi-item:first').text().trim()) || null,
           duration: $(element).find('div.fd-infor > span.fdi-duration').text().trim() || null,
         } as IMovie);
       } else if (type === 'TV') {
@@ -74,7 +74,6 @@ export class HiMovies extends BaseClass {
 
     return items;
   }
-
   private parseMixedSection($: cheerio.CheerioAPI, selector: cheerio.SelectorType): IMovieOrTv[] {
     const items: IMovieOrTv[] = [];
 
@@ -93,7 +92,7 @@ export class HiMovies extends BaseClass {
         items.push({
           ...baseData,
           type: 'Movie',
-          releaseDate: $(element).find('div.fd-infor > span.fdi-item:first').text().trim() || null,
+          releaseDate: Number($(element).find('div.fd-infor > span.fdi-item:first').text().trim()) || null,
           duration: $(element).find('div.fd-infor > span.fdi-duration').text().trim() || null,
         } as IMovie);
       } else if (type === 'TV') {
@@ -126,8 +125,34 @@ export class HiMovies extends BaseClass {
   }
 
   private parseHome($: cheerio.CheerioAPI) {
-    const trendingMoviesSelector: cheerio.SelectorType = 'div.tab-content div#trending-movies div.flw-item';
-    const trendingTvSelector: cheerio.SelectorType = 'div.tab-content div#trending-tv div.flw-item';
+    const selector: cheerio.SelectorType = 'div#slider > div.swiper-wrapper  > div.swiper-slide';
+    const slider: IMovieSlider[] = [];
+    $(selector).each((_, element) => {
+      const id = $(element).find('a.slide-link').attr('href')?.slice(1).replace('/', '-');
+      const type = id?.includes('tv') ? 'TV' : 'Movie';
+      slider.push({
+        id: id || null,
+        name: $(element).find('h3.film-title').text().trim() || null,
+        posterImage:
+          $(element)
+            .attr('style')
+            ?.match(/url\(["']?(.*?)["']?\)/)?.[1] || null,
+        type: type || null,
+        quality: $(element).find('div.scd-item > span.quality').text().trim() || null,
+        duration: $(element).find('div.scd-item strong').eq(0).text().trim() || null,
+        score: Number($(element).find('div.scd-item strong').eq(1).text().trim()) || null,
+        genre:
+          $(element)
+            .find('div.scd-item strong')
+            .eq(2)
+            .map((i, el) => $(el).text().replace(/\s+/g, ' ').trim())
+            .get() || null,
+
+        synopsis: $(element).find('p.sc-desc').text().trim() || null,
+      });
+    });
+    const trendingMoviesSelector: cheerio.SelectorType = 'div#trending-movies div.film_list-wrap > div.flw-item';
+    const trendingTvSelector: cheerio.SelectorType = 'div#trending-tv div.film_list-wrap > div.flw-item';
 
     const trending = {
       Movies: this.parseItems($, trendingMoviesSelector),
@@ -149,6 +174,7 @@ export class HiMovies extends BaseClass {
 
     const upcoming = this.parseMixedSection($, upcomingSelector);
     return {
+      featured: slider,
       trending,
       recentReleases,
       upcoming,
@@ -186,7 +212,7 @@ export class HiMovies extends BaseClass {
         items.push({
           ...baseData,
           type: 'Movie',
-          releaseDate: $(element).find('div.fd-infor > span.fdi-item:first').text().trim() || null,
+          releaseDate: Number($(element).find('div.fd-infor > span.fdi-item:first').text().trim()) || null,
           duration: $(element).find('div.fd-infor > span.fdi-duration').text().trim() || null,
         } as IMovie);
       } else if (type === 'TV') {
@@ -237,7 +263,7 @@ export class HiMovies extends BaseClass {
         id: $(element).attr('href')?.slice(1).replace('/', '-') || null,
         name: $(element).find('h3.film-name').text().trim() || null,
         posterImage: $(element).find('img.film-poster-img').attr('src') || null,
-        quality: $(element).find('div.pick.film-poster-quality').text().trim() || null,
+        // quality: $(element).find('div.pick.film-poster-quality').text().trim() || null,
         type,
       };
 
@@ -245,7 +271,7 @@ export class HiMovies extends BaseClass {
         items.push({
           ...baseData,
           type: 'Movie',
-          releaseDate: $(element).find('div.film-infor > span:first').text().trim() || null,
+          releaseDate: Number($(element).find('div.film-infor > span:first').text().trim()) || null,
           duration: $(element).find('div.film-infor > span').eq(1).text().trim() || null,
         } as IMovie);
       } else if (type === 'TV') {
@@ -331,30 +357,32 @@ export class HiMovies extends BaseClass {
     const mediaInfo: IMovieInfo = {
       id: id,
       name: $('h2.heading-name > a').text().trim() || null,
-      posterImage: $('div.film-poster.mb-2 > img.film-poster-img').attr('src') || null,
+      posterImage:
+        $('div.w_b-cover')
+          .attr('style')
+          ?.match(/url\(["']?(.*?)["']?\)/)?.[1] || null,
       type: type || null,
-      quality: $('span.item.mr-1 > button.btn.btn-sm.btn-quality > strong').text().trim() || null,
-      releaseDate: $('.row-line:has(strong:contains("Released:"))').text().replace('Released:', '').trim() || null,
+      quality: $('div.stats button.btn.btn-sm.btn-quality').text().trim() || null,
+      releaseDate: $('.row-line:has(span:contains("Released:"))').text().replace('Released:', '').trim() || null,
       genre:
-        $('.row-line:has(strong:contains("Genre:")) a')
+        $('.row-line:has(span:contains("Genre:")) a')
           .map((i, el) => $(el).text().split('&'))
           .get()
           .map(v => v.trim()) || null,
 
       casts:
-        $('.row-line:has(strong:contains("Casts:")) a')
+        $('.row-line:has(span:contains("Casts:")) a')
           .map((i, el) => $(el).text().trim())
           .get() || null,
-      duration:
-        $('.row-line:has(strong:contains("Duration:"))').text().replace('Duration:', '').replace(/\s+/g, ' ').trim() || null,
-      score: Number($('span.item.mr-2 > button.btn.btn-sm.btn-imdb').text().replace('IMDB:', '').trim()) || null,
+      duration: $('div.stats span.item.mr-3').eq(2).text().trim() || null,
+      score: Number($('div.stats span.item.mr-3').eq(1).text().trim()) || null,
       country:
-        $('.row-line:has(strong:contains("Country:")) a')
+        $('.row-line:has(span:contains("Country:")) a')
           .map((i, el) => $(el).text().trim())
           .get() || null,
 
       production:
-        $('.row-line:has(strong:contains("Production:"))')
+        $('.row-line:has(span:contains("Production:"))')
           .text()
           .replace('Production:', '')
           .replace(/\s+/g, ' ')
@@ -379,6 +407,18 @@ export class HiMovies extends BaseClass {
       })
       .get();
   }
+  private buildAjaxUrl(id: string, kind: 'movie-server' | 'tv-server' | 'tv' | 'season'): string {
+    switch (kind) {
+      case 'movie-server':
+        return `${this.baseUrl}/ajax/episode/list/${id}`;
+      case 'tv-server':
+        return `${this.baseUrl}/ajax/episode/servers/${id}`;
+      case 'tv':
+        return `${this.baseUrl}/ajax/season/episodes/${id}`; // fetch episodes per season
+      case 'season':
+        return `${this.baseUrl}/ajax/season/list/${id}`; ///fetches season list
+    }
+  }
 
   private parseEpisodes($: cheerio.CheerioAPI, seasonNumber: number, media: string) {
     return $('.nav > li')
@@ -400,15 +440,16 @@ export class HiMovies extends BaseClass {
   private parseServers($: cheerio.CheerioAPI) {
     const servers: IMovieServers[] = [];
     $('ul.nav > li.nav-item').each((_, element) => {
+      //check for tv fallback to movie
+      const serverId = $(element).find('a').attr('data-id');
       servers.push({
-        serverId: $(element).find('a').attr('data-id') || null,
+        serverId: serverId ? serverId : $(element).find('a').attr('data-linkid') || null,
         serverName: $(element).find('a').text().trim().toLowerCase() || null,
       });
     });
     return servers;
   }
-
-  private findServerId(servers: IMovieServers[], server: 'upcloud' | 'megacloud' | 'akcloud'): string {
+  private findServerId(servers: IMovieServers[], server: 'upcloud' | 'vidcloud' | 'akcloud'): string {
     const availableServers = servers.map(s => s.serverName || 'unknown');
     const serverIndex = servers.findIndex(s => (s.serverName || '').toLowerCase() === server.toLowerCase());
 
@@ -457,17 +498,20 @@ export class HiMovies extends BaseClass {
       };
     }
   }
-
   /**
-   * Fetches curated lists from the Himovies homepage.
+   * Fetches curated lists from the FlixHq homepage.
    * @returns Promise resolving to an object with various curated media lists
    */
   async fetchHome(): Promise<IHomeHIResponse<IMovieOrTv[] | []>> {
     try {
       const response = await this.client.get(`${this.baseUrl}/home`);
+      if (!response.data) {
+        throw new Error(response.statusText);
+      }
       return this.parseHome(cheerio.load(response.data));
     } catch (error) {
       return {
+        featured: [],
         trending: {
           Movies: [],
           Tv: [],
@@ -481,6 +525,7 @@ export class HiMovies extends BaseClass {
       };
     }
   }
+
   /**
    * Searches for media based on the provided query string.
    * @param {string} query - The search query string (required).
@@ -524,6 +569,7 @@ export class HiMovies extends BaseClass {
       };
     }
   }
+
   /**
    * Performs an advanced search with filters.
    * @param {'all' | 'movie' | 'tv'} [type] - The media type filter (required).
@@ -654,19 +700,6 @@ export class HiMovies extends BaseClass {
     const value = this.getMappedValue(country, HIMovieCountryCode);
 
     return await this.fetchPaginated(`/country/${value}`, page);
-  }
-
-  private buildAjaxUrl(id: string, kind: 'movie-server' | 'tv-server' | 'tv' | 'season'): string {
-    switch (kind) {
-      case 'movie-server':
-        return `${this.baseUrl}/ajax/episode/list/${id}`;
-      case 'tv-server':
-        return `${this.baseUrl}/ajax/episode/servers/${id}`;
-      case 'tv':
-        return `${this.baseUrl}/ajax/season/episodes/${id}`; // fetch episodes per season
-      case 'season':
-        return `${this.baseUrl}/ajax/season/list/${id}`; ///fetches season list
-    }
   }
 
   /**
@@ -808,23 +841,23 @@ export class HiMovies extends BaseClass {
    */
   async fetchSources(
     episodeId: string,
-    server: 'upcloud' | 'megacloud' | 'akcloud' = 'megacloud',
+    server: 'upcloud' | 'vidcloud' | 'akcloud' = 'vidcloud',
   ): Promise<IVideoSourceResponse<IVideoSource | null>> {
     if (episodeId.includes('https')) {
       const serverUrl = new URL(episodeId);
 
       switch (server) {
         case 'akcloud':
-        case 'megacloud':
+        case 'vidcloud':
         case 'upcloud':
           return {
             headers: { Referer: `${serverUrl.origin}/` },
-            data: await new VideoStream().extract(serverUrl, `${this.baseUrl}/`),
+            data: await new VidCloud().extract(serverUrl, `${this.baseUrl}/`),
           };
         default:
           return {
             headers: { Referer: `${serverUrl.origin}/` },
-            data: await new VideoStream().extract(serverUrl, `${this.baseUrl}/`),
+            data: await new VidCloud().extract(serverUrl, `${this.baseUrl}/`),
           };
       }
     }
