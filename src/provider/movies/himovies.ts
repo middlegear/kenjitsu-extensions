@@ -21,6 +21,9 @@ import {
 import VideoStream from '../../source-extractors/videostream.js';
 import { BaseClass } from '../../models/base-anime.js';
 
+/** A scraper and API wrapper for the unofficial HiMovies website,
+ * providing methods to fetch and parse movies, TV shows, and related data. */
+
 export class HiMovies extends BaseClass {
   private readonly baseUrl = 'https://himovies.sx';
   constructor() {

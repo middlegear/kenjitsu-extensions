@@ -22,6 +22,9 @@ import {
 } from '../../models/types.js';
 import VidCloud from '../../source-extractors/vidcloud.js';
 
+/** A scraper and API wrapper for the unofficial FlixHQ website,
+ * providing methods to fetch and parse movies, TV shows, and related data. */
+
 export class FlixHQ extends BaseClass {
   private readonly baseUrl: string = 'https://flixhq.to';
   constructor() {
