@@ -356,9 +356,7 @@ export abstract class Meta {
   protected async fetchZoroSources(episodeId: string, server: HiAnimeServers = 'hd-2', category: ISubOrDub = 'sub') {
     try {
       const result = await this.hianime.fetchSources(episodeId, server, category);
-      if ('error' in result) {
-        throw new Error(result.error);
-      }
+
       return result;
     } catch (error) {
       throw new Error(error instanceof Error ? error.message : String(error));
@@ -444,10 +442,7 @@ export abstract class Meta {
   protected async fetchAllAnimeSources(episodeId: string, category: ISubOrDub = 'sub') {
     try {
       const result = await this.allanime.fetchSources(episodeId, category);
-
-      if ('error' in result) {
-        throw new Error(result.error as string);
-      }
+      return result;
     } catch (error) {
       throw new Error(error instanceof Error ? error.message : String(error));
     }
@@ -496,9 +491,7 @@ export abstract class Meta {
     try {
       const result = await this.animepahe.fetchSources(episodeId, category);
 
-      if ('error' in result) {
-        throw new Error(result.error);
-      }
+      return result;
     } catch (error) {
       throw new Error(error instanceof Error ? error.message : String(error));
     }
