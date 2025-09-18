@@ -1,29 +1,51 @@
 import { FetchClient } from '../config/client.js';
 import { HiAnime } from '../provider/anime/hianime.js';
-import { findBestMatch } from '../utils/string-similarity.js';
-import type { HiAnimeServers, ISubOrDub, IMovieProviderResults, ITitle } from './types.js';
+import { compareTwoStrings, findBestMatch } from '../utils/string-similarity.js';
+import type { HiAnimeServers, ISubOrDub, IMovieProviderResults, IMetaData } from './types.js';
 import { FlixHQ } from '../provider/movies/flixhq.js';
 import { AllAnime } from '../provider/anime/allanime.js';
+import { Animepahe } from '../main.js';
 
 type AnimeSearchResults = {
   id: string;
   name: string;
-  romaji: string;
+  romaji?: string; // pahe lacks this
   provider: string;
+  type?: string;
   native?: string;
-  episodes?: {
-    sub: number;
-    dub: number;
-  };
+  season?: string;
+  totalEpisodes?: number;
+  releaseDate?: number;
 };
 
-// Union type for the generic parameter
+export interface IMediaTitle {
+  name: string | null;
+  // TV-specific
+  seasons?: number | null;
+  totalEpisodes?: number | null;
+  // Movie-specific
+  releaseDate?: string | null;
+  runtime?: number | null;
+}
+
+export interface MediaSearchResults {
+  id: string;
+  name: string | null;
+  // TV-specific
+  seasons?: number | null;
+  totalEpisodes?: number | null;
+  // Movie-specific
+  releaseYear?: number | null;
+  runtime?: number | null;
+  provider: string | null;
+}
 
 export abstract class Meta {
   protected readonly client: FetchClient;
   protected readonly hianime: HiAnime;
   protected readonly flixhq: FlixHQ;
   protected readonly allanime: AllAnime;
+  protected readonly animepahe: Animepahe;
 
   protected constructor() {
     this.client = new FetchClient();
@@ -31,6 +53,7 @@ export abstract class Meta {
     this.hianime = new HiAnime();
     this.flixhq = new FlixHQ();
     this.allanime = new AllAnime();
+    this.animepahe = new Animepahe();
   }
 
   // ------------------------
@@ -45,85 +68,256 @@ export abstract class Meta {
       .replace(/^-+|-+$/g, '');
   }
 
-  protected mapMovies(title: string, results: IMovieProviderResults[]) {
-    if (!results.length) return null;
-
-    const normalizedResults = results.map(item => ({
-      ...item,
-      _title: item.title,
-      _id: item.id,
-    }));
-
-    const findTitle = findBestMatch(
-      title,
-      normalizedResults.map(r => r._title),
-    );
-    const findId = findBestMatch(
-      title,
-      normalizedResults.map(r => r._id),
-    );
-
-    const bestOverallMatch = findTitle.bestMatch.rating >= findId.bestMatch.rating ? findTitle.bestMatch : findId.bestMatch;
-
-    if (bestOverallMatch.rating === 0) {
-      return [];
-    }
-
-    const matches = normalizedResults.filter(r => {
-      const isTitleMatch = r._title === bestOverallMatch.target && findTitle.bestMatch.rating === bestOverallMatch.rating;
-      const isIdMatch = r._id === bestOverallMatch.target && findId.bestMatch.rating === bestOverallMatch.rating;
-      return isTitleMatch || isIdMatch;
-    });
-
-    if (matches.length > 0) {
-      return matches.map(match => ({
-        id: match.id || null,
-        title: match.title || null,
-        quality: match.quality || null,
-        releaseDate: match.releaseDate || null,
-        score: bestOverallMatch.rating,
-      }));
-    } else {
+  protected mapAnimeId(
+    metadata: IMetaData | null,
+    results: AnimeSearchResults[] | null,
+    provider: 'pahe' | 'allanime' | 'hianime',
+  ) {
+    if (!results || results.length === 0 || !metadata) {
       return null;
     }
-  }
 
-  protected mapAnimeId(title: ITitle, results: AnimeSearchResults[]) {
-    if (!results.length) return null;
+    let bestMatch: AnimeSearchResults | null = null;
+    let bestScore = 0;
 
-    const normalizedResults = results.map(item => ({
-      ...item,
-      _name: item.name,
-      _romaji: item.romaji,
-    }));
+    for (const r of results) {
+      let totalScore = 0;
+      let compared = 0;
 
-    const englishMatch = findBestMatch(
-      title.english,
-      normalizedResults.map(r => r._name),
-    );
+      // Compare English if both present
+      if (metadata.english && r.name) {
+        totalScore += compareTwoStrings(metadata.english, r.name);
+        compared++;
+      }
 
-    const romajiMatch = findBestMatch(
-      title.romaji,
-      normalizedResults.map(r => r._romaji),
-    );
+      // Compare Romaji if both present
+      if (metadata.romaji && r.romaji) {
+        totalScore += compareTwoStrings(metadata.romaji, r.romaji);
+        compared++;
+      }
 
-    const best =
-      englishMatch.bestMatch.rating >= romajiMatch.bestMatch.rating ? englishMatch.bestMatch : romajiMatch.bestMatch;
+      // Compare Native if both present
+      if (metadata.native && r.native) {
+        totalScore += compareTwoStrings(metadata.native, r.native);
+        compared++;
+      }
 
-    const match = normalizedResults.find(r => r._name === best.target || r._romaji === best.target);
+      // Compare type if both present
+      if (metadata.type && r.type) {
+        totalScore += compareTwoStrings(metadata.type, r.type);
+        compared++;
+      }
 
-    return match
-      ? {
-          id: match.id,
-          name: match.name || null,
-          romaji: match.romaji || null,
-          provider: match.provider || null,
-          episodes: match.episodes || null,
-          score: best.rating,
+      // /// Additionally compare the id
+      if (provider !== 'pahe' && provider !== 'allanime') {
+        if (metadata.english && r.id) {
+          totalScore += compareTwoStrings(metadata.english, r.id);
+          compared++;
         }
-      : null;
+      }
+
+      if (metadata.season && r.season) {
+        totalScore += compareTwoStrings(metadata.season, r.season);
+        compared++;
+      }
+
+      if (metadata.episodes && r.totalEpisodes) {
+        const episodeDiff = Math.abs(Number(metadata.episodes) - Number(r.totalEpisodes));
+
+        const episodeMatch = Math.max(0, 1 - episodeDiff / Math.max(Number(metadata.episodes), Number(r.totalEpisodes)));
+        totalScore += episodeMatch;
+
+        compared++;
+      }
+
+      if (metadata.year && r.releaseDate) {
+        const yearDiff = Math.abs(metadata.year - Number(r.releaseDate));
+        let yearMatch: number;
+
+        if (yearDiff === 0) {
+          yearMatch = 1.0;
+        } else if (yearDiff === 1) {
+          yearMatch = 0.8;
+        } else if (yearDiff === 2) {
+          yearMatch = 0.5;
+        } else {
+          yearMatch = 0.2;
+        }
+
+        totalScore += yearMatch;
+        compared++;
+      }
+      // Skip if nothing was compared
+      if (compared === 0) continue;
+
+      const avgScore = totalScore / compared;
+
+      if (avgScore > bestScore) {
+        bestScore = avgScore;
+        bestMatch = r;
+      }
+    }
+
+    if (!bestMatch) {
+      return null;
+    }
+
+    return {
+      id: bestMatch.id,
+      name: bestMatch.name || null,
+      romaji: bestMatch.romaji || null,
+      provider: bestMatch.provider || null,
+      score: bestScore,
+    };
   }
 
+  protected mapMediaId(
+    title: IMediaTitle | null,
+    results: MediaSearchResults[] | null,
+    mediaType: 'TV' | 'Movie',
+  ): IMovieProviderResults | null {
+    if (!results || results.length === 0 || !title) {
+      return null;
+    }
+
+    let bestMatch: MediaSearchResults | null = null;
+    let bestScore = 0;
+
+    // Extract year from full date for movies
+    const titleYear = mediaType === 'Movie' && title.releaseDate ? this.extractYear(title.releaseDate) : null;
+
+    for (const r of results) {
+      let totalScore = 0;
+      let weightSum = 0;
+      let compared = 0;
+
+      // Title comparison (60% weight for both types)
+      if (title.name && r.name) {
+        const titleSimilarity = compareTwoStrings(title.name, r.name);
+        totalScore += titleSimilarity * 0.6;
+        weightSum += 0.6;
+        compared++;
+      }
+
+      // Type-specific comparisons
+      if (mediaType === 'TV') {
+        // TV: Seasons comparison (25% weight)
+        if (title.seasons !== null && r.seasons !== null) {
+          const seasonDiff = Math.abs(Number(title.seasons) - Number(r.seasons));
+          const seasonMatch = Math.max(0, 1 - seasonDiff / Math.max(Number(title.seasons), Number(r.seasons)));
+          totalScore += seasonMatch * 0.25;
+          weightSum += 0.25;
+          compared++;
+        }
+
+        // TV: Total episodes comparison (15% weight)
+        if (title.totalEpisodes !== null && r.totalEpisodes !== null) {
+          const episodeDiff = Math.abs(Number(title.totalEpisodes) - Number(r.totalEpisodes));
+
+          const episodeMatch = Math.max(0, 1 - episodeDiff / Math.max(Number(title.totalEpisodes), Number(r.totalEpisodes)));
+
+          totalScore += episodeMatch * 0.15;
+          weightSum += 0.15;
+          compared++;
+        }
+      } else if (mediaType === 'Movie') {
+        // Movie: Year comparison (25% weight)
+        if (titleYear !== null && r.releaseYear !== null) {
+          const yearDiff = Math.abs(titleYear - Number(r.releaseYear));
+          let yearMatch: number;
+
+          if (yearDiff === 0) {
+            yearMatch = 1.0;
+          } else if (yearDiff === 1) {
+            yearMatch = 0.8;
+          } else if (yearDiff === 2) {
+            yearMatch = 0.5;
+          } else {
+            yearMatch = 0.2;
+          }
+
+          totalScore += yearMatch * 0.25;
+          weightSum += 0.25;
+          compared++;
+        }
+
+        // Movie: Runtime comparison (15% weight)
+        if (title.runtime !== null && r.runtime !== null) {
+          const runtimeDiff = Math.abs(Number(title.runtime) - Number(r.runtime));
+          let runtimeMatch: number;
+
+          if (runtimeDiff <= 10) {
+            runtimeMatch = 1.0;
+          } else if (runtimeDiff <= 30) {
+            runtimeMatch = 0.7;
+          } else if (runtimeDiff <= 60) {
+            runtimeMatch = 0.4;
+          } else {
+            runtimeMatch = 0.1;
+          }
+
+          totalScore += runtimeMatch * 0.15;
+          weightSum += 0.15;
+          compared++;
+        }
+      }
+
+      if (compared === 0) continue;
+
+      const weightedAvgScore = totalScore / weightSum;
+
+      if (weightedAvgScore > bestScore) {
+        bestScore = weightedAvgScore;
+        bestMatch = r;
+      }
+    }
+
+    if (!bestMatch || bestScore < 0.3) {
+      return null;
+    }
+
+    const result: IMovieProviderResults = {
+      id: bestMatch.id,
+      name: bestMatch.name || null,
+    };
+
+    // Add type-specific fields
+    if (mediaType === 'TV') {
+      result.seasons = bestMatch.seasons || null;
+      result.totalEpisodes = bestMatch.totalEpisodes || null;
+      result.provider = bestMatch.provider || null;
+      result.score = bestScore;
+    } else {
+      result.releaseYear = bestMatch.releaseYear || null;
+      result.runtime = bestMatch.runtime || null;
+      result.provider = bestMatch.provider || null;
+      result.score = bestScore;
+    }
+
+    return result;
+  }
+
+  /**
+   * Extract year from ISO date string (YYYY-MM-DD format)
+   * Handles both full dates and partial years
+   * @param dateString - Full date like "2018-10-16" or just "2018"
+   * @returns Year as number or null if invalid
+   */
+  private extractYear(dateString: string | null): number | null {
+    if (!dateString) return null;
+
+    // Handle full ISO dates (YYYY-MM-DD) or just years (YYYY)
+    const yearMatch = dateString.match(/^(\d{4})/);
+    if (yearMatch) {
+      const year = parseInt(yearMatch[1], 10);
+
+      if (year >= 1900 && year <= 2050) {
+        return year;
+      }
+    }
+
+    return null;
+  }
   // ------------------------
   // HiAnime integration
   // ------------------------
@@ -135,7 +329,8 @@ export abstract class Meta {
           id: item.id,
           name: item.name,
           romaji: item.romaji,
-          episodes: item.episodes,
+          totalEpisodes: item.totalEpisodes,
+          type: item.type,
           provider: 'hianime',
         })) || []
       );
@@ -181,9 +376,10 @@ export abstract class Meta {
         .filter((item: any) => item.type === 'TV')
         .map((item: any) => ({
           id: item.id,
-          title: item.name,
+          name: item.name,
           seasons: item.seasons,
-          quality: item.quality,
+          totalEpisodes: item.totalEpisodes,
+          provider: 'flixhq and himovies',
         }));
     } catch (error) {
       throw new Error(error instanceof Error ? error.message : String(error));
@@ -198,9 +394,10 @@ export abstract class Meta {
         .filter((item: any) => item.type === 'Movie')
         .map((item: any) => ({
           id: item.id,
-          title: item.name,
-          releaseDate: item.releaseDate,
-          quality: item.quality,
+          name: item.name,
+          releaseDate: (item.releaseDate as number) || null,
+          duration: (item.duration.replace(/\D/g, '') as number) || null,
+          provider: 'flixhq and himovies',
         }));
     } catch (error) {
       throw new Error(error instanceof Error ? error.message : String(error));
@@ -248,7 +445,60 @@ export abstract class Meta {
     try {
       const result = await this.allanime.fetchSources(episodeId, category);
 
-      return result;
+      if ('error' in result) {
+        throw new Error(result.error as string);
+      }
+    } catch (error) {
+      throw new Error(error instanceof Error ? error.message : String(error));
+    }
+  }
+  // ------------------------
+  // Animepahe
+  // ------------------------
+  protected async searchPahe(title: string) {
+    try {
+      const result = await this.animepahe.search(title);
+
+      return (
+        result.data?.map((item: any) => ({
+          id: item.id,
+          name: item.name,
+          releaseDate: item.releaseDate,
+          type: item.type,
+          season: item.season,
+          totalEpisodes: item.totalEpisodes,
+          provider: 'animepahe',
+        })) || []
+      );
+    } catch (error) {
+      throw new Error(error instanceof Error ? error.message : String(error));
+    }
+  }
+  protected async fetchPaheEpisodes(title: string) {
+    try {
+      const result = await this.animepahe.fetchEpisodes(title);
+      ////a bit repetitive idk why will refactor
+      return (
+        result.data?.map((item: any) => ({
+          episodeId: item.episodeId,
+          episodeNumber: item.episodeNumber,
+          title: item.title,
+          thumbnail: item.thumbnail,
+          provider: 'animepahe',
+        })) || []
+      );
+    } catch (error) {
+      throw new Error(error instanceof Error ? error.message : String(error));
+    }
+  }
+
+  protected async fetchPaheSouces(episodeId: string, category: 'sub' | 'dub' | 'raw') {
+    try {
+      const result = await this.animepahe.fetchSources(episodeId, category);
+
+      if ('error' in result) {
+        throw new Error(result.error);
+      }
     } catch (error) {
       throw new Error(error instanceof Error ? error.message : String(error));
     }
@@ -298,7 +548,7 @@ export abstract class Meta {
           airDate: episode.airDate || episode.airdate,
           runtime: episode.runtime || episode.length,
           overview: episode.overview || episode.summary,
-          image: episode.image || 'No image available',
+          image: episode.image || null,
           rating: episode.rating || null,
           aired: true,
         };
@@ -322,29 +572,29 @@ export abstract class Meta {
   }
 
   protected mergeEpisodeData(providerEp: any, aniZipEp?: any) {
-    const episodeNumber = aniZipEp?.episodeAnizipNumber ?? providerEp?.episodeNumber ?? null;
-    const rating = aniZipEp?.rating ?? null;
-    const aired = aniZipEp?.aired ?? null;
-    const episodeId = providerEp?.episodeId ?? null;
-    const title = aniZipEp?.title?.english ?? aniZipEp?.title?.romanizedJapanese ?? null;
-    const overview = aniZipEp?.overview ?? null;
-    const thumbnail = aniZipEp?.image ?? null;
-    const provider = providerEp?.provider ?? null;
+    const episodeNumber = providerEp?.episodeNumber || aniZipEp?.episodeAnizipNumber || null;
+    const rating = aniZipEp?.rating || null;
+    const aired = aniZipEp?.aired || null;
+    const episodeId = providerEp?.episodeId || null;
+    const title = aniZipEp?.title?.english || aniZipEp?.title?.romanizedJapanese || providerEp.title || null;
+    const overview = aniZipEp?.overview || null;
+    const thumbnail = aniZipEp?.image || providerEp.thumbnail || null;
+    const provider = providerEp?.provider || null;
     const hasDub = providerEp.hasDub || null;
     const hasSub = providerEp.hasDub || null;
     // const hasRaw = providerEp.hasDub || null; disabled since i cant fetch raw sources from allanime
 
     return {
       episodeNumber,
-      rating,
-      aired,
       episodeId,
       title,
+      rating,
+      aired,
       overview,
       thumbnail,
       provider,
-      hasDub,
-      hasSub,
+      // hasDub,
+      // hasSub,
       // hasRaw,
     };
   }

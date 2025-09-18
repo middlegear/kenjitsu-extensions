@@ -1,4 +1,4 @@
-import { Meta } from '../../models/base-meta.js';
+import { Meta, type IMediaTitle } from '../../models/base-meta.js';
 import type {
   IAnimePaginated,
   IMetaInfoResponse,
@@ -466,6 +466,7 @@ export class TheMovieDatabase extends Meta {
           api_key: this.apiKey,
         },
       });
+
       if (!response.data) return { error: response.statusText, data: null };
       const data = {
         tmdbId: response.data.id || null,
@@ -488,6 +489,7 @@ export class TheMovieDatabase extends Meta {
         rating: response.data.vote_average || null,
         genres: response.data.genres || null,
         budget: response.data.budget || null,
+        runtime: (response.data.runtime as number) || null,
         collection: response.data.belongs_to_collection
           ? {
               id: response.data.belongs_to_collection.id,
@@ -610,16 +612,21 @@ export class TheMovieDatabase extends Meta {
     try {
       const tvShowData = await this.fetchShowInfo(tmdbId);
       const title = tvShowData.data?.name;
-
+      const tmdbdata: IMediaTitle = {
+        name: title as string,
+        seasons: tvShowData.data?.latestEpisode?.season,
+        totalEpisodes: tvShowData.data?.latestEpisode?.episodeNumber,
+      };
+      // 79744
       const titleSlug = this.createSlug(title as string);
       const flixResults = await this.searchFlixTv(titleSlug);
 
       return {
         data: tvShowData.data,
-        provider: this.mapMovies(title as string, flixResults) as IMovieProviderResults[],
+        provider: this.mapMediaId(tmdbdata, flixResults, 'TV') as IMovieProviderResults,
       };
     } catch (error) {
-      return { error: error instanceof Error ? error.message : 'Unknown error', data: null, provider: [] };
+      return { error: error instanceof Error ? error.message : 'Unknown error', data: null, provider: null };
     }
   }
 
@@ -634,15 +641,20 @@ export class TheMovieDatabase extends Meta {
       const movieData = await this.fetchMovieInfo(tmdbId);
       const title = movieData.data?.name;
       const titleSlug = this.createSlug(title as string);
-
+      const tmdbdata: IMediaTitle = {
+        name: title as string,
+        releaseDate: movieData.data?.releaseDate,
+        runtime: movieData.data?.runtime,
+      };
+      // 68721
       const flixResults = await this.searchFlixMovies(titleSlug);
 
       return {
         data: movieData.data,
-        provider: this.mapMovies(title as string, flixResults) as IMovieProviderResults[],
+        provider: this.mapMediaId(tmdbdata, flixResults, 'Movie') as IMovieProviderResults,
       };
     } catch (error) {
-      return { error: error instanceof Error ? error.message : 'Unknown error', data: null, provider: [] };
+      return { error: error instanceof Error ? error.message : 'Unknown error', data: null, provider: null };
     }
   }
 }

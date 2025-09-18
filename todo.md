@@ -1,23 +1,4 @@
 
-
-// const flixhq = new FlixHQ();
-// const data = await flixhq.fetchMediaInfo('tv-watch-the-boys-33895');
-// const data = await flixhq.fetchMediaInfo('movie-watch-bad-boys-ride-or-die-109831');
-// const data = await flixhq.fetchMediaServers('movie-109831');
-// const data = await flixhq.fetchSources('episode-1019968');
-// console.log(JSON.stringify(data.data?.sources));
-
-
-
-
-// const hianime = new HiAnime();
-// const data = await hianime.fetchSources('solo-leveling-18718-episode-119497', HiAnimeServers.HD2, SubOrDub.DUB);
-
-// console.log(JSON.stringify(data));
-// console.log(data.data?.sources);
-
-
-
 Hianime
 1. build out airing schedule.
 2. Filters for search(new method advanced search)
@@ -34,12 +15,32 @@ Animekai
 4. schedule
 
 
-FlixHq 
-1. Scrape new sections to match himovies
 
-Tmdb 
-1. Since mapping flixhq isnt accurate  ill temporarily remove it until a solution is implemented
-2. Mapping will be filtered by type then ill need more parameters 
+Tmdb  mapping
+1. filter by type(flixhq and himovies)
+2. For tv i can use seasons and total episodes and compare the fields to tmdb
+3. for movies i can use releasedate(tmdb and flix) with runtime if present
+
+
+
+TESTS
+
+3. add tests for all anime and animepahe
+
+
+IMPROVEMENTS 
+1. Add a way to initialize the domain name without changing and republshing
+2. Animepahe airing url 
+https://animepahe.si/api?m=airing&page=1
+
+
+Critical bugs to fix 
+1. The case of chinese anime like super cube and the lord of mysteries edge cases  in animepahe
+
+
+
+
+
 
 New Sites
 1. Kickass anime
@@ -48,13 +49,3 @@ New Sites
 7. https://projectfreetv.sx/
 8. https://www.downloads-anymovies.co/
 https://rentry.co/sflix#yflix-clones
-
-
-
-
-TESTS
-1. add tests for himovies 
-2. update tests for animekai and flixhq
-3. add tests for all anime and animepahe
-
-

@@ -5,10 +5,15 @@ export interface IBaseAnime {
   native?: string | null;
   posterImage: string | null;
 }
-export interface ITitle {
+export interface IMetaData {
   native?: string;
   english: string;
   romaji: string;
+  ///added for animepahe
+  type: string;
+  season: string;
+  year: number;
+  episodes: number;
 }
 export type IAnimeCategory = 'MOVIE' | 'TV' | 'ONA' | 'OVA' | 'SPECIALS';
 export interface IAnime extends IBaseAnime {
@@ -24,6 +29,18 @@ export interface IAnime extends IBaseAnime {
   releaseDate?: string | null;
   spotlight?: string | null;
   quality?: string | null;
+}
+
+export interface IPaheAnime {
+  id: string | null;
+  name: string | null;
+  romaji: string | null;
+  posterImage: string | null;
+  score: number | null;
+  type: string | null;
+  releaseDate: number | null;
+  season: string | null;
+  totalEpisodes: number | null;
 }
 export interface ISearchSuggestions extends IBaseAnime {
   releaseDate: string | null;
@@ -429,6 +446,7 @@ export interface IMetaMovie {
   };
   country?: string;
   language: string;
+  runtime?: number;
   releaseDate: string;
   summary: string;
   genres: string;
@@ -498,13 +516,18 @@ export interface IMetaMovieEpisodes {
 
 export interface IMovieProviderResults {
   id: string;
-  title: string;
-  seasons?: number;
-  releaseDate?: number;
-  quality: string;
+  name: string | null;
+  // TV-specific
+  seasons?: number | null;
+  totalEpisodes?: number | null;
+  // Movie-specific
+  releaseYear?: number | null;
+  runtime?: number | null;
+  provider?: string | null;
+  score?: number;
 }
 export interface IMetaMovieIdResponse<T> extends IResponse<T> {
-  provider: IMovieProviderResults[] | [];
+  provider: IMovieProviderResults | null;
 }
 
 ///// Movies and Tv

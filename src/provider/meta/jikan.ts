@@ -7,12 +7,12 @@ import type {
   JSort,
   IMetaEpisodes,
   IMetaProviderIdResponse,
-  ITitle,
   IMetaProviderEpisodesResponse,
   Seasons,
   ISubOrDub,
   HiAnimeServers,
   IMetaFormat,
+  IMetaData,
 } from '../../models/types.js';
 
 /**
@@ -140,15 +140,41 @@ export class Jikan extends Meta {
     }
     try {
       const mal = await this.fetchInfo(malId);
-      const titles = mal.data?.title as ITitle;
-      const userPref = titles?.english || titles?.romaji || titles?.native;
-      const titleSlug = this.createSlug(userPref as string);
 
-      const zoroResults = await this.searchZoro(titleSlug);
+      let titles: string | null = null;
+      let release: string | null = null;
+
+      if (mal.data) {
+        titles = mal.data.title.english || mal.data.title.romaji || mal.data.title.native || null;
+        release = mal.data.releaseDate;
+      }
+
+      const year = release ? new Date(release).getFullYear() : null;
+
+      const titleSlug = titles ? this.createSlug(titles) : null;
+
+      let malData: IMetaData | null = null;
+
+      if (mal.data) {
+        malData = {
+          english: mal.data.title.english,
+          romaji: mal.data.title.romaji,
+          native: mal.data.title.native,
+          type: mal.data.format,
+          episodes: mal.data.episodes,
+          season: mal.data.season,
+          year: year as number,
+        };
+      }
+
+      let zoroResults = null;
+      if (titleSlug) {
+        zoroResults = await this.searchZoro(titleSlug);
+      }
 
       return {
         data: mal.data,
-        provider: this.mapAnimeId(titles, zoroResults),
+        provider: this.mapAnimeId(malData, zoroResults, 'hianime'),
       };
     } catch (error) {
       return {
@@ -169,20 +195,153 @@ export class Jikan extends Meta {
     }
     try {
       const mal = await this.fetchInfo(malId);
-      const titles = mal.data?.title as ITitle;
-      const userPref = titles?.english || titles?.romaji || titles?.native;
-      const titleSlug = this.createSlug(userPref as string);
-      const allanimeResults = await this.searchAllAnime(titleSlug);
+
+      let titles: string | null = null;
+      let release: string | null = null;
+
+      if (mal.data) {
+        titles = mal.data.title.english || mal.data.title.romaji || mal.data.title.native || null;
+        release = mal.data.releaseDate;
+      }
+
+      const year = release ? new Date(release).getFullYear() : null;
+
+      const titleSlug = titles ? this.createSlug(titles) : null;
+
+      let malData: IMetaData | null = null;
+
+      if (mal.data) {
+        malData = {
+          english: mal.data.title.english,
+          romaji: mal.data.title.romaji,
+          native: mal.data.title.native,
+          type: mal.data.format,
+          episodes: mal.data.episodes,
+          season: mal.data.season,
+          year: year as number,
+        };
+      }
+
+      let allAnimeResults = null;
+      if (titleSlug) {
+        allAnimeResults = await this.searchAllAnime(titleSlug);
+      }
 
       return {
         data: mal.data,
-        provider: this.mapAnimeId(titles, allanimeResults),
+        provider: this.mapAnimeId(malData, allAnimeResults, 'allanime'),
       };
     } catch (error) {
       return {
         error: error instanceof Error ? error.message : 'Unknown error occurred',
         data: null,
         provider: null,
+      };
+    }
+  }
+  private async fetchAnimepaheProviderId(malId: number): Promise<IMetaProviderIdResponse<IMetaAnime | null>> {
+    if (!malId) {
+      return {
+        error: 'Invalid or missing required parameter: malId!',
+        data: null,
+        provider: null,
+      };
+    }
+    try {
+      const mal = await this.fetchInfo(malId);
+
+      let titles: string | null = null;
+      let release: string | null = null;
+
+      if (mal.data) {
+        titles = mal.data.title.english || mal.data.title.romaji || mal.data.title.native || null;
+        release = mal.data.releaseDate;
+      }
+
+      const year = release ? new Date(release).getFullYear() : null;
+
+      const titleSlug = titles ? this.createSlug(titles) : null;
+
+      let malData: IMetaData | null = null;
+
+      if (mal.data) {
+        malData = {
+          english: mal.data.title.english,
+          romaji: mal.data.title.romaji,
+          native: mal.data.title.native,
+          type: mal.data.format,
+          episodes: mal.data.episodes,
+          season: mal.data.season,
+          year: year as number,
+        };
+      }
+
+      let paheResults = null;
+      if (titleSlug) {
+        paheResults = await this.searchPahe(titleSlug);
+      }
+
+      return {
+        data: mal.data,
+        provider: this.mapAnimeId(malData, paheResults, 'pahe'),
+      };
+    } catch (error) {
+      return {
+        error: error instanceof Error ? error.message : 'Unknown error occurred',
+        data: null,
+        provider: null,
+      };
+    }
+  }
+  private async fetchPaheProviderEpisodes(malId: number): Promise<IMetaProviderEpisodesResponse<IMetaAnime | null>> {
+    if (!malId) {
+      return {
+        error: 'Invalid or missing required parameter: malId!',
+        data: null,
+        providerEpisodes: [],
+      };
+    }
+    try {
+      const initialResponse = await this.fetchAnimepaheProviderId(malId);
+      if (!initialResponse.provider?.id) {
+        return {
+          error: 'Provider not found for given AniList ID.',
+          data: initialResponse.data,
+          providerEpisodes: [],
+        };
+      }
+
+      const [paheResult, anizipResult] = await Promise.allSettled([
+        this.fetchPaheEpisodes(initialResponse.provider?.id as string),
+        this.anilistAnizip(malId),
+      ]);
+
+      if (paheResult.status === 'rejected') {
+        return {
+          error: `Failed to fetch provider episodes: ${paheResult.reason}`,
+          data: initialResponse.data,
+          providerEpisodes: [],
+        };
+      }
+
+      const animepahe = paheResult.value;
+      const anizipEpisodes = anizipResult.status === 'fulfilled' ? anizipResult.value.episodes : [];
+      const aniZipMap = new Map((anizipEpisodes || []).map(item => [item.episodeAnizipNumber, item]));
+
+      const enrichedEpisodes = animepahe.map((episode: any) => {
+        const aniZipEpisode = aniZipMap.get(episode.episodeNumber);
+        return this.mergeEpisodeData(episode, aniZipEpisode);
+      });
+
+      return {
+        data: initialResponse.data,
+        providerEpisodes: enrichedEpisodes,
+      };
+    } catch (error) {
+      return {
+        error: error instanceof Error ? error.message : 'Unknown Err',
+        data: null,
+        providerEpisodes: [],
       };
     }
   }
@@ -310,6 +469,7 @@ export class Jikan extends Meta {
     }
     try {
       const response = await this.client.get(`${this.baseUrl}/anime/${malId}`);
+
       if (!response.data)
         return {
           error: response.statusText || 'Server returned an empty response',
@@ -1171,7 +1331,7 @@ export class Jikan extends Meta {
    */
   async fetchProviderId(
     malId: number,
-    provider: 'allanime' | 'hianime' = 'hianime',
+    provider: 'allanime' | 'hianime' | 'animepahe' = 'hianime',
   ): Promise<IMetaProviderIdResponse<IMetaAnime | null>> {
     if (!malId) {
       return {
@@ -1194,6 +1354,14 @@ export class Jikan extends Meta {
             throw new Error(allanime.error);
           }
           return { data: allanime.data, provider: allanime.provider };
+
+        case 'animepahe':
+          const animepahe = await this.fetchAnimepaheProviderId(malId);
+          if ('error ' in animepahe) {
+            throw new Error(animepahe.error);
+          }
+
+          return { data: animepahe.data, provider: animepahe.provider };
       }
     } catch (error) {
       return {
@@ -1214,7 +1382,7 @@ export class Jikan extends Meta {
 
   async fetchAnimeProviderEpisodes(
     malId: number,
-    provider: 'allanime' | 'hianime' = 'hianime',
+    provider: 'allanime' | 'hianime' | 'animepahe' = 'hianime',
   ): Promise<IMetaProviderEpisodesResponse<IMetaAnime | null>> {
     if (!malId) {
       return {
@@ -1237,6 +1405,12 @@ export class Jikan extends Meta {
             throw new Error(allanime.error);
           }
           return { data: allanime.data, providerEpisodes: allanime.providerEpisodes };
+        case 'animepahe':
+          const animepahe = await this.fetchPaheProviderEpisodes(malId);
+          if ('error ' in animepahe) {
+            throw new Error(animepahe.error);
+          }
+          return { data: animepahe.data, providerEpisodes: animepahe.providerEpisodes };
       }
     } catch (error) {
       return {
@@ -1247,7 +1421,7 @@ export class Jikan extends Meta {
     }
   }
   /**
-   * Fetches video sources for a given episode from multiple servers.
+   * Fetches video sources for a given episode from multiple servers allanime.
    * @param episodeId - The unique ID of the episode to fetch sources forgotten from providerEpisodes array .
    * @param category - The translation category (sub, dub, or raw, default: 'sub').
    * @returns A promise resolving  to an object containing video sources to stream.
@@ -1257,7 +1431,7 @@ export class Jikan extends Meta {
   }
 
   /**
-   * Fetches video sources for a given episodeId.
+   * Fetches video sources for a given episodeId for hianime.
    * @param episodeId - The unique ID of the episode to fetch sources forgotten from providerEpisodes array .
    * @param category - The translation category (sub, dub, or raw, default: 'sub').
    * @param  server - The streaming server to use (optional, defaults to hd-2). Note: hd-1 may return a 403 error due to CORS restrictions; use a proxy or switch to hd-2 or hd-3
@@ -1265,5 +1439,15 @@ export class Jikan extends Meta {
    */
   async fetchHianimeProviderSources(episodeId: string, category: ISubOrDub = 'sub', server: HiAnimeServers = 'hd-2') {
     return await this.fetchZoroSources(episodeId, server, category);
+  }
+
+  /**
+   * Fetches streaming sources for a given anime episode from a specified  category.
+   * @param {string} episodeId - The unique identifier for the episode (required).
+   * @param {ISubOrDub} category  - The audio category (Subtitled or Dubbed) (optional, defaults to SubOrDub.SUB).
+   * @returns  A promise that resolves to an object containing streaming sources, headers,  or an error message.
+   */
+  async fetchAnimePaheProviderSources(episodeId: string, category: ISubOrDub = 'sub') {
+    return await this.fetchPaheSouces(episodeId, category);
   }
 }

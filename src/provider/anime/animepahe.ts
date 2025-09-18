@@ -3,13 +3,13 @@ import type {
   HIServerInfo,
   HISourceResponse,
   ISubOrDub,
-  IAnime,
   IAnimeInfo,
   IAnimePaginated,
   IEpisodes,
   IPaheServersResponse,
   IResponse,
   IVideoSource,
+  IPaheAnime,
 } from '../../models/types.js';
 import * as cheerio from 'cheerio';
 import Kwik from '../../source-extractors/kwik.js';
@@ -69,6 +69,7 @@ export class Animepahe extends BaseClass {
 
   private parseServers($: cheerio.CheerioAPI) {
     const subSelector: cheerio.SelectorType = 'div#resolutionMenu button[data-audio="jpn"]';
+    const chiSelector: cheerio.SelectorType = 'div#resolutionMenu button[data-audio="chi"]';
     const dubSelector: cheerio.SelectorType = 'div#resolutionMenu button[data-audio="eng"]';
     const servers: HIServerInfo = {
       sub: [],
@@ -85,13 +86,22 @@ export class Animepahe extends BaseClass {
     servers.episodeNumber = episode;
     download.episodeNumber = episode;
 
-    $(subSelector).each((_, element) => {
-      servers.sub.push({
-        serverId: $(element).attr('data-src') || null,
-        serverName: $(element).text().trim() || null,
-        mediaId: $(element).attr('data-src')?.split('/').at(-1) || null,
+    // Check which selector actually has elements
+    let selectorToUse =
+      subSelector && $(subSelector).length > 0 ? subSelector : chiSelector && $(chiSelector).length > 0 ? chiSelector : null;
+
+    if (selectorToUse) {
+      $(selectorToUse).each((_, element) => {
+        servers.sub.push({
+          serverId: $(element).attr('data-src') || null,
+          serverName: $(element).text().trim() || null,
+          mediaId: $(element).attr('data-src')?.split('/').at(-1) || null,
+        });
       });
-    });
+
+      // Slice to first 3 sub servers
+      servers.sub = servers.sub.slice(0, 3);
+    }
 
     $(dubSelector).each((_, element) => {
       servers.dub.push({
@@ -101,24 +111,46 @@ export class Animepahe extends BaseClass {
       });
     });
 
+    // Slice to first 3 dub servers
+    servers.dub = servers.dub.slice(0, 3);
+
     /// download servers
-    $('#pickDownload a:not(:has(span.badge-warning))').each((_, element) => {
-      const href = $(element).attr('href') || null;
-      download.sub.push({
-        serverId: href,
+    const chiDownloadSelector: cheerio.SelectorType = '#pickDownload a.dropdown-item:has(span:contains("chi"))';
+    const dubDownloadSelector: cheerio.SelectorType = '#pickDownload a.dropdown-item:has(span:contains("eng"))';
+    const subDownloadSelector: cheerio.SelectorType = '#pickDownload a.dropdown-item:has(span:contains("BD"))';
+    const altSubDownloadSelector: cheerio.SelectorType = '#pickDownload a.dropdown-item';
+
+    let downloadSubSelector;
+    downloadSubSelector =
+      subDownloadSelector && $(subDownloadSelector).length > 0
+        ? subDownloadSelector
+        : chiDownloadSelector && $(chiDownloadSelector).length > 0
+          ? chiDownloadSelector
+          : altSubDownloadSelector;
+
+    if (downloadSubSelector) {
+      $(downloadSubSelector).each((_, element) => {
+        download.sub.push({
+          serverId: $(element).attr('href') || null,
+          serverName: $(element).text().trim() || null,
+          mediaId: $(element).attr('href')?.split('/').at(-1) || null,
+        });
+      });
+
+      // Slice to first 3 download sub servers
+      download.sub = download.sub.slice(0, 3);
+    }
+
+    $(dubDownloadSelector).each((_, element) => {
+      download.dub.push({
+        serverId: $(element).attr('href') || null,
         serverName: $(element).text().trim() || null,
-        mediaId: href ? href.split('/').at(-1) || null : null,
+        mediaId: $(element).attr('href')?.split('/').at(-1) || null,
       });
     });
 
-    $('#pickDownload a:has(span.badge-warning)').each((_, element) => {
-      const href = $(element).attr('href') || null;
-      download.dub.push({
-        serverId: href,
-        serverName: $(element).text().trim() || null,
-        mediaId: href ? href.split('/').at(-1) || null : null,
-      });
-    });
+    // Slice to first 3 download dub servers
+    download.dub = download.dub.slice(0, 3);
 
     return { servers, download };
   }
@@ -165,7 +197,7 @@ export class Animepahe extends BaseClass {
    * @param {string} query - The search query string (required).
    * @returns  A promise that resolves to an object containing an array of anime titles, pagination details, or an error message.
    */
-  async search(query: string): Promise<IAnimePaginated<IAnime[] | []>> {
+  async search(query: string): Promise<IAnimePaginated<IPaheAnime[] | []>> {
     if (!query) {
       throw new Error('Query cannot be empty');
     }
@@ -185,10 +217,12 @@ export class Animepahe extends BaseClass {
           error: response.statusText,
         };
       }
-      const data: IAnime[] = response.data.data.map((item: any) => ({
+      const data: IPaheAnime[] = response.data.data.map((item: any) => ({
         id: item.session,
         name: item.title,
         type: item.type,
+        releaseDate: item.year,
+        season: item.season,
         posterImage: item.poster,
         totalEpisodes: item.episodes,
       }));
@@ -198,7 +232,7 @@ export class Animepahe extends BaseClass {
         perPage: response.data.per_page,
         totalResults: response.data.total,
         lastPage: response.data.last_page,
-        data: data as IAnime[],
+        data: data as IPaheAnime[],
       };
     } catch (error) {
       return {
