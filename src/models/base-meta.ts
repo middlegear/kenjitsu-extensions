@@ -1,6 +1,6 @@
 import { FetchClient } from '../config/client.js';
 import { HiAnime } from '../provider/anime/hianime.js';
-import { compareTwoStrings, findBestMatch } from '../utils/string-similarity.js';
+import { compareTwoStrings } from '../utils/string-similarity.js';
 import type { HiAnimeServers, ISubOrDub, IMovieProviderResults, IMetaData } from './types.js';
 import { FlixHQ } from '../provider/movies/flixhq.js';
 import { AllAnime } from '../provider/anime/allanime.js';
@@ -35,8 +35,8 @@ export interface MediaSearchResults {
   seasons?: number | null;
   totalEpisodes?: number | null;
   // Movie-specific
-  releaseYear?: number | null;
-  runtime?: number | null;
+  releaseDate?: number | null;
+  duration?: number | null;
   provider: string | null;
 }
 
@@ -191,22 +191,22 @@ export abstract class Meta {
       let weightSum = 0;
       let compared = 0;
 
-      // Title comparison (60% weight for both types)
+      // Title comparison (50% weight for both types)
       if (title.name && r.name) {
         const titleSimilarity = compareTwoStrings(title.name, r.name);
-        totalScore += titleSimilarity * 0.6;
-        weightSum += 0.6;
+        totalScore += titleSimilarity * 0.5;
+        weightSum += 0.5;
         compared++;
       }
 
       // Type-specific comparisons
       if (mediaType === 'TV') {
-        // TV: Seasons comparison (25% weight)
+        // TV: Seasons comparison (35% weight)
         if (title.seasons !== null && r.seasons !== null) {
           const seasonDiff = Math.abs(Number(title.seasons) - Number(r.seasons));
           const seasonMatch = Math.max(0, 1 - seasonDiff / Math.max(Number(title.seasons), Number(r.seasons)));
-          totalScore += seasonMatch * 0.25;
-          weightSum += 0.25;
+          totalScore += seasonMatch * 0.35;
+          weightSum += 0.35;
           compared++;
         }
 
@@ -221,9 +221,9 @@ export abstract class Meta {
           compared++;
         }
       } else if (mediaType === 'Movie') {
-        // Movie: Year comparison (25% weight)
-        if (titleYear !== null && r.releaseYear !== null) {
-          const yearDiff = Math.abs(titleYear - Number(r.releaseYear));
+        // Movie: Year comparison (35% weight)
+        if (titleYear !== null && r.releaseDate !== null) {
+          const yearDiff = Math.abs(titleYear - Number(r.releaseDate));
           let yearMatch: number;
 
           if (yearDiff === 0) {
@@ -236,14 +236,14 @@ export abstract class Meta {
             yearMatch = 0.2;
           }
 
-          totalScore += yearMatch * 0.25;
-          weightSum += 0.25;
+          totalScore += yearMatch * 0.35;
+          weightSum += 0.35;
           compared++;
         }
 
         // Movie: Runtime comparison (15% weight)
-        if (title.runtime !== null && r.runtime !== null) {
-          const runtimeDiff = Math.abs(Number(title.runtime) - Number(r.runtime));
+        if (title.runtime !== null && r.duration !== null) {
+          const runtimeDiff = Math.abs(Number(title.runtime) - Number(r.duration));
           let runtimeMatch: number;
 
           if (runtimeDiff <= 10) {
@@ -288,8 +288,8 @@ export abstract class Meta {
       result.provider = bestMatch.provider || null;
       result.score = bestScore;
     } else {
-      result.releaseYear = bestMatch.releaseYear || null;
-      result.runtime = bestMatch.runtime || null;
+      result.releaseDate = bestMatch.releaseDate || null;
+      result.duration = bestMatch.duration + ' ' + 'minutes' || null;
       result.provider = bestMatch.provider || null;
       result.score = bestScore;
     }
@@ -393,8 +393,8 @@ export abstract class Meta {
         .map((item: any) => ({
           id: item.id,
           name: item.name,
-          releaseDate: (item.releaseDate as number) || null,
-          duration: (item.duration.replace(/\D/g, '') as number) || null,
+          releaseDate: item.releaseDate as number,
+          duration: Number(item.duration.replace(/\D/g, '')),
           provider: 'flixhq and himovies',
         }));
     } catch (error) {

@@ -521,8 +521,8 @@ export interface IMovieProviderResults {
   seasons?: number | null;
   totalEpisodes?: number | null;
   // Movie-specific
-  releaseYear?: number | null;
-  runtime?: number | null;
+  releaseDate?: number | null;
+  duration?: number | string | null;
   provider?: string | null;
   score?: number;
 }
