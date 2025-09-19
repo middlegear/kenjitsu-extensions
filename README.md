@@ -1,5 +1,5 @@
 
-**hakai-extensions** is a package that scrapes  anime, movies and TV metadata from popular sources.
+**hakai-extensions** is a package  that scrapes  anime, movies and TV metadata from popular sources.
 
 
 > **Disclaimer:**
