@@ -1,15 +1,15 @@
 name: Publish to GitHub Packages
 
 on:
-  workflow_dispatch:
-
+  workflow_dispatch: # ✅ manual trigger only
 
 jobs:
   publish:
     runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' # ✅ only runs when dispatched on main
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -29,30 +29,24 @@ jobs:
           pnpm config set registry https://registry.npmjs.org/
           pnpm install
 
-
-      
       - name: Generate unique version
         id: version_generator
         run: |
+          BASE_VERSION="1.5"
           VERSION_DATE=$(date +%Y.%m.%d)
           VERSION_TIME=$(date +%H%M)
-          echo "NEW_VERSION=${VERSION_DATE}-${VERSION_TIME}" >> $GITHUB_ENV
+          echo "NEW_VERSION=${BASE_VERSION}.${VERSION_DATE}-${VERSION_TIME}" >> $GITHUB_ENV
 
       - name: Update package.json with the new version
         run: |
-
-       
           jq '.version = env.NEW_VERSION' package.json > package.tmp.json
           mv package.tmp.json package.json
-      
 
-      
       - name: Build package
         run: pnpm build
 
       - name: Prepare GitHub Package name
         run: |
-
           jq '.name = "@${{ github.repository_owner }}/hakai-extensions"' package.json > package.tmp.json
           mv package.tmp.json package.json
 
