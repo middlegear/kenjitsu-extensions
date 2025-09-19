@@ -13,6 +13,7 @@
     "test-jikan": "vitest jikan.test.ts   --config vitest.config.ts",
     "test-anilist": "vitest anilist.test.ts  --config vitest.config.ts",
     "test-hianime": "vitest hianime.test.ts  --config vitest.config.ts",
+    "test-kaido": "vitest kaido.test.ts  --config vitest.config.ts",
     "test-animekai": "vitest animekai.test.ts --config vitest.config.ts",
     "test-flixhq": "vitest flixhq.test.ts --config vitest.config.ts",
     "test-tmdb": "vitest tmdb.test.ts --config vitest.config.ts",

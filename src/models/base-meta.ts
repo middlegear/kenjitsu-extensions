@@ -331,7 +331,7 @@ export abstract class Meta {
           romaji: item.romaji,
           totalEpisodes: item.totalEpisodes,
           type: item.type,
-          provider: 'hianime',
+          provider: 'hianime and kaido',
         })) || []
       );
     } catch (error) {
@@ -346,7 +346,7 @@ export abstract class Meta {
         episodeId: `hianime-${item.episodeId}`,
         episodeNumber: item.episodeNumber,
         title: item.title,
-        provider: 'hianime',
+        provider: 'hianime and kaido',
       }));
     } catch (error) {
       throw new Error(error instanceof Error ? error.message : String(error));

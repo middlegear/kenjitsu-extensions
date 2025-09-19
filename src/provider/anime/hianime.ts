@@ -72,7 +72,7 @@ export class HiAnime extends BaseClass {
         $('.pagination li.active').length > 0 &&
         !$('.pagination > li').last().hasClass('active')) ||
       false;
-    const currentPage: number = Number($(paginationElement).find('li[class="page-item active"]').text().trim() || 1);
+    const currentPage: number = Number($('.pagination .page-item.active .page-link').text().trim());
     const lastPage: number = Number(
       paginationElement.find('a.page-link[title="Last"]').attr('href')?.split('page=').at(-1) ||
         paginationElement.find('a.page-link:last').text().trim() ||
@@ -311,12 +311,12 @@ export class HiAnime extends BaseClass {
       });
     });
     const relatedSeasonsSelector: cheerio.SelectorType =
-      'div.container > div#main-content > section.block_area.block_area-seasons div.os-list';
+      'div.container > div#main-content > section.block_area.block_area-seasons div.os-list a';
     const relatedSeasons: IRelatedSeasons[] = [];
     $(relatedSeasonsSelector).each((_, element) => {
       relatedSeasons.push({
-        id: $(element).find('a.os-item').attr('href')?.split('/').at(1) || null,
-        name: $(element).find('a.os-item').attr('title') || null,
+        id: $(element).attr('href')?.split('/').at(1) || null,
+        name: $(element).attr('title') || null,
         season: $(element).find('div.title').text() || null,
         seasonPoster: (() => {
           const style = $(element).find('div.season-poster').attr('style') || null;
@@ -689,9 +689,10 @@ export class HiAnime extends BaseClass {
         $('.pagination li.active').length > 0 &&
         !$('.pagination > li').last().hasClass('active')) ||
       false;
-    const currentPage: number = Number($(paginationElement).find('.active .page-link').text().trim() || 1);
+    const currentPage: number = Number($('.pagination .page-item.active .page-link').text().trim());
     const lastPage: number = Number(
-      paginationElement.find('a.page-link[title="Last"]').attr('href')?.split('page=').at(-1) || 1,
+      paginationElement.find('a.page-link[title="Last"]').attr('href')?.split('page=').at(-1) ||
+        $('.pagination .page-item').last().text().trim(),
     );
 
     const topDailyAnime: IAnime[] = [];
@@ -756,6 +757,16 @@ export class HiAnime extends BaseClass {
       weekly: topWeeklyAnime,
       monthly: topMonthlyAnime,
     };
+    if (!Array.isArray(data) || data.length === 0) {
+      return {
+        hasNextPage: false,
+        currentPage: 0,
+        lastPage: 0,
+        data: [],
+        topAnime: topAnime,
+        error: 'Cheerio Error: No results found',
+      };
+    }
 
     return {
       hasNextPage,
