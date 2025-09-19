@@ -996,14 +996,12 @@ class Animekai extends BaseClass {
         error: 'Missing required param: episodeId',
       };
     }
-    if (episodeId) {
-      throw new Error('Method not implemented use the embeded server url link to stream').message;
-    }
 
     if (episodeId.startsWith('http')) {
       const serverUrl = new URL(episodeId);
       return {
         headers: { Referer: serverUrl.href },
+        //@ts-ignore
         data: await new MegaUp().extract(serverUrl),
       };
     }
