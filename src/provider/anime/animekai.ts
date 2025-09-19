@@ -996,7 +996,9 @@ class Animekai extends BaseClass {
         error: 'Missing required param: episodeId',
       };
     }
-
+    if (episodeId) {
+      throw new Error('Unsupported method have fun');
+    }
     if (episodeId.startsWith('http')) {
       const serverUrl = new URL(episodeId);
       return {

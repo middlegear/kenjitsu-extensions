@@ -34,16 +34,16 @@ test('returns an array of trending anime', async () => {
 });
 
 test('returns an object that contains both providerId and animeinfo for hianime', async () => {
-  const data = await anilist.fetchProviderId(169755, 'allanime');
+  const data = await anilist.fetchProviderId(169755);
   expect(data.provider).not.toBeNull();
   expect(data.data).not.toBeNull();
 });
 
-test('returns an object that contains both providerId and animeinfo for allanime', async () => {
-  const data = await anilist.fetchProviderId(169755, 'allanime');
-  expect(data.provider).not.toBeNull();
-  expect(data.data).not.toBeNull();
-});
+// test('returns an object that contains both providerId and animeinfo for allanime', async () => {
+//   const data = await anilist.fetchProviderId(169755, 'allanime');
+//   expect(data.provider).not.toBeNull();
+//   expect(data.data).not.toBeNull();
+// });
 
 test('retuns an object containing anime cast and characters ', async () => {
   const data = await anilist.fetchCharacters(116674);
@@ -81,20 +81,20 @@ test('returns an object has anime info and provider episodes array for hianime',
   expect(data.data).not.toBeNull();
 });
 
-test('returns an object has anime info and provider episodes array for allanime', async () => {
-  const data = await anilist.fetchAnimeProviderEpisodes(159322, 'allanime');
-  expect(Array.isArray(data.providerEpisodes)).toBe(true);
-  expect(data.providerEpisodes.length).toBeGreaterThan(0);
-  expect(data.data).not.toBeNull();
-});
+// test('returns an object has anime info and provider episodes array for allanime', async () => {
+//   const data = await anilist.fetchAnimeProviderEpisodes(159322, 'allanime');
+//   expect(Array.isArray(data.providerEpisodes)).toBe(true);
+//   expect(data.providerEpisodes.length).toBeGreaterThan(0);
+//   expect(data.data).not.toBeNull();
+// });
 
-test('returns an object containing streaming sources for allanime provider', async () => {
-  const data = await anilist.fetchAllAnimeProviderSources('allanime-GoDoALiHc82Jrmcmh-episode-1', 'sub');
+// test('returns an object containing streaming sources for allanime provider', async () => {
+//   const data = await anilist.fetchAllAnimeProviderSources('allanime-GoDoALiHc82Jrmcmh-episode-1', 'sub');
 
-  expect(data.okru?.data).not.toBeNull();
-  expect(data.filemoon?.data).not.toBeNull();
-  expect(data.mp4upload?.data).not.toBeNull();
-});
+//   expect(data.okru?.data).not.toBeNull();
+//   expect(data.filemoon?.data).not.toBeNull();
+//   expect(data.mp4upload?.data).not.toBeNull();
+// });
 
 test('returns an object containing streaming sources for hianime provider', async () => {
   const data = await anilist.fetchHianimeProviderSources('hianime-solo-leveling-18718-episode-119497', 'sub');

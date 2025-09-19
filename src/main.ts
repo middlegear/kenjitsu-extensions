@@ -3,10 +3,10 @@ import { Anilist } from './provider/meta/anilist.js';
 import { Jikan } from './provider/meta/jikan.js';
 import { TheMovieDatabase } from './provider/meta/tmdb.js';
 import { FlixHQ } from './provider/movies/flixhq.js';
-import { Animekai } from './provider/anime/animekai.js';
-import { Animepahe } from './provider/anime/animepahe.js';
-import { HiMovies } from './provider/movies/himovies.js';
-import { Kaido } from './provider/anime/kaido.js';
+// import { Animekai } from './provider/anime/animekai.js';
+// import { Animepahe } from './provider/anime/animepahe.js';
+// import { HiMovies } from './provider/movies/himovies.js';
+// import { Kaido } from './provider/anime/kaido.js';
 import {
   type IMovieCountry,
   type IMovieGenre,
@@ -30,10 +30,10 @@ export {
   Jikan,
   TheMovieDatabase,
   HiAnime,
-  Kaido,
-  Animekai,
-  Animepahe,
-  HiMovies,
+  // Kaido,
+  // Animekai,
+  // Animepahe,
+  // HiMovies,
   FlixHQ,
   type IMovieCountry,
   type IMovieGenre,

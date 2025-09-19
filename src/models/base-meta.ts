@@ -3,8 +3,8 @@ import { HiAnime } from '../provider/anime/hianime.js';
 import { compareTwoStrings } from '../utils/string-similarity.js';
 import type { HiAnimeServers, ISubOrDub, IMovieProviderResults, IMetaData } from './types.js';
 import { FlixHQ } from '../provider/movies/flixhq.js';
-import { AllAnime } from '../provider/anime/allanime.js';
-import { Animepahe } from '../main.js';
+// import { AllAnime } from '../provider/anime/allanime.js';
+// import { Animepahe } from '../provider/anime/animepahe.js';
 
 type AnimeSearchResults = {
   id: string;
@@ -44,16 +44,16 @@ export abstract class Meta {
   protected readonly client: FetchClient;
   protected readonly hianime: HiAnime;
   protected readonly flixhq: FlixHQ;
-  protected readonly allanime: AllAnime;
-  protected readonly animepahe: Animepahe;
+  // protected readonly allanime: AllAnime;
+  // protected readonly animepahe: Animepahe;
 
   protected constructor() {
     this.client = new FetchClient();
     this.client.setProfile('normal-fetch');
     this.hianime = new HiAnime();
     this.flixhq = new FlixHQ();
-    this.allanime = new AllAnime();
-    this.animepahe = new Animepahe();
+    // this.allanime = new AllAnime();
+    // this.animepahe = new Animepahe();
   }
 
   // ------------------------
@@ -406,96 +406,96 @@ export abstract class Meta {
   // AllAnime integration
   // ------------------------
 
-  protected async searchAllAnime(title: string) {
-    try {
-      const result = await this.allanime.search(title);
+  // protected async searchAllAnime(title: string) {
+  //   try {
+  //     const result = await this.allanime.search(title);
 
-      return (
-        result.data?.map((item: any) => ({
-          id: item.id,
-          name: item.name,
-          romaji: item.romaji,
-          native: item.native,
-          provider: 'allanime',
-        })) || []
-      );
-    } catch (error) {
-      throw new Error(error instanceof Error ? error.message : String(error));
-    }
-  }
+  //     return (
+  //       result.data?.map((item: any) => ({
+  //         id: item.id,
+  //         name: item.name,
+  //         romaji: item.romaji,
+  //         native: item.native,
+  //         provider: 'allanime',
+  //       })) || []
+  //     );
+  //   } catch (error) {
+  //     throw new Error(error instanceof Error ? error.message : String(error));
+  //   }
+  // }
 
-  protected async fetchAllAnimeEpisodes(id: string) {
-    try {
-      const result = await this.allanime.fetchEpisodes(id);
-      return result.data.map((item: any) => ({
-        episodeId: item.episodeId,
-        episodeNumber: item.episodeNumber,
-        hasSub: item.hasSub,
-        hasDub: item.hasDub,
-        hasRaw: item.hasRaw,
-        provider: 'allanime',
-      }));
-    } catch (error) {
-      throw new Error(error instanceof Error ? error.message : String(error));
-    }
-  }
-  protected async fetchAllAnimeSources(episodeId: string, category: ISubOrDub = 'sub') {
-    try {
-      const result = await this.allanime.fetchSources(episodeId, category);
-      return result;
-    } catch (error) {
-      throw new Error(error instanceof Error ? error.message : String(error));
-    }
-  }
-  // ------------------------
-  // Animepahe
-  // ------------------------
-  protected async searchPahe(title: string) {
-    try {
-      const result = await this.animepahe.search(title);
+  // protected async fetchAllAnimeEpisodes(id: string) {
+  //   try {
+  //     const result = await this.allanime.fetchEpisodes(id);
+  //     return result.data.map((item: any) => ({
+  //       episodeId: item.episodeId,
+  //       episodeNumber: item.episodeNumber,
+  //       hasSub: item.hasSub,
+  //       hasDub: item.hasDub,
+  //       hasRaw: item.hasRaw,
+  //       provider: 'allanime',
+  //     }));
+  //   } catch (error) {
+  //     throw new Error(error instanceof Error ? error.message : String(error));
+  //   }
+  // }
+  // protected async fetchAllAnimeSources(episodeId: string, category: ISubOrDub = 'sub') {
+  //   try {
+  //     const result = await this.allanime.fetchSources(episodeId, category);
+  //     return result;
+  //   } catch (error) {
+  //     throw new Error(error instanceof Error ? error.message : String(error));
+  //   }
+  // }
+  // // ------------------------
+  // // Animepahe
+  // // ------------------------
+  // protected async searchPahe(title: string) {
+  //   try {
+  //     const result = await this.animepahe.search(title);
 
-      return (
-        result.data?.map((item: any) => ({
-          id: item.id,
-          name: item.name,
-          releaseDate: item.releaseDate,
-          type: item.type,
-          season: item.season,
-          totalEpisodes: item.totalEpisodes,
-          provider: 'animepahe',
-        })) || []
-      );
-    } catch (error) {
-      throw new Error(error instanceof Error ? error.message : String(error));
-    }
-  }
-  protected async fetchPaheEpisodes(title: string) {
-    try {
-      const result = await this.animepahe.fetchEpisodes(title);
-      ////a bit repetitive idk why will refactor
-      return (
-        result.data?.map((item: any) => ({
-          episodeId: item.episodeId,
-          episodeNumber: item.episodeNumber,
-          title: item.title,
-          thumbnail: item.thumbnail,
-          provider: 'animepahe',
-        })) || []
-      );
-    } catch (error) {
-      throw new Error(error instanceof Error ? error.message : String(error));
-    }
-  }
+  //     return (
+  //       result.data?.map((item: any) => ({
+  //         id: item.id,
+  //         name: item.name,
+  //         releaseDate: item.releaseDate,
+  //         type: item.type,
+  //         season: item.season,
+  //         totalEpisodes: item.totalEpisodes,
+  //         provider: 'animepahe',
+  //       })) || []
+  //     );
+  //   } catch (error) {
+  //     throw new Error(error instanceof Error ? error.message : String(error));
+  //   }
+  // }
+  // protected async fetchPaheEpisodes(title: string) {
+  //   try {
+  //     const result = await this.animepahe.fetchEpisodes(title);
+  //     ////a bit repetitive idk why will refactor
+  //     return (
+  //       result.data?.map((item: any) => ({
+  //         episodeId: item.episodeId,
+  //         episodeNumber: item.episodeNumber,
+  //         title: item.title,
+  //         thumbnail: item.thumbnail,
+  //         provider: 'animepahe',
+  //       })) || []
+  //     );
+  //   } catch (error) {
+  //     throw new Error(error instanceof Error ? error.message : String(error));
+  //   }
+  // }
 
-  protected async fetchPaheSouces(episodeId: string, category: 'sub' | 'dub' | 'raw') {
-    try {
-      const result = await this.animepahe.fetchSources(episodeId, category);
+  // protected async fetchPaheSouces(episodeId: string, category: 'sub' | 'dub' | 'raw') {
+  //   try {
+  //     const result = await this.animepahe.fetchSources(episodeId, category);
 
-      return result;
-    } catch (error) {
-      throw new Error(error instanceof Error ? error.message : String(error));
-    }
-  }
+  //     return result;
+  //   } catch (error) {
+  //     throw new Error(error instanceof Error ? error.message : String(error));
+  //   }
+  // }
   // ------------------------
   // Anizip integration
   // ------------------------

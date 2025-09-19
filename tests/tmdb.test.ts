@@ -53,8 +53,7 @@ test('returns an array of airing tv', async () => {
 
 test('returns an object containing providerId and tv show info ', async () => {
   const data = await tmdb.fetchTvProviderId(119051);
-  expect(Array.isArray(data.provider)).toBe(true);
-  expect(data.provider?.length).toBeGreaterThan(0);
+  expect(data.provider).not.toBe(null);
   expect(data.data).not.toBe(null);
 });
 
@@ -108,8 +107,7 @@ test('returns an array of releasing movies', async () => {
 
 test('returns an object containing providerId and movie info ', async () => {
   const data = await tmdb.fetchMovieProviderId(38700);
-  expect(Array.isArray(data.provider)).toBe(true);
-  expect(data.provider?.length).toBeGreaterThan(0);
+  expect(data.provider).not.toBe(null);
   expect(data.data).not.toBe(null);
 });
 
