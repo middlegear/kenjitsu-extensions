@@ -32,10 +32,10 @@ jobs:
       - name: Generate unique version
         id: version_generator
         run: |
-          BASE_VERSION="1.5"
+          
           VERSION_DATE=$(date +%Y.%m.%d)
           VERSION_TIME=$(date +%H%M)
-          echo "NEW_VERSION=${BASE_VERSION}.${VERSION_DATE}-${VERSION_TIME}" >> $GITHUB_ENV
+          echo "NEW_VERSION=${VERSION_DATE}-${VERSION_TIME}" >> $GITHUB_ENV
 
       - name: Update package.json with the new version
         run: |
