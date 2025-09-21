@@ -431,7 +431,7 @@ export class FlixHQ extends BaseClass {
         const title = anchor.attr('title')!;
         const episodeTitle = title.split(':').at(1)?.trim() || null;
         return {
-          episodeId: `${media}-episode-${rawId.split('-')[1]}` || null,
+          episodeId: `${media.replace('watch-', '')}-episode-${rawId.split('-')[1]}` || null,
           title: episodeTitle,
           episodeNumber: parseInt(title.split(':')[0].slice(3).trim(), 10) || null,
           seasonNumber: seasonNumber || null,
@@ -769,7 +769,7 @@ export class FlixHQ extends BaseClass {
       } else {
         episodes = [
           {
-            episodeId: mediaId,
+            episodeId: mediaId.replace('watch-', ''),
             title: data.name,
             episodeNumber: 1,
             seasonNumber: 0,
@@ -806,7 +806,7 @@ export class FlixHQ extends BaseClass {
         const response = await this.client.get(`${this.buildAjaxUrl(mediaId, 'movie-server')}`, {
           headers: {
             'X-Requested-With': 'XMLHttpRequest',
-            Referer: `${this.baseUrl}/${episodeId.replace('-', '/')}`,
+            Referer: `${this.baseUrl}/watch-${episodeId.replace('-', '/')}`,
           },
         });
 
@@ -821,7 +821,7 @@ export class FlixHQ extends BaseClass {
         const response = await this.client.get(`${this.buildAjaxUrl(String(mediaId.at(1)), 'tv-server')}`, {
           headers: {
             'X-Requested-With': 'XMLHttpRequest',
-            Referer: `${this.baseUrl}/${mediaId.at(0)?.replace('-', '/')}`,
+            Referer: `${this.baseUrl}/watch-${mediaId.at(0)?.replace('-', '/')}`,
           },
         });
         if (!response.data) {
