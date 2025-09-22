@@ -10,6 +10,7 @@ import type {
   IResponse,
   IVideoSource,
   IPaheAnime,
+  IPaheAnimeInfoResponse,
 } from '../../models/types.js';
 import * as cheerio from 'cheerio';
 import Kwik from '../../source-extractors/kwik.js';
@@ -32,7 +33,7 @@ export class Animepahe extends BaseClass {
     };
   }
 
-  private parseAnimeInfo($: cheerio.CheerioAPI, animeId: string): IResponse<IAnimeInfo> {
+  private parseAnimeInfo($: cheerio.CheerioAPI, animeId: string): IAnimeInfo {
     const animeinfo: IAnimeInfo = {
       anilistId: Number($('head').find('meta[name="anilist"]').attr('content')) || null,
       malId: Number($('head').find('meta[name="myanimelist"]').attr('content')) || null,
@@ -64,7 +65,7 @@ export class Animepahe extends BaseClass {
           .get() || null,
     };
 
-    return { data: animeinfo };
+    return animeinfo;
   }
 
   private parseServers($: cheerio.CheerioAPI) {
@@ -248,22 +249,67 @@ export class Animepahe extends BaseClass {
   }
 
   /**
-   * Fetches detailed information about a specific anime.
+   * Fetches detailed information about a specific anime including episodes.
    * @param {string} animeId - The unique identifier for the anime (e.g., "bleach-806") (required).
    * @returns  A promise that resolves to an object containing anime details, or an error message.
    */
-  async fetchAnimeInfo(animeId: string): Promise<IResponse<IAnimeInfo | null>> {
+  async fetchAnimeInfo(animeId: string): Promise<IPaheAnimeInfoResponse<IAnimeInfo | null>> {
     if (!animeId) {
-      throw new Error('AnimeId cannot be empty');
+      throw new Error('animeId cannot be empty');
     }
     try {
       const response = await this.client.get(`${this.baseUrl}/anime/${animeId}`, { headers: this.headers(false) });
+
       if (!response.data) {
-        return { error: response.statusText, data: null };
+        return { error: response.statusText, data: null, providerEpisodes: [] };
       }
-      return this.parseAnimeInfo(cheerio.load(response.data), animeId);
+      const {
+        data: { last_page, data },
+      } = await this.client.get(`${this.baseUrl}/api?m=release&id=${animeId}&sort=episode_asc&page=1`, {
+        headers: this.headers(animeId),
+      });
+
+      let episodes = data.map((item: any) => ({
+        episodeId: `pahe-${animeId}-$session$-${item.session}`,
+        episodeNumber: item.episode || null,
+        title: item.title || null,
+        thumbnail: item.snapshot || null,
+        // duration: item.duration,
+        // url: `${this.baseUrl}/play/${id}/${item.session}`,
+      }));
+
+      if (last_page > 1) {
+        const pageRequests = [];
+        for (let page = 2; page <= last_page; page++) {
+          pageRequests.push(
+            this.client.get(`${this.baseUrl}/api?m=release&id=${animeId}&sort=episode_asc&page=${page}`, {
+              headers: this.headers(animeId),
+            }),
+          );
+        }
+
+        const responses = await Promise.all(pageRequests);
+
+        for (const res of responses) {
+          episodes.push(
+            ...res.data.data.map((item: any) => ({
+              episodeId: `pahe-${animeId}-$session$-${item.session}`,
+              episodeNumber: item.episode || null,
+              title: item.title || null,
+              thumbnail: item.snapshot || null,
+              // duration: item.duration,
+              // url: `${this.baseUrl}/play/${id}/${item.session}`,
+            })),
+          );
+        }
+      }
+
+      return {
+        data: this.parseAnimeInfo(cheerio.load(response.data), animeId),
+        providerEpisodes: episodes,
+      };
     } catch (error) {
-      return { error: error instanceof Error ? error.message : 'Unknown Error', data: null };
+      return { error: error instanceof Error ? error.message : 'Unknown Error', data: null, providerEpisodes: [] };
     }
   }
 

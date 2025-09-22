@@ -1,6 +1,6 @@
 import * as cheerio from 'cheerio';
 import { BaseClass } from '../../models/base-anime.js';
-import type { ISubOrDub, HiAnimeServers, IAnimeCategory } from '../../models/types.js';
+import type { ISubOrDub, HiAnimeServers, IAnimeCategory, IHIAnimeInfoResponse } from '../../models/types.js';
 import MegaCloud from '../../source-extractors/megacloud.js';
 import {
   type IAnime,
@@ -968,15 +968,16 @@ export class Kaido extends BaseClass {
   }
 
   /**
-   * Fetches detailed information about a specific anime.
+   * Fetches detailed information about a specific anime including episodes.
    * @param {string} animeId - The unique identifier for the anime (e.g., "bleach-806") (required).
-   * @returns {Promise<IAnimeInfoResponse<IAnimeInfo | null>>} A promise that resolves to an object containing anime details, related seasons, characters, recommendations, or an error message.
+   * @returns {Promise<HIAnimeInfoResponse<IAnimeInfo | null>>} A promise that resolves to an object containing anime details,provider episodes, related seasons, characters, recommendations, or an error message.
    */
-  async fetchAnimeInfo(animeId: string): Promise<IAnimeInfoResponse<IAnimeInfo | null>> {
+  async fetchAnimeInfo(animeId: string): Promise<IHIAnimeInfoResponse<IAnimeInfo | null>> {
     if (!animeId.trim())
       return {
-        data: null,
         error: 'Missing required params :animeId',
+        data: null,
+        providerEpisodes: [],
         recommendedAnime: [],
         promotionVideos: [],
         mostPopular: [],
@@ -986,12 +987,21 @@ export class Kaido extends BaseClass {
       };
 
     try {
-      const response = await this.client.get(`${this.baseUrl}/${animeId}`);
+      const [response, episodes] = await Promise.all([
+        this.client.get(`${this.baseUrl}/${animeId}`),
+        this.client.get(`${this.baseUrl}/ajax/episode/list/${animeId.split('-').pop()}`, {
+          headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            Referer: `${this.baseUrl}/watch/${animeId}`,
+          },
+        }),
+      ]);
 
-      if (!response.data)
+      if (!response.data || !episodes.data) {
         return {
-          error: response.statusText || 'Server returned an empty response',
+          error: response.statusText || episodes.statusText || 'Server returned an empty response',
           data: null,
+          providerEpisodes: [],
           recommendedAnime: [],
           promotionVideos: [],
           mostPopular: [],
@@ -999,14 +1009,28 @@ export class Kaido extends BaseClass {
           relatedSeasons: [],
           characters: [],
         };
+      }
 
-      const $animeData = cheerio.load(response.data);
+      // Parse HTML responses
+      const { data, recommendedAnime, promotionVideos, mostPopular, relatedAnime, relatedSeasons, characters } =
+        this.parseAnimeInfo(cheerio.load(response.data));
+      const { data: providerEpisodes } = this.parseEpisodes(cheerio.load(episodes.data.html));
 
-      return this.parseAnimeInfo($animeData);
+      return {
+        data,
+        providerEpisodes,
+        recommendedAnime,
+        promotionVideos,
+        mostPopular,
+        relatedAnime,
+        relatedSeasons,
+        characters,
+      };
     } catch (error) {
       return {
-        data: null,
         error: error instanceof Error ? error.message : 'Fatal error',
+        data: null,
+        providerEpisodes: [],
         recommendedAnime: [],
         promotionVideos: [],
         mostPopular: [],

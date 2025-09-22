@@ -22,6 +22,8 @@ test('retuns an object containing anime info', async () => {
   const data = await zoro.fetchAnimeInfo('bleach-806');
   expect(data.data).not.toBeNull();
   expect(Array.isArray(data.mostPopular)).toBe(true);
+  expect(Array.isArray(data.providerEpisodes)).toBe(true);
+  expect(data.providerEpisodes.length).toBeGreaterThan(0);
   expect(data.recommendedAnime.length).toBeGreaterThan(0);
   expect(data.promotionVideos.length).toBeGreaterThan(0);
   expect(data.mostPopular.length).toBeGreaterThan(0);

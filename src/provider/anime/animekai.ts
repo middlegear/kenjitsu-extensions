@@ -8,7 +8,7 @@ import {
   type IAHomeResponse,
   type IAllAnimeEpisodes,
   type IAnime,
-  type IAnimeBaseInfoResponse,
+  type IAnimeKaiInfoResponse,
   type IAnimeCategory,
   type IAnimeInfo,
   type IAnimePaginated,
@@ -823,7 +823,7 @@ class Animekai extends BaseClass {
    * @param {string} animeId - The unique identifier for the anime  (required).
    * @returns  A promise that resolves to an object containing anime details, related seasons provider episodeslists ,recommendations, or an error message.
    */
-  async fetchAnimeInfo(animeId: string): Promise<IAnimeBaseInfoResponse<IAnimeInfo | null>> {
+  async fetchAnimeInfo(animeId: string): Promise<IAnimeKaiInfoResponse<IAnimeInfo | null>> {
     if (!animeId.trim()) {
       return {
         error: 'Missing required Params: animeId',

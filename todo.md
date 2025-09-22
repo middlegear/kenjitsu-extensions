@@ -49,3 +49,7 @@ New Sites
 7. https://projectfreetv.sx/
 8. https://www.downloads-anymovies.co/
 https://rentry.co/sflix#yflix-clones
+
+
+///BUGS
+Some of the queries for anilist are missing startDates and Enddates(should just return the year if unknown).Trending

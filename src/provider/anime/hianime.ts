@@ -1,6 +1,6 @@
 import * as cheerio from 'cheerio';
 import { BaseClass } from '../../models/base-anime.js';
-import type { ISubOrDub, HiAnimeServers, IAnimeCategory } from '../../models/types.js';
+import type { ISubOrDub, HiAnimeServers, IAnimeCategory, IHIAnimeInfoResponse } from '../../models/types.js';
 import MegaCloud from '../../source-extractors/megacloud.js';
 import {
   type IAnime,
@@ -968,56 +968,6 @@ export class HiAnime extends BaseClass {
   }
 
   /**
-   * Fetches detailed information about a specific anime.
-   * @param {string} animeId - The unique identifier for the anime (e.g., "bleach-806") (required).
-   * @returns {Promise<IAnimeInfoResponse<IAnimeInfo | null>>} A promise that resolves to an object containing anime details, related seasons, characters, recommendations, or an error message.
-   */
-  async fetchAnimeInfo(animeId: string): Promise<IAnimeInfoResponse<IAnimeInfo | null>> {
-    if (!animeId.trim())
-      return {
-        data: null,
-        error: 'Missing required params :animeId',
-        recommendedAnime: [],
-        promotionVideos: [],
-        mostPopular: [],
-        relatedAnime: [],
-        relatedSeasons: [],
-        characters: [],
-      };
-
-    try {
-      const response = await this.client.get(`${this.baseUrl}/${animeId}`);
-
-      if (!response.data)
-        return {
-          error: response.statusText || 'Server returned an empty response',
-          data: null,
-          recommendedAnime: [],
-          promotionVideos: [],
-          mostPopular: [],
-          relatedAnime: [],
-          relatedSeasons: [],
-          characters: [],
-        };
-
-      const $animeData = cheerio.load(response.data);
-
-      return this.parseAnimeInfo($animeData);
-    } catch (error) {
-      return {
-        data: null,
-        error: error instanceof Error ? error.message : 'Fatal error',
-        recommendedAnime: [],
-        promotionVideos: [],
-        mostPopular: [],
-        relatedAnime: [],
-        relatedSeasons: [],
-        characters: [],
-      };
-    }
-  }
-
-  /**
    * Fetches curated lists from the HiAnime homepage.
    * @returns Promise resolving to an object with various curated anime lists
    */
@@ -1506,6 +1456,80 @@ export class HiAnime extends BaseClass {
         lastPage: 0,
         data: [],
         error: error instanceof Error ? error.message : 'Unknown Error',
+      };
+    }
+  }
+
+  /**
+   * Fetches detailed information about a specific anime including episodes.
+   * @param {string} animeId - The unique identifier for the anime (e.g., "bleach-806") (required).
+   * @returns {Promise<IAnimeInfoResponse<IAnimeInfo | null>>} A promise that resolves to an object containing anime details,provider episodes, related seasons, characters, recommendations, or an error message.
+   */
+  async fetchAnimeInfo(animeId: string): Promise<IHIAnimeInfoResponse<IAnimeInfo | null>> {
+    if (!animeId.trim())
+      return {
+        error: 'Missing required params :animeId',
+        data: null,
+        providerEpisodes: [],
+        recommendedAnime: [],
+        promotionVideos: [],
+        mostPopular: [],
+        relatedAnime: [],
+        relatedSeasons: [],
+        characters: [],
+      };
+
+    try {
+      const [response, episodes] = await Promise.all([
+        this.client.get(`${this.baseUrl}/${animeId}`),
+        this.client.get(`${this.baseUrl}/ajax/v2/episode/list/${animeId.split('-').pop()}`, {
+          headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            Referer: `${this.baseUrl}/watch/${animeId}`,
+          },
+        }),
+      ]);
+
+      if (!response.data || !episodes.data) {
+        return {
+          data: null,
+          providerEpisodes: [],
+          error: response.statusText || episodes.statusText || 'Server returned an empty response',
+          recommendedAnime: [],
+          promotionVideos: [],
+          mostPopular: [],
+          relatedAnime: [],
+          relatedSeasons: [],
+          characters: [],
+        };
+      }
+
+      // Parse HTML responses
+      const { data, recommendedAnime, promotionVideos, mostPopular, relatedAnime, relatedSeasons, characters } =
+        this.parseAnimeInfo(cheerio.load(response.data));
+      const { data: providerEpisodes } = this.parseEpisodes(cheerio.load(episodes.data.html));
+
+      return {
+        data,
+        providerEpisodes,
+        recommendedAnime,
+        promotionVideos,
+        mostPopular,
+        relatedAnime,
+        relatedSeasons,
+        characters,
+      };
+    } catch (error) {
+      return {
+        error: error instanceof Error ? error.message : 'Fatal error',
+        data: null,
+        providerEpisodes: [],
+        recommendedAnime: [],
+        promotionVideos: [],
+        mostPopular: [],
+        relatedAnime: [],
+        relatedSeasons: [],
+        characters: [],
       };
     }
   }

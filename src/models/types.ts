@@ -101,16 +101,24 @@ export interface IAnimePaginated<T> extends IResponse<T> {
 export interface IRepetitiveSections<T> extends IAnimePaginated<T> {
   topAnime: { daily: IAnime[]; weekly: IAnime[]; monthly: IAnime[] };
 }
-export interface IAnimeBaseInfoResponse<T> extends IResponse<T> {
-  relatedSeasons: IRelatedSeasons[];
-  recommendedAnime: IAnime[];
-  // mostPopular: IAnime[];
-  // promotionVideos: IPromotionVIds[];
-  relatedAnime: IAnime[];
-  // characters: ICharacters[];
-  providerEpisodes?: IAllAnimeEpisodes[];
+export interface IPaheAnimeInfoResponse<T> extends IResponse<T> {
+  providerEpisodes: IEpisodes[] | [];
 }
-export interface IAnimeInfoResponse<T> extends IAnimeBaseInfoResponse<T> {
+export interface IHIAnimeInfoResponse<T> extends IPaheAnimeInfoResponse<T> {
+  relatedSeasons: IRelatedSeasons[] | [];
+  recommendedAnime: IAnime[] | [];
+  relatedAnime: IAnime[] | [];
+  mostPopular: IAnime[] | [];
+  promotionVideos: IPromotionVIds[] | [];
+  characters: ICharacters[] | [];
+}
+export interface IAnimeKaiInfoResponse<T> extends IResponse<T> {
+  relatedSeasons: IRelatedSeasons[] | [];
+  recommendedAnime: IAnime[] | [];
+  relatedAnime: IAnime[] | [];
+  providerEpisodes?: IAllAnimeEpisodes[] | [];
+}
+export interface IAnimeInfoResponse<T> extends IAnimeKaiInfoResponse<T> {
   mostPopular: IAnime[];
   promotionVideos: IPromotionVIds[];
   characters: ICharacters[];

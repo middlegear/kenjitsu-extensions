@@ -12,7 +12,8 @@ test('return an array of search results', async () => {
 
 test('return an object containing animeinfo', async () => {
   const data = await animepahe.fetchAnimeInfo('7e7e2276-8adc-3c2d-e655-9df8397d0ee3');
-
+  expect(Array.isArray(data.providerEpisodes)).toBe(true);
+  expect(data.providerEpisodes.length).toBeGreaterThan(0);
   expect(data.data).not.toBeNull();
 });
 
