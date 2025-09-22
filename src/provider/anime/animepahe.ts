@@ -25,6 +25,12 @@ export class Animepahe extends BaseClass {
     super();
   }
 
+  /**
+   * Generates HTTP headers for API requests to Animepahe.
+   * @private
+   * @param {string | false} id - The anime ID to include in the Referer header, or false for general requests.
+   * @returns {Record<string, string>} An object containing the required HTTP headers.
+   */
   private headers(id: string | false) {
     return {
       Cookie: '__ddg2_=;',
@@ -33,6 +39,13 @@ export class Animepahe extends BaseClass {
     };
   }
 
+  /**
+   * Parses HTML content to extract detailed anime information.
+   * @private
+   * @param {cheerio.CheerioAPI} $ - The Cheerio API instance for parsing HTML.
+   * @param {string} animeId - The unique identifier for the anime.
+   * @returns {IAnimeInfo} An object containing parsed anime information.
+   */
   private parseAnimeInfo($: cheerio.CheerioAPI, animeId: string): IAnimeInfo {
     const animeinfo: IAnimeInfo = {
       anilistId: Number($('head').find('meta[name="anilist"]').attr('content')) || null,
@@ -68,6 +81,12 @@ export class Animepahe extends BaseClass {
     return animeinfo;
   }
 
+  /**
+   * Parses HTML content to extract streaming server information for an episode.
+   * @private
+   * @param {cheerio.CheerioAPI} $ - The Cheerio API instance for parsing HTML.
+   * @returns {{servers: HIServerInfo; download: HIServerInfo}} An object containing streaming servers and download servers.
+   */
   private parseServers($: cheerio.CheerioAPI) {
     const subSelector: cheerio.SelectorType = 'div#resolutionMenu button[data-audio="jpn"]';
     const chiSelector: cheerio.SelectorType = 'div#resolutionMenu button[data-audio="chi"]';
@@ -156,6 +175,15 @@ export class Animepahe extends BaseClass {
     return { servers, download };
   }
 
+  /**
+   * Finds available server IDs for a specific audio category from the parsed server data.
+   * @private
+   * @param {HIServerInfo} servers - The parsed streaming server information.
+   * @param {HIServerInfo} download - The parsed download server information.
+   * @param {ISubOrDub} category - The audio category to filter servers for ('sub', 'dub', or 'raw').
+   * @returns {Array<{serverId: string; serverName: string; downloadId: string | null}>} An array of server objects with IDs and download information.
+   * @throws {Error} If no servers are available for the specified category.
+   */
   private findServerIds(
     servers: HIServerInfo,
     download: HIServerInfo,

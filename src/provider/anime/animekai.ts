@@ -50,6 +50,13 @@ class Animekai extends BaseClass {
     this.megaup = new MegaUp();
   }
 
+  /**
+   * Scrapes anime data from recently added/upcoming/recently completed sections.
+   * @private
+   * @param {cheerio.CheerioAPI} $ - The Cheerio API instance for parsing HTML.
+   * @param {cheerio.SelectorType} selector - CSS selector for the anime elements to scrape.
+   * @returns {IAnime[]} An array of parsed anime objects.
+   */
   private scrapeUpdates($: cheerio.CheerioAPI, selector: cheerio.SelectorType) {
     const recentSection: IAnime[] = [];
 
@@ -69,6 +76,14 @@ class Animekai extends BaseClass {
     });
     return recentSection;
   }
+
+  /**
+   * Scrapes trending anime cards from different time periods (now, daily, weekly, monthly).
+   * @private
+   * @param {cheerio.CheerioAPI} $ - The Cheerio API instance for parsing HTML.
+   * @param {cheerio.SelectorType} selector - CSS selector for the trending anime elements.
+   * @returns {IAnime[]} An array of parsed trending anime objects.
+   */
   private scrapeTrendingCard($: cheerio.CheerioAPI, selector: cheerio.SelectorType) {
     const trending: IAnime[] = [];
     $(selector).each((_, element) => {
@@ -92,6 +107,12 @@ class Animekai extends BaseClass {
     return trending;
   }
 
+  /**
+   * Parses the homepage HTML to extract curated anime sections including featured, trending, and recently updated content.
+   * @private
+   * @param {cheerio.CheerioAPI} $ - The Cheerio API instance for parsing HTML.
+   * @returns {IAHomeResponse<IAnime[] | []>} An object containing various curated anime lists.
+   */
   private parseHome($: cheerio.CheerioAPI): IAHomeResponse<IAnime[] | []> {
     const selector: cheerio.SelectorType = 'section#featured div.swiper-wrapper > div.swiper-slide';
 
@@ -175,6 +196,13 @@ class Animekai extends BaseClass {
     };
   }
 
+  /**
+   * Parses paginated anime search or category results from HTML.
+   * @private
+   * @param {cheerio.CheerioAPI} $ - The Cheerio API instance for parsing HTML.
+   * @param {cheerio.SelectorType} selector - CSS selector for the anime items in the paginated results.
+   * @returns {IAnimePaginated<IAnime[] | []>} An object containing paginated anime results with metadata.
+   */
   private parsePaginated($: cheerio.CheerioAPI, selector: cheerio.SelectorType): IAnimePaginated<IAnime[] | []> {
     const results: IAnime[] = [];
     $(selector).each((_, element) => {
@@ -212,6 +240,14 @@ class Animekai extends BaseClass {
       data: results,
     };
   }
+
+  /**
+   * Parses related/recommended anime sections from the anime info page.
+   * @private
+   * @param {cheerio.CheerioAPI} $ - The Cheerio API instance for parsing HTML.
+   * @param {cheerio.SelectorType} selector - CSS selector for the related/recommended anime elements.
+   * @returns {IAnime[]} An array of parsed related or recommended anime objects.
+   */
   private parseInfoSections($: cheerio.CheerioAPI, selector: cheerio.SelectorType) {
     const Anime: IAnime[] = [];
     $(selector).each((_, element) => {
@@ -237,6 +273,13 @@ class Animekai extends BaseClass {
 
     return Anime;
   }
+
+  /**
+   * Parses detailed anime information from the anime watch page.
+   * @private
+   * @param {cheerio.CheerioAPI} $ - The Cheerio API instance for parsing HTML.
+   * @returns {Object} An object containing parsed anime info, rating data, related seasons, and recommendations.
+   */
   private parseAnimeInfo($: cheerio.CheerioAPI) {
     const style = $('div.watch-section-bg').attr('style');
     const match = style?.match(/url\((['"]?)(.*?)\1\)/);
@@ -309,6 +352,13 @@ class Animekai extends BaseClass {
     return { animeInfo, rateBox, relatedSeasons, recommendedAnime, relatedAnime };
   }
 
+  /**
+   * Parses episode list from the AJAX endpoint response.
+   * @private
+   * @param {cheerio.CheerioAPI} $ - The Cheerio API instance for parsing HTML.
+   * @param {string} animeId - The unique identifier for the anime.
+   * @returns {IAllAnimeEpisodes[]} An array of parsed episode objects with language availability.
+   */
   private parseEpisodes($: cheerio.CheerioAPI, animeId: string) {
     const selector: cheerio.SelectorType = 'div.eplist ul li';
 
@@ -335,6 +385,13 @@ class Animekai extends BaseClass {
 
     return episodes;
   }
+
+  /**
+   * Parses server information from the episode links AJAX response.
+   * @private
+   * @param {cheerio.CheerioAPI} $ - The Cheerio API instance for parsing HTML.
+   * @returns {IResponse<HIServerInfo | null>} An object containing parsed server information.
+   */
   private parseServers($: cheerio.CheerioAPI): IResponse<HIServerInfo | null> {
     const subSelector: cheerio.SelectorType = 'div.server-wrap div.server-items[data-id="sub"] span.server';
     const dubSelector: cheerio.SelectorType = 'div.server-wrap div.server-items[data-id="dub"] span.server';
@@ -374,6 +431,14 @@ class Animekai extends BaseClass {
     return { data: servers };
   }
 
+  /**
+   * Extracts media IDs for a specific audio category from the server information.
+   * @private
+   * @param {HIServerInfo} servers - The parsed server information object.
+   * @param {ISubOrDub} category - The audio category to filter servers for ('sub', 'dub', or 'raw').
+   * @returns {string[]} An array of valid media IDs for the specified category.
+   * @throws {Error} If no servers or valid media IDs are found for the category.
+   */
   private findServerIds(servers: HIServerInfo, category: ISubOrDub): string[] {
     const list = servers[category];
     if (!list || list.length === 0) {
@@ -597,6 +662,7 @@ class Animekai extends BaseClass {
       };
     }
   }
+
   /**
    * Fetches a paginated list of recently added anime.
    * @param {IMetaFormat} category - The format which to fetch anime (optional,  defaults to TV)
@@ -818,6 +884,7 @@ class Animekai extends BaseClass {
       };
     }
   }
+
   /**
    * Fetches detailed information about a specific anime.
    * @param {string} animeId - The unique identifier for the anime  (required).
@@ -891,6 +958,13 @@ class Animekai extends BaseClass {
     }
   }
 
+  /**
+   * Fetches server information for a specific episode using the token-based AJAX endpoint.
+   * @private
+   * @param {string} episodeId - The unique identifier for the episode containing the token.
+   * @returns {Promise<IResponse<HIServerInfo | null>>} A promise resolving to server information or an error.
+   * @throws {Error} If the episodeId is missing or has invalid format.
+   */
   private async scrapefetchServers(episodeId: string): Promise<IResponse<HIServerInfo | null>> {
     if (!episodeId) {
       throw new Error('Missing required parameter: episodeId');

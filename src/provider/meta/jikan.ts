@@ -18,13 +18,28 @@ import type {
 /**
  * A class for interacting with the Jikan API (MyAnimeList unofficial API) to search for anime,
  * fetch detailed information, retrieve various top lists (airing, movies, popular, upcoming),
- * seasonal anime, character details, and episode information  from MyAnimeList.
+ * seasonal anime, character details, and episode information from MyAnimeList.
+ *
+ *
  */
 export class Jikan extends Meta {
+  /** Base URL for the Jikan API (MyAnimeList unofficial API) */
   private readonly baseUrl: string = 'https://api.jikan.moe/v4';
+
+  /**
+   * Creates an instance of the Jikan API client.
+   */
   constructor() {
     super();
   }
+
+  /**
+   * Fetches episodes from AllAnime provider and enriches with Anizip data for a given MAL ID.
+   *
+   * @private
+   * @param malId - The MyAnimeList ID of the anime
+   * @returns Promise resolving to episode data enriched with additional metadata
+   */
   private async fetchAllAnimeProviderEpisodes(malId: number): Promise<IMetaProviderEpisodesResponse<IMetaAnime | null>> {
     if (!malId) {
       return {
@@ -78,6 +93,14 @@ export class Jikan extends Meta {
       };
     }
   }
+
+  /**
+   * Fetches episodes from HiAnime (Zoro) provider and enriches with Anizip data for a given MAL ID.
+   *
+   * @private
+   * @param malId - The MyAnimeList ID of the anime
+   * @returns Promise resolving to episode data enriched with additional metadata
+   */
   private async fetchZoroProviderEpisodes(malId: number): Promise<IMetaProviderEpisodesResponse<IMetaAnime | null>> {
     if (!malId) {
       return {
@@ -86,6 +109,7 @@ export class Jikan extends Meta {
         providerEpisodes: [],
       };
     }
+
     try {
       const initialResponse = await this.fetchZoroProviderId(malId);
       if (!initialResponse.provider?.id) {
@@ -130,6 +154,14 @@ export class Jikan extends Meta {
       };
     }
   }
+
+  /**
+   * Maps MyAnimeList anime data to HiAnime (Zoro) provider ID.
+   *
+   * @private
+   * @param malId - The MyAnimeList ID of the anime
+   * @returns Promise resolving to provider mapping data
+   */
   private async fetchZoroProviderId(malId: number): Promise<IMetaProviderIdResponse<IMetaAnime | null>> {
     if (!malId) {
       return {
@@ -138,6 +170,7 @@ export class Jikan extends Meta {
         provider: null,
       };
     }
+
     try {
       const mal = await this.fetchInfo(malId);
 
@@ -150,7 +183,6 @@ export class Jikan extends Meta {
       }
 
       const year = release ? new Date(release).getFullYear() : null;
-
       const titleSlug = titles ? this.createSlug(titles) : null;
 
       let malData: IMetaData | null = null;
@@ -185,6 +217,13 @@ export class Jikan extends Meta {
     }
   }
 
+  /**
+   * Maps MyAnimeList anime data to AllAnime provider ID.
+   *
+   * @private
+   * @param malId - The MyAnimeList ID of the anime
+   * @returns Promise resolving to provider mapping data
+   */
   private async fetchAllAnimeProviderId(malId: number): Promise<IMetaProviderIdResponse<IMetaAnime | null>> {
     if (!malId) {
       return {
@@ -193,6 +232,7 @@ export class Jikan extends Meta {
         provider: null,
       };
     }
+
     try {
       const mal = await this.fetchInfo(malId);
 
@@ -205,7 +245,6 @@ export class Jikan extends Meta {
       }
 
       const year = release ? new Date(release).getFullYear() : null;
-
       const titleSlug = titles ? this.createSlug(titles) : null;
 
       let malData: IMetaData | null = null;
@@ -239,6 +278,14 @@ export class Jikan extends Meta {
       };
     }
   }
+
+  /**
+   * Maps MyAnimeList anime data to AnimePahe provider ID.
+   *
+   * @private
+   * @param malId - The MyAnimeList ID of the anime
+   * @returns Promise resolving to provider mapping data
+   */
   private async fetchAnimepaheProviderId(malId: number): Promise<IMetaProviderIdResponse<IMetaAnime | null>> {
     if (!malId) {
       return {
@@ -247,6 +294,7 @@ export class Jikan extends Meta {
         provider: null,
       };
     }
+
     try {
       const mal = await this.fetchInfo(malId);
 
@@ -259,7 +307,6 @@ export class Jikan extends Meta {
       }
 
       const year = release ? new Date(release).getFullYear() : null;
-
       const titleSlug = titles ? this.createSlug(titles) : null;
 
       let malData: IMetaData | null = null;
@@ -293,6 +340,14 @@ export class Jikan extends Meta {
       };
     }
   }
+
+  /**
+   * Fetches episodes from AnimePahe provider and enriches with Anizip data for a given MAL ID.
+   *
+   * @private
+   * @param malId - The MyAnimeList ID of the anime
+   * @returns Promise resolving to episode data enriched with additional metadata
+   */
   private async fetchPaheProviderEpisodes(malId: number): Promise<IMetaProviderEpisodesResponse<IMetaAnime | null>> {
     if (!malId) {
       return {
@@ -301,6 +356,7 @@ export class Jikan extends Meta {
         providerEpisodes: [],
       };
     }
+
     try {
       const initialResponse = await this.fetchAnimepaheProviderId(malId);
       if (!initialResponse.provider?.id) {
@@ -345,12 +401,14 @@ export class Jikan extends Meta {
       };
     }
   }
+
   /**
-   * Searches for anime titles based on the provided query string.
-   * @param {string} query - The search query string (required).
-   * @param {number} [page=1] - The page number for pagination (optional, defaults to 1).
-   * @param {number} [perPage=20] - The number of results per page (optional, defaults to 20, maximum 25).
-   * @returns  A promise that resolves to an object containing an array of anime results related to the search query.
+   * Searches for anime titles based on the provided query string using Jikan API.
+   *
+   * @param query - The search query string (required)
+   * @param page - The page number for pagination (optional, defaults to 1)
+   * @param perPage - The number of results per page (optional, defaults to 20, maximum 25)
+   * @returns Promise that resolves to paginated search results containing anime data
    */
   async search(query: string, page: number = 1, perPage: number = 20): Promise<IAnimePaginated<IMetaAnime[] | []>> {
     if (!query) {
@@ -364,6 +422,7 @@ export class Jikan extends Meta {
         error: 'Missing required fields : search',
       };
     }
+
     try {
       const response = await this.client.get(`${this.baseUrl}/anime`, {
         params: {
@@ -372,7 +431,8 @@ export class Jikan extends Meta {
           limit: String(perPage),
         },
       });
-      if (!response.data)
+
+      if (!response.data) {
         return {
           hasNextPage: false,
           currentPage: 0,
@@ -382,6 +442,8 @@ export class Jikan extends Meta {
           data: [],
           error: response.statusText || 'Server returned an empty response',
         };
+      }
+
       const pagination = {
         hasNextPage: response.data.pagination.has_next_page,
         lastPage: response.data.pagination.last_visible_page,
@@ -389,6 +451,7 @@ export class Jikan extends Meta {
         total: response.data.pagination.items.total,
         perPage: response.data.pagination.items.per_page,
       };
+
       const search: IMetaAnime[] = response.data.data.map((item: any) => ({
         malId: item.mal_id,
         title: {
@@ -457,8 +520,9 @@ export class Jikan extends Meta {
 
   /**
    * Fetches detailed information about a specific anime using its MyAnimeList (MAL) ID.
-   * @param {number} malId - The unique MyAnimeList (MAL) ID for the anime (required).
-   * @returns  A promise that resolves to an object containing comprehensive detailed anime information.
+   *
+   * @param malId - The unique MyAnimeList (MAL) ID for the anime (required)
+   * @returns Promise that resolves to comprehensive detailed anime information
    */
   async fetchInfo(malId: number): Promise<IResponse<IMetaAnime | null>> {
     if (!malId) {
@@ -467,14 +531,17 @@ export class Jikan extends Meta {
         data: null,
       };
     }
+
     try {
       const response = await this.client.get(`${this.baseUrl}/anime/${malId}`);
 
-      if (!response.data)
+      if (!response.data) {
         return {
           error: response.statusText || 'Server returned an empty response',
           data: null,
         };
+      }
+
       const animeInfo: IMetaAnime = {
         malId: response.data.data.mal_id,
         title: {
@@ -522,6 +589,7 @@ export class Jikan extends Meta {
         studio: response.data.data.studios,
         producers: response.data.data.producers,
       };
+
       return {
         data: animeInfo,
       };
@@ -532,10 +600,12 @@ export class Jikan extends Meta {
       };
     }
   }
+
   /**
-   * Fetches characters associated with a specific anime.
-   * @param {number} malId - The unique MyAnimeList (MAL) ID for the anime (required).
-   * @returns A promise that resolves to an object containing an array of anime characters.
+   * Fetches characters associated with a specific anime from MyAnimeList.
+   *
+   * @param malId - The unique MyAnimeList (MAL) ID for the anime (required)
+   * @returns Promise that resolves to anime characters with voice actor information
    */
   async fetchAnimeCharacters(malId: number): Promise<IResponse<IMetaCharacters[] | []>> {
     if (!malId) {
@@ -544,13 +614,17 @@ export class Jikan extends Meta {
         data: [],
       };
     }
+
     try {
       const response = await this.client.get(`${this.baseUrl}/anime/${malId}/characters`);
-      if (!response.data)
+
+      if (!response.data) {
         return {
           error: response.statusText || 'Server returned an empty response',
           data: [],
         };
+      }
+
       const res: IMetaCharacters[] = response.data.data.map((item: any) => ({
         role: item.role,
         id: item.character.mal_id,
@@ -566,6 +640,7 @@ export class Jikan extends Meta {
           language: item2.language,
         })),
       }));
+
       return {
         data: res,
       };
@@ -576,12 +651,14 @@ export class Jikan extends Meta {
       };
     }
   }
+
   /**
-   * Fetches the anime list for the current season.
-   * @param {number} [page] - The page number for pagination (optional, defaults to 1).
-   * @param {number} [perPage] - The number of results per page (optional, defaults to 20, maximum 25).
-   * @param {IMetaFormat} [format] - The format type to filter by (optional, defaults to TV).
-   * @returns  A promise that resolves to an object containing the list of current seasonal anime.
+   * Fetches the anime list for the current season from MyAnimeList.
+   *
+   * @param page - The page number for pagination (required)
+   * @param perPage - The number of results per page (required, maximum 25)
+   * @param format - The format type to filter by (optional, defaults to TV)
+   * @returns Promise that resolves to paginated list of current seasonal anime
    */
   async fetchCurrentSeason(
     page: number,
@@ -609,7 +686,8 @@ export class Jikan extends Meta {
           limit: String(perPage),
         },
       });
-      if (!response.data)
+
+      if (!response.data) {
         return {
           hasNextPage: false,
           currentPage: 0,
@@ -619,6 +697,7 @@ export class Jikan extends Meta {
           data: [],
           error: response.statusText || 'Server returned an empty response',
         };
+      }
 
       const res = response.data;
       const pagination = {
@@ -628,6 +707,7 @@ export class Jikan extends Meta {
         total: res.pagination.items.total,
         perPage: res.pagination.items.per_page,
       };
+
       const currentSeason: IMetaAnime[] = res.data.map((item: any) => ({
         malId: item.mal_id,
         title: {
@@ -695,11 +775,12 @@ export class Jikan extends Meta {
   }
 
   /**
-   * Fetches the anime list for the upcoming season.
-   * @param {number} [page] - The page number for pagination (optional, defaults to 1).
-   * @param {number} [perPage] - The number of results per page (optional, defaults to 20, maximum 25).
-   * @param {IMetaFormat} [format] - The format type to filter by (optional, defaults to TV).
-   * @returns A promise that resolves to an object containing the list of upcoming season's anime.
+   * Fetches the anime list for the upcoming season from MyAnimeList.
+   *
+   * @param page - The page number for pagination (optional, defaults to 1)
+   * @param perPage - The number of results per page (optional, defaults to 20, maximum 25)
+   * @param format - The format type to filter by (optional, defaults to TV)
+   * @returns Promise that resolves to paginated list of upcoming season's anime
    */
   async fetchNextSeason(
     page: number = 1,
@@ -727,7 +808,8 @@ export class Jikan extends Meta {
           limit: String(perPage),
         },
       });
-      if (!response.data)
+
+      if (!response.data) {
         return {
           hasNextPage: false,
           currentPage: 0,
@@ -737,6 +819,8 @@ export class Jikan extends Meta {
           data: [],
           error: response.statusText || 'Server returned an empty response',
         };
+      }
+
       const res = response.data;
       const pagination = {
         hasNextPage: res.pagination.has_next_page,
@@ -811,14 +895,16 @@ export class Jikan extends Meta {
       };
     }
   }
+
   /**
-   * Fetches seasonal anime for a given year and season.
-   * @param {Seasons} season - The target season (e.g., WINTER, SPRING, SUMMER, FALL) (required).
-   * @param {number} year - The target year (e.g., 2023, 2024) (required).
-   * @param {IMetaFormat} [format] - The anime format to filter by (optional, defaults to TV).
-   * @param {number} [page] - The page number for pagination (optional, defaults to 1).
-   * @param {number} [perPage] - The number of results per page (optional, defaults to 20, maximum 25).
-   * @returns  A promise that resolves to an object containing the list of seasonal anime.
+   * Fetches seasonal anime for a given year and season from MyAnimeList.
+   *
+   * @param season - The target season (e.g., WINTER, SPRING, SUMMER, FALL) (required)
+   * @param year - The target year (e.g., 2023, 2024) (required)
+   * @param format - The anime format to filter by (optional, defaults to TV)
+   * @param page - The page number for pagination (optional, defaults to 1)
+   * @param perPage - The number of results per page (optional, defaults to 20, maximum 25)
+   * @returns Promise that resolves to paginated list of seasonal anime
    */
   async fetchSeasonalAnime(
     season: Seasons,
@@ -838,6 +924,7 @@ export class Jikan extends Meta {
         error: 'Missing required parameter : year or season',
       };
     }
+
     try {
       const response = await this.client.get(`${this.baseUrl}/seasons/${year}/${season.toLowerCase()}`, {
         params: {
@@ -847,7 +934,8 @@ export class Jikan extends Meta {
           limit: String(perPage),
         },
       });
-      if (!response.data)
+
+      if (!response.data) {
         return {
           hasNextPage: false,
           currentPage: 0,
@@ -857,6 +945,7 @@ export class Jikan extends Meta {
           data: [],
           error: response.statusText || 'Server returned an empty response',
         };
+      }
 
       const res = response.data;
       const pagination = {
@@ -933,11 +1022,13 @@ export class Jikan extends Meta {
       };
     }
   }
+
   /**
-   * Fetches a list of the most anticipated upcoming anime.
-   * @param {number} [page=1] - The page number for pagination (optional, defaults to 1).
-   * @param {number} [perPage=20] - The number of results per page (optional, defaults to 20, maximum 25).
-   * @returns  A promise that resolves to an object containing an array of upcoming anime resources.
+   * Fetches a list of the most anticipated upcoming anime from MyAnimeList.
+   *
+   * @param page - The page number for pagination (optional, defaults to 1)
+   * @param perPage - The number of results per page (optional, defaults to 20, maximum 25)
+   * @returns Promise that resolves to paginated list of upcoming anime resources
    */
   async fetchTopUpcoming(page: number = 1, perPage: number = 20): Promise<IAnimePaginated<IMetaAnime[] | []>> {
     try {
@@ -949,7 +1040,8 @@ export class Jikan extends Meta {
           limit: String(perPage),
         },
       });
-      if (!response.data)
+
+      if (!response.data) {
         return {
           hasNextPage: false,
           currentPage: 0,
@@ -959,6 +1051,8 @@ export class Jikan extends Meta {
           data: [],
           error: response.statusText || 'Server returned an empty response',
         };
+      }
+
       const res = response.data;
       const pagination = {
         hasNextPage: res.pagination.has_next_page,
@@ -1035,12 +1129,15 @@ export class Jikan extends Meta {
       };
     }
   }
+
   /**
-   * Fetches a list of the top-rated anime.
-   * @param {number} [page] - The page number for pagination (optional, defaults to 1).
-   * @param {number} [perPage] - The number of results per page (optional, defaults to 20).
-   * @param {Format} [format] - The anime format to filter by (optional, defaults to TV).
-   * @returns  A promise that resolves to an object containing an array of top-rated anime.
+   * Fetches a list of the top-rated anime from MyAnimeList.
+   *
+   * @param page - The page number for pagination (optional, defaults to 1)
+   * @param perPage - The number of results per page (optional, defaults to 20)
+   * @param format - The anime format to filter by (optional, defaults to TV)
+   * @param sort - The sorting criteria (optional, defaults to 'rating')
+   * @returns Promise that resolves to paginated list of top-rated anime
    */
   async fetchTopAnime(
     page: number = 1,
@@ -1061,7 +1158,8 @@ export class Jikan extends Meta {
       }
 
       const response = await this.client.get(`${this.baseUrl}/top/anime`, { params });
-      if (!response.data)
+
+      if (!response.data) {
         return {
           hasNextPage: false,
           currentPage: 0,
@@ -1071,6 +1169,8 @@ export class Jikan extends Meta {
           data: [],
           error: response.statusText || 'Server returned an empty response',
         };
+      }
+
       const res = response.data;
       const pagination = {
         hasNextPage: res.pagination.has_next_page,
@@ -1148,11 +1248,13 @@ export class Jikan extends Meta {
   }
 
   /**
-   * Fetches a list of the top airing anime.
-   * @param {number} [page] - The page number for pagination (optional, defaults to 1).
-   * @param {number} [perPage] - The number of results per page (optional, defaults to 20, maximum 25).
-   * @param {IMetaFormat} [format] - The format type to filter by (optional, defaults to TV).
-   * @returns A promise that resolves to an object containing the list of top airing anime.
+   * Fetches a list of the top airing anime from MyAnimeList.
+   *
+   * @param page - The page number for pagination (optional, defaults to 1)
+   * @param perPage - The number of results per page (optional, defaults to 20, maximum 25)
+   * @param format - The format type to filter by (optional, defaults to TV)
+   * @param sort - The sorting criteria (optional, defaults to 'airing')
+   * @returns Promise that resolves to paginated list of top airing anime
    */
   async fetchTopAiring(
     page: number = 1,
@@ -1164,12 +1266,13 @@ export class Jikan extends Meta {
   }
 
   /**
-   * Fetches a list of the top  anime by category.
-   *  @param {IMetaFormat} [format] - The anime format type to filter by (required).
-   * @param {JSort} [sort] -  The sorting order for results (required).
-   * @param {number} [page] - The page number for pagination (required).
-   * @param {number} [perPage] - The number of results per page (required, maximum 25).
-   * @returns A promise that resolves to an object containing the list of top anime by category.
+   * Fetches a list of the top anime by category from MyAnimeList.
+   *
+   * @param format - The anime format type to filter by (required)
+   * @param sort - The sorting order for results (required)
+   * @param page - The page number for pagination (required)
+   * @param perPage - The number of results per page (required, maximum 25)
+   * @returns Promise that resolves to paginated list of top anime by category
    */
   async fetchTopCategory(
     format: IMetaFormat,
@@ -1181,11 +1284,13 @@ export class Jikan extends Meta {
   }
 
   /**
-   * Fetches a list of the most popular anime.
-   * @param {number} [page=1] - The page number for pagination (optional, defaults to 1).
-   * @param {number} [perPage] - The number of results per page (optional, defaults to 20, maximum 25).
-   * @param {Format} [format] - The format type to filter by (optional, defaults to TV).
-   * @returns  A promise that resolves to an object containing the list of most popular anime.
+   * Fetches a list of the most popular anime from MyAnimeList.
+   *
+   * @param page - The page number for pagination (optional, defaults to 1)
+   * @param perPage - The number of results per page (optional, defaults to 20, maximum 25)
+   * @param format - The format type to filter by (optional, defaults to TV)
+   * @param sort - The sorting criteria (optional, defaults to 'bypopularity')
+   * @returns Promise that resolves to paginated list of most popular anime
    */
   async fetchMostPopular(
     page: number = 1,
@@ -1197,10 +1302,13 @@ export class Jikan extends Meta {
   }
 
   /**
-   * Fetches a list of the top anime movies.
-   * @param {number} [page] - The page number for pagination (optional, defaults to 1).
-   * @param {number} [perPage] - The number of results per page (optional, defaults to 20, maximum 25).
-   * @returns   A promise that resolves to an object containing the list of top anime movies..
+   * Fetches a list of the top anime movies from MyAnimeList.
+   *
+   * @param page - The page number for pagination (optional, defaults to 1)
+   * @param perPage - The number of results per page (optional, defaults to 20, maximum 25)
+   * @param format - The anime format type (optional, defaults to 'MOVIE')
+   * @param sort - The sorting criteria (optional, defaults to 'bypopularity')
+   * @returns Promise that resolves to paginated list of top anime movies
    */
   async fetchTopMovies(
     page: number = 1,
@@ -1213,9 +1321,10 @@ export class Jikan extends Meta {
 
   /**
    * Fetches the episode list for a given anime directly from MyAnimeList (MAL).
-   * @param {number} malId - The unique MyAnimeList (MAL) ID for the anime (required).
-   * @param {number} [page=1] - The page number for pagination (optional, defaults to 1).
-   * @returns  A promise that resolves to an object containing the anime episodes list.
+   *
+   * @param malId - The unique MyAnimeList (MAL) ID for the anime (required)
+   * @param page - The page number for pagination (optional, defaults to 1)
+   * @returns Promise that resolves to paginated list of anime episodes
    */
   async fetchEpisodes(malId: number, page: number = 1): Promise<IAnimePaginated<IMetaEpisodes[] | []>> {
     if (!malId) {
@@ -1234,7 +1343,8 @@ export class Jikan extends Meta {
           page: String(page),
         },
       });
-      if (!response.data)
+
+      if (!response.data) {
         return {
           hasNextPage: false,
           currentPage: 0,
@@ -1242,6 +1352,8 @@ export class Jikan extends Meta {
           data: [],
           error: response.statusText || 'Server returned an empty response',
         };
+      }
+
       const pagination = {
         hasNextPage: response.data.pagination.has_next_page,
         lastPage: response.data.pagination.last_visible_page,
@@ -1260,6 +1372,7 @@ export class Jikan extends Meta {
         recap: item.recap,
         score: item.score,
       }));
+
       return {
         hasNextPage: pagination.hasNextPage,
         currentPage: pagination.currentPage,
@@ -1279,9 +1392,10 @@ export class Jikan extends Meta {
 
   /**
    * Fetches detailed information about a specific episode from MyAnimeList (MAL).
-   * @param {number} malId - The unique MyAnimeList (MAL) ID for the anime (required).
-   * @param {number} episodeNumber - The specific episode number (required).
-   * @returns  A promise that resolves to an object containing the detailed episode information.
+   *
+   * @param malId - The unique MyAnimeList (MAL) ID for the anime (required)
+   * @param episodeNumber - The specific episode number (required)
+   * @returns Promise that resolves to detailed episode information
    */
   async fetchEpisodeInfo(malId: number, episodeNumber: number): Promise<IResponse<IMetaEpisodes | null>> {
     if (!malId && !episodeNumber) {
@@ -1293,11 +1407,14 @@ export class Jikan extends Meta {
 
     try {
       const response = await this.client.get(`${this.baseUrl}/anime/${malId}/episodes/${episodeNumber}`);
-      if (!response.data)
+
+      if (!response.data) {
         return {
           error: response.statusText || 'Server returned an empty response',
           data: null,
         };
+      }
+
       const data: IMetaEpisodes = {
         number: response.data.data.mal_id,
         url: response.data.data.url,
@@ -1311,6 +1428,7 @@ export class Jikan extends Meta {
         recap: response.data.data.recap,
         synopsis: response.data.data.synopsis,
       };
+
       return {
         data: data,
       };
@@ -1323,11 +1441,11 @@ export class Jikan extends Meta {
   }
 
   /**
-   * Fetches anime information along with a provider-specific anime ID. Kind of depends on provider availability
-   * This is useful for linking MAL entries to external streaming provider IDs.
-   * @param {number} malId - The unique mal anime ID (required).
-   * @param {AnimeProvider} [provider] - The anime provider to fetch data from (optional, defaults to HiAnime)
-   * @returns  A promise that resolves to an object containing the provider-specific anime ID and core anime info.
+   * Fetches anime information along with a provider-specific anime ID for MyAnimeList entries.
+   *
+   * @param malId - The unique MyAnimeList anime ID (required)
+   * @param provider - The anime provider to fetch data from (optional, defaults to HiAnime)
+   * @returns Promise that resolves to provider-specific anime ID and core anime info
    */
   async fetchProviderId(
     malId: number,
@@ -1340,6 +1458,7 @@ export class Jikan extends Meta {
         provider: null,
       };
     }
+
     try {
       switch (provider) {
         case 'hianime':
@@ -1348,6 +1467,7 @@ export class Jikan extends Meta {
             throw new Error(zoro.error);
           }
           return { data: zoro.data, provider: zoro.provider };
+
         case 'allanime':
           const allanime = await this.fetchAllAnimeProviderId(malId);
           if ('error ' in allanime) {
@@ -1360,7 +1480,6 @@ export class Jikan extends Meta {
           if ('error ' in animepahe) {
             throw new Error(animepahe.error);
           }
-
           return { data: animepahe.data, provider: animepahe.provider };
       }
     } catch (error) {
@@ -1374,12 +1493,11 @@ export class Jikan extends Meta {
 
   /**
    * Fetches anime information along with provider-specific episode details using the MAL ID.
-   * This is used to get streamable episodes from a given provider.
-   * @param {number} malId - The unique MAL ID of the anime (required).
-   * @param  provider - The anime provider to fetch episodes from (optional, defaults to HiAnime)
-   * @returns  A promise that resolves to an object containing anime info and its episodes from the specified provider.
+   *
+   * @param malId - The unique MAL ID of the anime (required)
+   * @param provider - The anime provider to fetch episodes from (optional, defaults to HiAnime)
+   * @returns Promise that resolves to anime info and its episodes from the specified provider
    */
-
   async fetchAnimeProviderEpisodes(
     malId: number,
     provider: 'hianime' | 'allanime' | 'animepahe' = 'hianime',
@@ -1391,6 +1509,7 @@ export class Jikan extends Meta {
         providerEpisodes: [],
       };
     }
+
     try {
       switch (provider) {
         case 'hianime':
@@ -1399,12 +1518,14 @@ export class Jikan extends Meta {
             throw new Error(zoro.error);
           }
           return { data: zoro.data, providerEpisodes: zoro.providerEpisodes };
+
         case 'allanime':
           const allanime = await this.fetchAllAnimeProviderEpisodes(malId);
           if ('error ' in allanime) {
             throw new Error(allanime.error);
           }
           return { data: allanime.data, providerEpisodes: allanime.providerEpisodes };
+
         case 'animepahe':
           const animepahe = await this.fetchPaheProviderEpisodes(malId);
           if ('error ' in animepahe) {
@@ -1420,32 +1541,36 @@ export class Jikan extends Meta {
       };
     }
   }
+
   /**
-   * Fetches video sources for a given episode from multiple servers allanime.
-   * @param episodeId - The unique ID of the episode to fetch sources forgotten from providerEpisodes array .
-   * @param category - The translation category (sub, dub, or raw, default: 'sub').
-   * @returns A promise resolving  to an object containing video sources to stream.
+   * Fetches video sources for a given episode from multiple servers for AllAnime provider.
+   *
+   * @param episodeId - The unique ID of the episode from providerEpisodes array
+   * @param category - The translation category (sub, dub, or raw, default: 'sub')
+   * @returns Promise resolving to video sources for streaming
    */
   async fetchAllAnimeProviderSources(episodeId: string, category: ISubOrDub = 'sub') {
     return await this.fetchAllAnimeSources(episodeId, category);
   }
 
   /**
-   * Fetches video sources for a given episodeId for hianime.
-   * @param episodeId - The unique ID of the episode to fetch sources forgotten from providerEpisodes array .
-   * @param category - The translation category (sub, dub, or raw, default: 'sub').
-   * @param  server - The streaming server to use (optional, defaults to hd-2). Note: hd-1 may return a 403 error due to CORS restrictions; use a proxy or switch to hd-2 or hd-3
-   * @returns A promise resolving  to an object containing video sources to stream.
+   * Fetches video sources for a given episode for HiAnime provider.
+   *
+   * @param episodeId - The unique ID of the episode from providerEpisodes array
+   * @param category - The translation category (sub, dub, or raw, default: 'sub')
+   * @param server - The streaming server to use (optional, defaults to hd-2)
+   * @returns Promise resolving to video sources for streaming
    */
   async fetchHianimeProviderSources(episodeId: string, category: ISubOrDub = 'sub', server: HiAnimeServers = 'hd-2') {
     return await this.fetchZoroSources(episodeId, server, category);
   }
 
   /**
-   * Fetches streaming sources for a given anime episode from a specified  category.
-   * @param {string} episodeId - The unique identifier for the episode (required).
-   * @param {ISubOrDub} category  - The audio category (Subtitled or Dubbed) (optional, defaults to SubOrDub.SUB).
-   * @returns  A promise that resolves to an object containing streaming sources, headers,  or an error message.
+   * Fetches streaming sources for a given anime episode from a specified category for AnimePahe provider.
+   *
+   * @param episodeId - The unique identifier for the episode (required)
+   * @param category - The audio category (Subtitled or Dubbed) (optional, defaults to 'sub')
+   * @returns Promise that resolves to streaming sources, headers, or an error message
    */
   async fetchAnimePaheProviderSources(episodeId: string, category: ISubOrDub = 'sub') {
     return await this.fetchPaheSouces(episodeId, category);

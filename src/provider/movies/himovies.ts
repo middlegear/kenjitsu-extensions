@@ -21,14 +21,25 @@ import {
 import VideoStream from '../../source-extractors/videostream.js';
 import { BaseClass } from '../../models/base-anime.js';
 
-/** A scraper and API wrapper for the unofficial HiMovies website,
- * providing methods to fetch and parse movies, TV shows, and related data. */
-
+/**
+ * A scraper and API wrapper for the unofficial HiMovies website,
+ * providing methods to fetch and parse movies, TV shows, and related data.
+ *
+ *
+ */
 export class HiMovies extends BaseClass {
   private readonly baseUrl = 'https://himovies.sx';
   constructor() {
     super();
   }
+  /**
+   * Parses movie/TV show items from a Cheerio selection for standard item lists.
+   *
+   * @private
+   * @param $ - Cheerio API instance
+   * @param selector - CSS selector for the items to parse
+   * @returns Array of parsed movie or TV show objects
+   */
 
   private parseItems($: cheerio.CheerioAPI, selector: cheerio.SelectorType) {
     const items: IMovieOrTv[] = [];
@@ -77,6 +88,15 @@ export class HiMovies extends BaseClass {
 
     return items;
   }
+
+  /**
+   * Parses mixed movie/TV show items from a Cheerio selection for upcoming content sections.
+   *
+   * @private
+   * @param $ - Cheerio API instance
+   * @param selector - CSS selector for the mixed items to parse
+   * @returns Array of parsed movie or TV show objects with additional release date information
+   */
 
   private parseMixedSection($: cheerio.CheerioAPI, selector: cheerio.SelectorType): IMovieOrTv[] {
     const items: IMovieOrTv[] = [];
@@ -127,6 +147,13 @@ export class HiMovies extends BaseClass {
 
     return items;
   }
+  /**
+   * Parses the complete homepage structure from HIMovies including, trending, recent releases, and upcoming content.
+   *
+   * @private
+   * @param $ - Cheerio API instance containing homepage HTML
+   * @returns Complete homepage data structure with all sections parsed
+   */
 
   private parseHome($: cheerio.CheerioAPI) {
     const trendingMoviesSelector: cheerio.SelectorType = 'div.tab-content div#trending-movies div.flw-item';
@@ -157,6 +184,15 @@ export class HiMovies extends BaseClass {
       upcoming,
     };
   }
+
+  /**
+   * Parses paginated results from  search, category, or filter pages.
+   *
+   * @private
+   * @param $ - Cheerio API instance containing paginated HTML content
+   * @param selector - CSS selector for the media items in the paginated results
+   * @returns Paginated results object with media items and pagination metadata
+   */
 
   private parsePaginatedResults($: cheerio.CheerioAPI, selector: cheerio.SelectorType) {
     const paginationElement = $('div.pre-pagination:last ul.pagination-lg.justify-content-center');
@@ -229,6 +265,13 @@ export class HiMovies extends BaseClass {
     return { hasNextPage, currentPage, lastPage, data: items };
   }
 
+  /**
+   * Parses search suggestions from AJAX autocomplete response.
+   *
+   * @private
+   * @param $ - Cheerio API instance containing search suggestions HTML
+   * @returns Response object containing parsed search suggestion items
+   */
   private parseSearchSuggestions($: cheerio.CheerioAPI) {
     const selector: cheerio.SelectorType = 'a.nav-item';
 
@@ -275,6 +318,14 @@ export class HiMovies extends BaseClass {
     });
     return { data: items };
   }
+
+  /**
+   * Parses the recommended section from individual media info pages.
+   *
+   * @private
+   * @param $ - Cheerio API instance containing media info page HTML
+   * @returns Array of recommended movie or TV show items
+   */
 
   private parseInfoRecommendedSection($: cheerio.CheerioAPI): IMovieOrTv[] {
     const items: IMovieOrTv[] = [];
@@ -325,6 +376,14 @@ export class HiMovies extends BaseClass {
     return items;
   }
 
+  /**
+   * Parses detailed media information from media detail pages.
+   *
+   * @private
+   * @param $ - Cheerio API instance containing media info page HTML
+   * @returns Media information object with detailed metadata and recommendations
+   */
+
   private parseInfo($: cheerio.CheerioAPI) {
     const recommended = this.parseInfoRecommendedSection($);
     const id = $('h2.heading-name > a').attr('href')?.slice(1).replace('/', '-') || null;
@@ -372,6 +431,14 @@ export class HiMovies extends BaseClass {
     return { data: mediaInfo, recommended };
   }
 
+  /**
+   * Parses available seasons from TV show season dropdown.
+   *
+   * @private
+   * @param $ - Cheerio API instance containing season dropdown HTML
+   * @returns Array of season objects with season IDs and numbers
+   */
+
   private parseSeasons($: cheerio.CheerioAPI) {
     return $('.dropdown-menu > a')
       .map((_, el) => {
@@ -382,7 +449,37 @@ export class HiMovies extends BaseClass {
       })
       .get();
   }
+  /**
+   * Constructs AJAX URLs for different endpoints for episode and server data.
+   *
+   * @private
+   * @param id - The media or season identifier
+   * @param kind - The type of AJAX request ('movie-server', 'tv-server', 'tv', 'season')
+   * @returns Complete AJAX URL for the specified endpoint type
+   */
 
+  private buildAjaxUrl(id: string, kind: 'movie-server' | 'tv-server' | 'tv' | 'season'): string {
+    switch (kind) {
+      case 'movie-server':
+        return `${this.baseUrl}/ajax/episode/list/${id}`;
+      case 'tv-server':
+        return `${this.baseUrl}/ajax/episode/servers/${id}`;
+      case 'tv':
+        return `${this.baseUrl}/ajax/season/episodes/${id}`; // fetch episodes per season
+      case 'season':
+        return `${this.baseUrl}/ajax/season/list/${id}`; ///fetches season list
+    }
+  }
+
+  /**
+   * Parses episode information from season episodes AJAX response.
+   *
+   * @private
+   * @param $ - Cheerio API instance containing season episodes HTML
+   * @param seasonNumber - The season number these episodes belong to
+   * @param media - The media identifier for constructing episode IDs
+   * @returns Array of parsed episode objects with titles and numbering
+   */
   private parseEpisodes($: cheerio.CheerioAPI, seasonNumber: number, media: string) {
     return $('.nav > li')
       .map((_, el) => {
@@ -400,6 +497,13 @@ export class HiMovies extends BaseClass {
       .get();
   }
 
+  /**
+   * Parses available streaming servers from  server list AJAX response.
+   *
+   * @private
+   * @param $ - Cheerio API instance containing server list HTML
+   * @returns Array of server objects with server IDs and names
+   */
   private parseServers($: cheerio.CheerioAPI) {
     const servers: IMovieServers[] = [];
     $('ul.nav > li.nav-item').each((_, element) => {
@@ -411,6 +515,15 @@ export class HiMovies extends BaseClass {
     return servers;
   }
 
+  /**
+   * Finds the server ID for a specific server name from the available servers list.
+   *
+   * @private
+   * @param servers - Array of available server objects
+   * @param server - The target server name to find ('upcloud', 'megacloud', or 'akcloud')
+   * @returns The server ID for the specified server
+   * @throws Error if the specified server is not available
+   */
   private findServerId(servers: IMovieServers[], server: 'upcloud' | 'megacloud' | 'akcloud'): string {
     const availableServers = servers.map(s => s.serverName || 'unknown');
     const serverIndex = servers.findIndex(s => (s.serverName || '').toLowerCase() === server.toLowerCase());
@@ -423,6 +536,15 @@ export class HiMovies extends BaseClass {
 
     return servers[serverIndex].serverId as string;
   }
+
+  /**
+   * Fetches paginated content for various categories, filters, and search endpoints.
+   *
+   * @private
+   * @param path - The URL path, filter string, or category identifier
+   * @param page - The page number for pagination
+   * @returns Promise resolving to paginated media results with error handling
+   */
   private async fetchPaginated(path: string, page: number): Promise<IAnimePaginated<IMovieOrTv[] | []>> {
     try {
       let url;
@@ -462,8 +584,9 @@ export class HiMovies extends BaseClass {
   }
 
   /**
-   * Fetches curated lists from the Himovies homepage.
-   * @returns Promise resolving to an object with various curated media lists
+   * Fetches curated lists from the HiMovies homepage including , trending content, recent releases, and upcoming media.
+   *
+   * @returns Promise resolving to complete homepage data structure with all curated sections
    */
   async fetchHome(): Promise<IHomeHIResponse<IMovieOrTv[] | []>> {
     try {
@@ -657,19 +780,6 @@ export class HiMovies extends BaseClass {
     const value = this.getMappedValue(country, HIMovieCountryCode);
 
     return await this.fetchPaginated(`/country/${value}`, page);
-  }
-
-  private buildAjaxUrl(id: string, kind: 'movie-server' | 'tv-server' | 'tv' | 'season'): string {
-    switch (kind) {
-      case 'movie-server':
-        return `${this.baseUrl}/ajax/episode/list/${id}`;
-      case 'tv-server':
-        return `${this.baseUrl}/ajax/episode/servers/${id}`;
-      case 'tv':
-        return `${this.baseUrl}/ajax/season/episodes/${id}`; // fetch episodes per season
-      case 'season':
-        return `${this.baseUrl}/ajax/season/list/${id}`; ///fetches season list
-    }
   }
 
   /**

@@ -22,14 +22,28 @@ import {
 } from '../../models/types.js';
 import VidCloud from '../../source-extractors/vidcloud.js';
 
-/** A scraper and API wrapper for the unofficial FlixHQ website,
- * providing methods to fetch and parse movies, TV shows, and related data. */
+/**
+ * A scraper and API wrapper for the unofficial FlixHQ website,
+ * providing methods to fetch and parse movies, TV shows, and related data.
+ *
+ *
+ */
 
 export class FlixHQ extends BaseClass {
   private readonly baseUrl: string = 'https://flixhq.to';
   constructor() {
     super();
   }
+
+  /**
+   * Parses movie/TV show items from a Cheerio selection for standard item lists.
+   *
+   * @private
+   * @param $ - Cheerio API instance
+   * @param selector - CSS selector for the items to parse
+   * @returns Array of parsed movie or TV show objects
+   */
+
   private parseItems($: cheerio.CheerioAPI, selector: cheerio.SelectorType) {
     const items: IMovieOrTv[] = [];
 
@@ -77,6 +91,16 @@ export class FlixHQ extends BaseClass {
 
     return items;
   }
+
+  /**
+   * Parses mixed movie/TV show items from a Cheerio selection for upcoming content sections.
+   *
+   * @private
+   * @param $ - Cheerio API instance
+   * @param selector - CSS selector for the mixed items to parse
+   * @returns Array of parsed movie or TV show objects with additional release date information
+   */
+
   private parseMixedSection($: cheerio.CheerioAPI, selector: cheerio.SelectorType): IMovieOrTv[] {
     const items: IMovieOrTv[] = [];
 
@@ -126,6 +150,14 @@ export class FlixHQ extends BaseClass {
 
     return items;
   }
+
+  /**
+   * Parses the complete homepage structure from FlixHQ including featured slider, trending, recent releases, and upcoming content.
+   *
+   * @private
+   * @param $ - Cheerio API instance containing homepage HTML
+   * @returns Complete homepage data structure with all sections parsed
+   */
 
   private parseHome($: cheerio.CheerioAPI) {
     const selector: cheerio.SelectorType = 'div#slider > div.swiper-wrapper  > div.swiper-slide';
@@ -183,6 +215,15 @@ export class FlixHQ extends BaseClass {
       upcoming,
     };
   }
+
+  /**
+   * Parses paginated results from FlixHQ search, category, or filter pages.
+   *
+   * @private
+   * @param $ - Cheerio API instance containing paginated HTML content
+   * @param selector - CSS selector for the media items in the paginated results
+   * @returns Paginated results object with media items and pagination metadata
+   */
 
   private parsePaginatedResults($: cheerio.CheerioAPI, selector: cheerio.SelectorType) {
     const paginationElement = $('div.pre-pagination:last ul.pagination-lg.justify-content-center');
@@ -255,6 +296,14 @@ export class FlixHQ extends BaseClass {
     return { hasNextPage, currentPage, lastPage, data: items };
   }
 
+  /**
+   * Parses search suggestions from FlixHQ AJAX autocomplete response.
+   *
+   * @private
+   * @param $ - Cheerio API instance containing search suggestions HTML
+   * @returns Response object containing parsed search suggestion items
+   */
+
   private parseSearchSuggestions($: cheerio.CheerioAPI) {
     const selector: cheerio.SelectorType = 'a.nav-item';
 
@@ -301,6 +350,14 @@ export class FlixHQ extends BaseClass {
     });
     return { data: items };
   }
+
+  /**
+   * Parses the recommended section from individual media info pages.
+   *
+   * @private
+   * @param $ - Cheerio API instance containing media info page HTML
+   * @returns Array of recommended movie or TV show items
+   */
 
   private parseInfoRecommendedSection($: cheerio.CheerioAPI): IMovieOrTv[] {
     const items: IMovieOrTv[] = [];
@@ -351,6 +408,14 @@ export class FlixHQ extends BaseClass {
     return items;
   }
 
+  /**
+   * Parses detailed media information from FlixHQ media detail pages.
+   *
+   * @private
+   * @param $ - Cheerio API instance containing media info page HTML
+   * @returns Media information object with detailed metadata and recommendations
+   */
+
   private parseInfo($: cheerio.CheerioAPI) {
     const recommended = this.parseInfoRecommendedSection($);
     const id = $('h2.heading-name > a').attr('href')?.slice(1).replace('/', '-') || null;
@@ -400,6 +465,14 @@ export class FlixHQ extends BaseClass {
     return { data: mediaInfo, recommended };
   }
 
+  /**
+   * Parses available seasons from FlixHQ TV show season dropdown.
+   *
+   * @private
+   * @param $ - Cheerio API instance containing season dropdown HTML
+   * @returns Array of season objects with season IDs and numbers
+   */
+
   private parseSeasons($: cheerio.CheerioAPI) {
     return $('.dropdown-menu > a')
       .map((_, el) => {
@@ -410,6 +483,16 @@ export class FlixHQ extends BaseClass {
       })
       .get();
   }
+
+  /**
+   * Constructs AJAX URLs for different FlixHQ endpoints for episode and server data.
+   *
+   * @private
+   * @param id - The media or season identifier
+   * @param kind - The type of AJAX request ('movie-server', 'tv-server', 'tv', 'season')
+   * @returns Complete AJAX URL for the specified endpoint type
+   */
+
   private buildAjaxUrl(id: string, kind: 'movie-server' | 'tv-server' | 'tv' | 'season'): string {
     switch (kind) {
       case 'movie-server':
@@ -422,6 +505,16 @@ export class FlixHQ extends BaseClass {
         return `${this.baseUrl}/ajax/season/list/${id}`; ///fetches season list
     }
   }
+
+  /**
+   * Parses episode information from FlixHQ season episodes AJAX response.
+   *
+   * @private
+   * @param $ - Cheerio API instance containing season episodes HTML
+   * @param seasonNumber - The season number these episodes belong to
+   * @param media - The media identifier for constructing episode IDs
+   * @returns Array of parsed episode objects with titles and numbering
+   */
 
   private parseEpisodes($: cheerio.CheerioAPI, seasonNumber: number, media: string) {
     return $('.nav > li')
@@ -440,10 +533,16 @@ export class FlixHQ extends BaseClass {
       .get();
   }
 
+  /**
+   * Parses available streaming servers from FlixHQ server list AJAX response.
+   *
+   * @private
+   * @param $ - Cheerio API instance containing server list HTML
+   * @returns Array of server objects with server IDs and names
+   */
   private parseServers($: cheerio.CheerioAPI) {
     const servers: IMovieServers[] = [];
     $('ul.nav > li.nav-item').each((_, element) => {
-      //check for tv fallback to movie
       const serverId = $(element).find('a').attr('data-id');
       servers.push({
         serverId: serverId ? serverId : $(element).find('a').attr('data-linkid') || null,
@@ -452,6 +551,17 @@ export class FlixHQ extends BaseClass {
     });
     return servers;
   }
+
+  /**
+   * Finds the server ID for a specific server name from the available servers list.
+   *
+   * @private
+   * @param servers - Array of available server objects
+   * @param server - The target server name to find ('upcloud', 'vidcloud', or 'akcloud')
+   * @returns The server ID for the specified server
+   * @throws Error if the specified server is not available
+   */
+
   private findServerId(servers: IMovieServers[], server: 'upcloud' | 'vidcloud' | 'akcloud'): string {
     const availableServers = servers.map(s => s.serverName || 'unknown');
     const serverIndex = servers.findIndex(s => (s.serverName || '').toLowerCase() === server.toLowerCase());
@@ -464,6 +574,16 @@ export class FlixHQ extends BaseClass {
 
     return servers[serverIndex].serverId as string;
   }
+
+  /**
+   * Fetches paginated content from FlixHQ for various categories, filters, and search endpoints.
+   *
+   * @private
+   * @param path - The URL path, filter string, or category identifier
+   * @param page - The page number for pagination
+   * @returns Promise resolving to paginated media results with error handling
+   */
+
   private async fetchPaginated(path: string, page: number): Promise<IAnimePaginated<IMovieOrTv[] | []>> {
     try {
       let url;
@@ -501,9 +621,11 @@ export class FlixHQ extends BaseClass {
       };
     }
   }
+
   /**
-   * Fetches curated lists from the FlixHq homepage.
-   * @returns Promise resolving to an object with various curated media lists
+   * Fetches curated lists from the FlixHQ homepage including featured slider, trending content, recent releases, and upcoming media.
+   *
+   * @returns Promise resolving to complete homepage data structure with all curated sections
    */
   async fetchHome(): Promise<IHomeHIResponse<IMovieOrTv[] | []>> {
     try {
@@ -530,11 +652,13 @@ export class FlixHQ extends BaseClass {
   }
 
   /**
-   * Searches for media based on the provided query string.
-   * @param {string} query - The search query string (required).
-   * @param {number} [page=1] - The page number for pagination (optional, defaults to 1).
-   * @returns  A promise that resolves to an object containing an array of media titles, pagination details, or an error message.
+   * Searches for movies and TV shows based on the provided query string across FlixHQ catalog.
+   *
+   * @param query - The search query string (required)
+   * @param page - The page number for pagination (optional, defaults to 1)
+   * @returns Promise resolving to paginated search results containing matching media items
    */
+
   async search(query: string, page: number = 1): Promise<IAnimePaginated<IMovieOrTv[] | []>> {
     if (!query) {
       return {
@@ -574,14 +698,16 @@ export class FlixHQ extends BaseClass {
   }
 
   /**
-   * Performs an advanced search with filters.
-   * @param {'all' | 'movie' | 'tv'} [type] - The media type filter (required).
-   * @param {'all' | 'HD' | 'SD' | 'CAM'} [quality] - The quality filter (required).
-   * @param {HIMoviesGenreID} [genre] - Genre filter (default ='all').
-   * @param {HIMoviesCountryID} [country] - Country filter (default ='all').
-   * @param {number} [page=1] - Page number for pagination (default ='all').
-   * @returns  Paginated filtered search results
+   * Performs an advanced search with multiple filter criteria including type, quality, genre, and country.
+   *
+   * @param type - The media type filter (all, movie, tv) (required)
+   * @param quality - The quality filter (all, HD, SD, CAM) (required)
+   * @param genre - Genre filter using HIMoviesGenreID mapping (optional, defaults to 'all')
+   * @param country - Country filter using HIMoviesCountryID mapping (optional, defaults to 'all')
+   * @param page - Page number for pagination (optional, defaults to 1)
+   * @returns Promise resolving to paginated results filtered by all specified criteria
    */
+
   async advancedSearch(
     type: 'all' | 'movie' | 'tv',
     quality: 'all' | 'HD' | 'SD' | 'CAM',
@@ -597,10 +723,12 @@ export class FlixHQ extends BaseClass {
   }
 
   /**
-   * Fetches search suggestions for a query string.
-   * @param {string} query - The search query string (required).
-   * @returns {Promise<IResponse<IMovieOrTv[] | []>>} Search suggestions for autocomplete
+   * Fetches search suggestions for autocomplete functionality based on partial query input.
+   *
+   * @param query - The partial search query string (required)
+   * @returns Promise resolving to search suggestions containing matching media items
    */
+
   async searchSuggestions(query: string): Promise<IResponse<IMovieOrTv[] | []>> {
     if (!query) {
       return {
@@ -638,9 +766,10 @@ export class FlixHQ extends BaseClass {
   }
 
   /**
-   * Fetches a paginated list of the most popular movies.
-   * @param {number} [page=1] - Page number for pagination (default: 1).
-   * @returns {Promise<IAnimePaginated<IMovieOrTv[] | []>>} Paginated popular movies
+   * Fetches a paginated list of the most popular movies from FlixHQ catalog.
+   *
+   * @param page - Page number for pagination (optional, defaults to 1)
+   * @returns Promise resolving to paginated list of popular movies sorted by popularity
    */
   async fetchPopularMovies(page: number = 1): Promise<IAnimePaginated<IMovieOrTv[] | []>> {
     return await this.fetchPaginated('movie', page);

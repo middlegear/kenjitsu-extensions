@@ -15,21 +15,32 @@ import { _getVidSrcMovieUrl, _getVidSrcTvUrl, type EmbedSrcResponse } from '../m
 
 /**
  * A class for interacting with The Movie Database (TMDb) API to search for and retrieve
- * information about TV shows and movies, including trending, popular, top-rated, seasonal data.
+ * information about TV shows and movies, including trending, popular, top-rated, seasonal data,
+ * episode information, and streaming source integration with external providers.
+ *
+ *
  */
 export class TheMovieDatabase extends Meta {
+  /** TMDb API key for authentication */
   private readonly apiKey: string = 'b29bfe548cc2a3e4225effbd54ef0fda';
+
+  /** Base URL for the TMDb API */
   private readonly baseUrl: string = 'https://api.themoviedb.org/3';
 
+  /**
+   * Creates an instance of the TMDb API client.
+   */
   constructor() {
     super();
   }
 
   /**
    * Reusable method to fetch paginated TV show data from TMDb API.
-   * @param {string} endpoint - The API endpoint to fetch data from (e.g., '/search/tv').
-   * @param {Record<string, string>} params - Query parameters for the API request.
-   * @returns A promise that resolves to an object containing paginated TV show data.
+   *
+   * @private
+   * @param endpoint - The API endpoint to fetch data from (e.g., '/search/tv')
+   * @param params - Query parameters for the API request
+   * @returns Promise resolving to paginated TV show data with metadata
    */
   private async fetchPaginatedData(
     endpoint: string,
@@ -106,9 +117,11 @@ export class TheMovieDatabase extends Meta {
 
   /**
    * Reusable method to fetch paginated movie data from TMDb API.
-   * @param {string} endpoint - The API endpoint to fetch data from (e.g., '/search/movie').
-   * @param {Record<string, string>} params - Query parameters for the API request.
-   * @returns A promise that resolves to an object containing paginated movie data.
+   *
+   * @private
+   * @param endpoint - The API endpoint to fetch data from (e.g., '/search/movie')
+   * @param params - Query parameters for the API request
+   * @returns Promise resolving to paginated movie data with metadata
    */
   private async fetchPaginatedMovieData(
     endpoint: string,
@@ -183,10 +196,11 @@ export class TheMovieDatabase extends Meta {
   }
 
   /**
-   * Searches for TV shows based on the provided query string.
-   * @param {string} query - The search query string (required).
-   * @param {number} [page=1] - The page number for pagination (optional, defaults to 1).
-   * @returns A promise that resolves to an object containing an array of TV shows related to the search query.
+   * Searches for TV shows based on the provided query string using TMDb API.
+   *
+   * @param query - The search query string (required)
+   * @param page - The page number for pagination (optional, defaults to 1)
+   * @returns Promise resolving to paginated list of TV shows matching the search query
    */
   async searchShows(query: string, page: number = 1): Promise<IAnimePaginated<IMetaMovie[] | []>> {
     if (!query) {
@@ -199,6 +213,7 @@ export class TheMovieDatabase extends Meta {
         error: 'Missing required parameter. Query',
       };
     }
+
     return this.fetchPaginatedData('/search/tv', {
       include_adult: 'false',
       page: String(page),
@@ -208,8 +223,9 @@ export class TheMovieDatabase extends Meta {
 
   /**
    * Fetches detailed information about a specific TV show using its TMDb ID.
-   * @param {number} tmdbId - The unique TMDb ID for the TV show (required).
-   * @returns A promise that resolves to an object containing comprehensive TV show information.
+   *
+   * @param tmdbId - The unique TMDb ID for the TV show (required)
+   * @returns Promise resolving to comprehensive TV show information including seasons data
    */
   async fetchShowInfo(tmdbId: number): Promise<IMetaInfoResponse<IMetaMovieInfo | null>> {
     if (!tmdbId) {
@@ -219,6 +235,7 @@ export class TheMovieDatabase extends Meta {
         error: 'Missing required parameter. A tmdbId',
       };
     }
+
     try {
       const response = await this.client.get(`${this.baseUrl}/tv/${tmdbId}`, {
         params: {
@@ -227,12 +244,14 @@ export class TheMovieDatabase extends Meta {
         },
       });
 
-      if (!response.data)
+      if (!response.data) {
         return {
           data: null,
           seasons: [],
           error: response.statusText,
         };
+      }
+
       const data = {
         tmdbId: response.data.id || null,
         name: response.data.name || null,
@@ -283,6 +302,7 @@ export class TheMovieDatabase extends Meta {
             }
           : null,
       };
+
       const seasons = response.data.seasons.map((item: any) => ({
         airDate: item.air_date || null,
         id: item.id || null,
@@ -297,6 +317,7 @@ export class TheMovieDatabase extends Meta {
           original: item.poster_path ? `https://image.tmdb.org/t/p/original${item.poster_path}` : null,
         },
       }));
+
       return { data: data as IMetaMovieInfo, seasons: seasons as IMetaMovieSeasons[] };
     } catch (error) {
       return { error: error instanceof Error ? error.message : 'Unknown error', data: null, seasons: [] };
@@ -304,15 +325,17 @@ export class TheMovieDatabase extends Meta {
   }
 
   /**
-   * Fetches episodes available in a specific season of a TV show.
-   * @param {number} tmdbId - The unique TMDb ID for the TV show (required).
-   * @param {number} season - The season number for which to fetch episodes (required).
-   * @returns A promise that resolves to an object containing an array of episodes and their information for the specified season.
+   * Fetches episodes available in a specific season of a TV show from TMDb.
+   *
+   * @param tmdbId - The unique TMDb ID for the TV show (required)
+   * @param season - The season number for which to fetch episodes (required)
+   * @returns Promise resolving to array of episodes with their detailed information for the specified season
    */
   async fetchTvEpisodes(tmdbId: number, season: number): Promise<IResponse<IMetaMovieEpisodes[] | []>> {
     if (!tmdbId) {
       return { error: 'Missing required params: tmdbId!', data: [] };
     }
+
     try {
       const response = await this.client.get(`${this.baseUrl}/tv/${tmdbId}/season/${season}`, {
         params: {
@@ -321,6 +344,7 @@ export class TheMovieDatabase extends Meta {
       });
 
       if (!response.data) return { error: response.statusText, data: [] };
+
       const episodes = response.data.episodes.map((item: any) => ({
         airDate: item.air_date || null,
         episodeNumber: item.episode_number || null,
@@ -339,6 +363,7 @@ export class TheMovieDatabase extends Meta {
           original: item.still_path ? `https://image.tmdb.org/t/p/original${item.still_path}` : null,
         },
       }));
+
       return { data: episodes as IMetaMovieEpisodes[] };
     } catch (error) {
       return { error: error instanceof Error ? error.message : 'Unknown error', data: [] };
@@ -346,11 +371,12 @@ export class TheMovieDatabase extends Meta {
   }
 
   /**
-   * Fetches episode information available in a specific season of a TV show.
-   * @param {number} tmdbId - The unique TMDb ID for the TV show (required).
-   * @param {number} season - The season number for which to fetch episodes (optional, defaults to 1).
-   * @param {number} episodeNumber - The episode number for which to fetch episode information (optional, defaults to 1).
-   * @returns A promise that resolves to an object containing episode information.
+   * Fetches detailed information about a specific episode from a TV show.
+   *
+   * @param tmdbId - The unique TMDb ID for the TV show (required)
+   * @param season - The season number containing the episode (optional, defaults to 1)
+   * @param episodeNumber - The episode number for which to fetch information (optional, defaults to 1)
+   * @returns Promise resolving to detailed episode information including images and ratings
    */
   async fetchEpisodeInfo(
     tmdbId: number,
@@ -363,7 +389,9 @@ export class TheMovieDatabase extends Meta {
           api_key: this.apiKey,
         },
       });
+
       if (!response.data) return { error: response.statusText, data: null };
+
       const episode = {
         airDate: response.data.air_date || null,
         title: response.data.name || null,
@@ -379,6 +407,7 @@ export class TheMovieDatabase extends Meta {
           original: response.data.still_path ? `https://image.tmdb.org/t/p/original${response.data.still_path}` : null,
         },
       };
+
       return {
         data: episode as IMetaMovieEpisodes,
       };
@@ -391,47 +420,52 @@ export class TheMovieDatabase extends Meta {
   }
 
   /**
-   * Fetches trending TV shows based on a specified time window.
-   * @param {TimeWindow} timeWindow - The time window to fetch trending shows (day or week) (optional, defaults to TimeWindow.Week).
-   * @param {number} [page=1] - The page number for pagination (optional, defaults to 1).
-   * @returns A promise that resolves to an object containing an array of trending TV shows.
+   * Fetches trending TV shows based on a specified time window from TMDb.
+   *
+   * @param timeWindow - The time window to fetch trending shows (day or week) (optional, defaults to 'week')
+   * @param page - The page number for pagination (optional, defaults to 1)
+   * @returns Promise resolving to paginated list of trending TV shows
    */
   async fetchTrendingTv(timeWindow: 'day' | 'week' = 'week', page: number = 1): Promise<IAnimePaginated<IMetaMovie[] | []>> {
     return this.fetchPaginatedData(`/trending/tv/${timeWindow}`, { page: String(page) });
   }
 
   /**
-   * Fetches popular TV shows.
-   * @param {number} [page=1] - The page number for pagination (optional, defaults to 1).
-   * @returns A promise that resolves to an object containing an array of popular TV shows.
+   * Fetches popular TV shows from TMDb.
+   *
+   * @param page - The page number for pagination (optional, defaults to 1)
+   * @returns Promise resolving to paginated list of popular TV shows
    */
   async fetchPopularTv(page: number = 1): Promise<IAnimePaginated<IMetaMovie[] | []>> {
     return this.fetchPaginatedData('/tv/popular', { page: String(page) });
   }
 
   /**
-   * Fetches top-rated TV shows.
-   * @param {number} [page=1] - The page number for pagination (optional, defaults to 1).
-   * @returns A promise that resolves to an object containing an array of top-rated TV shows.
+   * Fetches top-rated TV shows from TMDb.
+   *
+   * @param page - The page number for pagination (optional, defaults to 1)
+   * @returns Promise resolving to paginated list of top-rated TV shows
    */
   async fetchTopShows(page: number = 1): Promise<IAnimePaginated<IMetaMovie[] | []>> {
     return this.fetchPaginatedData('/tv/top_rated', { page: String(page) });
   }
 
   /**
-   * Fetches currently airing TV shows.
-   * @param {number} [page=1] - The page number for pagination (optional, defaults to 1).
-   * @returns A promise that resolves to an object containing an array of airing TV shows.
+   * Fetches currently airing TV shows from TMDb.
+   *
+   * @param page - The page number for pagination (optional, defaults to 1)
+   * @returns Promise resolving to paginated list of currently airing TV shows
    */
   async fetchAiringTv(page: number = 1): Promise<IAnimePaginated<IMetaMovie[] | []>> {
     return this.fetchPaginatedData('/tv/on_the_air', { page: String(page) });
   }
 
   /**
-   * Searches for movies based on the provided query string.
-   * @param {string} query - The search query string (required).
-   * @param {number} [page=1] - The page number for pagination (optional, defaults to 1).
-   * @returns A promise that resolves to an object containing an array of movies related to the search query.
+   * Searches for movies based on the provided query string using TMDb API.
+   *
+   * @param query - The search query string (required)
+   * @param page - The page number for pagination (optional, defaults to 1)
+   * @returns Promise resolving to paginated list of movies matching the search query
    */
   async searchMovie(query: string, page: number = 1): Promise<IAnimePaginated<IMetaMovie[] | []>> {
     if (!query) {
@@ -444,6 +478,7 @@ export class TheMovieDatabase extends Meta {
         error: 'Missing required parameter. Query',
       };
     }
+
     return this.fetchPaginatedMovieData('/search/movie', {
       include_adult: 'false',
       page: String(page),
@@ -453,13 +488,15 @@ export class TheMovieDatabase extends Meta {
 
   /**
    * Fetches detailed information about a specific movie using its TMDb ID.
-   * @param {number} tmdbId - The unique TMDb ID for the movie (required).
-   * @returns A promise that resolves to an object containing comprehensive movie information.
+   *
+   * @param tmdbId - The unique TMDb ID for the movie (required)
+   * @returns Promise resolving to comprehensive movie information including collection data
    */
   async fetchMovieInfo(tmdbId: number): Promise<IResponse<IMetaMovie | null>> {
     if (!tmdbId) {
       return { data: null, error: 'Missing required params tmdbId!' };
     }
+
     try {
       const response = await this.client.get(`${this.baseUrl}/movie/${tmdbId}`, {
         params: {
@@ -468,6 +505,7 @@ export class TheMovieDatabase extends Meta {
       });
 
       if (!response.data) return { error: response.statusText, data: null };
+
       const data = {
         tmdbId: response.data.id || null,
         name: response.data.original_title || response.data.title || null,
@@ -527,6 +565,7 @@ export class TheMovieDatabase extends Meta {
         summary: response.data.overview || null,
         releaseDate: response.data.release_date || null,
       };
+
       return { data: data as IMetaMovie };
     } catch (error) {
       return { error: error instanceof Error ? error.message : 'Unknown error', data: null };
@@ -534,10 +573,11 @@ export class TheMovieDatabase extends Meta {
   }
 
   /**
-   * Fetches trending movies based on a specified time window.
-   * @param {TimeWindow} [timeWindow=TimeWindow.Week] - The time window to fetch trending movies (day or week) (optional, defaults to TimeWindow.Week).
-   * @param {number} [page=1] - The page number for pagination (optional, defaults to 1).
-   * @returns A promise that resolves to an object containing an array of trending movies.
+   * Fetches trending movies based on a specified time window from TMDb.
+   *
+   * @param timeWindow - The time window to fetch trending movies (day or week) (optional, defaults to 'week')
+   * @param page - The page number for pagination (optional, defaults to 1)
+   * @returns Promise resolving to paginated list of trending movies
    */
   async fetchTrendingMovies(
     timeWindow: 'day' | 'week' = 'week',
@@ -547,56 +587,62 @@ export class TheMovieDatabase extends Meta {
   }
 
   /**
-   * Fetches popular movies.
-   * @param {number} [page=1] - The page number for pagination (optional, defaults to 1).
-   * @returns A promise that resolves to an object containing an array of popular movies.
+   * Fetches popular movies from TMDb.
+   *
+   * @param page - The page number for pagination (optional, defaults to 1)
+   * @returns Promise resolving to paginated list of popular movies
    */
   async fetchPopularMovies(page: number = 1): Promise<IAnimePaginated<IMetaMovie[] | []>> {
     return this.fetchPaginatedMovieData('/movie/popular', { page: String(page) });
   }
 
   /**
-   * Fetches top-rated movies.
-   * @param {number} [page=1] - The page number for pagination (optional, defaults to 1).
-   * @returns A promise that resolves to an object containing an array of top-rated movies.
+   * Fetches top-rated movies from TMDb.
+   *
+   * @param page - The page number for pagination (optional, defaults to 1)
+   * @returns Promise resolving to paginated list of top-rated movies
    */
   async fetchTopMovies(page: number = 1): Promise<IAnimePaginated<IMetaMovie[] | []>> {
     return this.fetchPaginatedMovieData('/movie/top_rated', { page: String(page) });
   }
 
   /**
-   * Fetches movies that are currently in cinemas.
-   * @param {number} [page=1] - The page number for pagination (optional, defaults to 1).
-   * @returns A promise that resolves to an object containing an array of movies currently releasing in cinemas.
+   * Fetches movies that are currently in cinemas from TMDb.
+   *
+   * @param page - The page number for pagination (optional, defaults to 1)
+   * @returns Promise resolving to paginated list of movies currently releasing in cinemas
    */
   async fetchReleasingMovies(page: number = 1): Promise<IAnimePaginated<IMetaMovie[] | []>> {
     return this.fetchPaginatedMovieData('/movie/now_playing', { page: String(page) });
   }
 
   /**
-   * Fetches data on upcoming movies.
-   * @param {number} [page=1] - The page number for pagination (optional, defaults to 1).
-   * @returns A promise that resolves to an object containing an array of upcoming movies.
+   * Fetches data on upcoming movies from TMDb.
+   *
+   * @param page - The page number for pagination (optional, defaults to 1)
+   * @returns Promise resolving to paginated list of upcoming movies
    */
   async fetchUpcomingMovies(page: number = 1): Promise<IAnimePaginated<IMetaMovie[] | []>> {
     return this.fetchPaginatedMovieData('/movie/upcoming', { page: String(page) });
   }
 
   /**
-   * Fetches movie streaming sources using TMDB ID
-   * @param {number} tmdbId - The unique TMDb ID for the movie (required).
-   * @returns  A promise that resolves to an object containing array of available streaming sources.
+   * Fetches movie streaming sources using TMDB ID through VidSrc integration.
+   *
+   * @param tmdbId - The unique TMDb ID for the movie (required)
+   * @returns Promise resolving to available streaming sources for the movie
    */
   async fetchMovieSources(tmdbId: number): Promise<EmbedSrcResponse> {
     return _getVidSrcMovieUrl(tmdbId);
   }
 
   /**
-   * Fetches TV show streaming sources using TMDB ID
-   * @param {number} tmdbId - The unique TMDb ID for the TV show (required).
-   * @param {number} season - The season number for which to fetch episodes(required)
-   * @param {number} episodeNumber - The episode number for which to fetch streaming sources (required)
-   * @returns  A promise that resolves to an object containing array of available streaming sources.
+   * Fetches TV show streaming sources using TMDB ID through VidSrc integration.
+   *
+   * @param tmdbId - The unique TMDb ID for the TV show (required)
+   * @param season - The season number for which to fetch episodes (required)
+   * @param episodeNumber - The episode number for which to fetch streaming sources (required)
+   * @returns Promise resolving to available streaming sources for the specific episode
    */
   async fetchTvSources(tmdbId: number, season: number, episodeNumber: number): Promise<EmbedSrcResponse> {
     return _getVidSrcTvUrl(tmdbId, season, episodeNumber);
@@ -604,20 +650,21 @@ export class TheMovieDatabase extends Meta {
 
   /**
    * Fetches TV show information along with a provider-specific show ID.
-   * This is useful for linking TMDb TV show entries to external streaming site IDs, such as FlixHQ.
-   * @param {number} tmdbId - The unique TMDb ID for the TV show (required).
-   * @returns  A promise that resolves to an object containing the provider-specific TV show ID and related information.
+   *
+   * @param tmdbId - The unique TMDb ID for the TV show (required)
+   * @returns Promise resolving to provider-specific TV show ID mapping with related information
    */
   async fetchTvProviderId(tmdbId: number): Promise<IMetaMovieIdResponse<IMetaMovieInfo | null>> {
     try {
       const tvShowData = await this.fetchShowInfo(tmdbId);
       const title = tvShowData.data?.name;
+
       const tmdbdata: IMediaTitle = {
         name: title as string,
         seasons: tvShowData.data?.latestEpisode?.season,
         totalEpisodes: tvShowData.data?.latestEpisode?.episodeNumber,
       };
-      // 79744
+
       const titleSlug = this.createSlug(title as string);
       const flixResults = await this.searchFlixTv(titleSlug);
 
@@ -632,21 +679,21 @@ export class TheMovieDatabase extends Meta {
 
   /**
    * Fetches movie information along with a provider-specific movie ID.
-   * This is useful for linking TMDb movie entries to external streaming site IDs, such as FlixHQ.
-   * @param {number} tmdbId - The unique TMDb ID for the movie (required).
-   * @returns  A promise that resolves to an object containing the provider-specific movie ID and related information.
+   *
+   * @param tmdbId - The unique TMDb ID for the movie (required)
+   * @returns Promise resolving to provider-specific movie ID mapping with related information
    */
   async fetchMovieProviderId(tmdbId: number): Promise<IMetaMovieIdResponse<IMetaMovie | null>> {
     try {
       const movieData = await this.fetchMovieInfo(tmdbId);
       const title = movieData.data?.name;
+
       const titleSlug = this.createSlug(title as string);
       const tmdbdata: IMediaTitle = {
         name: title as string,
         releaseDate: movieData.data?.releaseDate,
         runtime: movieData.data?.runtime,
       };
-      // 68721
 
       const flixResults = await this.searchFlixMovies(titleSlug);
 

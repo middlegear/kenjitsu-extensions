@@ -28,12 +28,23 @@ import {
  * A class for interacting with the Anilist API to search for anime, fetch detailed information,
  * retrieve various lists (trending, popular, top-rated, seasonal, upcoming), and get character
  * and episode information from specific providers.
+ *
+ *
  */
 export class Anilist extends Meta {
   private readonly baseUrl: string = 'https://graphql.anilist.co';
+
   constructor() {
     super();
   }
+
+  /**
+   * Fetches episodes from AllAnime provider and enriches with Anizip data.
+   *
+   * @private
+   * @param anilistId - The Anilist ID of the anime
+   * @returns Promise resolving to episode data enriched with additional metadata
+   */
   private async fetchAllAnimeProviderEpisodes(anilistId: number): Promise<IMetaProviderEpisodesResponse<IMetaAnime | null>> {
     if (!anilistId) {
       return {
@@ -42,8 +53,10 @@ export class Anilist extends Meta {
         providerEpisodes: [],
       };
     }
+
     try {
       const initialResponse = await this.fetchAllAnimeProviderId(anilistId);
+
       if (!initialResponse.provider?.id) {
         return {
           error: 'Provider not found for given AniList ID.',
@@ -81,11 +94,19 @@ export class Anilist extends Meta {
     } catch (error) {
       return {
         data: null,
-        error: error instanceof Error ? error.message : 'Unknown Err',
+        error: error instanceof Error ? error.message : 'Unknown Error',
         providerEpisodes: [],
       };
     }
   }
+
+  /**
+   * Fetches episodes from HiAnime (Zoro) provider and enriches with Anizip data.
+   *
+   * @private
+   * @param anilistId - The Anilist ID of the anime
+   * @returns Promise resolving to episode data enriched with additional metadata
+   */
   private async fetchZoroProviderEpisodes(anilistId: number): Promise<IMetaProviderEpisodesResponse<IMetaAnime | null>> {
     if (!anilistId) {
       return {
@@ -94,8 +115,10 @@ export class Anilist extends Meta {
         providerEpisodes: [],
       };
     }
+
     try {
       const initialResponse = await this.fetchZoroProviderId(anilistId);
+
       if (!initialResponse.provider?.id) {
         return {
           error: 'Provider not found for given AniList ID.',
@@ -132,12 +155,20 @@ export class Anilist extends Meta {
       };
     } catch (error) {
       return {
-        error: error instanceof Error ? error.message : 'Unknown Err',
+        error: error instanceof Error ? error.message : 'Unknown Error',
         data: null,
         providerEpisodes: [],
       };
     }
   }
+
+  /**
+   * Maps Anilist anime data to HiAnime (Zoro) provider ID.
+   *
+   * @private
+   * @param anilistId - The Anilist ID of the anime
+   * @returns Promise resolving to provider mapping data
+   */
   private async fetchZoroProviderId(anilistId: number): Promise<IMetaProviderIdResponse<IMetaAnime | null>> {
     if (!anilistId) {
       return {
@@ -146,6 +177,7 @@ export class Anilist extends Meta {
         provider: null,
       };
     }
+
     try {
       const anilist = await this.fetchInfo(anilistId);
 
@@ -158,7 +190,6 @@ export class Anilist extends Meta {
       }
 
       const year = release ? new Date(release).getFullYear() : null;
-
       const titleSlug = titles ? this.createSlug(titles) : null;
 
       let anilistData: IMetaData | null = null;
@@ -193,6 +224,13 @@ export class Anilist extends Meta {
     }
   }
 
+  /**
+   * Maps Anilist anime data to AllAnime provider ID.
+   *
+   * @private
+   * @param anilistId - The Anilist ID of the anime
+   * @returns Promise resolving to provider mapping data
+   */
   private async fetchAllAnimeProviderId(anilistId: number): Promise<IMetaProviderIdResponse<IMetaAnime | null>> {
     if (!anilistId) {
       return {
@@ -201,6 +239,7 @@ export class Anilist extends Meta {
         provider: null,
       };
     }
+
     try {
       const anilist = await this.fetchInfo(anilistId);
 
@@ -213,7 +252,6 @@ export class Anilist extends Meta {
       }
 
       const year = release ? new Date(release).getFullYear() : null;
-
       const titleSlug = titles ? this.createSlug(titles) : null;
 
       let anilistData: IMetaData | null = null;
@@ -247,6 +285,14 @@ export class Anilist extends Meta {
       };
     }
   }
+
+  /**
+   * Maps Anilist anime data to AnimePahe provider ID.
+   *
+   * @private
+   * @param anilistId - The Anilist ID of the anime
+   * @returns Promise resolving to provider mapping data
+   */
   private async fetchAnimepaheProviderId(anilistId: number): Promise<IMetaProviderIdResponse<IMetaAnime | null>> {
     if (!anilistId) {
       return {
@@ -255,6 +301,7 @@ export class Anilist extends Meta {
         provider: null,
       };
     }
+
     try {
       const anilist = await this.fetchInfo(anilistId);
 
@@ -267,7 +314,6 @@ export class Anilist extends Meta {
       }
 
       const year = release ? new Date(release).getFullYear() : null;
-
       const titleSlug = titles ? this.createSlug(titles) : null;
 
       let anilistData: IMetaData | null = null;
@@ -302,6 +348,13 @@ export class Anilist extends Meta {
     }
   }
 
+  /**
+   * Fetches episodes from AnimePahe provider and enriches with Anizip data.
+   *
+   * @private
+   * @param anilistId - The Anilist ID of the anime
+   * @returns Promise resolving to episode data enriched with additional metadata
+   */
   private async fetchPaheProviderEpisodes(anilistId: number): Promise<IMetaProviderEpisodesResponse<IMetaAnime | null>> {
     if (!anilistId) {
       return {
@@ -310,8 +363,10 @@ export class Anilist extends Meta {
         providerEpisodes: [],
       };
     }
+
     try {
       const initialResponse = await this.fetchAnimepaheProviderId(anilistId);
+
       if (!initialResponse.provider?.id) {
         return {
           error: 'Provider not found for given AniList ID.',
@@ -348,18 +403,20 @@ export class Anilist extends Meta {
       };
     } catch (error) {
       return {
-        error: error instanceof Error ? error.message : 'Unknown Err',
+        error: error instanceof Error ? error.message : 'Unknown Error',
         data: null,
         providerEpisodes: [],
       };
     }
   }
+
   /**
    * Searches for anime based on the provided query string.
-   * @param {string} search - The search query string (required).
-   * @param {number} [page] - The page number for pagination (optional, defaults to 1).
-   * @param {number} [perPage] - The number of results per page (optional, defaults to 20).
-   * @returns  A promise that resolves to an object containing an array of anime related to the search query.
+   *
+   * @param search - The search query string (required)
+   * @param page - The page number for pagination (optional, defaults to 1)
+   * @param perPage - The number of results per page (optional, defaults to 20)
+   * @returns Promise that resolves to paginated search results containing anime data
    */
   async search(search: string, page: number = 1, perPage: number = 20): Promise<IAnimePaginated<IMetaAnime[] | []>> {
     if (!search) {
@@ -372,13 +429,15 @@ export class Anilist extends Meta {
         error: 'Missing required parameter: query',
       };
     }
+
     try {
       const variables = { search, page, perPage, type: 'ANIME', isAdult: false };
       const response = await this.client.post(this.baseUrl, {
         query: searchQuery,
         variables,
       });
-      if (!response.data)
+
+      if (!response.data) {
         return {
           hasNextPage: false,
           currentPage: 0,
@@ -387,6 +446,8 @@ export class Anilist extends Meta {
           data: [],
           error: response.statusText || 'Server returned an empty response',
         };
+      }
+
       const pagination = {
         hasNextPage: response.data.data.Page.pageInfo.hasNextPage,
         total: response.data.data.Page.pageInfo.total,
@@ -458,8 +519,9 @@ export class Anilist extends Meta {
 
   /**
    * Fetches detailed information about a specific anime using its Anilist ID.
-   * @param {number} id - The unique Anilist anime ID (required).
-   * @returns  A promise that resolves to an object containing detailed anime information.
+   *
+   * @param id - The unique Anilist anime ID (required)
+   * @returns Promise that resolves to detailed anime information
    */
   async fetchInfo(id: number): Promise<IResponse<IMetaAnime | null>> {
     if (!id) {
@@ -468,18 +530,21 @@ export class Anilist extends Meta {
         data: null,
       };
     }
+
     const variables = { id };
+
     try {
       const response = await this.client.post(this.baseUrl, {
         query: fetchByIdQuery,
         variables,
       });
 
-      if (!response.data)
+      if (!response.data) {
         return {
           error: response.statusText || 'Server returned an empty response',
           data: null,
         };
+      }
 
       const res = {
         malId: response.data.data.Media.idMal,
@@ -550,12 +615,14 @@ export class Anilist extends Meta {
       };
     }
   }
+
   /**
    * Fetches a list of the most anticipated upcoming anime.
-   * @param {number} [page] - The page number for pagination (optional, defaults to 1).
-   * @param {number} [perPage] - The number of results per page (optional, defaults to 20).
-   * @param {Sort} [sort]  - The sorting order for results.(optional, defaults to POPULARITY_DESC )
-   * @returns  A promise that resolves to an object containing an array of upcoming anime.
+   *
+   * @param page - The page number for pagination (optional, defaults to 1)
+   * @param perPage - The number of results per page (optional, defaults to 20)
+   * @param sort - The sorting order for results (optional, defaults to POPULARITY_DESC)
+   * @returns Promise that resolves to paginated list of upcoming anime
    */
   async fetchTopUpcoming(
     page: number = 1,
@@ -569,7 +636,8 @@ export class Anilist extends Meta {
         query: topQuery,
         variables,
       });
-      if (!response.data)
+
+      if (!response.data) {
         return {
           hasNextPage: false,
           currentPage: 0,
@@ -578,6 +646,8 @@ export class Anilist extends Meta {
           data: [],
           error: response.statusText || 'Server returned an empty response',
         };
+      }
+
       const pagination = {
         hasNextPage: response.data.data.Page.pageInfo.hasNextPage,
         total: response.data.data.Page.pageInfo.total,
@@ -585,6 +655,7 @@ export class Anilist extends Meta {
         currentPage: response.data.data.Page.pageInfo.currentPage,
         perPage: response.data.data.Page.pageInfo.perPage,
       };
+
       const res: IMetaAnime[] = response.data.data.Page.media.map((item: any) => ({
         malId: item.idMal,
         anilistId: item.id,
@@ -631,12 +702,14 @@ export class Anilist extends Meta {
       };
     }
   }
+
   /**
    * Fetches a list of the top airing anime.
-   * @param {number} [page] - The page number for pagination (optional, defaults to 1).
-   * @param {number} [perPage] - The number of results per page (optional, defaults to 20).
-   * @param {Sort} [sort]  - The sorting order for results.(optional, defaults to POPULARITY_DESC )
-   * @returns  A promise that resolves to an object containing an array of top-airing anime.
+   *
+   * @param page - The page number for pagination (optional, defaults to 1)
+   * @param perPage - The number of results per page (optional, defaults to 20)
+   * @param sort - The sorting order for results (optional, defaults to POPULARITY_DESC)
+   * @returns Promise that resolves to paginated list of airing anime
    */
   async fetchTopAiring(
     page: number = 1,
@@ -649,11 +722,11 @@ export class Anilist extends Meta {
 
   /**
    * Fetches a list of the most popular anime.
-   * @param {number} [page] - The page number for pagination (optional, defaults to 1).
-   * @param {number} [perPage] - The number of results per page (optional, defaults to 20).
-   * @param {IMetaFormat} [format] - The anime format to filter by (optional, defaults to TV).
-   * @param  [sort]  - The sorting order for results.(optional, defaults to POPULARITY_DESC )
-   * @returns A promise that resolves to an object containing an array of popular anime.
+   *
+   * @param page - The page number for pagination (optional, defaults to 1)
+   * @param perPage - The number of results per page (optional, defaults to 20)
+   * @param format - The anime format to filter by (optional, defaults to TV)
+   * @returns Promise that resolves to paginated list of popular anime
    */
   async fetchMostPopular(
     page: number = 1,
@@ -668,7 +741,7 @@ export class Anilist extends Meta {
         variables,
       });
 
-      if (!response.data)
+      if (!response.data) {
         return {
           hasNextPage: false,
           currentPage: 0,
@@ -677,6 +750,8 @@ export class Anilist extends Meta {
           data: [],
           error: response.statusText || 'Server returned an empty response',
         };
+      }
+
       const pagination = {
         hasNextPage: response.data.data.Page.pageInfo.hasNextPage,
         total: response.data.data.Page.pageInfo.total,
@@ -689,7 +764,6 @@ export class Anilist extends Meta {
         malId: item.idMal,
         anilistId: item.id,
         image: item.coverImage.extraLarge ?? item.coverImage.large ?? item.coverImage.medium,
-
         bannerImage: item.bannerImage ?? item.coverImage.extraLarge ?? item.coverImage.large ?? item.coverImage.medium,
         title: {
           romaji: item.title.romaji ?? item.title.userPreferred,
@@ -726,6 +800,7 @@ export class Anilist extends Meta {
         studio: item.studios.nodes.length > 0 ? item.studios.nodes[0].name : null,
         producers: item.studios.nodes.map((item2: any) => item2.name),
       }));
+
       return {
         hasNextPage: pagination.hasNextPage,
         currentPage: pagination.currentPage,
@@ -744,13 +819,15 @@ export class Anilist extends Meta {
       };
     }
   }
+
   /**
    * Fetches a list of the top-rated anime.
-   * @param {number} [page] - The page number for pagination (optional, defaults to 1).
-   * @param {number} [perPage] - The number of results per page (optional, defaults to 20).
-   * @param {Format} [format] - The anime format to filter by (optional, defaults to TV).
-   * @param   [sort]  - The sorting order for results.(optional, defaults to SCORE_DESC )
-   * @returns  A promise that resolves to an object containing an array of top-rated anime.
+   *
+   * @param page - The page number for pagination (optional, defaults to 1)
+   * @param perPage - The number of results per page (optional, defaults to 20)
+   * @param format - The anime format to filter by (optional, defaults to TV)
+
+   * @returns Promise that resolves to paginated list of top-rated anime
    */
   async fetchTopRatedAnime(
     page: number = 1,
@@ -763,12 +840,13 @@ export class Anilist extends Meta {
 
   /**
    * Fetches seasonal anime for a given year and season.
-   * @param {Seasons} season - The target season (e.g., WINTER, SPRING, SUMMER, FALL) (required).
-   * @param {number} seasonYear - The target year (e.g., 2023, 2024) (required).
-   * @param {number} [page=1] - The page number for pagination (optional, defaults to 1).
-   * @param {number} [perPage=20] - The number of results per page (optional, defaults to 20).
-   * @param {IMetaFormat} [format] - The anime format to filter by (optional, defaults to TV).
-   * @returns  A promise that resolves to an object containing an array of seasonal anime.
+   *
+   * @param season - The target season (e.g., WINTER, SPRING, SUMMER, FALL) (required)
+   * @param seasonYear - The target year (e.g., 2023, 2024) (required)
+   * @param page - The page number for pagination (optional, defaults to 1)
+   * @param perPage - The number of results per page (optional, defaults to 20)
+   * @param format - The anime format to filter by (optional, defaults to TV)
+   * @returns Promise that resolves to paginated list of seasonal anime
    */
   async fetchSeasonalAnime(
     season: Seasons,
@@ -799,11 +877,13 @@ export class Anilist extends Meta {
         seasonYear,
         sort: 'POPULARITY_DESC',
       };
+
       const response = await this.client.post(this.baseUrl, {
         query: seasonQuery,
         variables,
       });
-      if (!response.data)
+
+      if (!response.data) {
         return {
           hasNextPage: false,
           currentPage: 0,
@@ -812,6 +892,8 @@ export class Anilist extends Meta {
           data: [],
           error: response.statusText || 'Server returned an empty response',
         };
+      }
+
       const pagination = {
         hasNextPage: response.data.data.Page.pageInfo.hasNextPage,
         total: response.data.data.Page.pageInfo.total,
@@ -824,7 +906,6 @@ export class Anilist extends Meta {
         malId: item.idMal,
         anilistId: item.id,
         image: item.coverImage.extraLarge ?? item.coverImage.large ?? item.coverImage.medium,
-
         bannerImage: item.bannerImage ?? item.coverImage.extraLarge ?? item.coverImage.large ?? item.coverImage.medium,
         title: {
           romaji: item.title.romaji ?? item.title.userPreferred,
@@ -861,6 +942,7 @@ export class Anilist extends Meta {
         studio: item.studios.nodes.length > 0 ? item.studios.nodes[0].name : null,
         producers: item.studios.nodes.map((item2: any) => item2.name),
       }));
+
       return {
         hasNextPage: pagination.hasNextPage,
         currentPage: pagination.currentPage,
@@ -882,21 +964,24 @@ export class Anilist extends Meta {
 
   /**
    * Fetches a list of currently trending anime.
-   * @param {number} [page=1] - The page number for pagination (optional, defaults to 1).
-   * @param {number} [perPage=20] - The number of results per page (optional, defaults to 20).
-   * @returns  A promise that resolves to an object containing an array of trending anime.
+   *
+   * @param page - The page number for pagination (optional, defaults to 1)
+   * @param perPage - The number of results per page (optional, defaults to 20)
+   * @returns Promise that resolves to paginated list of trending anime
    */
   async fetchTrending(page: number = 1, perPage: number = 20): Promise<IAnimePaginated<IMetaAnime[] | []>> {
     const variables = {
       page,
       perPage,
     };
+
     try {
       const response = await this.client.post(this.baseUrl, {
         query: mediaTrendQuery,
         variables,
       });
-      if (!response.data)
+
+      if (!response.data) {
         return {
           hasNextPage: false,
           currentPage: 0,
@@ -905,6 +990,8 @@ export class Anilist extends Meta {
           data: [],
           error: response.statusText || 'Server returned an empty response',
         };
+      }
+
       const pagination = {
         hasNextPage: response.data.data.Page.pageInfo.hasNextPage,
         total: response.data.data.Page.pageInfo.total,
@@ -951,6 +1038,7 @@ export class Anilist extends Meta {
         studio: item.studios.nodes.length > 0 ? item.studios.nodes[0].name : null,
         producers: item.studios?.nodes.map((item2: any) => item2.name),
       }));
+
       return {
         hasNextPage: pagination.hasNextPage,
         currentPage: pagination.currentPage,
@@ -969,31 +1057,38 @@ export class Anilist extends Meta {
       };
     }
   }
+
   /**
    * Fetches anime titles related to a specific anime ID, such as sequels, prequels, or spin-offs.
-   * @param {number} mediaId - The unique Anilist anime ID (required).
-   * @returns  A promise that resolves to an object containing an array of related anime information.
+   *
+   * @param mediaId - The unique Anilist anime ID (required)
+   * @returns Promise that resolves to related anime information
    */
   async fetchRelatedAnime(mediaId: number): Promise<IResponse<IRelatedAnilistData[] | []>> {
-    if (!mediaId)
+    if (!mediaId) {
       return {
         data: [],
         error: 'Missing a required param : season | seasonYear',
       };
+    }
+
     const variables = {
       mediaId,
       type: 'ANIME',
     };
+
     try {
       const response = await this.client.post(this.baseUrl, {
         query: relatedQuery,
         variables,
       });
-      if (!response.data)
+
+      if (!response.data) {
         return {
           error: response.statusText || 'Server returned an empty response',
           data: [],
         };
+      }
 
       const res: IRelatedAnilistData[] = response.data.data.Media.relations.edges
         .filter((item: any) => item.node.type === 'ANIME')
@@ -1022,10 +1117,12 @@ export class Anilist extends Meta {
       };
     }
   }
+
   /**
    * Fetches characters associated with a specific anime.
-   * @param {number} mediaId - The unique Anilist anime ID (required).
-   * @returns A promise that resolves to an object containing an array of anime characters and their voice actors.
+   *
+   * @param mediaId - The unique Anilist anime ID (required)
+   * @returns Promise that resolves to anime characters and their voice actors
    */
   async fetchCharacters(mediaId: number): Promise<IResponse<IAnilistCharacters | null>> {
     if (!mediaId) {
@@ -1041,15 +1138,19 @@ export class Anilist extends Meta {
         sort: 'RELEVANCE',
         voiceActorsSort2: 'RELEVANCE',
       };
+
       const response = await this.client.post(this.baseUrl, {
         query: characterQuery,
         variables,
       });
-      if (!response.data)
+
+      if (!response.data) {
         return {
           error: response.statusText || 'Server returned an empty response',
           data: null,
         };
+      }
+
       const res: IAnilistCharacters = {
         malId: response.data.data.Media.idMal,
         anilistId: response.data.data.Media.id,
@@ -1081,12 +1182,13 @@ export class Anilist extends Meta {
       };
     }
   }
+
   /**
-   * Fetches anime information along with a provider-specific anime ID. Kind of depends on provider availability
-   * This is useful for linking Anilist entries to external streaming provider IDs.
-   * @param {number} anilistId - The unique Anilist anime ID (required).
-   * @param  [provider] - The anime provider to fetch data from (optional, defaults to HiAnime)
-   * @returns  A promise that resolves to an object containing the provider-specific anime ID and core anime info.
+   * Fetches anime information along with a provider-specific anime ID.
+   *
+   * @param anilistId - The unique Anilist anime ID (required)
+   * @param provider - The anime provider to fetch data from (optional, defaults to HiAnime)
+   * @returns Promise that resolves to provider-specific anime ID and core anime info
    */
   async fetchProviderId(
     anilistId: number,
@@ -1099,6 +1201,7 @@ export class Anilist extends Meta {
         provider: null,
       };
     }
+
     try {
       switch (provider) {
         case 'hianime':
@@ -1114,12 +1217,12 @@ export class Anilist extends Meta {
             throw new Error(allanime.error);
           }
           return { data: allanime.data, provider: allanime.provider };
+
         case 'animepahe':
           const animepahe = await this.fetchAnimepaheProviderId(anilistId);
           if ('error ' in animepahe) {
             throw new Error(animepahe.error);
           }
-
           return { data: animepahe.data, provider: animepahe.provider };
       }
     } catch (error) {
@@ -1133,12 +1236,11 @@ export class Anilist extends Meta {
 
   /**
    * Fetches anime information along with provider-specific episode details using the Anilist ID.
-   * This is used to get streamable episodes from a given provider.
-   * @param {number} anilistId - The unique Anilist ID of the anime (required).
-   * @param {AnimeProvider} [provider] - The anime provider to fetch episodes from (optional, defaults to HiAnime)
-   * @returns  A promise that resolves to an object containing anime info and its episodes from the specified provider.
+   *
+   * @param anilistId - The unique Anilist ID of the anime (required)
+   * @param provider - The anime provider to fetch episodes from (optional, defaults to HiAnime)
+   * @returns Promise that resolves to anime info and its episodes from the specified provider
    */
-
   async fetchAnimeProviderEpisodes(
     anilistId: number,
     provider: 'hianime' | 'allanime' | 'animepahe' = 'hianime',
@@ -1150,6 +1252,7 @@ export class Anilist extends Meta {
         providerEpisodes: [],
       };
     }
+
     try {
       switch (provider) {
         case 'hianime':
@@ -1158,12 +1261,14 @@ export class Anilist extends Meta {
             throw new Error(zoro.error);
           }
           return { data: zoro.data, providerEpisodes: zoro.providerEpisodes };
+
         case 'allanime':
           const allanime = await this.fetchAllAnimeProviderEpisodes(anilistId);
           if ('error ' in allanime) {
             throw new Error(allanime.error);
           }
           return { data: allanime.data, providerEpisodes: allanime.providerEpisodes };
+
         case 'animepahe':
           const animepahe = await this.fetchPaheProviderEpisodes(anilistId);
           if ('error ' in animepahe) {
@@ -1182,9 +1287,10 @@ export class Anilist extends Meta {
 
   /**
    * Fetches video sources for a given episode from multiple servers.
-   * @param episodeId - The unique ID of the episode to fetch sources  from providerEpisodes array .
-   * @param category - The translation category (sub, dub, or raw, default: 'sub').
-   * @returns A promise resolving  to an object containing video sources to stream.
+   *
+   * @param episodeId - The unique ID of the episode to fetch sources from providerEpisodes array
+   * @param category - The translation category (sub, dub, or raw, default: 'sub')
+   * @returns Promise resolving to video sources for streaming
    */
   async fetchAllAnimeProviderSources(episodeId: string, category: ISubOrDub = 'sub') {
     return await this.fetchAllAnimeSources(episodeId, category);
@@ -1192,20 +1298,22 @@ export class Anilist extends Meta {
 
   /**
    * Fetches video sources for a given episodeId.
-   * @param episodeId - The unique ID of the episode to fetch sources  from providerEpisodes array .
-   * @param category - The translation category (sub, dub, or raw, default: 'sub').
-   * @param  server - The streaming server to use (optional, defaults to hd-2). Note: hd-1 may return a 403 error due to CORS restrictions; use a proxy or switch to hd-2 or hd-3
-   * @returns A promise resolving  to an object containing video sources to stream.
+   *
+   * @param episodeId - The unique ID of the episode to fetch sources from providerEpisodes array
+   * @param category - The translation category (sub, dub, or raw, default: 'sub')
+   * @param server - The streaming server to use (optional, defaults to hd-2)
+   * @returns Promise resolving to video sources for streaming
    */
   async fetchHianimeProviderSources(episodeId: string, category: ISubOrDub = 'sub', server: HiAnimeServers = 'hd-2') {
     return await this.fetchZoroSources(episodeId, server, category);
   }
 
   /**
-   * Fetches streaming sources for a given anime episode from a specified  category.
-   * @param {string} episodeId - The unique ID of the episode to fetch sources  from providerEpisodes array .
-   * @param {ISubOrDub} category  - The audio category (Subtitled or Dubbed) (optional, defaults to SubOrDub.SUB).
-   * @returns  A promise that resolves to an object containing streaming sources, headers,  or an error message.
+   * Fetches streaming sources for a given anime episode from a specified category.
+   *
+   * @param episodeId - The unique ID of the episode to fetch sources from providerEpisodes array
+   * @param category - The audio category (Subtitled or Dubbed) (optional, defaults to SubOrDub.SUB)
+   * @returns Promise that resolves to streaming sources, headers, or an error message
    */
   async fetchAnimePaheProviderSources(episodeId: string, category: ISubOrDub = 'sub') {
     return await this.fetchPaheSouces(episodeId, category);

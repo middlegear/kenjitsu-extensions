@@ -172,27 +172,33 @@ export class Kaido extends BaseClass {
 
     animeInfo.id = section?.find('.film-buttons .btn')?.attr('href')?.split('/')?.at(-1) || null;
     animeInfo.name = $(selector)?.find('.anisc-detail .film-name.dynamic-name')?.text()?.trim() || null;
-    animeInfo.japanese = $(selector).find('div.item.item-title  span.name:first').text().trim() || null;
+    animeInfo.japanese = $(`div.item.item-title:has(.item-head:contains("Japanese:")) .name`).text().trim() || null;
     animeInfo.romaji = $(selector).find('h2.film-name.dynamic-name').attr('data-jname') || null;
     animeInfo.quality = $(selector).find('div.tick-item.tick-quality').text().trim() || null;
     animeInfo.rating = $(selector).find('div.tick-item.tick-pg').text().trim() || null;
-    animeInfo.producers = $(selector).find('div.film-text.m-hide  a.name strong').text().trim() || null;
-    animeInfo.altnames = $(selector).find('div.item.item-title  span.name:eq(1)').text().trim() || null;
-    animeInfo.releaseDate = $(selector).find('div.item.item-title  span.name:eq(2)').text().trim() || null;
-    animeInfo.status = $(selector).find('div.item.item-title  span.name:eq(5)').text().trim() || null;
-    animeInfo.score = $(selector).find('div.item.item-title  span.name:last').text().trim() || null;
+
+    animeInfo.altnames = $(`div.item.item-title:has(.item-head:contains("Synonyms:")) .name`).text().trim() || null;
+
+    animeInfo.releaseDate = $(`div.item.item-title:has(.item-head:contains("Aired:")) .name`).text().trim() || null;
+
+    animeInfo.status = $(`div.item.item-title:has(.item-head:contains("Status:")) .name`).text().trim() || null;
+
+    animeInfo.score = $(`div.item.item-title:has(.item-head:contains("MAL Score:")) .name`).text().trim() || null;
+
     const { mal_id, anilist_id } = JSON.parse($('#syncData').text().trim());
     animeInfo.anilistId = Number(anilist_id) || null;
     animeInfo.malId = Number(mal_id) || null;
     animeInfo.posterImage = section?.find('.film-poster .film-poster-img')?.attr('src') || null;
     animeInfo.genres =
-      $(selector)
-        .find('div.item.item-list  a')
-        .map((i, el) => $(el).text().trim())
+      $(`div.item.item-list:has(.item-head:contains("Genres:")) a`)
+        .map((i, el) => $(el).text().replace('Genres:', '').replace(/\s+/g, '').trim())
         .get() || null;
     animeInfo.studios =
-      $(selector)
-        .find('div.item.item-title  a')
+      $(`div.item.item-title:has(.item-head:contains("Studios:")) .name`)
+        .map((i, el) => $(el).text().trim())
+        .get() || null;
+    animeInfo.producers =
+      $(`div.item.item-title:has(.item-head:contains("Producers:")) .name`)
         .map((i, el) => $(el).text().trim())
         .get() || null;
     animeInfo.synopsis = section?.find('.anisc-info .text').text().trim() || null;
