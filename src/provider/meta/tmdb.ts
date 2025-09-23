@@ -9,9 +9,8 @@ import type {
   IMetaMovieSeasons,
   IMovieProviderResults,
   IResponse,
+  IVideoSource,
 } from '../../models/types.js';
-
-import { _getVidSrcMovieUrl, _getVidSrcTvUrl, type EmbedSrcResponse } from '../movies/embed/vidsrc.js';
 
 /**
  * A class for interacting with The Movie Database (TMDb) API to search for and retrieve
@@ -632,8 +631,8 @@ export class TheMovieDatabase extends Meta {
    * @param tmdbId - The unique TMDb ID for the movie (required)
    * @returns Promise resolving to available streaming sources for the movie
    */
-  async fetchMovieSources(tmdbId: number): Promise<EmbedSrcResponse> {
-    return _getVidSrcMovieUrl(tmdbId);
+  async fetchMovieSources(tmdbId: number): Promise<IResponse<IVideoSource | null>> {
+    return await this.vidsrc.fetchMovie(tmdbId);
   }
 
   /**
@@ -644,8 +643,8 @@ export class TheMovieDatabase extends Meta {
    * @param episodeNumber - The episode number for which to fetch streaming sources (required)
    * @returns Promise resolving to available streaming sources for the specific episode
    */
-  async fetchTvSources(tmdbId: number, season: number, episodeNumber: number): Promise<EmbedSrcResponse> {
-    return _getVidSrcTvUrl(tmdbId, season, episodeNumber);
+  async fetchTvSources(tmdbId: number, season: number, episodeNumber: number): Promise<IResponse<IVideoSource | null>> {
+    return await this.vidsrc.fetchTvSources(tmdbId, season, episodeNumber);
   }
 
   /**

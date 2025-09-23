@@ -53,3 +53,8 @@ https://rentry.co/sflix#yflix-clones
 
 ///BUGS
 Some of the queries for anilist are missing startDates and Enddates(should just return the year if unknown).Trending
+Will need to add anilist and jikan info to match consumet cause its very detailed
+
+Need to build a schedule for next episode for all providers
+
+Can recommendations be the same as related for most providers

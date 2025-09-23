@@ -1003,6 +1003,7 @@ export class Anilist extends Meta {
       const res: IMetaAnime[] = response.data.data.Page.media.map((item: any) => ({
         malId: item.idMal,
         anilistId: item.id,
+        bannerImage: item.bannerImage ?? item.coverImage.extraLarge ?? item.coverImage.large ?? item.coverImage.medium,
         image: item.coverImage.extraLarge ?? item.coverImage.large ?? item.coverImage.medium,
         title: {
           romaji: item.title.romaji ?? item.title.userPreferred,
@@ -1293,7 +1294,7 @@ export class Anilist extends Meta {
    * @returns Promise resolving to video sources for streaming
    */
   async fetchAllAnimeProviderSources(episodeId: string, category: ISubOrDub = 'sub') {
-    return await this.fetchAllAnimeSources(episodeId, category);
+    return await this.allanime.fetchSources(episodeId, category);
   }
 
   /**
@@ -1305,7 +1306,7 @@ export class Anilist extends Meta {
    * @returns Promise resolving to video sources for streaming
    */
   async fetchHianimeProviderSources(episodeId: string, category: ISubOrDub = 'sub', server: HiAnimeServers = 'hd-2') {
-    return await this.fetchZoroSources(episodeId, server, category);
+    return await this.hianime.fetchSources(episodeId, server, category);
   }
 
   /**
@@ -1316,6 +1317,6 @@ export class Anilist extends Meta {
    * @returns Promise that resolves to streaming sources, headers, or an error message
    */
   async fetchAnimePaheProviderSources(episodeId: string, category: ISubOrDub = 'sub') {
-    return await this.fetchPaheSouces(episodeId, category);
+    return await this.animepahe.fetchSources(episodeId, category);
   }
 }

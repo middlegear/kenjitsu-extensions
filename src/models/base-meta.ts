@@ -5,6 +5,7 @@ import type { HiAnimeServers, ISubOrDub, IMovieProviderResults, IMetaData } from
 import { FlixHQ } from '../provider/movies/flixhq.js';
 import { AllAnime } from '../provider/anime/allanime.js';
 import { Animepahe } from '../provider/anime/animepahe.js';
+import { VidSrc } from '../provider/movies/vidsrc.js';
 
 type AnimeSearchResults = {
   id: string;
@@ -46,6 +47,7 @@ export abstract class Meta {
   protected readonly flixhq: FlixHQ;
   protected readonly allanime: AllAnime;
   protected readonly animepahe: Animepahe;
+  protected readonly vidsrc: VidSrc;
 
   protected constructor() {
     this.client = new FetchClient();
@@ -54,6 +56,7 @@ export abstract class Meta {
     this.flixhq = new FlixHQ();
     this.allanime = new AllAnime();
     this.animepahe = new Animepahe();
+    this.vidsrc = new VidSrc();
   }
 
   // ------------------------
@@ -353,16 +356,6 @@ export abstract class Meta {
     }
   }
 
-  protected async fetchZoroSources(episodeId: string, server: HiAnimeServers = 'hd-2', category: ISubOrDub = 'sub') {
-    try {
-      const result = await this.hianime.fetchSources(episodeId, server, category);
-
-      return result;
-    } catch (error) {
-      throw new Error(error instanceof Error ? error.message : String(error));
-    }
-  }
-
   // ------------------------
   // FlixHQ integration
   // ------------------------
@@ -439,14 +432,7 @@ export abstract class Meta {
       throw new Error(error instanceof Error ? error.message : String(error));
     }
   }
-  protected async fetchAllAnimeSources(episodeId: string, category: ISubOrDub = 'sub') {
-    try {
-      const result = await this.allanime.fetchSources(episodeId, category);
-      return result;
-    } catch (error) {
-      throw new Error(error instanceof Error ? error.message : String(error));
-    }
-  }
+
   // // ------------------------
   // // Animepahe
   // // ------------------------
@@ -487,15 +473,6 @@ export abstract class Meta {
     }
   }
 
-  protected async fetchPaheSouces(episodeId: string, category: 'sub' | 'dub' | 'raw') {
-    try {
-      const result = await this.animepahe.fetchSources(episodeId, category);
-
-      return result;
-    } catch (error) {
-      throw new Error(error instanceof Error ? error.message : String(error));
-    }
-  }
   // ------------------------
   // Anizip integration
   // ------------------------

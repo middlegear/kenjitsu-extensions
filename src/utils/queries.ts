@@ -354,6 +354,11 @@ export const mediaTrendQuery = `query Query($page: Int, $perPage: Int) {
       }
       status
       description
+      startDate {
+        year
+        month
+        day
+      }
       endDate {
         year
         month
@@ -364,6 +369,7 @@ export const mediaTrendQuery = `query Query($page: Int, $perPage: Int) {
       averageScore
       meanScore
       popularity
+      bannerImage
       coverImage {
         extraLarge
         large
