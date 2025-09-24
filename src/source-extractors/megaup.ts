@@ -1,9 +1,13 @@
 import { BaseClass } from '../models/base-anime.js';
 import { gotScraping } from 'got-scraping';
+import type { IVideoSource } from '../models/types.js';
 export class MegaUp extends BaseClass {
-  private readonly tokenUrl: string = 'https://ilovekai.simplepostrequest.workers.dev/?ilovefeet=';
-  private readonly decodeUrlIframe: string = 'https://ilovekai.simplepostrequest.workers.dev/?ilovearmpits=';
-  private readonly decodeM3u8: string = 'https://azartx-tools.vercel.app/api/dec-mega';
+  // private readonly tokenUrl: string = 'https://ilovekai.simplepostrequest.workers.dev/?ilovefeet=';
+  // private readonly decodeUrlIframe: string = 'https://ilovekai.simplepostrequest.workers.dev/?ilovearmpits=';
+  // private readonly decodeM3u8: string = 'https://azartx-tools.vercel.app/api/dec-mega';
+  private readonly tokenUrl: string = 'https://enc-dec.app/api/enc-kai?text=';
+  private readonly decodeUrlIframe: string = 'https://enc-dec.app/api/dec-kai?text=';
+  private readonly decodeM3u8: string = 'https://enc-dec.app/api/dec-mega';
 
   constructor() {
     super();
@@ -15,7 +19,7 @@ export class MegaUp extends BaseClass {
 
       const response = await this.client.get(url);
 
-      return response.data;
+      return response.data.result; /// added result
     } catch (error) {
       return { error: error instanceof Error ? error.message : 'GenerateToken function failed' };
     }
@@ -27,7 +31,7 @@ export class MegaUp extends BaseClass {
 
       const response = await this.client.get(url);
 
-      return response.data;
+      return response.data.result; /// added result
     } catch (error) {
       return { error: error instanceof Error ? error.message : 'Decode function failed' };
     }
@@ -35,17 +39,18 @@ export class MegaUp extends BaseClass {
 
   async decrypt(encryptedData: string, userAgent: string) {
     try {
-      const url = `${this.decodeM3u8}?text=${encryptedData}&agent=${userAgent}`;
-
-      const response = await this.client.get(url);
+      const response = await this.client.post(this.decodeM3u8, {
+        text: encryptedData,
+        agent: userAgent,
+      });
 
       return response.data.result;
     } catch (error) {
-      return { error: error instanceof Error ? error.message : 'Decode function failed' };
+      return { error: error instanceof Error ? error.message : 'decrypt function failed' };
     }
   }
 
-  public async extract(videoUrl: URL) {
+  public async extract(videoUrl: URL): Promise<IVideoSource> {
     const mediaUrl = videoUrl.href.replace(/\/(e|e2)\//, '/media/');
 
     try {

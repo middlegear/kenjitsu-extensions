@@ -1015,6 +1015,7 @@ class Animekai extends BaseClass {
         intro: { start: number | null; end: number | null };
         outro: { start: number | null; end: number | null };
         download: string;
+        message: string;
       }> = [];
 
       for (const mediaId of mediaIds) {
@@ -1025,7 +1026,7 @@ class Animekai extends BaseClass {
             headers: this.headers,
           });
 
-          const decodedData = JSON.parse(await this.megaup.DecodeIframeData(data.result));
+          const decodedData = await this.megaup.DecodeIframeData(data.result); /// removed json.parse
 
           servers.push({
             url: decodedData.url,
@@ -1038,6 +1039,7 @@ class Animekai extends BaseClass {
               end: decodedData?.skip?.outro?.[1] ?? null,
             },
             download: decodedData.url.replace(/\/e\//, '/download/'),
+            message: decodedData.message || 'Hi how are you',
           });
         } catch {
           continue;
@@ -1078,6 +1080,7 @@ class Animekai extends BaseClass {
           ...(await new MegaUp().extract(serverUrl)),
           intro: { start: null, end: null },
           outro: { start: null, end: null },
+          posterImage: 'Hi how are you',
         },
       };
     }
@@ -1100,6 +1103,7 @@ class Animekai extends BaseClass {
               ...source.data,
               intro: firstServer.intro,
               outro: firstServer.outro,
+              posterImage: firstServer.message,
             }
           : null,
       };
