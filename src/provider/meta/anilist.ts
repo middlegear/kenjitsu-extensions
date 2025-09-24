@@ -14,8 +14,10 @@ import type {
   IMetaData,
 } from '../../models/types.js';
 import {
+  airingSchedule,
   characterQuery,
   fetchByIdQuery,
+  mediaAiringSchedule,
   mediaTrendQuery,
   popularAnimeQuery,
   relatedQuery,
@@ -1180,6 +1182,132 @@ export class Anilist extends Meta {
       return {
         error: error instanceof Error ? error.message : 'Unknown err',
         data: null,
+      };
+    }
+  }
+
+  /**
+   * Fetches anime  airing schedule by Id.
+   *
+   * @param mediaId - The unique Anilist anime ID (required)
+   * @returns Promise that resolves to airing schedule
+   */
+  async fetchMediaSchedule(mediaId: number) {
+    if (!mediaId) {
+      return { error: 'Missing required params: anilistId', data: null };
+    }
+    try {
+      const variables = {
+        mediaId,
+      };
+
+      const response = await this.client.post(`${this.baseUrl}`, {
+        query: mediaAiringSchedule,
+        variables,
+      });
+
+      if (!response.data) {
+        return {
+          error: response.statusText || 'Server returned an empty response',
+          data: null,
+        };
+      }
+
+      const res = {
+        malId: response.data.data.AiringSchedule.media.idMal,
+        anilistId: response.data.data.AiringSchedule.media.id,
+
+        image:
+          response.data.data.AiringSchedule.media.coverImage.extraLarge ??
+          response.data.data.AiringSchedule.media.coverImage.large ??
+          response.data.data.AiringSchedule.media.coverImage.medium,
+
+        color: response.data.data.AiringSchedule.media.coverImage.color,
+
+        bannerImage:
+          response.data.data.AiringSchedule.media.bannerImage ??
+          response.data.data.AiringSchedule.media.coverImage.extraLarge ??
+          response.data.data.AiringSchedule.media.coverImage.large ??
+          response.data.data.AiringSchedule.media.coverImage.medium,
+
+        title: {
+          romaji:
+            response.data.data.AiringSchedule.media.title.romaji ??
+            response.data.data.AiringSchedule.media.title.userPreferred,
+          english: response.data.data.AiringSchedule.media.title.english,
+          native: response.data.data.AiringSchedule.media.title.native,
+        },
+
+        format: response.data.data.AiringSchedule.media.format,
+        duration: response.data.data.AiringSchedule.media.duration,
+
+        releaseDate: response.data.data.AiringSchedule.media.startDate?.year
+          ? new Date(
+              response.data.data.AiringSchedule.media.startDate.year,
+              response.data.data.AiringSchedule.media.startDate.month - 1,
+              response.data.data.AiringSchedule.media.startDate.day,
+            ).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
+          : 'Unknown',
+
+        endDate: response.data.data.AiringSchedule.media.endDate?.year
+          ? new Date(
+              response.data.data.AiringSchedule.media.endDate.year,
+              response.data.data.AiringSchedule.media.endDate.month - 1,
+              response.data.data.AiringSchedule.media.endDate.day,
+            ).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
+          : 'Unknown',
+
+        nextAiringEpisode: response.data.data.AiringSchedule.media.nextAiringEpisode
+          ? {
+              episode: response.data.data.AiringSchedule.media.nextAiringEpisode.episode,
+              id: response.data.data.AiringSchedule.media.nextAiringEpisode.id,
+              airingAt: response.data.data.AiringSchedule.media.nextAiringEpisode.airingAt,
+              timeUntilAiring: response.data.data.AiringSchedule.media.nextAiringEpisode.timeUntilAiring,
+            }
+          : null,
+      };
+
+      return { data: res };
+    } catch (error) {
+      return {
+        error: error instanceof Error ? error.message : 'Unknown err',
+        data: null,
+      };
+    }
+  }
+
+  async fetchAiringSchedule(page: number, perPage: number) {
+    try {
+      const variables = {
+        page: page,
+        perPage: perPage,
+        notYetAired: true,
+      };
+      const response = await this.client.post(this.baseUrl, {
+        query: airingSchedule,
+        variables,
+      });
+
+      if (!response.data) {
+        return {
+          hasNextPage: false,
+          currentPage: 0,
+          lastPage: 0,
+          perPage: 0,
+          data: [],
+          error: response.statusText || 'Server returned an empty response',
+        };
+      }
+      // const
+      return response.data;
+    } catch (error) {
+      return {
+        hasNextPage: false,
+        currentPage: 0,
+        lastPage: 0,
+        perPage: 0,
+        data: [],
+        error: error instanceof Error ? error.message : 'Unknown err',
       };
     }
   }

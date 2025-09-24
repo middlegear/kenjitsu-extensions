@@ -1055,14 +1055,13 @@ class Animekai extends BaseClass {
   }
 
   /**
-   * **⚠️ .
+   * **⚠️ . Very unstable dont blame me
    * Fetches streaming sources for a given anime episode from a specified server and category.
    * @param {string} episodeId - The unique identifier for the episode (required).
    * @param {HISubOrDub} category  - The audio category (Subtitled or Dubbed) (optional, defaults to SubOrDub.SUB).
    * @returns  A promise that resolves to an object containing streaming sources, headers, sync data (AniList/MAL IDs), or an error message.
    */
   async fetchSources(episodeId: string, category: ISubOrDub = 'sub'): Promise<ISourceBaseResponse<IVideoSource | null>> {
-    //
     if (!episodeId) {
       return {
         data: null,
@@ -1070,15 +1069,16 @@ class Animekai extends BaseClass {
         error: 'Missing required param: episodeId',
       };
     }
-    if (episodeId) {
-      throw new Error('Unsupported method have fun');
-    }
+
     if (episodeId.startsWith('http')) {
       const serverUrl = new URL(episodeId);
       return {
-        headers: { Referer: serverUrl.href },
-        //@ts-ignore
-        data: await new MegaUp().extract(serverUrl),
+        headers: { Referer: `${serverUrl.origin}/` },
+        data: {
+          ...(await new MegaUp().extract(serverUrl)),
+          intro: { start: null, end: null },
+          outro: { start: null, end: null },
+        },
       };
     }
 
@@ -1091,7 +1091,18 @@ class Animekai extends BaseClass {
       const firstServer = servers.data[0];
       const serverUrl = new URL(firstServer.url);
 
-      return await this.fetchSources(serverUrl.href, category);
+      const source = await this.fetchSources(serverUrl.href, category);
+
+      return {
+        ...source,
+        data: source.data
+          ? {
+              ...source.data,
+              intro: firstServer.intro,
+              outro: firstServer.outro,
+            }
+          : null,
+      };
     } catch (error) {
       return {
         data: null,

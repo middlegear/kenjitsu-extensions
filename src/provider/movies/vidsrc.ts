@@ -2,6 +2,10 @@ import { BaseClass } from '../../models/base-anime.js';
 import * as cheerio from 'cheerio';
 import type { IMovieServers, IResponse, IVideoSource } from '../../models/types.js';
 
+/**
+ * A class for interacting with the VidSrc video streaming service to fetch movie and TV show sources.
+ * Extends the BaseClass for shared functionality.
+ */
 export class VidSrc extends BaseClass {
   private readonly baseUrl: string = 'https://vidsrc.io';
   private readonly cloudnestraUrl: string = 'https://cloudnestra.com';
@@ -10,6 +14,12 @@ export class VidSrc extends BaseClass {
   constructor() {
     super();
   }
+  /**
+   * Parses the server hash from the provided Cheerio API instance.
+   * @private
+   * @param $ - The Cheerio API instance loaded with HTML content.
+   * @returns An array of server objects containing serverName and serverId.
+   */
 
   private parseServerHash($: cheerio.CheerioAPI) {
     const servers: IMovieServers[] = [];
@@ -30,6 +40,13 @@ export class VidSrc extends BaseClass {
 
     return servers;
   }
+
+  /**
+   * Extracts the iframe source URL from a script tag containing 'loadIframe'.
+   * @private
+   * @param $ - The Cheerio API instance loaded with HTML content.
+   * @returns The iframe source URL or null if not found.
+   */
 
   private parseIframe($: cheerio.CheerioAPI) {
     const scriptContent = $('script')
@@ -52,6 +69,14 @@ export class VidSrc extends BaseClass {
     return null;
   }
 
+  /**
+   * Finds the server ID for a specified server name.
+   * @private
+   * @param servers - Array of available servers.
+   * @param server - The server name to find (e.g., 'cloudstream').
+   * @returns The server ID.
+   * @throws Error if the specified server is not found.
+   */
   private findServerId(servers: IMovieServers[], server: 'cloudstream') {
     const availableServers = servers.map(s => s.serverName || 'unknown');
     const serverIndex = servers.findIndex(s => (s.serverName || '').toLowerCase() === server.toLowerCase());
@@ -63,6 +88,14 @@ export class VidSrc extends BaseClass {
 
     return servers[serverIndex].serverId as string;
   }
+
+  /**
+   * Parses M3U8 file information from a script tag containing 'new Playerjs'.
+   * @private
+   * @param $ - The Cheerio API instance loaded with HTML content.
+   * @returns An object containing the M3U8 file URL and optional cuid.
+   */
+
   private parseM3u8($: cheerio.CheerioAPI) {
     const playerScript = $('script').filter((_, el) => {
       const content = $(el).html();
@@ -89,11 +122,11 @@ export class VidSrc extends BaseClass {
       // cuid: cuidMatch?.[1] ?? null,
     };
   }
-
   /**
-   *  Fetches srcp data
-   * @param serverId the server hash
-   * @returns
+   * Fetches RCP data for a given server ID.
+   * @private
+   * @param serverId - The server hash ID.
+   * @returns The RCP data or an error object if the request fails.
    */
   private async fetchRCP(serverId: string) {
     try {
@@ -125,6 +158,16 @@ export class VidSrc extends BaseClass {
     }
   }
 
+  /**
+   * Fetches media hash for a movie or TV show episode.
+   * @private
+   * @param tmdbId - The TMDB ID of the media.
+   * @param season - The season number (optional, for TV shows).
+   * @param episode - The episode number (optional, for TV shows).
+   * @param server - The server name to use (default: 'cloudstream').
+   * @returns The RCP data or an error object if the request fails.
+   */
+
   private async fetchMediaHash(tmdbId: number, season?: number, episode?: number, server: 'cloudstream' = 'cloudstream') {
     try {
       let url: string;
@@ -146,6 +189,11 @@ export class VidSrc extends BaseClass {
     }
   }
 
+  /**
+   * Fetches video sources for a movie.
+   * @param tmdbId - The TMDB ID of the movie.
+   * @returns A promise resolving to an IResponse containing the video sources and subtitles or an error.
+   */
   async fetchMovie(tmdbId: number): Promise<IResponse<IVideoSource | null>> {
     if (!tmdbId) {
       return { data: null, error: 'Missing required params: tmdbid' };
@@ -181,8 +229,15 @@ export class VidSrc extends BaseClass {
     }
   }
 
+  /**
+   * Fetches video sources for a TV show episode.
+   * @param tmdbId - The TMDB ID of the TV show.
+   * @param season - The season number.
+   * @param episodeNumber - The episode number.
+   * @returns A promise resolving to an IResponse containing the video sources and subtitles or an error.
+   */
+
   async fetchTvSources(tmdbId: number, season: number, episodeNumber: number): Promise<IResponse<IVideoSource | null>> {
-    //
     const required = {
       tmdbId,
       season,

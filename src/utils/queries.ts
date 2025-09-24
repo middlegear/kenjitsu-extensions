@@ -409,3 +409,107 @@ export const relatedQuery = `query Media($mediaId: Int, $type: MediaType) {
     }
   }
 }`;
+
+export const mediaAiringSchedule = `query AiringSchedule($mediaId: Int) {
+  AiringSchedule(mediaId: $mediaId) {
+    media {
+      bannerImage
+      averageScore
+      coverImage {
+        color
+        extraLarge
+        large
+        medium
+      }
+       startDate {
+        year
+        month
+        day
+      }
+
+      endDate {
+        day
+        month
+        year
+      }
+      format
+      idMal
+      nextAiringEpisode {
+        airingAt
+        episode
+        id
+        timeUntilAiring
+      }
+      duration
+      title {
+        english
+        native
+        romaji
+        userPreferred
+      }
+      id
+      status
+    }
+  }
+}`;
+
+// take note
+// {
+//   "mediaId": 178090
+// }
+
+export const airingSchedule = `query Page($page: Int, $perPage: Int, $notYetAired: Boolean) {
+  Page(page: $page, perPage: $perPage) {
+    airingSchedules(notYetAired: $notYetAired) {
+      media {
+        bannerImage
+        id
+        idMal
+         title {
+            romaji
+            english
+            native
+            userPreferred
+          }
+        averageScore
+        coverImage {
+          color
+          extraLarge
+          large
+          medium
+        }
+        description
+        duration
+        type
+        status
+        startDate {
+          day
+          month
+          year
+        }
+        endDate {
+          day
+          month
+          year
+        }
+        format
+        genres
+        nextAiringEpisode {
+          episode
+          id
+          airingAt
+        }
+        episodes
+        meanScore
+        countryOfOrigin
+      }
+    }
+    pageInfo {
+      currentPage
+      hasNextPage
+      lastPage
+      perPage
+      total
+    }
+  }
+}`;
