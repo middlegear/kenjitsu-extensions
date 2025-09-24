@@ -6,19 +6,7 @@ export class MegaUp extends BaseClass {
   private readonly decodeM3u8: string = 'https://azartx-tools.vercel.app/api/dec-mega';
   private headers = {
     Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-    'Accept-Encoding': 'gzip, deflate, br, zstd',
     'Accept-Language': 'en-US,en;q=0.5',
-    'Alt-Used': 'megaup.live',
-    Connection: 'keep-alive',
-    Host: 'megaup.live',
-    Priority: 'u=0, i',
-    'Sec-Fetch-Dest': 'document',
-    'Sec-Fetch-Mode': 'navigate',
-    'Sec-Fetch-Site': 'none',
-    'Sec-Fetch-User': '?1',
-    'Sec-GPC': '1',
-    TE: 'trailers',
-    'Upgrade-Insecure-Requests': '1',
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:143.0) Gecko/20100101 Firefox/143.0',
   };
 
@@ -31,33 +19,32 @@ export class MegaUp extends BaseClass {
 
     try {
       const url = `${this.tokenUrl}${encodeURIComponent(token)}`;
-      console.log('[MegaUp] Requesting token URL:', url);
 
       const response = await this.client.get(url);
-      console.log('[MegaUp] Response status:', response.status);
-      console.log('[MegaUp] Response data:', response.data);
+      console.log('[Animekai] Response status:', response.status);
+      console.log('[Animekai] Response data:', response.data);
 
       return response.data;
     } catch (error) {
-      console.error('[MegaUp] GenerateToken error:', error);
+      console.error('[AnimeKai] GenerateToken error:', error);
       return { error: error instanceof Error ? error.message : 'GenerateToken function failed' };
     }
   }
 
   async DecodeIframeData(iframe: string) {
-    console.log('[MegaUp] DecodeIframeData called with:', iframe);
+    console.log('[AnimeKai] DecodeIframeData called with:', iframe);
 
     try {
       const url = `${this.decodeUrlIframe}${iframe}`;
-      console.log('[MegaUp] Requesting iframe decode URL:', url);
+      console.log('[Animekai] Requesting iframe decode ');
 
       const response = await this.client.get(url);
-      console.log('[MegaUp] Response status:', response.status);
-      console.log('[MegaUp] Response data:', response.data);
+      console.log('[AnimeKai] Response status:', response.status);
+      console.log('[Animekai] Response data:', response.data);
 
       return response.data;
     } catch (error) {
-      console.error('[MegaUp] DecodeIframeData error:', error);
+      console.error('[AnimeKai] DecodeIframeData error:', error);
       return { error: error instanceof Error ? error.message : 'Decode function failed' };
     }
   }
@@ -69,7 +56,7 @@ export class MegaUp extends BaseClass {
       const userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:143.0) Gecko/20100101 Firefox/143.0';
       const url = `${this.decodeM3u8}?text=${data}&agent=${userAgent}`;
 
-      console.log('[MegaUp] Requesting decrypt URL:', url);
+      console.log('[MegaUp] Requesting decrypt ');
 
       const response = await this.client.get(url);
       console.log('[MegaUp] Response status:', response.status);
