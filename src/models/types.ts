@@ -436,6 +436,46 @@ export interface IMetaEpisodes {
   score?: number;
   url: string;
 }
+// Base interface for common fields
+interface AnimeTitle {
+  romaji: string;
+  english: string | null;
+  native: string | null;
+}
+
+interface NextAiringEpisode {
+  episode: number;
+  id: number;
+  airingAt: number;
+  timeUntilAiring: number;
+}
+
+interface BaseAnimeSchedule {
+  malId: number;
+  anilistId: number;
+  bannerImage: string;
+  image: string;
+  title: AnimeTitle;
+  format: string;
+  releaseDate: string;
+  endDate: string;
+  status: string;
+  nextAiringEpisode: NextAiringEpisode | null;
+}
+
+export interface MediaSchedule extends BaseAnimeSchedule {
+  color: string;
+  duration: number | null;
+}
+
+export interface AiringSchedule extends BaseAnimeSchedule {
+  popularity: number;
+  score: number;
+  genres: string[];
+  episodes: number | null;
+  synopsis: string;
+  season: string | null;
+}
 
 export interface IMetaMovie {
   tmdbId: number;

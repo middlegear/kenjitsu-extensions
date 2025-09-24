@@ -12,6 +12,8 @@ import type {
   Seasons,
   IMetaFormat,
   IMetaData,
+  MediaSchedule,
+  AiringSchedule,
 } from '../../models/types.js';
 import {
   airingSchedule,
@@ -1187,12 +1189,12 @@ export class Anilist extends Meta {
   }
 
   /**
-   * Fetches anime  airing schedule by Id.
+   * Fetches the airing schedule for a specific anime by its Anilist ID.
    *
-   * @param mediaId - The unique Anilist anime ID (required)
-   * @returns Promise that resolves to airing schedule
-   */
-  async fetchMediaSchedule(mediaId: number) {
+   * @param {number} mediaId - The unique Anilist anime ID (required).
+   * @returns  A promise that resolves to an object containing the airing schedule data or an error.
+   * **/
+  async fetchMediaSchedule(mediaId: number): Promise<IResponse<MediaSchedule | null>> {
     if (!mediaId) {
       return { error: 'Missing required params: anilistId', data: null };
     }
@@ -1237,7 +1239,7 @@ export class Anilist extends Meta {
           english: response.data.data.AiringSchedule.media.title.english,
           native: response.data.data.AiringSchedule.media.title.native,
         },
-
+        status: response.data.data.AiringSchedule.media.status,
         format: response.data.data.AiringSchedule.media.format,
         duration: response.data.data.AiringSchedule.media.duration,
 
@@ -1267,7 +1269,7 @@ export class Anilist extends Meta {
           : null,
       };
 
-      return { data: res };
+      return { data: res as MediaSchedule };
     } catch (error) {
       return {
         error: error instanceof Error ? error.message : 'Unknown err',
@@ -1276,11 +1278,17 @@ export class Anilist extends Meta {
     }
   }
 
-  async fetchAiringSchedule(page: number, perPage: number) {
+  /**
+   * Fetches a paginated list of airing schedules for anime with a minimum score.
+   *
+   * @param {number} page - The page number to fetch (deafault=1).
+   * @param {number} [score=60] - The minimum average or mean score for filtering anime (default: 60).If you have bad taste you can lower this
+   * **/
+  async fetchAiringSchedule(page: number = 1, score: number = 60): Promise<IAnimePaginated<AiringSchedule[] | []>> {
     try {
       const variables = {
         page: page,
-        perPage: perPage,
+        perPage: 50,
         notYetAired: true,
       };
       const response = await this.client.post(this.baseUrl, {
@@ -1298,8 +1306,75 @@ export class Anilist extends Meta {
           error: response.statusText || 'Server returned an empty response',
         };
       }
-      // const
-      return response.data;
+
+      const res = response.data.data.Page.airingSchedules
+        .filter(
+          (item: any) =>
+            item.media.format === 'TV' &&
+            item.media.type === 'ANIME' &&
+            (item.media.averageScore >= score || item.media.meanScore >= score),
+        )
+        .map((item: any) => ({
+          malId: item.media.idMal,
+          anilistId: item.media.id,
+          bannerImage:
+            item.media.bannerImage ??
+            item.media.coverImage.extraLarge ??
+            item.media.coverImage.large ??
+            item.media.coverImage.medium,
+          image: item.media.coverImage.extraLarge ?? item.media.coverImage.large ?? item.media.coverImage.medium,
+          color: item.media.coverImage.color,
+          title: {
+            romaji: item.media.title.romaji ?? item.media.title.userPreferred,
+            english: item.media.title.english,
+            native: item.media.title.native,
+          },
+          format: item.media.format,
+          status: item.media.status,
+          popularity: item.media.popularity,
+          score: item.media.meanScore ?? item.media.averageScore,
+          genres: item.media.genres,
+          episodes: item.media.episodes,
+          duration: item.media.duration,
+          synopsis: item.media.description,
+          season: item.media.season,
+          releaseDate:
+            item.media.startDate && item.media.startDate.year
+              ? new Date(
+                  item.media.startDate.year,
+                  item.media.startDate.month - 1,
+                  item.media.startDate.day,
+                ).toLocaleDateString('en-US', {
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric',
+                })
+              : 'Unknown',
+          endDate:
+            item.media.endDate && item.media.endDate.year
+              ? new Date(item.media.endDate.year, item.media.endDate.month - 1, item.media.endDate.day).toLocaleDateString(
+                  'en-US',
+                  {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                  },
+                )
+              : 'Unknown',
+          nextAiringEpisode: item.media.nextAiringEpisode
+            ? {
+                episode: item.media.nextAiringEpisode.episode,
+                id: item.media.nextAiringEpisode.id,
+                airingAt: item.media.nextAiringEpisode.airingAt,
+                timeUntilAiring: item.media.nextAiringEpisode.timeUntilAiring,
+              }
+            : null,
+        }));
+      return {
+        hasNextPage: response.data.data.Page.pageInfo.hasNextPage,
+        currentPage: response.data.data.Page.pageInfo.currentPage,
+        data: res,
+      };
     } catch (error) {
       return {
         hasNextPage: false,

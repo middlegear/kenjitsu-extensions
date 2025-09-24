@@ -32,3 +32,24 @@ export abstract class BaseClass {
     return mapping[normalized];
   }
 }
+
+interface AnimeSchedule {
+  malId: number;
+  anilistId: number;
+  bannerImage: string;
+  image: string;
+  title: { romaji: string; english: string | null; native: string | null };
+  format: string;
+  status?: string;
+  popularity?: number;
+  score?: number;
+  genres?: string[];
+  episodes?: number | null;
+  synopsis?: string;
+  season?: string | null;
+  releaseDate: string;
+  endDate: string;
+  nextAiringEpisode: { episode: number; id: number; airingAt: number; timeUntilAiring: number };
+  color?: string;
+  duration?: number | null;
+}

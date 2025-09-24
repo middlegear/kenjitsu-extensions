@@ -449,6 +449,7 @@ export const mediaAiringSchedule = `query AiringSchedule($mediaId: Int) {
       }
       id
       status
+      popularity
     }
   }
 }`;
@@ -482,6 +483,7 @@ export const airingSchedule = `query Page($page: Int, $perPage: Int, $notYetAire
         duration
         type
         status
+        season
         startDate {
           day
           month
@@ -492,6 +494,7 @@ export const airingSchedule = `query Page($page: Int, $perPage: Int, $notYetAire
           month
           year
         }
+        popularity
         format
         genres
         nextAiringEpisode {
@@ -507,9 +510,7 @@ export const airingSchedule = `query Page($page: Int, $perPage: Int, $notYetAire
     pageInfo {
       currentPage
       hasNextPage
-      lastPage
-      perPage
-      total
+     
     }
   }
 }`;
