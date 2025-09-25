@@ -9,8 +9,10 @@ anilist
 
 allanime
 1. sources need to throw error. Test case with servers fullalchemist the brotherhood
-Animekai
 
+
+
+Animekai
 3. add watch together
 4. schedule
 

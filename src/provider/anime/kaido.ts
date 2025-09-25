@@ -1,7 +1,6 @@
 import * as cheerio from 'cheerio';
 import { BaseClass } from '../../models/base-anime.js';
-import type { ISubOrDub, HiAnimeServers, IAnimeCategory, IHIAnimeInfoResponse } from '../../models/types.js';
-import MegaCloud from '../../source-extractors/megacloud.js';
+import type { ISubOrDub, IAnimeCategory, IHIAnimeInfoResponse } from '../../models/types.js';
 import {
   type IAnime,
   type IAnimePaginated,
@@ -28,10 +27,11 @@ import RapidCloud from '../../source-extractors/rapidcloud.js';
  * retrieve episode lists, get available streaming servers, and fetch curated anime lists.
  */
 export class Kaido extends BaseClass {
-  private readonly baseUrl: string = 'https://kaido.to';
+  private readonly baseUrl: string;
 
-  constructor() {
+  constructor(baseUrl: string = 'https://kaido.to') {
     super();
+    this.baseUrl = baseUrl;
   }
 
   /**

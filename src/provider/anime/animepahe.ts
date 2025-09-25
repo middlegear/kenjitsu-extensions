@@ -20,17 +20,12 @@ import Kwik from '../../source-extractors/kwik.js';
  * retrieve episode lists, get available streaming servers, and sources.
  */
 export class Animepahe extends BaseClass {
-  private readonly baseUrl: string = 'https://animepahe.si';
-  constructor() {
+  private readonly baseUrl: string;
+  constructor(baseUrl: string = 'https://animepahe.si') {
     super();
+    this.baseUrl = baseUrl;
   }
 
-  /**
-   * Generates HTTP headers for API requests to Animepahe.
-   * @private
-   * @param {string | false} id - The anime ID to include in the Referer header, or false for general requests.
-   * @returns {Record<string, string>} An object containing the required HTTP headers.
-   */
   private headers(id: string | false) {
     return {
       Cookie: '__ddg2_=;',

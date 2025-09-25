@@ -51,3 +51,7 @@ export {
   type IMovieOrTv,
   type ISubOrDub,
 };
+// const data = await new Animekai().fetchSources(
+//   'bleach-thousand-year-blood-war-the-conflict-zev9-token-dYTnq6fktAW4iHoUy5Sc',
+// );
+// console.log(data);

@@ -27,10 +27,11 @@ import {
  * retrieve episode lists, get available streaming servers, and fetch curated anime lists.
  */
 export class HiAnime extends BaseClass {
-  private readonly baseUrl: string = 'https://hianime.to';
+  private readonly baseUrl: string;
 
-  constructor() {
+  constructor(baseUrl: string = 'https://hianime.to') {
     super();
+    this.baseUrl = baseUrl;
   }
 
   /**
