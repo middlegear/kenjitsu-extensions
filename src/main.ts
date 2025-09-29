@@ -7,6 +7,8 @@ import { Animekai } from './provider/anime/animekai.js';
 import { Animepahe } from './provider/anime/animepahe.js';
 import { HiMovies } from './provider/movies/himovies.js';
 import { Kaido } from './provider/anime/kaido.js';
+import MegaCloud from './source-extractors/megacloud.js';
+import RapidCloud from './source-extractors/rapidcloud.js';
 import {
   type IMovieCountry,
   type IMovieGenre,
@@ -35,6 +37,8 @@ export {
   Animepahe,
   HiMovies,
   FlixHQ,
+  MegaCloud,
+  RapidCloud,
   type IMovieCountry,
   type IMovieGenre,
   type KaiGenres,
@@ -51,7 +55,3 @@ export {
   type IMovieOrTv,
   type ISubOrDub,
 };
-// const data = await new Animekai().fetchSources(
-//   'bleach-thousand-year-blood-war-the-conflict-zev9-token-dYTnq6fktAW4iHoUy5Sc',
-// );
-// console.log(data);

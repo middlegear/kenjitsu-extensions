@@ -48,7 +48,7 @@ class RapidCloud {
     if (!sourceId) {
       throw new Error('Failed to extract source ID');
     }
-
+    // console.log(videoUrl.href);
     const fullPathname = videoUrl.pathname;
     const lastSlashIndex = fullPathname.lastIndexOf('/');
     const basePathname = fullPathname.substring(0, lastSlashIndex);
