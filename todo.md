@@ -59,4 +59,4 @@ Will need to add anilist and jikan info to match consumet cause its very detaile
 
 Need to build a schedule for next episode for all providers
 
-Can recommendations be the same as related for most providers
+/// Undici fetch wrapper is bullshit will need to implement impit

@@ -7,8 +7,7 @@ import { Animekai } from './provider/anime/animekai.js';
 import { Animepahe } from './provider/anime/animepahe.js';
 import { HiMovies } from './provider/movies/himovies.js';
 import { Kaido } from './provider/anime/kaido.js';
-import MegaCloud from './source-extractors/megacloud.js';
-import RapidCloud from './source-extractors/rapidcloud.js';
+
 import {
   type IMovieCountry,
   type IMovieGenre,
@@ -37,8 +36,6 @@ export {
   Animepahe,
   HiMovies,
   FlixHQ,
-  MegaCloud,
-  RapidCloud,
   type IMovieCountry,
   type IMovieGenre,
   type KaiGenres,
