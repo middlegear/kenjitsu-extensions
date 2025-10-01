@@ -230,7 +230,7 @@ export class AllAnime extends BaseClass {
 
       const serverIdMap: Record<string, string> = {
         ok: 'okru',
-        'fm-hls': 'filemoon',
+        // 'fm-hls': 'filemoon', // disabled for reseaons that the stream is IP bound and tokenised
         mp4: 'mp4upload',
         // vg: 'listeamed', unsupported server uses jsfuck (idk)
       };
@@ -316,7 +316,7 @@ export class AllAnime extends BaseClass {
 
     const hasValidSource = Object.values(response).some(val => val.data !== null);
     if (!hasValidSource) {
-      throw new Error(`No streams available for episode: ${episodeId}. Known Issue`).message;
+      throw new Error(`No streams available for episode: ${episodeId}.It is a Known Issue`).message;
     }
 
     return response;

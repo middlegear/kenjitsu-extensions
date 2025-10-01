@@ -59,4 +59,5 @@ Will need to add anilist and jikan info to match consumet cause its very detaile
 
 Need to build a schedule for next episode for all providers
 
-/// Undici fetch wrapper is bullshit will need to implement impit
+Isolate filemoon m3u8 until a valid method is found 
+Undici fetch wrapper is bullshit will need to implement impit

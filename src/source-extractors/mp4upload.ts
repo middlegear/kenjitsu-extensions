@@ -43,6 +43,7 @@ class MP4Upload {
         url: sourceUrl?.src,
         isM3U8: sourceUrl?.type.includes('m3u8'),
         type: sourceUrl?.type,
+        quality: 'Requires a proxy. ',
       });
       extractedData.posterImage = posterImage;
       return extractedData || null;
