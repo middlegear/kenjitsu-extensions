@@ -58,6 +58,8 @@ Some of the queries for anilist are missing startDates and Enddates(should just 
 Will need to add anilist and jikan info to match consumet cause its very detailed
 
 Need to build a schedule for next episode for all providers
-
+Revisit jikan im getting a lot of nulls especially in top airing fields better test all of them 
 Isolate filemoon m3u8 until a valid method is found 
 Undici fetch wrapper is bullshit will need to implement impit
+
+{"error":"Cannot read properties of undefined (reading 'averageScore')","data":null}  https://hakai-api.vercel.app/api/anilist/info/185575

@@ -574,7 +574,7 @@ export class Anilist extends Meta {
         format: response.data.data.Media.format,
         status: response.data.data.Media.status,
         duration: response.data.data.Media.duration,
-        score: response.data.data.Media.meanScore ?? response.data.data.media.averageScore,
+        score: response.data.data.Media.meanScore || response.data.data.Media.averageScore,
         genres: response.data.data.Media.genres,
         episodes: response.data.data.Media.episodes,
         synopsis: response.data.data.Media.description,
