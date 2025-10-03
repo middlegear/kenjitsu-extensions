@@ -13,6 +13,7 @@ import type {
   HiAnimeServers,
   IMetaFormat,
   IMetaData,
+  IMetaProviderEpisodes,
 } from '../../models/types.js';
 
 /**
@@ -26,13 +27,195 @@ export class Jikan extends Meta {
   /** Base URL for the Jikan API (MyAnimeList unofficial API) */
   private readonly baseUrl: string = 'https://api.jikan.moe/v4';
 
-  /**
-   * Creates an instance of the Jikan API client.
-   */
   constructor() {
     super();
   }
 
+  /**
+   * Maps MyAnimeList anime data to HiAnime (Zoro) provider ID.
+   *
+   * @private
+   * @param malId - The MyAnimeList ID of the anime
+   * @returns Promise resolving to provider mapping data
+   */
+  private async fetchZoroProviderId(malId: number): Promise<IMetaProviderIdResponse<IMetaAnime | null>> {
+    if (!malId) {
+      return {
+        error: 'Invalid or missing required parameter: malId!',
+        data: null,
+        provider: null,
+      };
+    }
+
+    try {
+      const mal = await this.fetchInfo(malId);
+
+      let titles: string | null = null;
+      let release: string | null = null;
+
+      if (mal.data) {
+        titles = mal.data.title.english || mal.data.title.romaji || mal.data.title.native || null;
+        release = mal.data.releaseDate;
+      }
+
+      const year = release ? new Date(release).getFullYear() : null;
+      const titleSlug = titles ? this.createSlug(titles) : null;
+
+      let malData: IMetaData | null = null;
+
+      if (mal.data) {
+        malData = {
+          english: mal.data.title.english,
+          romaji: mal.data.title.romaji,
+          native: mal.data.title.native,
+          type: mal.data.format,
+          episodes: mal.data.episodes,
+          season: mal.data.season,
+          year: year as number,
+        };
+      }
+
+      let zoroResults = null;
+      if (titleSlug) {
+        zoroResults = await this.searchZoro(titleSlug);
+      }
+
+      return {
+        data: mal.data,
+        provider: this.mapAnimeId(malData, zoroResults, 'hianime'),
+      };
+    } catch (error) {
+      return {
+        error: error instanceof Error ? error.message : 'Unknown error occurred',
+        data: null,
+        provider: null,
+      };
+    }
+  }
+
+  /**
+   * Maps MyAnimeList anime data to AllAnime provider ID.
+   *
+   * @private
+   * @param malId - The MyAnimeList ID of the anime
+   * @returns Promise resolving to provider mapping data
+   */
+  private async fetchAllAnimeProviderId(malId: number): Promise<IMetaProviderIdResponse<IMetaAnime | null>> {
+    if (!malId) {
+      return {
+        error: 'Invalid or missing required parameter: malId!',
+        data: null,
+        provider: null,
+      };
+    }
+
+    try {
+      const mal = await this.fetchInfo(malId);
+
+      let titles: string | null = null;
+      let release: string | null = null;
+
+      if (mal.data) {
+        titles = mal.data.title.english || mal.data.title.romaji || mal.data.title.native || null;
+        release = mal.data.releaseDate;
+      }
+
+      const year = release ? new Date(release).getFullYear() : null;
+
+      let malData: IMetaData | null = null;
+
+      if (mal.data) {
+        malData = {
+          english: mal.data.title.english,
+          romaji: mal.data.title.romaji,
+          native: mal.data.title.native,
+          type: mal.data.format,
+          episodes: mal.data.episodes,
+          season: mal.data.season,
+          year: year as number,
+        };
+      }
+
+      let allAnimeResults = null;
+
+      if (titles) {
+        allAnimeResults = await this.searchAllAnime(titles);
+      }
+
+      return {
+        data: mal.data,
+        provider: this.mapAnimeId(malData, allAnimeResults, 'allanime'),
+      };
+    } catch (error) {
+      return {
+        error: error instanceof Error ? error.message : 'Unknown error occurred',
+        data: null,
+        provider: null,
+      };
+    }
+  }
+
+  /**
+   * Maps MyAnimeList anime data to AnimePahe provider ID.
+   *
+   * @private
+   * @param malId - The MyAnimeList ID of the anime
+   * @returns Promise resolving to provider mapping data
+   */
+  private async fetchAnimepaheProviderId(malId: number): Promise<IMetaProviderIdResponse<IMetaAnime | null>> {
+    if (!malId) {
+      return {
+        error: 'Invalid or missing required parameter: malId!',
+        data: null,
+        provider: null,
+      };
+    }
+
+    try {
+      const mal = await this.fetchInfo(malId);
+
+      let titles: string | null = null;
+      let release: string | null = null;
+
+      if (mal.data) {
+        titles = mal.data.title.english || mal.data.title.romaji || mal.data.title.native || null;
+        release = mal.data.releaseDate;
+      }
+
+      const year = release ? new Date(release).getFullYear() : null;
+      const titleSlug = titles ? this.createSlug(titles) : null;
+
+      let malData: IMetaData | null = null;
+
+      if (mal.data) {
+        malData = {
+          english: mal.data.title.english,
+          romaji: mal.data.title.romaji,
+          native: mal.data.title.native,
+          type: mal.data.format,
+          episodes: mal.data.episodes,
+          season: mal.data.season,
+          year: year as number,
+        };
+      }
+
+      let paheResults = null;
+      if (titleSlug) {
+        paheResults = await this.searchPahe(titleSlug);
+      }
+
+      return {
+        data: mal.data,
+        provider: this.mapAnimeId(malData, paheResults, 'pahe'),
+      };
+    } catch (error) {
+      return {
+        error: error instanceof Error ? error.message : 'Unknown error occurred',
+        data: null,
+        provider: null,
+      };
+    }
+  }
   /**
    * Fetches episodes from AllAnime provider and enriches with Anizip data for a given MAL ID.
    *
@@ -156,192 +339,6 @@ export class Jikan extends Meta {
   }
 
   /**
-   * Maps MyAnimeList anime data to HiAnime (Zoro) provider ID.
-   *
-   * @private
-   * @param malId - The MyAnimeList ID of the anime
-   * @returns Promise resolving to provider mapping data
-   */
-  private async fetchZoroProviderId(malId: number): Promise<IMetaProviderIdResponse<IMetaAnime | null>> {
-    if (!malId) {
-      return {
-        error: 'Invalid or missing required parameter: malId!',
-        data: null,
-        provider: null,
-      };
-    }
-
-    try {
-      const mal = await this.fetchInfo(malId);
-
-      let titles: string | null = null;
-      let release: string | null = null;
-
-      if (mal.data) {
-        titles = mal.data.title.english || mal.data.title.romaji || mal.data.title.native || null;
-        release = mal.data.releaseDate;
-      }
-
-      const year = release ? new Date(release).getFullYear() : null;
-      const titleSlug = titles ? this.createSlug(titles) : null;
-
-      let malData: IMetaData | null = null;
-
-      if (mal.data) {
-        malData = {
-          english: mal.data.title.english,
-          romaji: mal.data.title.romaji,
-          native: mal.data.title.native,
-          type: mal.data.format,
-          episodes: mal.data.episodes,
-          season: mal.data.season,
-          year: year as number,
-        };
-      }
-
-      let zoroResults = null;
-      if (titleSlug) {
-        zoroResults = await this.searchZoro(titleSlug);
-      }
-
-      return {
-        data: mal.data,
-        provider: this.mapAnimeId(malData, zoroResults, 'hianime'),
-      };
-    } catch (error) {
-      return {
-        error: error instanceof Error ? error.message : 'Unknown error occurred',
-        data: null,
-        provider: null,
-      };
-    }
-  }
-
-  /**
-   * Maps MyAnimeList anime data to AllAnime provider ID.
-   *
-   * @private
-   * @param malId - The MyAnimeList ID of the anime
-   * @returns Promise resolving to provider mapping data
-   */
-  private async fetchAllAnimeProviderId(malId: number): Promise<IMetaProviderIdResponse<IMetaAnime | null>> {
-    if (!malId) {
-      return {
-        error: 'Invalid or missing required parameter: malId!',
-        data: null,
-        provider: null,
-      };
-    }
-
-    try {
-      const mal = await this.fetchInfo(malId);
-
-      let titles: string | null = null;
-      let release: string | null = null;
-
-      if (mal.data) {
-        titles = mal.data.title.english || mal.data.title.romaji || mal.data.title.native || null;
-        release = mal.data.releaseDate;
-      }
-
-      const year = release ? new Date(release).getFullYear() : null;
-      const titleSlug = titles ? this.createSlug(titles) : null;
-
-      let malData: IMetaData | null = null;
-
-      if (mal.data) {
-        malData = {
-          english: mal.data.title.english,
-          romaji: mal.data.title.romaji,
-          native: mal.data.title.native,
-          type: mal.data.format,
-          episodes: mal.data.episodes,
-          season: mal.data.season,
-          year: year as number,
-        };
-      }
-
-      let allAnimeResults = null;
-      if (titleSlug) {
-        allAnimeResults = await this.searchAllAnime(titleSlug);
-      }
-
-      return {
-        data: mal.data,
-        provider: this.mapAnimeId(malData, allAnimeResults, 'allanime'),
-      };
-    } catch (error) {
-      return {
-        error: error instanceof Error ? error.message : 'Unknown error occurred',
-        data: null,
-        provider: null,
-      };
-    }
-  }
-
-  /**
-   * Maps MyAnimeList anime data to AnimePahe provider ID.
-   *
-   * @private
-   * @param malId - The MyAnimeList ID of the anime
-   * @returns Promise resolving to provider mapping data
-   */
-  private async fetchAnimepaheProviderId(malId: number): Promise<IMetaProviderIdResponse<IMetaAnime | null>> {
-    if (!malId) {
-      return {
-        error: 'Invalid or missing required parameter: malId!',
-        data: null,
-        provider: null,
-      };
-    }
-
-    try {
-      const mal = await this.fetchInfo(malId);
-
-      let titles: string | null = null;
-      let release: string | null = null;
-
-      if (mal.data) {
-        titles = mal.data.title.english || mal.data.title.romaji || mal.data.title.native || null;
-        release = mal.data.releaseDate;
-      }
-
-      const year = release ? new Date(release).getFullYear() : null;
-      const titleSlug = titles ? this.createSlug(titles) : null;
-
-      let malData: IMetaData | null = null;
-
-      if (mal.data) {
-        malData = {
-          english: mal.data.title.english,
-          romaji: mal.data.title.romaji,
-          native: mal.data.title.native,
-          type: mal.data.format,
-          episodes: mal.data.episodes,
-          season: mal.data.season,
-          year: year as number,
-        };
-      }
-
-      let paheResults = null;
-      if (titleSlug) {
-        paheResults = await this.searchPahe(titleSlug);
-      }
-
-      return {
-        data: mal.data,
-        provider: this.mapAnimeId(malData, paheResults, 'pahe'),
-      };
-    } catch (error) {
-      return {
-        error: error instanceof Error ? error.message : 'Unknown error occurred',
-        data: null,
-        provider: null,
-      };
-    }
-  }
-
-  /**
    * Fetches episodes from AnimePahe provider and enriches with Anizip data for a given MAL ID.
    *
    * @private
@@ -369,7 +366,7 @@ export class Jikan extends Meta {
 
       const [paheResult, anizipResult] = await Promise.allSettled([
         this.fetchPaheEpisodes(initialResponse.provider?.id as string),
-        this.anilistAnizip(malId),
+        this.malAnizip(malId),
       ]);
 
       if (paheResult.status === 'rejected') {
@@ -382,16 +379,28 @@ export class Jikan extends Meta {
 
       const animepahe = paheResult.value;
       const anizipEpisodes = anizipResult.status === 'fulfilled' ? anizipResult.value.episodes : [];
-      const aniZipMap = new Map((anizipEpisodes || []).map(item => [item.episodeAnizipNumber, item]));
+      const paheNumbers = animepahe.map((e: any) => Number(e.episodeNumber));
+      console.log(anizipEpisodes);
 
-      const enrichedEpisodes = animepahe.map((episode: any) => {
-        const aniZipEpisode = aniZipMap.get(episode.episodeNumber);
-        return this.mergeEpisodeData(episode, aniZipEpisode);
-      });
+      let enrichedEpisodes;
+      if (anizipEpisodes) {
+        const anizipNumbers = anizipEpisodes?.map((e: any) => Number(e.episodeAnizipNumber));
 
+        const offset = paheNumbers[0] - anizipNumbers[0];
+
+        const aniZipMap = new Map(
+          anizipEpisodes.map((item: { episodeAnizipNumber: any }) => [Number(item.episodeAnizipNumber), item]),
+        );
+
+        enrichedEpisodes = animepahe.map((episode: any) => {
+          const matchKey = Number(episode.episodeNumber) - offset;
+          const aniZipEpisode = aniZipMap.get(matchKey) || null;
+          return this.mergeEpisodeData(episode, aniZipEpisode);
+        });
+      }
       return {
         data: initialResponse.data,
-        providerEpisodes: enrichedEpisodes,
+        providerEpisodes: enrichedEpisodes as IMetaProviderEpisodes[],
       };
     } catch (error) {
       return {
@@ -459,8 +468,14 @@ export class Jikan extends Meta {
           english: item.title_english,
           native: item.title_japanese,
         },
-        image: item.images.jpg.large_image_url ?? item.images.webp.large_image_url,
-        bannerImage: item.images.jpg.large_image_url ?? item.images.webp.large_image_url,
+        image:
+          item.images.webp.large_image_url ||
+          item.images.jpg.large_image_url ||
+          item.images.jpg.image_url ||
+          item.images.webp.image_url ||
+          item.images.webp.small_image_url ||
+          item.images.jpg.small_image_url,
+
         trailer: item.trailer.embed_url ?? item.trailer.url,
         episodes: item.episodes,
         releaseDate:
@@ -549,8 +564,14 @@ export class Jikan extends Meta {
           english: response.data.data.title_english,
           native: response.data.data.title_japanese,
         },
-        image: response.data.data.images.jpg.large_image_url ?? response.data.data.images.webp.large_image_url,
-        bannerImage: response.data.data.images.jpg.large_image_url ?? response.data.data.images.webp.large_image_url,
+        image:
+          response.data.data.images.webp.large_image_url ||
+          response.data.data.images.jpg.large_image_url ||
+          response.data.data.images.jpg.image_url ||
+          response.data.data.images.webp.image_url ||
+          response.data.data.images.webp.small_image_url ||
+          response.data.data.images.jpg.small_image_url,
+
         trailer: response.data.data.trailer.embed_url ?? response.data.data.trailer.url,
         episodes: response.data.data.episodes,
 
@@ -642,7 +663,7 @@ export class Jikan extends Meta {
       }));
 
       return {
-        data: res,
+        data: res as IMetaCharacters[],
       };
     } catch (error) {
       return {
@@ -661,8 +682,8 @@ export class Jikan extends Meta {
    * @returns Promise that resolves to paginated list of current seasonal anime
    */
   async fetchCurrentSeason(
-    page: number,
-    perPage: number,
+    page: number = 1,
+    perPage: number = 20,
     format: IMetaFormat = 'TV',
   ): Promise<IAnimePaginated<IMetaAnime[] | []>> {
     if (!format) {
@@ -715,8 +736,13 @@ export class Jikan extends Meta {
           english: item.title_english,
           native: item.title_japanese,
         },
-        image: item.images.jpg.large_image_url ?? item.images.webp.large_image_url,
-        bannerImage: item.images.jpg.large_image_url ?? item.images.webp.large_image_url,
+        image:
+          item.images.webp.large_image_url ||
+          item.images.jpg.large_image_url ||
+          item.images.jpg.image_url ||
+          item.images.webp.image_url ||
+          item.images.webp.small_image_url ||
+          item.images.jpg.small_image_url,
         trailer: item.trailer.embed_url ?? item.trailer.url,
         episodes: item.episodes,
         releaseDate:
@@ -837,8 +863,14 @@ export class Jikan extends Meta {
           english: item.title_english,
           native: item.title_japanese,
         },
-        image: item.images.jpg.large_image_url ?? item.images.webp.large_image_url,
-        bannerImage: item.images.jpg.large_image_url ?? item.images.webp.large_image_url,
+        image:
+          item.images.webp.large_image_url ||
+          item.images.jpg.large_image_url ||
+          item.images.jpg.image_url ||
+          item.images.webp.image_url ||
+          item.images.webp.small_image_url ||
+          item.images.jpg.small_image_url,
+
         trailer: item.trailer.embed_url ?? item.trailer.url,
         episodes: item.episodes,
         releaseDate:
@@ -963,8 +995,14 @@ export class Jikan extends Meta {
           english: item.title_english,
           native: item.title_japanese,
         },
-        image: item.images.jpg.large_image_url ?? item.images.webp.large_image_url,
-        bannerImage: item.images.jpg.large_image_url ?? item.images.webp.large_image_url,
+        image:
+          item.images.webp.large_image_url ||
+          item.images.jpg.large_image_url ||
+          item.images.jpg.image_url ||
+          item.images.webp.image_url ||
+          item.images.webp.small_image_url ||
+          item.images.jpg.small_image_url,
+
         trailer: item.trailer.embed_url ?? item.trailer.url,
         episodes: item.episodes,
 
@@ -1069,8 +1107,14 @@ export class Jikan extends Meta {
           english: item.title_english,
           native: item.title_japanese,
         },
-        image: item.images.jpg.large_image_url ?? item.images.webp.large_image_url,
-        bannerImage: item.images.jpg.large_image_url ?? item.images.webp.large_image_url,
+        image:
+          item.images.webp.large_image_url ||
+          item.images.jpg.large_image_url ||
+          item.images.jpg.image_url ||
+          item.images.webp.image_url ||
+          item.images.webp.small_image_url ||
+          item.images.jpg.small_image_url,
+
         trailer: item.trailer.embed_url ?? item.trailer.url,
         episodes: item.episodes,
 
@@ -1187,8 +1231,14 @@ export class Jikan extends Meta {
           english: item.title_english,
           native: item.title_japanese,
         },
-        image: item.images.jpg.large_image_url ?? item.images.webp.large_image_url,
-        bannerImage: item.images.jpg.large_image_url ?? item.images.webp.large_image_url,
+        image:
+          item.images.webp.large_image_url ||
+          item.images.jpg.large_image_url ||
+          item.images.jpg.image_url ||
+          item.images.webp.image_url ||
+          item.images.webp.small_image_url ||
+          item.images.jpg.small_image_url,
+
         trailer: item.trailer.embed_url ?? item.trailer.url,
         episodes: item.episodes,
 

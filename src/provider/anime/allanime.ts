@@ -230,11 +230,11 @@ export class AllAnime extends BaseClass {
 
       const serverIdMap: Record<string, string> = {
         ok: 'okru',
-        // 'fm-hls': 'filemoon', // disabled for reseaons that the stream is IP bound and tokenised
+        // 'fm-hls': 'filemoon', // disabled for reseaons that the stream is IP bound and tokenised  //fm-hls
         mp4: 'mp4upload',
-        // vg: 'listeamed', unsupported server uses jsfuck (idk)
+        vg: 'listeamed', // unsupported server uses jsfuck (idk)
       };
-      const allowed = ['ok', 'fm-hls', 'mp4'];
+      const allowed = ['ok', 'mp4'];
       const servers = sourceUrls
         .filter((src: { sourceName: string }) => allowed.includes(src.sourceName.toLowerCase()))
         .map((src: { sourceUrl: string; type: string; sourceName: string }) => {
@@ -267,7 +267,7 @@ export class AllAnime extends BaseClass {
 
     const extractors: Record<AllAnimeServers, (url: URL) => Promise<IVideoSource | null>> = {
       mp4upload: url => new MP4Upload().extract(url),
-      filemoon: url => new FileMoon().extract(url),
+      // filemoon: url => new FileMoon().extract(url),
       okru: url => new Okru().extract(url),
     };
 

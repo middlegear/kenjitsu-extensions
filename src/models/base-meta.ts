@@ -541,8 +541,8 @@ export abstract class Meta {
     return this.fetchAnizipByMapping('mal_id', id);
   }
 
-  protected mergeEpisodeData(providerEp: any, aniZipEp?: any) {
-    const episodeNumber = providerEp?.episodeNumber || aniZipEp?.episodeAnizipNumber || null;
+  protected mergeEpisodeData(providerEp: any, aniZipEp: any) {
+    const episodeNumber = providerEp.episodeNumber || aniZipEp.episodeAnizipNumber || null;
     const rating = aniZipEp?.rating || null;
     const aired = aniZipEp?.aired || null;
     const episodeId = providerEp?.episodeId || null;

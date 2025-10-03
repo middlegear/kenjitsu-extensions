@@ -122,7 +122,7 @@ test('returns an object containing streaming sources for allanime provider', asy
   const data = await jikan.fetchAllAnimeProviderSources('allanime-GoDoALiHc82Jrmcmh-episode-1', 'sub');
 
   expect(data.okru?.data).not.toBeNull();
-  expect(data.filemoon?.data).not.toBeNull();
+  // expect(data.filemoon?.data).not.toBeNull();
   expect(data.mp4upload?.data).not.toBeNull();
 });
 

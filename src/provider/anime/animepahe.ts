@@ -358,8 +358,6 @@ export class Animepahe extends BaseClass {
         episodeNumber: item.episode || null,
         title: item.title || null,
         thumbnail: item.snapshot || null,
-        // duration: item.duration,
-        // url: `${this.baseUrl}/play/${id}/${item.session}`,
       }));
 
       if (last_page > 1) {

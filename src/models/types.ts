@@ -203,7 +203,7 @@ export type ISubOrDub = 'sub' | 'dub' | 'raw';
 export type HiAnimeServers = 'hd-1' | 'hd-2' | 'hd-3';
 
 ///'streamwish', has been omited since the extractor method isnt ready a
-export type AllAnimeServers = 'okru' | 'filemoon' | 'mp4upload';
+export type AllAnimeServers = 'okru' | 'mp4upload'; // | 'filemoon'
 
 export type AKserver = {
   url: string;
@@ -331,7 +331,7 @@ export interface IMetaAnime {
   anilistId?: number;
   image: string;
   color?: string;
-  bannerImage: string;
+  bannerImage?: string;
   title: {
     romaji: string;
     english: string;
@@ -410,7 +410,7 @@ export interface IMetaProviderIdResponse<T> extends IResponse<T> {
   provider: IProviderId | null;
 }
 
-interface IMetaProviderEpisodes {
+export interface IMetaProviderEpisodes {
   episodeNumber: number | null;
   rating: number | null;
   aired: boolean | null;
