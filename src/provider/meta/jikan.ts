@@ -380,7 +380,6 @@ export class Jikan extends Meta {
       const animepahe = paheResult.value;
       const anizipEpisodes = anizipResult.status === 'fulfilled' ? anizipResult.value.episodes : [];
       const paheNumbers = animepahe.map((e: any) => Number(e.episodeNumber));
-      console.log(anizipEpisodes);
 
       let enrichedEpisodes;
       if (anizipEpisodes) {
