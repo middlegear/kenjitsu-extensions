@@ -27,7 +27,7 @@ import { MegaUp } from '../../source-extractors/megaup.js';
  * and obtain direct episode sources.
  */
 class Animekai extends BaseClass {
-  constructor(baseUrl: string = 'https://animekai.to') {
+  constructor(baseUrl: string = 'https://anikai.to') {
     super();
     this.baseUrl = baseUrl;
     this.megaup = new MegaUp();

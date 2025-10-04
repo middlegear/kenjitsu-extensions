@@ -18,17 +18,6 @@ Animekai
 
 
 
-Tmdb  mapping
-1. filter by type(flixhq and himovies)
-2. For tv i can use seasons and total episodes and compare the fields to tmdb
-3. for movies i can use releasedate(tmdb and flix) with runtime if present
-
-
-
-TESTS
-
-3. add tests for all anime and animepahe
-
 
 IMPROVEMENTS 
 1. Add a way to initialize the domain name without changing and republshing
@@ -62,4 +51,4 @@ Revisit jikan im getting a lot of nulls especially in top airing fields better t
 Isolate filemoon m3u8 until a valid method is found 
 Undici fetch wrapper is bullshit will need to implement impit
 
-{"error":"Cannot read properties of undefined (reading 'averageScore')","data":null}  https://hakai-api.vercel.app/api/anilist/info/185575
+TMDB is getting blocked idk why
