@@ -924,10 +924,6 @@ export class HiMovies extends BaseClass {
     episodeId: string,
     server: 'upcloud' | 'megacloud' | 'akcloud' = 'megacloud',
   ): Promise<IVideoSourceResponse<IVideoSource | null>> {
-    if (episodeId.startsWith('episode')) {
-      throw new Error('This format is not requred and you are gay if you see this.Visit the docs: https://docs.hakai.men/');
-    }
-
     if (episodeId.includes('https')) {
       const serverUrl = new URL(episodeId);
 

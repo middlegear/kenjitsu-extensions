@@ -222,7 +222,6 @@ export type AKserver = {
   intro: { start: number | null; end: number | null };
   outro: { start: number | null; end: number | null };
   download: string;
-  message?: string;
 };
 
 export interface IAllAnimeEpisodes extends IEpisodes {
