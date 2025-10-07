@@ -197,14 +197,14 @@ class VideoStream {
 
         extractedData.sources = sources.map((s: any) => ({
           url: s.file,
-          isM3U8: s.type === 'hls',
+          isM3u8: s.type === 'hls',
           type: s.type,
         }));
       } else {
         if (initialResponse.sources && Array.isArray(initialResponse.sources)) {
           extractedData.sources = initialResponse.sources.map((s: any) => ({
             url: s.file,
-            isM3U8: s.type === 'hls',
+            isM3u8: s.type === 'hls',
             type: s.type,
           }));
         }
@@ -223,7 +223,7 @@ class VideoStream {
 
       return extractedData;
     } catch (error) {
-      throw new Error(error as string).message;
+      throw new Error((error as Error).message);
     }
   }
 }

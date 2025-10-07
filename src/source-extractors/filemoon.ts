@@ -46,7 +46,7 @@ class FileMoon {
       if (m3u8Match && m3u8Match[1]) {
         extractedData.sources.push({
           url: m3u8Match[1],
-          isM3U8: m3u8Match[1].includes('m3u8'),
+          isM3u8: m3u8Match[1].includes('m3u8'),
           type: m3u8Match[1].includes('m3u8') ? 'hls' : 'idk',
           quality: 'This stream is IP-bound and tokenized.',
         });

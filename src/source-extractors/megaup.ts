@@ -89,7 +89,8 @@ export class MegaUp extends BaseClass {
       const extractedData = {
         sources: (decryptedResult.sources || []).map((s: { file: string }) => ({
           url: s.file,
-          isM3U8: s.file.includes('.m3u8') || s.file.endsWith('m3u8'),
+          isM3u8: s.file.includes('.m3u8') || s.file.endsWith('m3u8'),
+          type: s.file.includes('.m3u8') ? 'hls' : 'idk',
         })),
         subtitles: (decryptedResult.tracks || []).map((t: { kind: any; file: any }) => ({
           kind: t.kind,
@@ -101,7 +102,7 @@ export class MegaUp extends BaseClass {
       return extractedData;
     } catch (error) {
       console.error('[MegaUp] extract error:', error);
-      throw new Error(error as string);
+      throw new Error((error as Error).message);
     }
   }
 }

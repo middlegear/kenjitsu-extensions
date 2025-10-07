@@ -218,7 +218,7 @@ export class VidSrc extends BaseClass {
       if (result.file) {
         extractedData.sources.push({
           url: result.file,
-          isM3U8: result.file.endsWith('.m3u8'),
+          isM3u8: result.file.endsWith('.m3u8'),
           type: result.file.endsWith('.m3u8') ? 'hls' : 'unknown',
         });
       }
@@ -269,7 +269,7 @@ export class VidSrc extends BaseClass {
       if (result.file) {
         extractedData.sources.push({
           url: result.file,
-          isM3U8: result.file.endsWith('.m3u8'),
+          isM3u8: result.file.endsWith('.m3u8'),
           type: result.file.endsWith('.m3u8') ? 'hls' : 'unknown',
         });
       }

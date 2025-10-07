@@ -41,14 +41,13 @@ class MP4Upload {
       extractedData.download = download;
       extractedData.sources.push({
         url: sourceUrl?.src,
-        isM3U8: sourceUrl?.type.includes('m3u8'),
+        isM3u8: sourceUrl?.type.includes('m3u8'),
         type: sourceUrl?.type,
-        quality: 'Requires a proxy. ',
       });
       extractedData.posterImage = posterImage;
       return extractedData || null;
     } catch (error) {
-      throw new Error(error as string);
+      throw new Error((error as Error).message);
     }
   }
 }

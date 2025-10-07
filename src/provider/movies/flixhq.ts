@@ -30,9 +30,10 @@ import VidCloud from '../../source-extractors/vidcloud.js';
  */
 
 export class FlixHQ extends BaseClass {
-  private readonly baseUrl: string = 'https://flixhq.to';
-  constructor() {
+  private readonly baseUrl: string;
+  constructor(baseUrl: string = 'https://flixhq.to') {
     super();
+    this.baseUrl = baseUrl;
   }
 
   /**

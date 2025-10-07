@@ -28,9 +28,10 @@ import { BaseClass } from '../../models/base-anime.js';
  *
  */
 export class HiMovies extends BaseClass {
-  private readonly baseUrl = 'https://himovies.sx';
-  constructor() {
+  private readonly baseUrl: string;
+  constructor(baseUrl: string = 'https://himovies.sx') {
     super();
+    this.baseUrl = baseUrl;
   }
   /**
    * Parses movie/TV show items from a Cheerio selection for standard item lists.

@@ -42,7 +42,7 @@ class StreamWish {
 
             extractedData.sources.push({
               url: url,
-              isM3U8: url.includes('m3u8'),
+              isM3u8: url.includes('m3u8'),
               type: url.includes('m3u8') ? 'hls' : 'raise issue for investigation',
               // default: url.includes(domain),
             });
@@ -69,7 +69,7 @@ class StreamWish {
       });
       return extractedData;
     } catch (error) {
-      throw new Error(error as string).message;
+      throw new Error((error as Error).message);
     }
   }
 }

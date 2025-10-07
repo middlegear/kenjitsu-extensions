@@ -1082,7 +1082,7 @@ class Animekai extends BaseClass {
           ...(await new MegaUp().extract(serverUrl)),
           intro: { start: null, end: null },
           outro: { start: null, end: null },
-          posterImage: 'Hi how are you',
+          posterImage: 'Why are you gay? @yogesh-hacker.',
         },
       };
     }

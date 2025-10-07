@@ -14,6 +14,7 @@ import type {
   IResponse,
   IVideoSource,
 } from '../../models/types.js';
+import { InternalAK, InternalDefaultHls, InternalSMP4, InternalYtMP4 } from '../../source-extractors/allanime/index.js';
 import FileMoon from '../../source-extractors/filemoon.js';
 import MP4Upload from '../../source-extractors/mp4upload.js';
 import Okru from '../../source-extractors/okru.js';
@@ -98,6 +99,26 @@ export class AllAnime extends BaseClass {
       }
     }
 `;
+  private decryptSource(input: string): string {
+    // If the string doesn't start with "-", return as-is
+    if (!input.startsWith('-')) return input;
+
+    // Get the part after the last "-"
+    const encryptedPart = input.substring(input.lastIndexOf('-') + 1);
+
+    // Split into pairs of hex characters
+    const hexPairs = encryptedPart.match(/.{1,2}/g);
+    if (!hexPairs) return input; // fallback
+
+    // Convert each hex pair → byte → XOR with 56 → char
+    const decrypted = hexPairs
+      .map(pair => parseInt(pair, 16)) // hex → number
+      .map(num => num ^ 56) // XOR with 56
+      .map(num => String.fromCharCode(num))
+      .join('');
+
+    return decrypted;
+  }
 
   /**
    * Searches for anime based on a query string and pagination.
@@ -232,20 +253,33 @@ export class AllAnime extends BaseClass {
         ok: 'okru',
         // 'fm-hls': 'filemoon', // disabled for reseaons that the stream is IP bound and tokenised  //fm-hls
         mp4: 'mp4upload',
-        vg: 'listeamed', // unsupported server uses jsfuck (idk)
+        's-mp4': 'Internal-S-mp4',
+        // vg: 'listeamed', // unsupported server uses  aaaencode (idk)
+        default: 'Internal-default-hls',
+        ak: 'Internal-AK', /// has separate audio and video streams
+        // 'luf-mp4': 'Internal-Luf-Mp4', //might be similar to smp4 doesnt work better to just disable it
+        'yt-mp4': 'Internal-Yt-mp4', ///http://127.0.0.1:8080?url=https://tools.fast4speed.rsvp//media9/videos/LYKSutL2PaAjYyXWz/sub/23?v=22&headers={"Referer":"https://allmanga.to/"}
       };
-      const allowed = ['ok', 'mp4'];
+      const allowed = ['ok', 'mp4', 's-mp4', 'ak', 'yt-mp4', 'default'];
       const servers = sourceUrls
         .filter((src: { sourceName: string }) => allowed.includes(src.sourceName.toLowerCase()))
         .map((src: { sourceUrl: string; type: string; sourceName: string }) => {
           const key = src.sourceName.toLowerCase();
+
+          let url = this.decryptSource(src.sourceUrl);
+
+          if (url.startsWith('/apivtwo/clock')) {
+            url = url.replace('/apivtwo/clock', 'https://blog.allanime.day/apivtwo/clock.json');
+          }
+
           return {
-            serverUrl: src.sourceUrl,
+            serverUrl: url,
             type: src.type,
             serverName: src.sourceName,
             serverId: serverIdMap[key] || key,
           };
         });
+
       return { data: servers };
     } catch (error) {
       return { error: error instanceof Error ? error.message : 'Unknown Error', data: [] };
@@ -269,54 +303,54 @@ export class AllAnime extends BaseClass {
       mp4upload: url => new MP4Upload().extract(url),
       // filemoon: url => new FileMoon().extract(url),
       okru: url => new Okru().extract(url),
+      'Internal-AK': url => new InternalAK().extract(url),
+      'Internal-default-hls': url => new InternalDefaultHls().extract(url),
+      'Internal-S-mp4': url => new InternalSMP4().extract(url),
+      'Internal-Yt-mp4': url => new InternalYtMP4().extract(url),
     };
 
     const results = await Promise.all(
       data.map(async ({ serverId, serverUrl }) => {
         try {
           const url = new URL(serverUrl);
-          const refererOrigin = serverId === 'mp4upload' ? `https://www.${url.hostname}/` : `${url.origin}/`;
+          const refererOrigin =
+            serverId === 'mp4upload'
+              ? `https://www.${url.hostname}/`
+              : serverId === 'Internal-Yt-mp4'
+                ? 'https://blog.allanime.day'
+                : `${url.origin}/`;
 
           const extractor = extractors[serverId as AllAnimeServers];
           if (!extractor) {
-            return {
-              serverId,
-              value: {
-                headers: { Referer: null },
-                data: null,
-                error: `Extractor not implemented for: ${serverId}`,
-              },
-            };
+            return null; // Skip if no extractor
           }
 
           const extracted = await extractor(url);
+          if (!extracted) {
+            return null; // Skip if no data extracted
+          }
+
           return {
             serverId,
-            value: extracted
-              ? { headers: { Referer: refererOrigin }, data: extracted }
-              : { headers: { Referer: null }, data: null, error: `No streams available for: ${serverId}` },
+            value: { headers: { Referer: refererOrigin }, data: extracted },
           };
         } catch (err) {
-          return {
-            serverId,
-            value: {
-              headers: { Referer: null },
-              data: null,
-              error: err instanceof Error ? err.message : 'Unknown Error',
-            },
-          };
+          return null; // Skip on error
         }
       }),
     );
 
-    const response = results.reduce<AllAnimeSourceResponseMap>((acc, { serverId, value }) => {
-      acc[serverId as AllAnimeServers] = value;
+    // Filter out null results and build the response
+    const response = results.reduce<AllAnimeSourceResponseMap>((acc, result) => {
+      if (result && result.value.data) {
+        acc[result.serverId as AllAnimeServers] = result.value;
+      }
       return acc;
     }, {} as AllAnimeSourceResponseMap);
 
-    const hasValidSource = Object.values(response).some(val => val.data !== null);
+    const hasValidSource = Object.keys(response).length > 0;
     if (!hasValidSource) {
-      throw new Error(`No streams available for episode: ${episodeId}.It is a Known Issue`).message;
+      throw new Error(`No streams available for episode: ${episodeId}. It is a Known Issue`);
     }
 
     return response;

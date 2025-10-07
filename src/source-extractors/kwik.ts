@@ -42,7 +42,7 @@ class Kwik {
       }
       extractedData.sources.push({
         url: m3u8Match[0],
-        isM3U8: m3u8Match[0]?.includes('m3u8'),
+        isM3u8: m3u8Match[0]?.includes('m3u8'),
         type: m3u8Match[0].includes('m3u8') ? 'hls' : 'idk',
         quality: quality,
       });

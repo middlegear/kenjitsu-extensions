@@ -25,6 +25,7 @@ import {
   type IMovieOrTv,
   type ISubOrDub,
 } from './models/types.js';
+import { AllAnime } from './provider/anime/allanime.js';
 
 export {
   Anilist,
@@ -52,3 +53,8 @@ export {
   type IMovieOrTv,
   type ISubOrDub,
 };
+// const data = await new AllAnime().fetchSources('allanime-LYKSutL2PaAjYyXWz-episode-23');
+// console.log(JSON.stringify(data));
+// allanime-XqKvkSEty5koms32i-episode-1 bleach okru is very different from the one in bleach conflict
+// allanime-LYKSutL2PaAjYyXWz-episode-23' jjk
+// allanime-GoDoALiHc82Jrmcmh-episode-1 bleach the conflict

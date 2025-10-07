@@ -168,17 +168,23 @@ interface IOutro {
   start: number | null;
   end: number | null;
 }
+interface ITracks {
+  url: string | null;
+  type: string | null;
+  quality: string | null;
+}
 export interface IVideoSource {
   intro?: IOutro;
   outro?: IOutro;
   subtitles?: ISubtitles[];
+  tracks?: ITracks[];
   sources: ISource[];
   download?: string | null;
   posterImage?: string | null;
 }
 interface ISource {
   url: string | null;
-  isM3U8: boolean | null;
+  isM3u8: boolean | null;
   type: string | null;
   quality?: string | null;
 }
@@ -203,7 +209,13 @@ export type ISubOrDub = 'sub' | 'dub' | 'raw';
 export type HiAnimeServers = 'hd-1' | 'hd-2' | 'hd-3';
 
 ///'streamwish', has been omited since the extractor method isnt ready a
-export type AllAnimeServers = 'okru' | 'mp4upload'; // | 'filemoon'
+export type AllAnimeServers =
+  | 'okru'
+  | 'mp4upload'
+  | 'Internal-S-mp4'
+  | 'Internal-default-hls'
+  | 'Internal-AK'
+  | 'Internal-Yt-mp4'; // | 'filemoon'
 
 export type AKserver = {
   url: string;
