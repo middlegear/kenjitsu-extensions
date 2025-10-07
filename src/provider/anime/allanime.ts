@@ -317,7 +317,7 @@ export class AllAnime extends BaseClass {
             serverId === 'mp4upload'
               ? `https://www.${url.hostname}/`
               : serverId === 'Internal-Yt-mp4'
-                ? 'https://blog.allanime.day'
+                ? 'https://blog.allanime.day/'
                 : `${url.origin}/`;
 
           const extractor = extractors[serverId as AllAnimeServers];
