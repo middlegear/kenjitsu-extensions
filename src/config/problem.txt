@@ -1,5 +1,6 @@
 import { gotScraping } from 'got-scraping';
 import { URLSearchParams } from 'url';
+import { HeaderGenerator, PRESETS, type HeaderGeneratorOptions } from 'header-generator';
 
 export class NetworkError extends Error {
   constructor(
@@ -23,21 +24,26 @@ export class RequestError extends Error {
 
 export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'HEAD';
 
+export type Headers = Record<string, string>;
+
 export interface RequestConfig {
   url: string;
   method?: HttpMethod;
-  headers?: Record<string, string>;
+  headers?: Headers;
   body?: any;
   params?: Record<string, string>;
   retries?: number;
   timeout?: number;
   delayBetweenRequests?: number;
+  preset?: keyof typeof PRESETS;
+  headerGeneratorOptions?: Partial<HeaderGeneratorOptions>;
+  requestDependentHeaders?: Headers;
 }
 
 export interface FetchResponse<T = any> {
   status: number;
   statusText: string;
-  headers: Record<string, string>;
+  headers: Headers;
   data: T;
   config: RequestConfig;
 }
@@ -50,18 +56,38 @@ export class FetchClient {
     timeout: number;
     retries: number;
     delayBetweenRequests: number;
+    preset: keyof typeof PRESETS;
+    headerGeneratorOptions: Partial<HeaderGeneratorOptions>;
   };
+  private headerGenerator: HeaderGenerator;
   private lastRequestTime = 0;
-  private lastUserAgent: string | null = null;
   private readonly requestInterceptors: RequestInterceptor[] = [];
   private readonly responseInterceptors: ResponseInterceptor[] = [];
 
   constructor(options: Partial<RequestConfig> = {}) {
     this.defaultOptions = {
-      timeout: options.timeout || 5000,
+      timeout: options.timeout ||0,
       retries: options.retries || 2,
-      delayBetweenRequests: options.delayBetweenRequests || 1000,
+      delayBetweenRequests: options.delayBetweenRequests || 800,
+      preset: options.preset || 'MODERN_WINDOWS_CHROME',
+      headerGeneratorOptions: options.headerGeneratorOptions || {},
     };
+
+    this.headerGenerator = new HeaderGenerator({
+      ...PRESETS[this.defaultOptions.preset],
+      ...this.defaultOptions.headerGeneratorOptions,
+    });
+  }
+
+  public setPreset(preset: keyof typeof PRESETS): void {
+    if (!PRESETS[preset]) {
+      throw new Error(`Preset "${preset}" does not exist.`);
+    }
+    this.defaultOptions.preset = preset;
+    this.headerGenerator = new HeaderGenerator({
+      ...PRESETS[preset],
+      ...this.defaultOptions.headerGeneratorOptions,
+    });
   }
 
   public useRequestInterceptor(interceptor: RequestInterceptor): void {
@@ -70,10 +96,6 @@ export class FetchClient {
 
   public useResponseInterceptor(interceptor: ResponseInterceptor): void {
     this.responseInterceptors.push(interceptor);
-  }
-
-  public getUserAgent(): string | null {
-    return this.lastUserAgent;
   }
 
   private async delayIfNeeded(): Promise<void> {
@@ -88,6 +110,25 @@ export class FetchClient {
     this.lastRequestTime = Date.now();
   }
 
+  private generateHeaders(config: RequestConfig): Headers {
+    const genOptions: Partial<HeaderGeneratorOptions> = {
+      ...PRESETS[config.preset || this.defaultOptions.preset],
+      ...this.defaultOptions.headerGeneratorOptions,
+      ...config.headerGeneratorOptions,
+    };
+
+    const generator = new HeaderGenerator(genOptions);
+    const generatedHeaders = generator.getHeaders(config.headerGeneratorOptions, config.requestDependentHeaders);
+
+    return { ...generatedHeaders, ...(config.headers ?? {}) };
+  }
+
+  public getUserAgent(config: Partial<RequestConfig> = {}): string | undefined {
+    const finalConfig: RequestConfig = { ...this.defaultOptions, ...config, url: '' };
+    const headers = this.generateHeaders(finalConfig);
+    return headers['User-Agent'] || headers['user-agent'];
+  }
+
   public async request<T = any>(config: RequestConfig): Promise<FetchResponse<T>> {
     let finalConfig: RequestConfig = { ...this.defaultOptions, ...config };
 
@@ -97,8 +138,10 @@ export class FetchClient {
       finalConfig = await interceptor(finalConfig);
     }
 
-    const { url, method = 'GET', headers = {}, body, params } = finalConfig;
+    const { url, method = 'GET', body, params } = finalConfig;
     const retries = finalConfig.retries ?? this.defaultOptions.retries;
+
+    const headers = this.generateHeaders(finalConfig);
 
     const finalUrl = params ? `${url}?${new URLSearchParams(params).toString()}` : url;
 
@@ -107,13 +150,6 @@ export class FetchClient {
       headers,
       timeout: { request: finalConfig.timeout },
       throwHttpErrors: false,
-      hooks: {
-        beforeRequest: [
-          (options: { headers: { [x: string]: null } }) => {
-            this.lastUserAgent = options.headers['user-agent'] || null;
-          },
-        ],
-      },
     };
 
     if (body !== undefined && body !== null) {
@@ -142,7 +178,7 @@ export class FetchClient {
       let responseObj: FetchResponse<T> = {
         status: response.statusCode,
         statusText: response.statusMessage || '',
-        headers: response.headers as Record<string, string>,
+        headers: response.headers as Headers,
         data,
         config: finalConfig,
       };
@@ -176,13 +212,3 @@ export class FetchClient {
     return this.request<T>({ ...config, url, method: 'POST', body: data });
   }
 }
-
-// const res = await gotScraping(mediaUrl, {
-//   hooks: {
-//     beforeRequest: [
-//       options => {
-//         userAgentKey = options.headers['user-agent'];
-//       },
-//     ],
-//   },
-// });

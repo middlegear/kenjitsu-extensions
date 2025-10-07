@@ -46,19 +46,19 @@
   "devDependencies": {
     "@commitlint/cli": "^19.8.1",
     "@commitlint/config-conventional": "^19.8.1",
-    "@types/node": "^22.18.1",
+    "@types/node": "^24.7.0",
     "commitizen": "^4.3.1",
     "cz-conventional-changelog": "^3.3.0",
     "prettier": "^3.6.2",
-    "semantic-release": "^24.2.7",
+    "semantic-release": "^24.2.9",
     "tsup": "^8.5.0",
-    "typescript": "^5.9.2",
+    "typescript": "^5.9.3",
     "vitest": "^3.2.4"
   },
   "dependencies": {
     "cheerio": "^1.1.2",
     "got-scraping": "^4.1.2",
-    "undici": "^7.15.0"
+    "header-generator": "^2.1.74"
   },
   "config": {
     "commitizen": {

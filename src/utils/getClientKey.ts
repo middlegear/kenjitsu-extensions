@@ -5,7 +5,7 @@ const client = new FetchClient();
 
 export async function getClientKey(embedUrl: string, Referer: string): Promise<string> {
   const salts: string[] = [];
-  const maxAttempts = 1000;
+  const maxAttempts = 10;
 
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     try {

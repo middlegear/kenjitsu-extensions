@@ -2,20 +2,17 @@ import { test, expect } from 'vitest';
 import { HiAnime } from '../src/provider/anime/hianime.js';
 
 const zoro = new HiAnime();
-const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 test('returns an array based on search query', async () => {
   const data = await zoro.search('bleach', 1);
   expect(Array.isArray(data.data)).toBe(true);
   expect(data.data.length).toBeGreaterThan(0);
-  await wait(1000);
 });
 
 test('returns an array based on search suggestions query', async () => {
   const data = await zoro.searchSuggestions('jujutsu');
   expect(Array.isArray(data.data)).toBe(true);
   expect(data.data.length).toBeGreaterThan(0);
-  await wait(1000);
 });
 
 test('retuns an object containing anime info', async () => {
@@ -31,7 +28,6 @@ test('retuns an object containing anime info', async () => {
   expect(data.relatedSeasons.length).toBeGreaterThan(0);
   expect(data.characters.length).toBeGreaterThan(0);
   expect(data.mostPopular.length).toBeGreaterThan(0);
-  await wait(1000);
 });
 
 test('retuns an object containing home page data', async () => {
@@ -44,8 +40,6 @@ test('retuns an object containing home page data', async () => {
   expect(Array.isArray(data.favourites)).toBe(true);
   expect(Array.isArray(data.trending)).toBe(true);
   expect(Array.isArray(data.mostPopular)).toBe(true);
-
-  await wait(1000);
 });
 
 test('returns an object containing array of mostpopular anime and top anime', async () => {
@@ -58,7 +52,6 @@ test('returns an object containing array of mostpopular anime and top anime', as
   expect(data.topAnime.monthly.length).toBeGreaterThan(0);
   expect(Array.isArray(data.data)).toBe(true);
   expect(data.data.length).toBeGreaterThan(0);
-  await wait(1000);
 });
 
 test('returns an object containing array of top airing anime and top anime', async () => {
@@ -71,7 +64,6 @@ test('returns an object containing array of top airing anime and top anime', asy
   expect(data.topAnime.weekly.length).toBeGreaterThan(0);
   expect(data.topAnime.monthly.length).toBeGreaterThan(0);
   expect(data.data.length).toBeGreaterThan(0);
-  await wait(1000);
 });
 
 test('returns an object containing array favourite anime and top anime', async () => {
@@ -84,21 +76,18 @@ test('returns an object containing array favourite anime and top anime', async (
   expect(data.topAnime.monthly.length).toBeGreaterThan(0);
   expect(Array.isArray(data.data)).toBe(true);
   expect(data.data.length).toBeGreaterThan(0);
-  await wait(1000);
 });
 
 test('returns an array dubbed anime', async () => {
   const data = await zoro.fetchDubbedAnime(1);
   expect(Array.isArray(data.data)).toBe(true);
   expect(data.data.length).toBeGreaterThan(0);
-  await wait(1000);
 });
 
 test('returns an array of subbed anime', async () => {
   const data = await zoro.fetchSubbedAnime(1);
   expect(Array.isArray(data.data)).toBe(true);
   expect(data.data.length).toBeGreaterThan(0);
-  await wait(1000);
 });
 
 test('returns an object containing array of recently added anime and top anime', async () => {
@@ -111,7 +100,6 @@ test('returns an object containing array of recently added anime and top anime',
   expect(data.topAnime.weekly.length).toBeGreaterThan(0);
   expect(data.topAnime.monthly.length).toBeGreaterThan(0);
   expect(data.data.length).toBeGreaterThan(0);
-  await wait(1000);
 });
 
 test('returns an object containing array of recently updated anime and top anime', async () => {
@@ -124,7 +112,6 @@ test('returns an object containing array of recently updated anime and top anime
   expect(data.topAnime.weekly.length).toBeGreaterThan(0);
   expect(data.topAnime.monthly.length).toBeGreaterThan(0);
   expect(data.data.length).toBeGreaterThan(0);
-  await wait(1000);
 });
 
 test('returns an object containing array recently completed anime and top anime', async () => {
@@ -137,28 +124,24 @@ test('returns an object containing array recently completed anime and top anime'
   expect(data.topAnime.weekly.length).toBeGreaterThan(0);
   expect(data.topAnime.monthly.length).toBeGreaterThan(0);
   expect(data.data.length).toBeGreaterThan(0);
-  await wait(1000);
 });
 
 test('returns an array of AtoZ anime lists', async () => {
   const data = await zoro.fetchAtoZList('A', 1);
   expect(Array.isArray(data.data)).toBe(true);
   expect(data.data.length).toBeGreaterThan(0);
-  await wait(1000);
 });
 
 test('returns an array of genre anime', async () => {
   const data = await zoro.fetchGenre('action', 1);
   expect(Array.isArray(data.data)).toBe(true);
   expect(data.data.length).toBeGreaterThan(0);
-  await wait(1000);
 });
 
 test('returns an array of TV category anime', async () => {
   const data = await zoro.fetchAnimeCategory('TV', 1);
   expect(Array.isArray(data.data)).toBe(true);
   expect(data.data.length).toBeGreaterThan(0);
-  await wait(1000);
 });
 
 test('returns an array of episodes', async () => {
@@ -166,7 +149,6 @@ test('returns an array of episodes', async () => {
 
   expect(Array.isArray(data.data)).toBe(true);
   expect(data.data.length).toBeGreaterThan(0);
-  await wait(1000);
 });
 
 test('return an object containing serverInfo', async () => {
@@ -175,7 +157,6 @@ test('return an object containing serverInfo', async () => {
   expect(data.data).not.toBeNull();
   expect(Array.isArray(data.data?.dub)).toBe(true);
   expect(Array.isArray(data.data?.sub)).toBe(true);
-  await wait(1000);
 });
 
 test('returns an object containing streaming sources', async () => {
@@ -183,6 +164,4 @@ test('returns an object containing streaming sources', async () => {
   expect(data.data).not.toBeNull();
   expect(Array.isArray(data.data?.sources)).toBe(true);
   expect(data.data?.sources.length).toBeGreaterThan(0);
-
-  await wait(1000);
 });

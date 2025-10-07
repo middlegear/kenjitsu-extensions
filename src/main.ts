@@ -59,3 +59,7 @@ export {
 // allanime-GoDoALiHc82Jrmcmh-episode-1 bleach the conflict
 // const data = await new FlixHQ().fetchSources('episode-67890');
 // console.log(data);
+// const data = await new Animekai().fetchSources(
+//   'bleach-thousand-year-blood-war-the-conflict-zev9-token-dYTnq6fktAW4iHoUy5Sc',
+// );
+// console.log(data);

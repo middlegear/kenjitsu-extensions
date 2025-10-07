@@ -54,33 +54,19 @@ export class MegaUp extends BaseClass {
     const mediaUrl = videoUrl.href.replace(/\/(e|e2)\//, '/media/');
 
     try {
-      let userAgentKey;
+      const response = await this.client.get(mediaUrl);
 
-      const res = await gotScraping(mediaUrl, {
-        hooks: {
-          beforeRequest: [
-            options => {
-              userAgentKey = options.headers['user-agent'];
-            },
-          ],
-        },
-      });
+      const userAgentKey = this.client.getUserAgent();
 
-      const text = res.body;
-
-      if (!res.ok) {
-        throw new Error(`HTTP error! status: ${res.statusCode}`);
+      if (!response.data) {
+        throw new Error(`HTTP error! status: ${response.statusText}`);
       }
 
-      let encrypted;
-      try {
-        encrypted = JSON.parse(text);
-      } catch (err) {
-        console.error('[MegaUp] Failed to parse JSON response:', err);
-        throw err;
-      }
       let decryptedResult;
-      if (userAgentKey) decryptedResult = await this.decrypt(encrypted.result, userAgentKey);
+
+      if (userAgentKey) {
+        decryptedResult = await this.decrypt(response.data.result, userAgentKey);
+      }
 
       if (!decryptedResult) {
         throw new Error('Failed to decode video data.');

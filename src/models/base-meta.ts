@@ -1,7 +1,7 @@
 import { FetchClient } from '../config/client.js';
 import { HiAnime } from '../provider/anime/hianime.js';
 import { compareTwoStrings } from '../utils/string-similarity.js';
-import type { HiAnimeServers, ISubOrDub, IMovieProviderResults, IMetaData } from './types.js';
+import type { IMovieProviderResults, IMetaData } from './types.js';
 import { FlixHQ } from '../provider/movies/flixhq.js';
 import { AllAnime } from '../provider/anime/allanime.js';
 import { Animepahe } from '../provider/anime/animepahe.js';
