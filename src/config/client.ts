@@ -1,4 +1,4 @@
-import { fetch, Headers } from 'undici';
+import { gotScraping } from 'got-scraping';
 import { URLSearchParams } from 'url';
 
 export class NetworkError extends Error {
@@ -31,7 +31,6 @@ export interface RequestConfig {
   params?: Record<string, string>;
   retries?: number;
   timeout?: number;
-  profile?: string;
   delayBetweenRequests?: number;
 }
 
@@ -51,10 +50,7 @@ export class FetchClient {
     timeout: number;
     retries: number;
     delayBetweenRequests: number;
-    profile: string;
   };
-  private readonly profiles: Record<string, { headers: Record<string, string> }>;
-  private activeProfile: string;
   private lastRequestTime = 0;
   private readonly requestInterceptors: RequestInterceptor[] = [];
   private readonly responseInterceptors: ResponseInterceptor[] = [];
@@ -64,61 +60,7 @@ export class FetchClient {
       timeout: options.timeout || 10000,
       retries: options.retries || 2,
       delayBetweenRequests: options.delayBetweenRequests || 1000,
-      profile: options.profile || 'chrome-desktop',
     };
-
-    this.profiles = {
-      'chrome-desktop': {
-        headers: {
-          'User-Agent':
-            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36',
-          Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
-          'Accept-Language': 'en-US,en;q=0.9',
-          'Accept-Encoding': 'gzip, deflate, br, zstd',
-          Connection: 'keep-alive',
-          'Upgrade-Insecure-Requests': '1',
-          'Sec-Fetch-Dest': 'document',
-          'Sec-Fetch-Mode': 'navigate',
-          'Sec-Fetch-Site': 'none',
-          'Sec-Fetch-User': '?1',
-          'Sec-CH-UA': '"Chromium";v="140", "Google Chrome";v="140", "Not-A.Brand";v="99"',
-          'Sec-CH-UA-Platform': '"Windows"',
-          'Sec-CH-UA-Mobile': '?0',
-          Priority: 'u=0, i',
-        },
-      },
-      'librewolf-desktop': {
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:140.0) Gecko/20100101 Firefox/140.0',
-          Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
-          'Accept-Language': 'en-US,en;q=0.5',
-          'Accept-Encoding': 'gzip, deflate, br, zstd',
-          Connection: 'keep-alive',
-          'Upgrade-Insecure-Requests': '1',
-          'Sec-Fetch-Dest': 'document',
-          'Sec-Fetch-Mode': 'navigate',
-          'Sec-Fetch-Site': 'none',
-          'Sec-Fetch-User': '?1',
-          Priority: 'u=0',
-        },
-      },
-      'normal-fetch': {
-        headers: {
-          Accept: '*/*',
-          'Accept-Encoding': 'gzip, deflate, br',
-          Connection: 'keep-alive',
-        },
-      },
-    };
-
-    this.activeProfile = this.defaultOptions.profile;
-  }
-
-  public setProfile(profileName: string): void {
-    if (!this.profiles[profileName]) {
-      throw new Error(`Profile "${profileName}" does not exist.`);
-    }
-    this.activeProfile = profileName;
   }
 
   public useRequestInterceptor(interceptor: RequestInterceptor): void {
@@ -153,58 +95,42 @@ export class FetchClient {
     const { url, method = 'GET', headers = {}, body, params } = finalConfig;
     const retries = finalConfig.retries ?? this.defaultOptions.retries;
 
-    const profile = this.profiles[this.activeProfile];
-    const profileHeaders = profile.headers;
-
-    const mergedHeadersArray = Object.entries({
-      ...profileHeaders,
-      ...headers,
-    }).sort(() => Math.random() - 0.5);
-
-    const finalHeaders = new Headers(Object.fromEntries(mergedHeadersArray));
-
     const finalUrl = params ? `${url}?${new URLSearchParams(params).toString()}` : url;
 
-    let finalBody: any;
+    const gotOptions: any = {
+      method,
+      headers,
+      timeout: { request: finalConfig.timeout },
+      throwHttpErrors: false, // Let us handle HTTP errors manually
+    };
+
     if (body !== undefined && body !== null) {
       if (body instanceof FormData) {
-        finalBody = body;
+        gotOptions.form = body;
       } else if (body instanceof URLSearchParams) {
-        finalBody = body.toString();
-        finalHeaders.set('Content-Type', 'application/x-www-form-urlencoded');
+        gotOptions.form = body;
       } else if (typeof body === 'object') {
-        finalBody = JSON.stringify(body);
-        finalHeaders.set('Content-Type', 'application/json');
+        gotOptions.json = body;
       } else {
-        finalBody = String(body);
+        gotOptions.body = String(body);
       }
     }
 
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), finalConfig.timeout);
-
     try {
-      const response = await fetch(finalUrl, {
-        method,
-        headers: finalHeaders,
-        body: finalBody,
-        signal: controller.signal,
-      });
-
-      clearTimeout(timeout);
+      const response = await gotScraping(finalUrl, gotOptions);
 
       let data: T;
-      const contentType = response.headers.get('content-type');
+      const contentType = response.headers['content-type'];
       if (contentType?.includes('application/json')) {
-        data = (await response.json()) as T;
+        data = JSON.parse(response.body) as T;
       } else {
-        data = (await response.text()) as T;
+        data = response.body as T;
       }
 
       let responseObj: FetchResponse<T> = {
-        status: response.status,
-        statusText: response.statusText,
-        headers: Object.fromEntries(response.headers.entries()),
+        status: response.statusCode,
+        statusText: response.statusMessage || '',
+        headers: response.headers as Record<string, string>,
         data,
         config: finalConfig,
       };
@@ -213,16 +139,14 @@ export class FetchClient {
         responseObj = await interceptor(responseObj);
       }
 
-      if (!response.ok) {
-        throw new RequestError(`Request failed with status code ${response.status}`, responseObj);
+      if (response.statusCode >= 400) {
+        throw new RequestError(`Request failed with status code ${response.statusCode}`, responseObj);
       }
 
       return responseObj;
     } catch (error) {
-      clearTimeout(timeout);
-
-      const isAbortError = (error as Error).name === 'AbortError';
-      if ((isAbortError || error instanceof NetworkError) && retries > 0) {
+      const isTimeoutError = error instanceof Error && error.name === 'TimeoutError';
+      if ((isTimeoutError || error instanceof NetworkError) && retries > 0) {
         return this.request({ ...finalConfig, retries: retries - 1 });
       }
 

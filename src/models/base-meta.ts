@@ -51,7 +51,7 @@ export abstract class Meta {
 
   protected constructor() {
     this.client = new FetchClient();
-    this.client.setProfile('normal-fetch');
+
     this.hianime = new HiAnime();
     this.flixhq = new FlixHQ();
     this.allanime = new AllAnime();
