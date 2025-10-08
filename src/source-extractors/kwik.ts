@@ -1,30 +1,29 @@
 // src/services/kwik.ts
 import { FetchClient } from '../config/client.js';
+import { BaseClass } from '../models/base-anime.js';
 import type { IVideoSource } from '../models/types.js';
 import { unpack } from '../utils/unpacker.js';
 
-class Kwik {
-  protected client: FetchClient;
-
+class Kwik extends BaseClass {
   constructor() {
-    this.client = new FetchClient();
+    super();
   }
 
   async extract(videoUrl: URL, quality: string, referer: string) {
     try {
       const extractedData: IVideoSource = {
         sources: [],
-        subtitles: [],
+        // subtitles: [],
       };
 
-      const response = await fetch(videoUrl.href, {
+      const response = await this.client.get(videoUrl.href, {
         headers: {
           Referer: `${referer}/`,
         },
       });
 
-      const data = await response.text();
-      const scriptMatch = /(eval\(function.*?<\/script>)/s.exec(data);
+      // const data = await response.text();
+      const scriptMatch = /(eval\(function.*?<\/script>)/s.exec(response.data);
       if (!scriptMatch) {
         throw new Error('No packed script found in response.');
       }
