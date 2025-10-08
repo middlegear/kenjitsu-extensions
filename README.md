@@ -1,5 +1,5 @@
 
-**hakai-extensions** is a package  that scrapes  anime, movies and TV metadata from popular sources.
+**hakai-extensions** A lightweight Node.js scraper that extracts video sources from streaming sites.
 
 
 > **Disclaimer:**

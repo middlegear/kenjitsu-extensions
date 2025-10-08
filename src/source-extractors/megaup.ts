@@ -1,5 +1,4 @@
 import { BaseClass } from '../models/base-anime.js';
-import { gotScraping } from 'got-scraping';
 import type { IVideoSource } from '../models/types.js';
 export class MegaUp extends BaseClass {
   // private readonly tokenUrl: string = 'https://ilovekai.simplepostrequest.workers.dev/?ilovefeet=';

@@ -538,7 +538,7 @@ export class HiMovies extends BaseClass {
 
     if (serverIndex === -1) {
       throw new Error(
-        `Server '${server}' not found '. ` + `Try one of the available servers: ${availableServers.join(', ')}.`,
+        `Server '${server}' not found '. ` + `Try one of the available streaming servers: ${availableServers.join(', ')}.`,
       );
     }
 
