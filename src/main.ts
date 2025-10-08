@@ -59,7 +59,5 @@ export {
 // allanime-GoDoALiHc82Jrmcmh-episode-1 bleach the conflict
 // const data = await new FlixHQ().fetchSources('episode-67890');
 // console.log(data);
-// const data = await new Animepahe().fetchSources(
-//   'pahe-9a16dfb8-8ffc-a0b0-6508-1b291afa04a7-$session$-5d6e1e1d1c5c5e29d66e396a0d8d9f20011ff1ee518d30db01a62c25dc312b56',
-// );
+// const data = await new FlixHQ().searchSuggestions('bad boys');
 // console.log(data);

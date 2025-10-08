@@ -317,6 +317,13 @@ export class HiMovies extends BaseClass {
         } as ITvShow);
       }
     });
+
+    if (!Array.isArray(items) || items.length === 0) {
+      return {
+        error: 'No results found. Try adding a space between words. This issue cant be fixed',
+        data: [],
+      };
+    }
     return { data: items };
   }
 
@@ -640,7 +647,22 @@ export class HiMovies extends BaseClass {
         };
       }
       const selector: cheerio.SelectorType = 'div.block_area-content.block_area-list.film_list.film_list-grid div.flw-item';
-      return this.parsePaginatedResults(cheerio.load(response.data), selector);
+      const { hasNextPage, currentPage, lastPage, data } = this.parsePaginatedResults(cheerio.load(response.data), selector);
+      if (!Array.isArray(data) || data.length === 0) {
+        return {
+          hasNextPage: false,
+          currentPage: 0,
+          lastPage: 0,
+          error: 'No results found. Try adding a space between words. This issue cant be fixed',
+          data: [],
+        };
+      }
+      return {
+        hasNextPage,
+        currentPage,
+        lastPage,
+        data,
+      };
     } catch (error) {
       return {
         hasNextPage: false,

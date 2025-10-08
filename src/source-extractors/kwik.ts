@@ -1,5 +1,3 @@
-// src/services/kwik.ts
-import { FetchClient } from '../config/client.js';
 import { BaseClass } from '../models/base-anime.js';
 import type { IVideoSource } from '../models/types.js';
 import { unpack } from '../utils/unpacker.js';
@@ -22,7 +20,6 @@ class Kwik extends BaseClass {
         },
       });
 
-      // const data = await response.text();
       const scriptMatch = /(eval\(function.*?<\/script>)/s.exec(response.data);
       if (!scriptMatch) {
         throw new Error('No packed script found in response.');
