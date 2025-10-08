@@ -1,5 +1,5 @@
 {
-  "name": "hakai-extensions",
+  "name": "kenjitsu-extensions",
   "version": "0.0.0-development",
   "description": "A lightweight Node.js scraper that extracts video sources from streaming sites",
   "main": "dist/main.js",
@@ -37,12 +37,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/middlegear/hakai-extensions"
+    "url": "https://github.com/middlegear/kenjitsu-extensions"
   },
   "publishConfig": {
     "registry": "https://registry.npmjs.org/"
   },
-  "homepage": "https://github.com/middlegear/hakai-extensions",
+  "homepage": "https://github.com/middlegear/kenjitsu-extensions",
   "devDependencies": {
     "@commitlint/cli": "^19.8.1",
     "@commitlint/config-conventional": "^19.8.1",

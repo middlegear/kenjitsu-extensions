@@ -1,5 +1,5 @@
 
-**hakai-extensions** A lightweight Node.js scraper that extracts video sources from streaming sites.
+**kenjitsu-extensions** A lightweight Node.js scraper that extracts video sources from streaming sites.
 
 
 > **Disclaimer:**

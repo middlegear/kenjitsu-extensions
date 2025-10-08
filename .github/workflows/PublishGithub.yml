@@ -47,7 +47,7 @@ jobs:
 
       - name: Prepare GitHub Package name
         run: |
-          jq '.name = "@${{ github.repository_owner }}/hakai-extensions"' package.json > package.tmp.json
+          jq '.name = "@${{ github.repository_owner }}/kenjitsu-extensions"' package.json > package.tmp.json
           mv package.tmp.json package.json
 
       - name: Publish to GitHub Packages
