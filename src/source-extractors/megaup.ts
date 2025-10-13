@@ -1,11 +1,11 @@
 import { BaseClass } from '../models/base-anime.js';
 import type { IVideoSource } from '../models/types.js';
 export class MegaUp extends BaseClass {
-  // private readonly tokenUrl: string = 'https://ilovekai.simplepostrequest.workers.dev/?ilovefeet=';
-  // private readonly decodeUrlIframe: string = 'https://ilovekai.simplepostrequest.workers.dev/?ilovearmpits=';
+  private readonly tokenUrl: string = 'https://ilovekai.simplepostrequest.workers.dev/?ilovefeet=';
+  private readonly decodeUrlIframe: string = 'https://ilovekai.simplepostrequest.workers.dev/?ilovearmpits=';
   // private readonly decodeM3u8: string = 'https://azartx-tools.vercel.app/api/dec-mega';
-  private readonly tokenUrl: string = 'https://enc-dec.app/api/enc-kai?text=';
-  private readonly decodeUrlIframe: string = 'https://enc-dec.app/api/dec-kai?text=';
+  // private readonly tokenUrl: string = 'https://enc-dec.app/api/enc-kai?text=';
+  // private readonly decodeUrlIframe: string = 'https://enc-dec.app/api/dec-kai?text=';
   private readonly decodeM3u8: string = 'https://enc-dec.app/api/dec-mega';
 
   constructor() {
@@ -18,7 +18,8 @@ export class MegaUp extends BaseClass {
 
       const response = await this.client.get(url);
 
-      return response.data.result; /// added result
+      // return response.data.result; /// added result
+      return response.data;
     } catch (error) {
       return { error: error instanceof Error ? error.message : 'GenerateToken function failed' };
     }
@@ -30,7 +31,9 @@ export class MegaUp extends BaseClass {
 
       const response = await this.client.get(url);
 
-      return response.data.result; /// added result
+      // return response.data.result; /// added result
+
+      return response.data;
     } catch (error) {
       return { error: error instanceof Error ? error.message : 'Decode function failed' };
     }

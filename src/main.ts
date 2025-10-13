@@ -52,12 +52,3 @@ export {
   type IMovieOrTv,
   type ISubOrDub,
 };
-// const data = await new AllAnime().fetchSources('allanime-GoDoALiHc82Jrmcmh-episode-1');
-// console.log(JSON.stringify(data));
-// allanime-XqKvkSEty5koms32i-episode-1 bleach okru is very different from the one in bleach conflict
-// allanime-LYKSutL2PaAjYyXWz-episode-23' jjk
-// allanime-GoDoALiHc82Jrmcmh-episode-1 bleach the conflict
-// const data = await new FlixHQ().fetchSources('episode-67890');
-// console.log(data);
-// const data = await new FlixHQ().searchSuggestions('bad boys');
-// console.log(data);

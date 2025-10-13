@@ -1018,12 +1018,19 @@ class Animekai extends BaseClass {
         try {
           const token = await this.megaup.GenerateToken(mediaId);
 
-          const { data } = await this.client.get(`${this.baseUrl}/ajax/links/view?id=${mediaId}&_=${token}`, {
+          const response = await this.client.get(`${this.baseUrl}/ajax/links/view?id=${mediaId}&_=${token}`, {
             headers: this.headers,
           });
 
-          const decodedData = await this.megaup.DecodeIframeData(data.result); /// removed json.parse
+          if (!response.data) {
+            return {
+              error: `Server responded with error:${response.statusText}` || 'Unknown error in server',
+              data: [],
+            };
+          }
 
+          // const decodedData = await this.megaup.DecodeIframeData(data.result); /// removed json.parse
+          const decodedData = JSON.parse(await this.megaup.DecodeIframeData(response.data.result));
           servers.push({
             url: decodedData.url,
             intro: {
@@ -1082,7 +1089,7 @@ class Animekai extends BaseClass {
     try {
       const servers = await this.fetchServers(episodeId, category);
       if (!servers.data || servers.data.length === 0) {
-        throw new Error('No servers found');
+        throw new Error('No valid sources found. Try again with a different category');
       }
 
       const firstServer = servers.data[0];
