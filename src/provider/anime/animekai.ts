@@ -410,7 +410,12 @@ class Animekai extends BaseClass {
         serverId: Number($(element).attr('data-sid')) || null,
         mediaId: $(element).attr('data-lid') || null,
         eid: $(element).attr('data-eid') || null,
-        serverName: $(element).text().trim(),
+        serverName:
+          $(element)
+            .text()
+            .trim()
+            .toLowerCase()
+            .replace(/server\s+(\d+)/g, 'server-$1') || null,
       });
     });
     $(dubSelector).each((_, element) => {
@@ -418,7 +423,12 @@ class Animekai extends BaseClass {
         serverId: Number($(element).attr('data-sid')) || null,
         mediaId: $(element).attr('data-lid') || null,
         eid: $(element).attr('data-eid') || null,
-        serverName: $(element).text().trim() || null,
+        serverName:
+          $(element)
+            .text()
+            .trim()
+            .toLowerCase()
+            .replace(/server\s+(\d+)/g, 'server-$1') || null,
       });
     });
     $(softSubSelector).each((_, element) => {
@@ -426,7 +436,12 @@ class Animekai extends BaseClass {
         serverId: Number($(element).attr('data-sid')) || null,
         mediaId: $(element).attr('data-lid') || null,
         eid: $(element).attr('data-eid') || null,
-        serverName: $(element).text().trim() || null,
+        serverName:
+          $(element)
+            .text()
+            .trim()
+            .toLowerCase()
+            .replace(/server\s+(\d+)/g, 'server-$1') || null,
       });
     });
 
@@ -438,24 +453,34 @@ class Animekai extends BaseClass {
    * @private
    * @param {HIServerInfo} servers - The parsed server information object.
    * @param {ISubOrDub} category - The audio category to filter servers for ('sub', 'dub', or 'raw').
-   * @returns {string[]} An array of valid media IDs for the specified category.
+   * @param  {string}  server - The streaming server to use (optional, defaults to server-1).
+   * @returns {string} A valid media ID for the specified category.
    * @throws {Error} If no servers or valid media IDs are found for the category.
    */
-  private findServerIds(servers: HIServerInfo, category: ISubOrDub): string[] {
-    const list = servers[category];
-    if (!list || list.length === 0) {
-      throw new Error(`No servers found for category '${category}'.`);
+  private findServerIds(servers: HIServerInfo, category: ISubOrDub, server: 'server-1' | 'server-2'): string {
+    const availableCategories: string[] = [];
+    if (servers.sub?.length > 0) availableCategories.push('sub');
+    if (servers.dub?.length > 0) availableCategories.push('dub');
+    if (servers.raw?.length > 0) availableCategories.push('raw');
+
+    if (!servers[category] || servers[category].length === 0) {
+      const suggestionMessage =
+        availableCategories.length > 0
+          ? ` Available categories: ${availableCategories.join(' or ')}.`
+          : ' No servers available in any category right now.';
+      throw new Error(`Category '${category}' has no servers.${suggestionMessage}`);
+    }
+    const availableServers = servers[category].map(s => s.serverName || 'unknown');
+    const serverIndex = servers[category].findIndex(s => (s.serverName || '').toLowerCase() === server.toLowerCase());
+
+    if (serverIndex === -1) {
+      throw new Error(
+        `Server '${server}' not found in category '${category}'. ` +
+          `Try one of the available servers: ${availableServers.join(', ')}.`,
+      );
     }
 
-    const mediaIds = list
-      .map(server => server.mediaId)
-      .filter((id): id is string => typeof id === 'string' && id.trim().length > 0);
-
-    if (mediaIds.length === 0) {
-      throw new Error(`No valid mediaIds found in category '${category}'.`);
-    }
-
-    return mediaIds;
+    return servers[category][serverIndex].mediaId as string;
   }
 
   /**
@@ -998,9 +1023,14 @@ class Animekai extends BaseClass {
    * Fetches available streaming servers for a specific anime episode.
    * @param {string} episodeId - The unique identifier for the episode  (required).
    * @param {ISubOrDub} category  - The audio category (Subtitled or Dubbed) (optional, defaults to Sub).
+   * @param  {string}  server - The streaming server to use (optional, defaults to server-1).
    * @returns  A promise that resolves to an object containing available streaming server details (sub, dub, raw) or an error message.
    */
-  async fetchServers(episodeId: string, category: ISubOrDub = 'sub'): Promise<IResponse<AKserver[] | []>> {
+  async fetchServers(
+    episodeId: string,
+    category: ISubOrDub = 'sub',
+    server: 'server-1' | 'server-2' = 'server-1',
+  ): Promise<IResponse<AKserver[] | []>> {
     if (!episodeId) {
       throw new Error('Missing required parameter: episodeId');
     }
@@ -1008,48 +1038,42 @@ class Animekai extends BaseClass {
     try {
       const serverInfo = (await this.scrapefetchServers(episodeId)).data as HIServerInfo;
       if ('error' in serverInfo) {
-        throw new Error(serverInfo.error as string);
+        throw new Error((serverInfo.error as Error).message);
       }
 
-      const mediaIds = this.findServerIds(serverInfo, category);
+      const mediaId = this.findServerIds(serverInfo, category, server);
       const servers: AKserver[] = [];
 
-      for (const mediaId of mediaIds) {
-        try {
-          const token = await this.megaup.GenerateToken(mediaId);
+      const token = await this.megaup.GenerateToken(mediaId);
 
-          const response = await this.client.get(`${this.baseUrl}/ajax/links/view?id=${mediaId}&_=${token}`, {
-            headers: this.headers,
-          });
+      const response = await this.client.get(`${this.baseUrl}/ajax/links/view?id=${mediaId}&_=${token}`, {
+        headers: this.headers,
+      });
 
-          if (!response.data) {
-            return {
-              error: `Server responded with error:${response.statusText}` || 'Unknown error in server',
-              data: [],
-            };
-          }
-
-          // const decodedData = await this.megaup.DecodeIframeData(data.result); /// removed json.parse
-          const decodedData = JSON.parse(await this.megaup.DecodeIframeData(response.data.result));
-          servers.push({
-            url: decodedData.url,
-            intro: {
-              start: decodedData?.skip?.intro?.[0] ?? null,
-              end: decodedData?.skip?.intro?.[1] ?? null,
-            },
-            outro: {
-              start: decodedData?.skip?.outro?.[0] ?? null,
-              end: decodedData?.skip?.outro?.[1] ?? null,
-            },
-            download: decodedData.url.replace(/\/e\//, '/download/'),
-          });
-        } catch {
-          continue;
-        }
+      if (!response.data) {
+        return {
+          error: `Server responded with error:${response.statusText}` || 'Unknown error in server',
+          data: [],
+        };
       }
 
-      if (servers.length === 0) {
-        throw new Error('No working servers found.');
+      // const decodedData = await this.megaup.DecodeIframeData(data.result); /// removed json.parse
+      try {
+        const decodedData = JSON.parse(await this.megaup.DecodeIframeData(response.data.result));
+        servers.push({
+          url: decodedData.url,
+          intro: {
+            start: decodedData?.skip?.intro?.[0] ?? null,
+            end: decodedData?.skip?.intro?.[1] ?? null,
+          },
+          outro: {
+            start: decodedData?.skip?.outro?.[0] ?? null,
+            end: decodedData?.skip?.outro?.[1] ?? null,
+          },
+          download: decodedData.url.replace(/\/e\//, '/download/'),
+        });
+      } catch (error) {
+        throw new Error((error as Error).message);
       }
 
       return { data: servers };
@@ -1059,13 +1083,18 @@ class Animekai extends BaseClass {
   }
 
   /**
-   * **⚠️ . Very unstable dont blame me
+   * **⚠️ . Very unstable
    * Fetches streaming sources for a given anime episode from a specified server and category.
    * @param {string} episodeId - The unique identifier for the episode (required).
    * @param {HISubOrDub} category  - The audio category (Subtitled or Dubbed) (optional, defaults to SubOrDub.SUB).
+   * @param {string}  server - The streaming server to use (optional, defaults to server-1).
    * @returns  A promise that resolves to an object containing streaming sources, headers, sync data (AniList/MAL IDs), or an error message.
    */
-  async fetchSources(episodeId: string, category: ISubOrDub = 'sub'): Promise<ISourceBaseResponse<IVideoSource | null>> {
+  async fetchSources(
+    episodeId: string,
+    category: ISubOrDub = 'sub',
+    server: 'server-1' | 'server-2' = 'server-1',
+  ): Promise<ISourceBaseResponse<IVideoSource | null>> {
     if (!episodeId) {
       return {
         data: null,
@@ -1087,15 +1116,16 @@ class Animekai extends BaseClass {
     }
 
     try {
-      const servers = await this.fetchServers(episodeId, category);
-      if (!servers.data || servers.data.length === 0) {
-        throw new Error('No valid sources found. Try again with a different category');
+      const servers = await this.fetchServers(episodeId, category, server);
+
+      if ('error' in servers) {
+        throw new Error(servers.error).message;
       }
 
       const firstServer = servers.data[0];
       const serverUrl = new URL(firstServer.url);
 
-      const source = await this.fetchSources(serverUrl.href, category);
+      const source = await this.fetchSources(serverUrl.href, category, server);
 
       return {
         ...source,
