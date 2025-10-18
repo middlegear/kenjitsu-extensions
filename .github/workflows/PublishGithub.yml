@@ -21,7 +21,7 @@ jobs:
       - name: Configure GitHub Packages Auth
         run: |
           rm -f ~/.npmrc
-          echo "//npm.pkg.github.com/:_authToken=${{ secrets.GITHUB_TOKEN }}" > ~/.npmrc
+          echo "//npm.pkg.github.com/:_authToken=${{ secrets.NPM_TOKEN }}" > ~/.npmrc
           echo "always-auth=true" >> ~/.npmrc
 
       - name: Install dependencies
@@ -58,4 +58,4 @@ jobs:
             --no-git-checks \
             --access public
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

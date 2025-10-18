@@ -1,4 +1,5 @@
 IMPROVEMENTS 
+2. pagination in animekai
 3. Need to build a schedule for next episode for all providers(hianime,animekai have it better scrape )
 4. Build watch together for animekai and hianime
 5. Add watch together support for hianime and animekai
