@@ -280,9 +280,9 @@ class Animekai extends BaseClass {
    * Parses detailed anime information from the anime watch page.
    * @private
    * @param {cheerio.CheerioAPI} $ - The Cheerio API instance for parsing HTML.
-   * @returns {Object} An object containing parsed anime info, rating data, related seasons, and recommendations.
+   * @returns {IAnimeInfo} An object containing parsed anime info, rating data, related seasons, and recommendations.
    */
-  private parseAnimeInfo($: cheerio.CheerioAPI) {
+  private parseAnimeInfo($: cheerio.CheerioAPI, id: string) {
     const style = $('div.watch-section-bg').attr('style');
     const match = style?.match(/url\((['"]?)(.*?)\1\)/);
     const url = match ? match[2] : null;
@@ -291,7 +291,7 @@ class Animekai extends BaseClass {
       //
       anilistId: Number($('div#watch-page').attr('data-al-id')) || null,
       malId: Number($('div#watch-page').attr('data-mal-id')) || null,
-      id: $('div.swiper-slide.aitem.active a.poster').attr('href')?.split('/').at(2) || null,
+      id: $('div.swiper-slide.aitem.active a.poster').attr('href')?.split('/').at(2) || id || null, // will need to pass the id used here
       name: $('li.breadcrumb-item.active').text().trim() || null,
       romaji: $('li.breadcrumb-item.active').attr('data-jp') || null,
       altnames: $('small.al-title.text-expand').text().trim() || null,
@@ -320,8 +320,8 @@ class Animekai extends BaseClass {
         dub: Number($('div.main-entity.collapse').find('div.info > span.dub:first').text().trim()) || null,
       },
       totalEpisodes:
+        Number($('div.main-entity.collapse').find('div.info > span.sub').text().trim()) ||
         Number($('.detail > div > div:contains("Episodes") span').text().trim()) ||
-        Number($('div.info span.sub').text().trim()) ||
         null,
     };
 
@@ -940,6 +940,7 @@ class Animekai extends BaseClass {
 
       const { animeInfo, relatedSeasons, recommendedAnime, relatedAnime, rateBox } = this.parseAnimeInfo(
         cheerio.load(response.data),
+        animeId,
       );
 
       const ani_id = rateBox.dataId as string;

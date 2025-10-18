@@ -485,10 +485,11 @@ export class HiMovies extends BaseClass {
    * @private
    * @param $ - Cheerio API instance containing season episodes HTML
    * @param seasonNumber - The season number these episodes belong to
+   * @param tvInfo - Tv data used to construct episodeId
    * @param media - The media identifier for constructing episode IDs
    * @returns Array of parsed episode objects with titles and numbering
    */
-  private parseEpisodes($: cheerio.CheerioAPI, seasonNumber: number, media: string) {
+  private parseEpisodes($: cheerio.CheerioAPI, seasonNumber: number, tvInfo: IMovieInfo, media: string) {
     return $('.nav > li')
       .map((_, el) => {
         const anchor = $(el).find('a');
@@ -496,7 +497,9 @@ export class HiMovies extends BaseClass {
         const title = anchor.attr('title')!;
         const episodeTitle = title.split(':').at(1)?.trim() || null;
         return {
-          episodeId: `${media.replace('watch-', '')}-episode-${rawId.split('-')[1]}` || null,
+          episodeId: tvInfo.id
+            ? `${tvInfo.id.replace('watch-', '')}-episode-${rawId.split('-')[1]}`
+            : `${media.replace('watch-', '')}-episode-${rawId.split('-')[1]}` || null,
           title: episodeTitle,
           episodeNumber: parseInt(title.split(':')[0].slice(3).trim(), 10) || null,
           seasonNumber: seasonNumber || null,
@@ -863,13 +866,13 @@ export class HiMovies extends BaseClass {
               error: seasonEpisodes.statusText || 'Received empty response from server',
             };
           }
-          const episodeslist = this.parseEpisodes(cheerio.load(seasonEpisodes.data), seasonNumber, mediaId);
+          const episodeslist = this.parseEpisodes(cheerio.load(seasonEpisodes.data), seasonNumber, data, mediaId);
           episodes.push(...episodeslist);
         }
       } else {
         episodes = [
           {
-            episodeId: mediaId.replace('watch-', ''),
+            episodeId: data.id !== null ? data.id.replace('watch-', '') : mediaId.replace('watch-', ''),
             title: data.name,
             episodeNumber: 1,
             seasonNumber: 0,

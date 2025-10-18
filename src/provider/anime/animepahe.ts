@@ -11,6 +11,7 @@ import type {
   IVideoSource,
   IPaheAnime,
   IPaheAnimeInfoResponse,
+  IPaheReleases,
 } from '../../models/types.js';
 import * as cheerio from 'cheerio';
 import Kwik from '../../source-extractors/kwik.js';
@@ -257,6 +258,55 @@ export class Animepahe extends BaseClass {
         totalResults: response.data.total,
         lastPage: response.data.last_page,
         data: data as IPaheAnime[],
+      };
+    } catch (error) {
+      return {
+        hasNextPage: false,
+        currentPage: 0,
+        totalResults: 0,
+        perPage: 0,
+        lastPage: 0,
+        data: [],
+        error: error instanceof Error ? error.message : 'Unknown Error',
+      };
+    }
+  }
+
+  /**
+   *  Fetches recently updated anime. Mostly those that are airing
+   * @param {number} [page] - The page number for pagination (optional, defaults to 1).
+   * @returns
+   */
+  async fetchRecentlyUpdated(page: number = 1): Promise<IAnimePaginated<IPaheReleases[] | []>> {
+    try {
+      const response = await this.client.get(`${this.baseUrl}/api?m=airing&page=${page}`, {
+        headers: this.headers(false),
+      });
+      if (!response.data) {
+        return {
+          hasNextPage: false,
+          currentPage: 0,
+          totalResults: 0,
+          perPage: 0,
+          lastPage: 0,
+          data: [],
+          error: response.statusText,
+        };
+      }
+
+      const data: IPaheReleases[] = response.data.data.map((item: any) => ({
+        id: item.session,
+        name: item.anime_title,
+        thumbnail: item.snapshot,
+        episodeNumber: item.episode,
+      }));
+      return {
+        hasNextPage: response.data.last_page > 1,
+        currentPage: response.data.current_page,
+        perPage: response.data.per_page,
+        totalResults: response.data.total,
+        lastPage: response.data.last_page,
+        data: data as IPaheReleases[],
       };
     } catch (error) {
       return {

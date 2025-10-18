@@ -86,6 +86,13 @@ export interface IEpisodes {
   title?: string | null;
 }
 
+export interface IPaheReleases {
+  id: string | null;
+  name: string | null;
+  episodeNumber: number | null;
+  thumbnail: string | null;
+}
+
 export interface IResponse<T> {
   data: T;
   error?: string;

@@ -1,9 +1,5 @@
 IMPROVEMENTS 
-1. Allanime Vidguard server cannot be scraped 
-2. Animepahe airing url and recent updates needs scraping
-https://animepahe.si/api?m=airing&page=1
-
-3.Need to build a schedule for next episode for all providers(hianime,animekai have it better scrape )
+3. Need to build a schedule for next episode for all providers(hianime,animekai have it better scrape )
 4. Build watch together for animekai and hianime
 5. Add watch together support for hianime and animekai
 6. Add advanced search filters for both anime
@@ -26,6 +22,4 @@ New Sites(TO DO last)
 https://rentry.co/sflix#yflix-clones
 
 
-///BUGS
-1. Filemoon has been disabled 
 
