@@ -7,7 +7,7 @@ import { Animekai } from './provider/anime/animekai.js';
 import { Animepahe } from './provider/anime/animepahe.js';
 import { HiMovies } from './provider/movies/himovies.js';
 import { Kaido } from './provider/anime/kaido.js';
-
+import { Anizone } from './provider/anime/anizone.js';
 import {
   type IMovieCountry,
   type IMovieGenre,
@@ -34,6 +34,7 @@ export {
   Kaido,
   Animekai,
   Animepahe,
+  Anizone,
   HiMovies,
   FlixHQ,
   type IMovieCountry,

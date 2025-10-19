@@ -24,3 +24,7 @@ https://rentry.co/sflix#yflix-clones
 
 
 
+For maintainance reasons
+1. separate the response structure types into their own file
+2. have meta in its own file
+3. have movies in its own file

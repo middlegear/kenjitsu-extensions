@@ -240,6 +240,7 @@ export class TheMovieDatabase extends Meta {
         params: {
           language: 'en-US',
           api_key: this.apiKey,
+          append_to_response: `external_ids`,
         },
       });
 
@@ -300,6 +301,16 @@ export class TheMovieDatabase extends Meta {
               airDate: response.data.next_episode_to_air.air_date,
             }
           : null,
+
+        externalIds: {
+          imdbId: response.data.external_ids.imdb_id || null,
+          tvdbId: response.data.external_ids.tvdb_id || null,
+          tvrageId: response.data.external_ids.tvrage_id || null,
+          wikidataId: response.data.external_ids.wikidata_id || null,
+          facebookId: response.data.external_ids.facebook_id || null,
+          instagramId: response.data.external_ids.instagram_id || null,
+          twitterId: response.data.external_ids.twitter_id || null,
+        },
       };
 
       const seasons = response.data.seasons.map((item: any) => ({
@@ -500,6 +511,7 @@ export class TheMovieDatabase extends Meta {
       const response = await this.client.get(`${this.baseUrl}/movie/${tmdbId}`, {
         params: {
           api_key: this.apiKey,
+          append_to_response: `external_ids`,
         },
       });
 
@@ -563,6 +575,15 @@ export class TheMovieDatabase extends Meta {
           : null,
         summary: response.data.overview || null,
         releaseDate: response.data.release_date || null,
+        externalIds: {
+          imdbId: response.data.external_ids.imdb_id || null,
+          tvdbId: response.data.external_ids.tvdb_id || null,
+          tvrageId: response.data.external_ids.tvrage_id || null,
+          wikidataId: response.data.external_ids.wikidata_id || null,
+          facebookId: response.data.external_ids.facebook_id || null,
+          instagramId: response.data.external_ids.instagram_id || null,
+          twitterId: response.data.external_ids.twitter_id || null,
+        },
       };
 
       return { data: data as IMetaMovie };

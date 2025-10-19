@@ -30,11 +30,38 @@ export interface IAnime extends IBaseAnime {
   spotlight?: string | null;
   quality?: string | null;
 }
+export interface IAnizone extends IBaseAnime {
+  releaseDate: string | number | null;
+  status: string | null;
+  genres: string[] | null;
+  type: string | null;
+}
+export interface IAnizoneInfo extends IAnizone {
+  coverImage: string | null;
+  synopsis: string | null;
+  totalEpisodes: number | null;
+}
 
+export interface IAniZoneEpisodes {
+  episodeId: string | null;
+  // episodeNumber: number | null;
+  title: string | null;
+  thumbnail: string | null;
+  teaser: string | null;
+  airDate: string | null;
+  description?: string | null;
+}
+
+export interface IAnizoneInfoResponse<T> extends IResponse<T> {
+  providerEpisodes: IAniZoneEpisodes[] | [];
+}
+export interface IAnizoneUpdates<T> extends IResponse<T> {
+  recentlyAdded: IBaseAnime[] | [];
+}
 export interface IPaheAnime {
   id: string | null;
   name: string | null;
-  romaji: string | null;
+  romaji?: string | null;
   posterImage: string | null;
   score: number | null;
   type: string | null;
@@ -42,6 +69,7 @@ export interface IPaheAnime {
   season: string | null;
   totalEpisodes: number | null;
 }
+
 export interface ISearchSuggestions extends IBaseAnime {
   releaseDate: string | null;
   type: string | null;
@@ -178,7 +206,7 @@ interface IOutro {
 interface ITracks {
   url: string | null;
   type: string | null;
-  quality: string | null;
+  quality?: string | null;
 }
 export interface IVideoSource {
   intro?: IOutro;
@@ -518,6 +546,7 @@ export interface IMetaMovie {
   summary: string;
   genres: string;
   rating: string;
+  externalIds: IMetaExternalId;
 }
 
 export interface IMetaMovieInfo extends IMetaMovie {
@@ -579,6 +608,15 @@ export interface IMetaMovieEpisodes {
     large: string;
     original: string;
   };
+}
+interface IMetaExternalId {
+  imdbId: string | null;
+  tvdbId?: number | null;
+  tvrageId?: number | null;
+  facebookId: string | null;
+  instagramId: string | null;
+  twitterId: string | null;
+  wikidataId: string | null;
 }
 
 export interface IMovieProviderResults {
