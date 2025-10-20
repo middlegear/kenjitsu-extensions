@@ -312,7 +312,7 @@ export class Anizone extends BaseClass {
    * @param {string} animeId - The unique identifier for the anime.
    * @returns {Promise<IAnizoneInfoResponse<IAnizoneInfo | null>>} - A promise resolving to an object containing anime details and episodes or an error message.
    */
-  async fetchInfo(animeId: string): Promise<IAnizoneInfoResponse<IAnizoneInfo | null>> {
+  async fetchAnimeInfo(animeId: string): Promise<IAnizoneInfoResponse<IAnizoneInfo | null>> {
     if (!animeId) {
       return { error: 'Missing required params animeId', data: null, providerEpisodes: [] };
     }

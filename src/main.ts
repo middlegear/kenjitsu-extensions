@@ -53,3 +53,5 @@ export {
   type IMovieOrTv,
   type ISubOrDub,
 };
+// const data = await new Anizone().fetchInfo('bleach-sennen-kessen-hen-soukoku-tan-gwna8xmk');
+// console.log(data);
