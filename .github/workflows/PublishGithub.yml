@@ -27,7 +27,8 @@ jobs:
       - name: Install dependencies
         run: |
           pnpm config set registry https://registry.npmjs.org/
-          pnpm install
+          pnpm install --prod
+          pnpm add -D tsup typescript
 
       - name: Generate unique version
         id: version_generator
