@@ -2,22 +2,19 @@
  * AllAnime class for interacting with the AllAnime API to search for anime,
  * fetch episodes, servers, and video sources.
  */
-import { BaseClass } from '../../models/base-anime.js';
-import type {
-  AllAnimeServers,
-  AllAnimeSourceResponseMap,
-  ISubOrDub,
-  IAllAnimeEpisodes,
-  IAllAnimeServers,
-  IAnimePaginated,
-  IBaseAnime,
-  IResponse,
-  IVideoSource,
-} from '../../models/types.js';
+import { BaseClass } from '../../models/base.js';
 import { InternalAK, InternalDefaultHls, InternalSMP4, InternalYtMP4 } from '../../source-extractors/allanime/index.js';
 import FileMoon from '../../source-extractors/filemoon.js';
 import MP4Upload from '../../source-extractors/mp4upload.js';
 import Okru from '../../source-extractors/okru.js';
+import type {
+  AllAnimeServers,
+  AllAnimeSourceResponseMap,
+  IAllAnime,
+  IAllAnimeEpisodes,
+  IAllAnimeServers,
+} from '../../types/anime/allanime.js';
+import type { IBasePaginated, IResponse, ISubOrDub, IVideoSource } from '../../types/base.js';
 
 /**
  * Class to handle interactions with the AllAnime API.
@@ -127,7 +124,7 @@ export class AllAnime extends BaseClass {
    * @returns A promise resolving to paginated anime search results.
    * @throws Error if the search query is empty.
    */
-  async search(query: string, page: number = 1): Promise<IAnimePaginated<IBaseAnime[] | []>> {
+  async search(query: string, page: number = 1): Promise<IBasePaginated<IAllAnime[] | []>> {
     if (query.length === 0) {
       throw new Error('Search query cannot be empty.');
     }
@@ -154,7 +151,7 @@ export class AllAnime extends BaseClass {
       if (!response.data) {
         return { hasNextPage: false, currentPage: 0, data: [], error: response.statusText };
       }
-      const anime: IBaseAnime[] = response.data.data.shows.edges.map((item: any) => ({
+      const anime: IAllAnime[] = response.data.data.shows.edges.map((item: any) => ({
         id: item._id,
         romaji: item.name,
         name: item.englishName,
@@ -322,12 +319,12 @@ export class AllAnime extends BaseClass {
 
           const extractor = extractors[serverId as AllAnimeServers];
           if (!extractor) {
-            return null; // Skip if no extractor
+            return null;
           }
 
           const extracted = await extractor(url);
           if (!extracted) {
-            return null; // Skip if no data extracted
+            return null;
           }
 
           return {
@@ -335,12 +332,11 @@ export class AllAnime extends BaseClass {
             value: { headers: { Referer: refererOrigin }, data: extracted },
           };
         } catch (err) {
-          return null; // Skip on error
+          return null;
         }
       }),
     );
 
-    // Filter out null results and build the response
     const response = results.reduce<AllAnimeSourceResponseMap>((acc, result) => {
       if (result && result.value.data) {
         acc[result.serverId as AllAnimeServers] = result.value;
@@ -350,7 +346,7 @@ export class AllAnime extends BaseClass {
 
     const hasValidSource = Object.keys(response).length > 0;
     if (!hasValidSource) {
-      throw new Error(`No streams available for episode: ${episodeId}. It is a Known Issue`);
+      throw new Error(`No streams available for episode: ${episodeId}.`);
     }
 
     return response;

@@ -1,20 +1,17 @@
-import { BaseClass } from '../../models/base-anime.js';
-import type {
-  HIServerInfo,
-  HISourceResponse,
-  ISubOrDub,
-  IAnimeInfo,
-  IAnimePaginated,
-  IEpisodes,
-  IPaheServersResponse,
-  IResponse,
-  IVideoSource,
-  IPaheAnime,
-  IPaheAnimeInfoResponse,
-  IPaheReleases,
-} from '../../models/types.js';
+import { BaseClass } from '../../models/base.js';
+
 import * as cheerio from 'cheerio';
 import Kwik from '../../source-extractors/kwik.js';
+import type {
+  IPaheAnime,
+  IPaheAnimeInfoResponse,
+  IPaheEpisodes,
+  IPaheInfo,
+  IPahePaginated,
+  IPaheReleases,
+  IPaheServersResponse,
+} from '../../types/anime/animepahe.js';
+import type { IResponse, IServerInfo, ISourceBaseResponse, ISubOrDub, IVideoSource } from '../../types/base.js';
 
 /**
  * A class for interacting with the Animepahe platform  to search for anime, fetch detailed information,
@@ -40,10 +37,10 @@ export class Animepahe extends BaseClass {
    * @private
    * @param {cheerio.CheerioAPI} $ - The Cheerio API instance for parsing HTML.
    * @param {string} animeId - The unique identifier for the anime.
-   * @returns {IAnimeInfo} An object containing parsed anime information.
+   * @returns {IPaheInfo} An object containing parsed anime information.
    */
-  private parseAnimeInfo($: cheerio.CheerioAPI, animeId: string): IAnimeInfo {
-    const animeinfo: IAnimeInfo = {
+  private parseAnimeInfo($: cheerio.CheerioAPI, animeId: string): IPaheInfo {
+    const animeinfo: IPaheInfo = {
       anilistId: Number($('head').find('meta[name="anilist"]').attr('content')) || null,
       malId: Number($('head').find('meta[name="myanimelist"]').attr('content')) || null,
       id: `${animeId}`,
@@ -87,13 +84,13 @@ export class Animepahe extends BaseClass {
     const subSelector: cheerio.SelectorType = 'div#resolutionMenu button[data-audio="jpn"]';
     const chiSelector: cheerio.SelectorType = 'div#resolutionMenu button[data-audio="chi"]';
     const dubSelector: cheerio.SelectorType = 'div#resolutionMenu button[data-audio="eng"]';
-    const servers: HIServerInfo = {
+    const servers: IServerInfo = {
       sub: [],
       dub: [],
       raw: [],
       episodeNumber: 0,
     };
-    const download: HIServerInfo = { sub: [], dub: [], raw: [], episodeNumber: 0 };
+    const download: IServerInfo = { sub: [], dub: [], raw: [], episodeNumber: 0 };
 
     const h1Text = $('div.theatre-info h1').text().trim();
     const match = h1Text.match(/-\s*(\d+)/);
@@ -174,15 +171,15 @@ export class Animepahe extends BaseClass {
   /**
    * Finds available server IDs for a specific audio category from the parsed server data.
    * @private
-   * @param {HIServerInfo} servers - The parsed streaming server information.
-   * @param {HIServerInfo} download - The parsed download server information.
+   * @param {IServerInfo} servers - The parsed streaming server information.
+   * @param {IServerInfo} download - The parsed download server information.
    * @param {ISubOrDub} category - The audio category to filter servers for ('sub', 'dub', or 'raw').
    * @returns {Array<{serverId: string; serverName: string; downloadId: string | null}>} An array of server objects with IDs and download information.
    * @throws {Error} If no servers are available for the specified category.
    */
   private findServerIds(
-    servers: HIServerInfo,
-    download: HIServerInfo,
+    servers: IServerInfo,
+    download: IServerInfo,
     category: ISubOrDub,
   ): { serverId: string; serverName: string; downloadId: string | null }[] {
     const availableCategories: string[] = [];
@@ -222,7 +219,7 @@ export class Animepahe extends BaseClass {
    * @param {string} query - The search query string (required).
    * @returns  A promise that resolves to an object containing an array of anime titles, pagination details, or an error message.
    */
-  async search(query: string): Promise<IAnimePaginated<IPaheAnime[] | []>> {
+  async search(query: string): Promise<IPahePaginated<IPaheAnime[] | []>> {
     if (!query) {
       throw new Error('Query cannot be empty');
     }
@@ -277,7 +274,7 @@ export class Animepahe extends BaseClass {
    * @param {number} [page] - The page number for pagination (optional, defaults to 1).
    * @returns
    */
-  async fetchRecentlyUpdated(page: number = 1): Promise<IAnimePaginated<IPaheReleases[] | []>> {
+  async fetchRecentlyUpdated(page: number = 1): Promise<IPahePaginated<IPaheReleases[] | []>> {
     try {
       const response = await this.client.get(`${this.baseUrl}/api?m=airing&page=${page}`, {
         headers: this.headers(false),
@@ -326,7 +323,7 @@ export class Animepahe extends BaseClass {
    * @param {string} animeId - The unique identifier for the anime (e.g., "bleach-806") (required).
    * @returns  A promise that resolves to an object containing anime details, or an error message.
    */
-  async fetchAnimeInfo(animeId: string): Promise<IPaheAnimeInfoResponse<IAnimeInfo | null>> {
+  async fetchAnimeInfo(animeId: string): Promise<IPaheAnimeInfoResponse<IPaheInfo | null>> {
     if (!animeId) {
       throw new Error('animeId cannot be empty');
     }
@@ -392,7 +389,7 @@ export class Animepahe extends BaseClass {
    * @returns  A promise that resolves to an object containing an array of episode information or an error message.
    */
 
-  async fetchEpisodes(animeId: string): Promise<IResponse<IEpisodes[] | []>> {
+  async fetchEpisodes(animeId: string): Promise<IResponse<IPaheEpisodes[] | []>> {
     if (!animeId) {
       throw new Error('Missing required params: animeid');
     }
@@ -436,7 +433,7 @@ export class Animepahe extends BaseClass {
         }
       }
 
-      return { data: episodes as IEpisodes[] };
+      return { data: episodes as IPaheEpisodes[] };
     } catch (error) {
       return { error: error instanceof Error ? error.message : 'Unknown Error', data: [] };
     }
@@ -447,7 +444,7 @@ export class Animepahe extends BaseClass {
    * @param {string} episodeId - The unique identifier for the episode  (required).
    * @returns  A promise that resolves to an object containing available streaming server details (sub, dub, raw) or an error message.
    */
-  async fetchServers(episodeId: string): Promise<IPaheServersResponse<HIServerInfo | null>> {
+  async fetchServers(episodeId: string): Promise<IPaheServersResponse<IServerInfo | null>> {
     if (!episodeId) {
       throw new Error('Missing required parameter: episodeId');
     }
@@ -488,14 +485,14 @@ export class Animepahe extends BaseClass {
    * @param {ISubOrDub} category  - The audio category (Subtitled or Dubbed) (optional, defaults to SubOrDub.SUB).
    * @returns  A promise that resolves to an object containing streaming sources, headers,  or an error message.
    */
-  async fetchSources(episodeId: string, category: ISubOrDub = 'sub'): Promise<HISourceResponse<IVideoSource | null>> {
+  async fetchSources(episodeId: string, category: ISubOrDub = 'sub'): Promise<ISourceBaseResponse<IVideoSource | null>> {
     try {
       const servers = await this.fetchServers(episodeId);
       if ('error' in servers) {
         throw new Error(servers.error);
       }
 
-      const serverIds = this.findServerIds(servers.data as HIServerInfo, servers.download as HIServerInfo, category);
+      const serverIds = this.findServerIds(servers.data as IServerInfo, servers.download as IServerInfo, category);
 
       const promises = serverIds.map(s => {
         const url = new URL(s.serverId, this.baseUrl);
@@ -518,7 +515,7 @@ export class Animepahe extends BaseClass {
 
       const merged: IVideoSource = {
         sources: fulfilled.flatMap(item => item.sources || []),
-        subtitles: fulfilled.flatMap(item => item.subtitles || []),
+        // subtitles: fulfilled.flatMap(item => item.subtitles || []), we dont have soft subs
         download: highestDownloadId || null,
       };
 

@@ -1,16 +1,14 @@
 import * as cheerio from 'cheerio';
-import { BaseClass } from '../../models/base-anime.js';
+import { BaseClass } from '../../models/base.js';
+
 import type {
   IAnizone,
   IAniZoneEpisodes,
   IAnizoneInfo,
   IAnizoneInfoResponse,
   IAnizoneUpdates,
-  IBaseAnime,
-  IResponse,
-  ISourceBaseResponse,
-  IVideoSource,
-} from '../../models/types.js';
+} from '../../types/anime/anizone.js';
+import type { IBaseAnime, IResponse, ISourceBaseResponse, IVideoSource } from '../../types/base.js';
 
 /**
  * Anizone class for interacting with the Anizone anime streaming platform.
@@ -19,17 +17,8 @@ import type {
  * @extends BaseClass
  */
 export class Anizone extends BaseClass {
-  /**
-   * Base URL for the Anizone website.
-   * @private
-   * @type {string}
-   */
   private readonly baseUrl: string;
 
-  /**
-   * Constructs an instance of the Anizone class.
-   * @param {string} [baseUrl='https://anizone.to'] - The base URL for the Anizone API.
-   */
   constructor(baseUrl: string = 'https://anizone.to') {
     super();
     this.baseUrl = baseUrl;
@@ -58,7 +47,7 @@ export class Anizone extends BaseClass {
       anime.push({
         id: title ? `${this.createSlug(title)}-${id}` : id || null,
         name: title,
-        romaji: $(element).find('div.absolute.-inset-y-0.-right-0.w-80 > img').attr('alt') || null,
+        // romaji: $(element).find('div.absolute.-inset-y-0.-right-0.w-80 > img').attr('alt') || null,
         posterImage: $(element).find('div.absolute.-inset-y-0.-right-0.w-80 > img').attr('src') || null,
         ...(() => {
           const infoSpans = $(element)
@@ -99,7 +88,7 @@ export class Anizone extends BaseClass {
     const animeInfo: IAnizoneInfo = {
       id: `${this.createSlug(title)}-${id}` || null,
       name: title || null,
-      romaji: $('div.mx-auto img').attr('alt') || null,
+      // romaji: $('div.mx-auto img').attr('alt') || null,
       type: $(infoSpans[0]).find('.inline-block').text().trim().toLowerCase().includes('tv')
         ? 'TV'
         : $(infoSpans[0]).find('.inline-block').text().trim() || null,
@@ -130,16 +119,18 @@ export class Anizone extends BaseClass {
       const $el = $(el);
       const url = $el.find('a').attr('href') || null;
       const title = $el.find('h3').text().trim() || null;
+      const episodeNumber = url ? url.split('/').at(-1) : null;
       episodes.push({
-        episodeId: `${animeInfo.id}-episode-${url?.split('/').at(-1)}`,
+        episodeId: `${animeInfo.id}-episode-${episodeNumber}`,
+        episodeNumber: episodeNumber ? Number(episodeNumber) : null,
         thumbnail: $el.find('div.absolute img').attr('src') || null,
+
         teaser:
           $el
             .find('div.absolute img')
             .attr(':src')
             ?.match(/'([^']*teaser\.webp)'/)?.[1] || null,
         title,
-        description: $el.find('div.text-sm span').text().trim() || 'N/A' || null,
         airDate:
           $el
             .find('span')
@@ -231,7 +222,7 @@ export class Anizone extends BaseClass {
       recentlyAdded.push({
         id: title ? `${this.createSlug(title)}-${id}` : null,
         name: title || null,
-        romaji: $(el).find('a[title]').attr('title') || $(el).find('img').attr('alt') || null,
+        // romaji: $(el).find('a[title]').attr('title') || $(el).find('img').attr('alt') || null,
         posterImage: $(el).find('img').attr('src') || null,
       });
     });
@@ -249,6 +240,7 @@ export class Anizone extends BaseClass {
         ?.match(/'([^']*teaser\.webp)'/);
       latestEpisodes.push({
         episodeId: title ? `${this.createSlug(title)}-${animeId}-episode-${episodeNumber}` : null,
+        episodeNumber: episodeNumber ? Number(episodeNumber) : null,
         title: $el.find('div .title').last().text().trim() || null,
         thumbnail: $el.find('img').attr('src') || null,
         teaser: teaserMatch ? teaserMatch[1] : null,
@@ -258,6 +250,21 @@ export class Anizone extends BaseClass {
 
     return { data: latestEpisodes, recentlyAdded };
   }
+
+  private formatQuery = (title: string): string => {
+    let decoded = title.trim();
+    const isEncoded = /%[0-9A-Fa-f]{2}/.test(decoded);
+
+    if (isEncoded) {
+      try {
+        decoded = decodeURIComponent(decoded);
+      } catch {
+        // fallback to original if malformed
+      }
+    }
+
+    return decoded;
+  };
 
   /**
    * Searches for anime on the Anizone platform using a query string.
@@ -272,7 +279,7 @@ export class Anizone extends BaseClass {
     try {
       const response = await this.client.get(`${this.baseUrl}/anime`, {
         params: {
-          search: query,
+          search: this.formatQuery(query),
         },
       });
       if (!response.data) {

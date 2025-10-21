@@ -1,5 +1,4 @@
-import type { IVideoSource } from '../models/types.js';
-
+import type { IVideoSource } from '../types/base.js';
 import { unpack } from '../utils/unpacker.js';
 
 // this class need to be refactored so i pass embed src url under the URL interface object for resuablity

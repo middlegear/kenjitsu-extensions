@@ -1,16 +1,16 @@
-import { Meta, type IMediaTitle } from '../../models/base-meta.js';
+import { BaseMovieMeta, type IMediaTitle } from '../../models/movie-meta.js';
+
+import type { IResponse, IVideoSource } from '../../types/base.js';
 import type {
-  IAnimePaginated,
   IMetaInfoResponse,
   IMetaMovie,
   IMetaMovieEpisodes,
   IMetaMovieIdResponse,
   IMetaMovieInfo,
+  IMetaMoviePaginated,
   IMetaMovieSeasons,
   IMovieProviderResults,
-  IResponse,
-  IVideoSource,
-} from '../../models/types.js';
+} from '../../types/meta/meta-movie.js';
 
 /**
  * A class for interacting with The Movie Database (TMDb) API to search for and retrieve
@@ -19,7 +19,7 @@ import type {
  *
  *
  */
-export class TheMovieDatabase extends Meta {
+export class TheMovieDatabase extends BaseMovieMeta {
   /** TMDb API key for authentication */
   private readonly apiKey: string = 'b29bfe548cc2a3e4225effbd54ef0fda';
 
@@ -44,7 +44,7 @@ export class TheMovieDatabase extends Meta {
   private async fetchPaginatedData(
     endpoint: string,
     params: Record<string, string>,
-  ): Promise<IAnimePaginated<IMetaMovie[] | []>> {
+  ): Promise<IMetaMoviePaginated<IMetaMovie[] | []>> {
     try {
       const response = await this.client.get(`${this.baseUrl}${endpoint}`, {
         params: {
@@ -125,7 +125,7 @@ export class TheMovieDatabase extends Meta {
   private async fetchPaginatedMovieData(
     endpoint: string,
     params: Record<string, string>,
-  ): Promise<IAnimePaginated<IMetaMovie[] | []>> {
+  ): Promise<IMetaMoviePaginated<IMetaMovie[] | []>> {
     try {
       const response = await this.client.get(`${this.baseUrl}${endpoint}`, {
         params: {
@@ -201,7 +201,7 @@ export class TheMovieDatabase extends Meta {
    * @param page - The page number for pagination (optional, defaults to 1)
    * @returns Promise resolving to paginated list of TV shows matching the search query
    */
-  async searchShows(query: string, page: number = 1): Promise<IAnimePaginated<IMetaMovie[] | []>> {
+  async searchShows(query: string, page: number = 1): Promise<IMetaMoviePaginated<IMetaMovie[] | []>> {
     if (!query) {
       return {
         hasNextPage: false,
@@ -436,7 +436,10 @@ export class TheMovieDatabase extends Meta {
    * @param page - The page number for pagination (optional, defaults to 1)
    * @returns Promise resolving to paginated list of trending TV shows
    */
-  async fetchTrendingTv(timeWindow: 'day' | 'week' = 'week', page: number = 1): Promise<IAnimePaginated<IMetaMovie[] | []>> {
+  async fetchTrendingTv(
+    timeWindow: 'day' | 'week' = 'week',
+    page: number = 1,
+  ): Promise<IMetaMoviePaginated<IMetaMovie[] | []>> {
     return this.fetchPaginatedData(`/trending/tv/${timeWindow}`, { page: String(page) });
   }
 
@@ -446,7 +449,7 @@ export class TheMovieDatabase extends Meta {
    * @param page - The page number for pagination (optional, defaults to 1)
    * @returns Promise resolving to paginated list of popular TV shows
    */
-  async fetchPopularTv(page: number = 1): Promise<IAnimePaginated<IMetaMovie[] | []>> {
+  async fetchPopularTv(page: number = 1): Promise<IMetaMoviePaginated<IMetaMovie[] | []>> {
     return this.fetchPaginatedData('/tv/popular', { page: String(page) });
   }
 
@@ -456,7 +459,7 @@ export class TheMovieDatabase extends Meta {
    * @param page - The page number for pagination (optional, defaults to 1)
    * @returns Promise resolving to paginated list of top-rated TV shows
    */
-  async fetchTopShows(page: number = 1): Promise<IAnimePaginated<IMetaMovie[] | []>> {
+  async fetchTopShows(page: number = 1): Promise<IMetaMoviePaginated<IMetaMovie[] | []>> {
     return this.fetchPaginatedData('/tv/top_rated', { page: String(page) });
   }
 
@@ -466,7 +469,7 @@ export class TheMovieDatabase extends Meta {
    * @param page - The page number for pagination (optional, defaults to 1)
    * @returns Promise resolving to paginated list of currently airing TV shows
    */
-  async fetchAiringTv(page: number = 1): Promise<IAnimePaginated<IMetaMovie[] | []>> {
+  async fetchAiringTv(page: number = 1): Promise<IMetaMoviePaginated<IMetaMovie[] | []>> {
     return this.fetchPaginatedData('/tv/on_the_air', { page: String(page) });
   }
 
@@ -477,7 +480,7 @@ export class TheMovieDatabase extends Meta {
    * @param page - The page number for pagination (optional, defaults to 1)
    * @returns Promise resolving to paginated list of movies matching the search query
    */
-  async searchMovie(query: string, page: number = 1): Promise<IAnimePaginated<IMetaMovie[] | []>> {
+  async searchMovie(query: string, page: number = 1): Promise<IMetaMoviePaginated<IMetaMovie[] | []>> {
     if (!query) {
       return {
         hasNextPage: false,
@@ -602,7 +605,7 @@ export class TheMovieDatabase extends Meta {
   async fetchTrendingMovies(
     timeWindow: 'day' | 'week' = 'week',
     page: number = 1,
-  ): Promise<IAnimePaginated<IMetaMovie[] | []>> {
+  ): Promise<IMetaMoviePaginated<IMetaMovie[] | []>> {
     return this.fetchPaginatedMovieData(`/trending/movie/${timeWindow}`, { page: String(page) });
   }
 
@@ -612,7 +615,7 @@ export class TheMovieDatabase extends Meta {
    * @param page - The page number for pagination (optional, defaults to 1)
    * @returns Promise resolving to paginated list of popular movies
    */
-  async fetchPopularMovies(page: number = 1): Promise<IAnimePaginated<IMetaMovie[] | []>> {
+  async fetchPopularMovies(page: number = 1): Promise<IMetaMoviePaginated<IMetaMovie[] | []>> {
     return this.fetchPaginatedMovieData('/movie/popular', { page: String(page) });
   }
 
@@ -622,7 +625,7 @@ export class TheMovieDatabase extends Meta {
    * @param page - The page number for pagination (optional, defaults to 1)
    * @returns Promise resolving to paginated list of top-rated movies
    */
-  async fetchTopMovies(page: number = 1): Promise<IAnimePaginated<IMetaMovie[] | []>> {
+  async fetchTopMovies(page: number = 1): Promise<IMetaMoviePaginated<IMetaMovie[] | []>> {
     return this.fetchPaginatedMovieData('/movie/top_rated', { page: String(page) });
   }
 
@@ -632,7 +635,7 @@ export class TheMovieDatabase extends Meta {
    * @param page - The page number for pagination (optional, defaults to 1)
    * @returns Promise resolving to paginated list of movies currently releasing in cinemas
    */
-  async fetchReleasingMovies(page: number = 1): Promise<IAnimePaginated<IMetaMovie[] | []>> {
+  async fetchReleasingMovies(page: number = 1): Promise<IMetaMoviePaginated<IMetaMovie[] | []>> {
     return this.fetchPaginatedMovieData('/movie/now_playing', { page: String(page) });
   }
 
@@ -642,7 +645,7 @@ export class TheMovieDatabase extends Meta {
    * @param page - The page number for pagination (optional, defaults to 1)
    * @returns Promise resolving to paginated list of upcoming movies
    */
-  async fetchUpcomingMovies(page: number = 1): Promise<IAnimePaginated<IMetaMovie[] | []>> {
+  async fetchUpcomingMovies(page: number = 1): Promise<IMetaMoviePaginated<IMetaMovie[] | []>> {
     return this.fetchPaginatedMovieData('/movie/upcoming', { page: String(page) });
   }
 
@@ -686,11 +689,26 @@ export class TheMovieDatabase extends Meta {
       };
 
       const titleSlug = this.createSlug(title as string);
-      const flixResults = await this.searchFlixTv(titleSlug);
+
+      const response = await this.himovies.search(titleSlug);
+
+      let result = null;
+
+      if (response && response.data && response.data.length > 0) {
+        result = response.data
+          .filter((item: any) => item.type === 'TV')
+          .map((item: any) => ({
+            id: item.id,
+            name: item.name,
+            seasons: item.seasons,
+            totalEpisodes: item.totalEpisodes,
+            provider: 'flixhq and himovies',
+          }));
+      }
 
       return {
         data: tvShowData.data,
-        provider: this.mapMediaId(tmdbdata, flixResults, 'TV') as IMovieProviderResults,
+        provider: this.mapMediaProviderId(tmdbdata, result, 'TV') as IMovieProviderResults,
       };
     } catch (error) {
       return { error: error instanceof Error ? error.message : 'Unknown error', data: null, provider: null };
@@ -714,12 +732,22 @@ export class TheMovieDatabase extends Meta {
         releaseDate: movieData.data?.releaseDate,
         runtime: movieData.data?.runtime,
       };
-
-      const flixResults = await this.searchFlixMovies(titleSlug);
-
+      let result = null;
+      const response = await this.himovies.search(titleSlug);
+      if (response && response.data && response.data.length > 0) {
+        result = response.data
+          .filter((item: any) => item.type === 'Movie')
+          .map((item: any) => ({
+            id: item.id,
+            name: item.name,
+            releaseDate: item.releaseDate as number,
+            duration: Number(item.duration.replace(/\D/g, '')),
+            provider: 'flixhq and himovies',
+          }));
+      }
       return {
         data: movieData.data,
-        provider: this.mapMediaId(tmdbdata, flixResults, 'Movie') as IMovieProviderResults,
+        provider: this.mapMediaProviderId(tmdbdata, result, 'Movie') as IMovieProviderResults,
       };
     } catch (error) {
       return { error: error instanceof Error ? error.message : 'Unknown error', data: null, provider: null };

@@ -1,24 +1,28 @@
-import { BaseClass } from '../../models/base-anime.js';
+import { BaseClass } from '../../models/base.js';
 import * as cheerio from 'cheerio';
+
+import { MegaUp } from '../../source-extractors/megaup.js';
 import {
   AKGenres,
   type AKserver,
-  type HIServerInfo,
-  type ISubOrDub,
-  type IAHomeResponse,
-  type IAllAnimeEpisodes,
-  type IAnime,
-  type IAnimeKaiInfoResponse,
-  type IAnimeCategory,
-  type IAnimeInfo,
-  type IAnimePaginated,
-  type IRelatedSeasons,
-  type IResponse,
-  type ISourceBaseResponse,
-  type IVideoSource,
-  type IMetaFormat,
-} from '../../models/types.js';
-import { MegaUp } from '../../source-extractors/megaup.js';
+  type IAKAnime,
+  type IAKEpisodes,
+  type IAKHomeResponse,
+  type IAKInfo,
+  type IAKInfoResponse,
+  type IAKPaginated,
+  type IAKRelatedSeasons,
+  type IAKSlider,
+} from '../../types/anime/animekai.js';
+import type {
+  IAnimeCategory,
+  IResponse,
+  IServerInfo,
+  ISourceBaseResponse,
+  ISubOrDub,
+  IVideoSource,
+} from '../../types/base.js';
+import type { IMetaFormat } from '../../types/meta/meta-anime.js';
 
 /**
  * A class for interacting with the AnimeKai Provider.
@@ -28,7 +32,7 @@ import { MegaUp } from '../../source-extractors/megaup.js';
  */
 class Animekai extends BaseClass {
   constructor(baseUrl: string = 'https://anikai.to') {
-    super();
+    super('animekai');
     this.baseUrl = baseUrl;
     this.megaup = new MegaUp();
     this.headers = {
@@ -55,12 +59,12 @@ class Animekai extends BaseClass {
   /**
    * Scrapes anime data from recently added/upcoming/recently completed sections.
    * @private
-   * @param {cheerio.CheerioAPI} $ - The Cheerio API instance for parsing HTML.
-   * @param {cheerio.SelectorType} selector - CSS selector for the anime elements to scrape.
-   * @returns {IAnime[]} An array of parsed anime objects.
+   * @param  $ - The Cheerio API instance for parsing HTML.
+   * @param  selector - CSS selector for the anime elements to scrape.
+   * @returns  An array of parsed anime objects.
    */
   private scrapeUpdates($: cheerio.CheerioAPI, selector: cheerio.SelectorType) {
-    const recentSection: IAnime[] = [];
+    const recentSection: IAKAnime[] = [];
 
     $(selector).each((_, element) => {
       recentSection.push({
@@ -82,12 +86,12 @@ class Animekai extends BaseClass {
   /**
    * Scrapes trending anime cards from different time periods (now, daily, weekly, monthly).
    * @private
-   * @param {cheerio.CheerioAPI} $ - The Cheerio API instance for parsing HTML.
-   * @param {cheerio.SelectorType} selector - CSS selector for the trending anime elements.
-   * @returns {IAnime[]} An array of parsed trending anime objects.
+   * @param  $ - The Cheerio API instance for parsing HTML.
+   * @param selector - CSS selector for the trending anime elements.
+   * @returns  An array of parsed trending anime objects.
    */
   private scrapeTrendingCard($: cheerio.CheerioAPI, selector: cheerio.SelectorType) {
-    const trending: IAnime[] = [];
+    const trending: IAKAnime[] = [];
     $(selector).each((_, element) => {
       const style = $(element).attr('style');
       const match = style?.match(/url\((['"]?)(.*?)\1\)/);
@@ -111,14 +115,13 @@ class Animekai extends BaseClass {
 
   /**
    * Parses the homepage HTML to extract curated anime sections including featured, trending, and recently updated content.
-   * @private
    * @param {cheerio.CheerioAPI} $ - The Cheerio API instance for parsing HTML.
-   * @returns {IAHomeResponse<IAnime[] | []>} An object containing various curated anime lists.
+   * @returns  An object containing various curated anime lists.
    */
-  private parseHome($: cheerio.CheerioAPI): IAHomeResponse<IAnime[] | []> {
+  private parseHome($: cheerio.CheerioAPI): IAKHomeResponse<IAKSlider[] | []> {
     const selector: cheerio.SelectorType = 'section#featured div.swiper-wrapper > div.swiper-slide';
 
-    const data: IAnime[] = [];
+    const data: IAKSlider[] = [];
 
     $(selector).each((_, element) => {
       const style = $(element).attr('style');
@@ -158,7 +161,7 @@ class Animekai extends BaseClass {
 
     const recentlyUpdatedSelector: cheerio.SelectorType = 'section#latest-updates div.aitem-wrapper.regular div.aitem';
 
-    const recentlyUpdated: IAnime[] = [];
+    const recentlyUpdated: IAKAnime[] = [];
 
     $(recentlyUpdatedSelector).each((_, element) => {
       const episodeId = $(element).find('a.poster').attr('href')?.split('/').at(2);
@@ -203,10 +206,10 @@ class Animekai extends BaseClass {
    * @private
    * @param {cheerio.CheerioAPI} $ - The Cheerio API instance for parsing HTML.
    * @param {cheerio.SelectorType} selector - CSS selector for the anime items in the paginated results.
-   * @returns {IAnimePaginated<IAnime[] | []>} An object containing paginated anime results with metadata.
+   * @returns An object containing paginated anime results with metadata.
    */
-  private parsePaginated($: cheerio.CheerioAPI, selector: cheerio.SelectorType): IAnimePaginated<IAnime[] | []> {
-    const results: IAnime[] = [];
+  private parsePaginated($: cheerio.CheerioAPI, selector: cheerio.SelectorType): IAKPaginated<IAKAnime[] | []> {
+    const results: IAKAnime[] = [];
     $(selector).each((_, element) => {
       results.push({
         id: $(element).find('div.inner > a').attr('href')?.replace('/watch/', '').trim() || null,
@@ -248,10 +251,10 @@ class Animekai extends BaseClass {
    * @private
    * @param {cheerio.CheerioAPI} $ - The Cheerio API instance for parsing HTML.
    * @param {cheerio.SelectorType} selector - CSS selector for the related/recommended anime elements.
-   * @returns {IAnime[]} An array of parsed related or recommended anime objects.
+   * @returns An array of parsed related or recommended anime objects.
    */
   private parseInfoSections($: cheerio.CheerioAPI, selector: cheerio.SelectorType) {
-    const Anime: IAnime[] = [];
+    const Anime: IAKAnime[] = [];
     $(selector).each((_, element) => {
       const style = $(element).attr('style');
       const match = style?.match(/url\((['"]?)(.*?)\1\)/);
@@ -280,14 +283,14 @@ class Animekai extends BaseClass {
    * Parses detailed anime information from the anime watch page.
    * @private
    * @param {cheerio.CheerioAPI} $ - The Cheerio API instance for parsing HTML.
-   * @returns {IAnimeInfo} An object containing parsed anime info, rating data, related seasons, and recommendations.
+   * @returns  An object containing parsed anime info, rating data, related seasons, and recommendations.
    */
   private parseAnimeInfo($: cheerio.CheerioAPI, id: string) {
     const style = $('div.watch-section-bg').attr('style');
     const match = style?.match(/url\((['"]?)(.*?)\1\)/);
     const url = match ? match[2] : null;
 
-    const animeInfo: IAnimeInfo = {
+    const animeInfo: IAKInfo = {
       //
       anilistId: Number($('div#watch-page').attr('data-al-id')) || null,
       malId: Number($('div#watch-page').attr('data-mal-id')) || null,
@@ -333,7 +336,7 @@ class Animekai extends BaseClass {
     };
 
     const seasonSelector: cheerio.SelectorType = 'div.swiper.swiper-seasons div.swiper-slide.aitem';
-    const relatedSeasons: IRelatedSeasons[] = [];
+    const relatedSeasons: IAKRelatedSeasons[] = [];
     $(seasonSelector).each((_, element) => {
       relatedSeasons.push({
         id: $(element).find('div.inner a.poster').attr('href')?.split('/').at(2) || null,
@@ -346,10 +349,10 @@ class Animekai extends BaseClass {
     });
 
     const relatedSelector: cheerio.SelectorType = 'section#related-anime  div.aitem-col a.aitem';
-    const relatedAnime: IAnime[] = this.parseInfoSections($, relatedSelector);
+    const relatedAnime: IAKAnime[] = this.parseInfoSections($, relatedSelector);
 
     const recommedSelector: cheerio.SelectorType = 'section.sidebar-section.hide-bg-mobile  div.aitem-col a';
-    const recommendedAnime: IAnime[] = this.parseInfoSections($, recommedSelector);
+    const recommendedAnime: IAKAnime[] = this.parseInfoSections($, recommedSelector);
 
     return { animeInfo, rateBox, relatedSeasons, recommendedAnime, relatedAnime };
   }
@@ -359,12 +362,12 @@ class Animekai extends BaseClass {
    * @private
    * @param {cheerio.CheerioAPI} $ - The Cheerio API instance for parsing HTML.
    * @param {string} animeId - The unique identifier for the anime.
-   * @returns {IAllAnimeEpisodes[]} An array of parsed episode objects with language availability.
+   * @returns An array of parsed episode objects with language availability.
    */
   private parseEpisodes($: cheerio.CheerioAPI, animeId: string) {
     const selector: cheerio.SelectorType = 'div.eplist ul li';
 
-    const episodes: IAllAnimeEpisodes[] = [];
+    const episodes: IAKEpisodes[] = [];
     $(selector).each((_, element) => {
       const language = $(element).find('a').attr('langs') || null;
       let Dub;
@@ -380,8 +383,8 @@ class Animekai extends BaseClass {
           Number(
             $(element).find('a').attr('slug') || $(element).find('a').attr('num') || $(element).find('a').text().trim(),
           ) || null,
-        hasDub: Dub || null,
-        hasSub: Sub || null,
+        hasDub: Dub ? Dub : false,
+        hasSub: Sub ? Sub : false,
       });
     });
 
@@ -392,13 +395,13 @@ class Animekai extends BaseClass {
    * Parses server information from the episode links AJAX response.
    * @private
    * @param {cheerio.CheerioAPI} $ - The Cheerio API instance for parsing HTML.
-   * @returns {IResponse<HIServerInfo | null>} An object containing parsed server information.
+   * @returns An object containing parsed server information.
    */
-  private parseServers($: cheerio.CheerioAPI): IResponse<HIServerInfo | null> {
+  private parseServers($: cheerio.CheerioAPI): IResponse<IServerInfo | null> {
     const subSelector: cheerio.SelectorType = 'div.server-wrap div.server-items[data-id="sub"] span.server';
     const dubSelector: cheerio.SelectorType = 'div.server-wrap div.server-items[data-id="dub"] span.server';
     const softSubSelector: cheerio.SelectorType = 'div.server-wrap div.server-items[data-id="softsub"] span.server'; /// this will be raw
-    const servers: HIServerInfo = {
+    const servers: IServerInfo = {
       sub: [],
       dub: [],
       raw: [],
@@ -451,13 +454,13 @@ class Animekai extends BaseClass {
   /**
    * Extracts media IDs for a specific audio category from the server information.
    * @private
-   * @param {HIServerInfo} servers - The parsed server information object.
+   * @param {IServerInfo} servers - The parsed server information object.
    * @param {ISubOrDub} category - The audio category to filter servers for ('sub', 'dub', or 'raw').
    * @param  {string}  server - The streaming server to use (optional, defaults to server-1).
    * @returns {string} A valid media ID for the specified category.
    * @throws {Error} If no servers or valid media IDs are found for the category.
    */
-  private findServerIds(servers: HIServerInfo, category: ISubOrDub, server: 'server-1' | 'server-2'): string {
+  private findServerIds(servers: IServerInfo, category: ISubOrDub, server: 'server-1' | 'server-2'): string {
     const availableCategories: string[] = [];
     if (servers.sub?.length > 0) availableCategories.push('sub');
     if (servers.dub?.length > 0) availableCategories.push('dub');
@@ -487,7 +490,7 @@ class Animekai extends BaseClass {
    * Fetches curated lists from the Animekai homepage.
    * @returns Promise resolving to an object with various curated anime lists
    */
-  async fetchHome(): Promise<IAHomeResponse<IAnime[] | []>> {
+  async fetchHome(): Promise<IAKHomeResponse<IAKSlider[] | []>> {
     try {
       const response = await this.client.get(`${this.baseUrl}/home`);
       if (!response.data) {
@@ -520,9 +523,9 @@ class Animekai extends BaseClass {
    * Fetches a list of anime by category.
    * @param { IAnimeCategory} category - The category of anime to fetch (MOVIE, TV, ONA, OVA, SPECIALS).
    * @param {number} [page=1] - The page number for pagination (default: 1).
-   * @returns {Promise<IAnimePaginated<IAnime[] | []>>} - Promise resolving to paginated anime results.
+   * @returns - Promise resolving to paginated anime results.
    */
-  async fetchAnimeCategory(category: IAnimeCategory, page: number = 1): Promise<IAnimePaginated<IAnime[] | []>> {
+  async fetchAnimeCategory(category: IAnimeCategory, page: number = 1): Promise<IAKPaginated<IAKAnime[] | []>> {
     try {
       let endpoint: string;
 
@@ -583,7 +586,7 @@ class Animekai extends BaseClass {
    * @param {number} [page] - The page number for pagination (optional, defaults to 1).
    * @returns  A promise that resolves to an object containing an array of anime results related to the search query.
    */
-  async search(query: string, page: number = 1): Promise<IAnimePaginated<IAnime[] | []>> {
+  async search(query: string, page: number = 1): Promise<IAKPaginated<IAKAnime[] | []>> {
     if (!query.trim()) {
       return {
         hasNextPage: false,
@@ -632,10 +635,10 @@ class Animekai extends BaseClass {
    * Fetches a paginated list of recently added anime.
    * @param {IMetaFormat} category - The format which to fetch anime (optional,  defaults to TV)
    * @param {number} page - Page number for pagination (default: 1)
-   * @returns { Promise<IRepetitiveSections<IAnime[] | []>>} Promise resolving to an object with recently added anime and pagination details
+   * @returns  Promise resolving to an object with recently added anime and pagination details
    */
 
-  async fetchRecentlyAdded(category: IMetaFormat, page: number = 1): Promise<IAnimePaginated<IAnime[] | []>> {
+  async fetchRecentlyAdded(category: IMetaFormat, page: number = 1): Promise<IAKPaginated<IAKAnime[] | []>> {
     let endpoint: string;
 
     switch (category) {
@@ -694,10 +697,10 @@ class Animekai extends BaseClass {
    * Fetches a paginated list of recently added anime.
    * @param {IMetaFormat} category - The format which to fetch anime (optional,  defaults to TV)
    * @param {number} page - Page number for pagination (default: 1)
-   * @returns { Promise<IRepetitiveSections<IAnime[] | []>>} Promise resolving to an object with top airing anime and pagination details
+   * @returns  Promise resolving to an object with top airing anime and pagination details
    */
 
-  async fetchTopAiring(category: IMetaFormat = 'TV', page: number = 1): Promise<IAnimePaginated<IAnime[] | []>> {
+  async fetchTopAiring(category: IMetaFormat = 'TV', page: number = 1): Promise<IAKPaginated<IAKAnime[] | []>> {
     try {
       let endpoint: string;
 
@@ -756,10 +759,10 @@ class Animekai extends BaseClass {
    * Fetches a paginated list of recently updated anime.
    * @param {IMetaFormat} category - The format which to fetch anime (optional,  defaults to TV)
    * @param {number} page - Page number for pagination (default: 1)
-   * @returns { Promise<IRepetitiveSections<IAnime[] | []>>} Promise resolving to an object with recently updated anime and pagination details
+   * @returns Promise resolving to an object with recently updated anime and pagination details
    */
 
-  async fetchRecentlyUpdated(category: IMetaFormat = 'TV', page: number = 1): Promise<IAnimePaginated<IAnime[] | []>> {
+  async fetchRecentlyUpdated(category: IMetaFormat = 'TV', page: number = 1): Promise<IAKPaginated<IAKAnime[] | []>> {
     try {
       let endpoint: string;
 
@@ -807,6 +810,7 @@ class Animekai extends BaseClass {
         hasNextPage: false,
         currentPage: 0,
         lastPage: 0,
+        totalResults: 0,
         data: [],
         error: error instanceof Error ? error.message : 'Unknown error occurred',
       };
@@ -817,10 +821,10 @@ class Animekai extends BaseClass {
    * Fetches a paginated list of recently completed anime.
    * @param {IMetaFormat} category - The format which to fetch anime (optional,  defaults to TV)
    * @param {number} page - Page number for pagination (default: 1)
-   * @returns { Promise<IRepetitiveSections<IAnime[] | []>>} Promise resolving to an object with recently completed anime and pagination details
+   * @returns Promise resolving to an object with recently completed anime and pagination details
    */
 
-  async fetchRecentlyCompleted(category: IMetaFormat = 'TV', page: number = 1): Promise<IAnimePaginated<IAnime[] | []>> {
+  async fetchRecentlyCompleted(category: IMetaFormat = 'TV', page: number = 1): Promise<IAKPaginated<IAKAnime[] | []>> {
     try {
       let endpoint: string;
 
@@ -879,10 +883,10 @@ class Animekai extends BaseClass {
    * Fetches a paginated list of genre curated anime.
    * @param {AKGenre} genre - The genre which to fetch anime (required)
    * @param {number} page - Page number for pagination (default: 1)
-   * @returns { Promise<IRepetitiveSections<IAnime[] | []>>} Promise resolving to an object with anime curated by genre and pagination details
+   * @returns  Promise resolving to an object with anime curated by genre and pagination details
    */
 
-  async fetchGenres(genre: string, page: number = 1): Promise<IAnimePaginated<IAnime[] | []>> {
+  async fetchGenres(genre: string, page: number = 1): Promise<IAKPaginated<IAKAnime[] | []>> {
     try {
       const Igenre = this.getMappedValue(genre, AKGenres);
       const response = await this.client.get(`${this.baseUrl}/genres/${Igenre}`, { params: { page: String(page) } });
@@ -917,7 +921,7 @@ class Animekai extends BaseClass {
    * @param {string} animeId - The unique identifier for the anime  (required).
    * @returns  A promise that resolves to an object containing anime details, related seasons provider episodeslists ,recommendations, or an error message.
    */
-  async fetchAnimeInfo(animeId: string): Promise<IAnimeKaiInfoResponse<IAnimeInfo | null>> {
+  async fetchAnimeInfo(animeId: string): Promise<IAKInfoResponse<IAKInfo | null>> {
     if (!animeId.trim()) {
       return {
         error: 'Missing required Params: animeId',
@@ -990,10 +994,10 @@ class Animekai extends BaseClass {
    * Fetches server information for a specific episode using the token-based AJAX endpoint.
    * @private
    * @param {string} episodeId - The unique identifier for the episode containing the token.
-   * @returns {Promise<IResponse<HIServerInfo | null>>} A promise resolving to server information or an error.
+   * @returns {Promise<IResponse<IServerInfo | null>>} A promise resolving to server information or an error.
    * @throws {Error} If the episodeId is missing or has invalid format.
    */
-  private async scrapefetchServers(episodeId: string): Promise<IResponse<HIServerInfo | null>> {
+  private async scrapefetchServers(episodeId: string): Promise<IResponse<IServerInfo | null>> {
     if (!episodeId) {
       throw new Error('Missing required parameter: episodeId');
     }
@@ -1037,7 +1041,7 @@ class Animekai extends BaseClass {
     }
 
     try {
-      const serverInfo = (await this.scrapefetchServers(episodeId)).data as HIServerInfo;
+      const serverInfo = (await this.scrapefetchServers(episodeId)).data as IServerInfo;
       if ('error' in serverInfo) {
         throw new Error((serverInfo.error as Error).message);
       }

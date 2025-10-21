@@ -50,17 +50,6 @@ test('return an object containing anime info', async () => {
   expect(data.data).not.toBeNull();
 });
 
-test('returns an array of  episodes', async () => {
-  const data = await jikan.fetchEpisodes(56784);
-  expect(Array.isArray(data.data)).toBe(true);
-  expect(data.data.length).toBeGreaterThan(0);
-});
-
-test('returns an object containing detailed episode info', async () => {
-  const data = await jikan.fetchEpisodeInfo(58567, 3);
-  expect(data.data).not.toBeNull();
-});
-
 test('returns an object containing provider anime ID with animeinfo for hianime', async () => {
   const data = await jikan.fetchProviderId(52299, 'hianime');
   expect(data.data).not.toBeNull();

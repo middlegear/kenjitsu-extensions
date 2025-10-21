@@ -1,5 +1,6 @@
-import { BaseClass } from '../models/base-anime.js';
-import type { IVideoSource } from '../models/types.js';
+import { BaseClass } from '../models/base.js';
+import type { IVideoSource } from '../types/base.js';
+
 export class MegaUp extends BaseClass {
   private readonly tokenUrl: string = 'https://ilovekai.simplepostrequest.workers.dev/?ilovefeet=';
   private readonly decodeUrlIframe: string = 'https://ilovekai.simplepostrequest.workers.dev/?ilovearmpits=';
@@ -9,7 +10,7 @@ export class MegaUp extends BaseClass {
   private readonly decodeM3u8: string = 'https://enc-dec.app/api/dec-mega';
 
   constructor() {
-    super();
+    super('animekai');
   }
 
   async GenerateToken(token: string) {

@@ -1,11 +1,10 @@
-import { BaseClass } from '../../models/base-anime.js';
+import { BaseClass } from '../../models/base.js';
 import * as cheerio from 'cheerio';
 import {
   HIMovieCountryCode,
   HIMovieGenres,
   HIMoviesCountryID,
   HIMoviesGenreID,
-  type IAnimePaginated,
   type IHomeHIResponse,
   type IMovie,
   type IMovieEpisodes,
@@ -15,12 +14,11 @@ import {
   type IMovieServers,
   type IMovieSlider,
   type IMovieTvBase,
-  type IResponse,
   type ITvShow,
-  type IVideoSource,
-  type IVideoSourceResponse,
-} from '../../models/types.js';
+  type IZPaginated,
+} from '../../types/movies/movie.js';
 import VidCloud from '../../source-extractors/vidcloud.js';
+import type { IResponse, ISourceBaseResponse, IVideoSource } from '../../types/base.js';
 
 /**
  * A scraper and API wrapper for the unofficial FlixHQ website,
@@ -595,7 +593,7 @@ export class FlixHQ extends BaseClass {
    * @returns Promise resolving to paginated media results with error handling
    */
 
-  private async fetchPaginated(path: string, page: number): Promise<IAnimePaginated<IMovieOrTv[] | []>> {
+  private async fetchPaginated(path: string, page: number): Promise<IZPaginated<IMovieOrTv[] | []>> {
     try {
       let url;
 
@@ -670,7 +668,7 @@ export class FlixHQ extends BaseClass {
    * @returns Promise resolving to paginated search results containing matching media items
    */
 
-  async search(query: string, page: number = 1): Promise<IAnimePaginated<IMovieOrTv[] | []>> {
+  async search(query: string, page: number = 1): Promise<IZPaginated<IMovieOrTv[] | []>> {
     if (!query) {
       return {
         hasNextPage: false,
@@ -740,7 +738,7 @@ export class FlixHQ extends BaseClass {
     genre: string = 'all',
     country: string = 'all',
     page: number = 1,
-  ): Promise<IAnimePaginated<IMovieOrTv[] | []>> {
+  ): Promise<IZPaginated<IMovieOrTv[] | []>> {
     const genreIdValue = this.getMappedValue(genre, HIMoviesGenreID);
     const countryIdValue = this.getMappedValue(country, HIMoviesCountryID);
     const url = `${type}&quality=${quality}&release_year=all&genre=${genreIdValue}&country=${countryIdValue}`;
@@ -797,42 +795,42 @@ export class FlixHQ extends BaseClass {
    * @param page - Page number for pagination (optional, defaults to 1)
    * @returns Promise resolving to paginated list of popular movies sorted by popularity
    */
-  async fetchPopularMovies(page: number = 1): Promise<IAnimePaginated<IMovieOrTv[] | []>> {
+  async fetchPopularMovies(page: number = 1): Promise<IZPaginated<IMovieOrTv[] | []>> {
     return await this.fetchPaginated('movie', page);
   }
 
   /**
    * Fetches a paginated list of the most popular TV shows.
    * @param {number} [page=1] - Page number for pagination (default: 1).
-   * @returns {Promise<IAnimePaginated<IMovieOrTv[] | []>>} Paginated popular TV shows
+   * @returns  Paginated popular TV shows
    */
-  async fetchPopularTv(page: number = 1): Promise<IAnimePaginated<IMovieOrTv[] | []>> {
+  async fetchPopularTv(page: number = 1): Promise<IZPaginated<IMovieOrTv[] | []>> {
     return await this.fetchPaginated('tv-show', page);
   }
 
   /**
    * Fetches a paginated list of top rated movies.
    * @param {number} [page=1] - Page number for pagination (default: 1).
-   * @returns {Promise<IAnimePaginated<IMovieOrTv[] | []>>} Paginated top-rated movies
+   * @returns Paginated top-rated movies
    */
-  async fetchTopMovies(page: number = 1): Promise<IAnimePaginated<IMovieOrTv[] | []>> {
+  async fetchTopMovies(page: number = 1): Promise<IZPaginated<IMovieOrTv[] | []>> {
     return await this.fetchPaginated('top-imdb?type=movie', page);
   }
 
   /**
    * Fetches a paginated list of top rated TV shows.
    * @param {number} [page=1] - Page number for pagination (default: 1).
-   * @returns {Promise<IAnimePaginated<IMovieOrTv[] | []>>} Paginated top-rated TV shows
+   * @returns Paginated top-rated TV shows
    */
-  async fetchTopTv(page: number = 1): Promise<IAnimePaginated<IMovieOrTv[] | []>> {
+  async fetchTopTv(page: number = 1): Promise<IZPaginated<IMovieOrTv[] | []>> {
     return await this.fetchPaginated('top-imdb?type=tv', page);
   }
   /**
    * Fetches a paginated list of upcoming media to be added.
    * @param {number} [page=1] - Page number for pagination (default: 1).
-   * @returns {Promise<IAnimePaginated<IMovieOrTv[] | []>>} Paginated media
+   * @returns  Paginated media for upcoming
    */
-  async fetchUpcoming(page: number = 1): Promise<IAnimePaginated<IMovieOrTv[] | []>> {
+  async fetchUpcoming(page: number = 1): Promise<IZPaginated<IMovieOrTv[] | []>> {
     return await this.fetchPaginated('coming-soon', page);
   }
 
@@ -840,9 +838,9 @@ export class FlixHQ extends BaseClass {
    * Fetches media by genre.
    * @param {string} genre - The genre to filter by.
    * @param {number} [page=1] - Page number for pagination (default: 1).
-   * @returns {Promise<IAnimePaginated<IMovieOrTv[] | []>>} Paginated media by genre
+   * @returns  Paginated media by genre
    */
-  async fetchGenre(genre: string, page: number = 1): Promise<IAnimePaginated<IMovieOrTv[] | []>> {
+  async fetchGenre(genre: string, page: number = 1): Promise<IZPaginated<IMovieOrTv[] | []>> {
     const value = this.getMappedValue(genre, HIMovieGenres);
 
     return await this.fetchPaginated(`/genre/${value}`, page);
@@ -852,9 +850,9 @@ export class FlixHQ extends BaseClass {
    * Fetches media by country.
    * @param {string} country - The country code to filter by.
    * @param {number} [page=1] - Page number for pagination (default: 1).
-   * @returns {Promise<IAnimePaginated<IMovieOrTv[] | []>>} Paginated media by country
+   * @returns Paginated media by country
    */
-  async fetchByCountry(country: string, page: number = 1): Promise<IAnimePaginated<IMovieOrTv[] | []>> {
+  async fetchByCountry(country: string, page: number = 1): Promise<IZPaginated<IMovieOrTv[] | []>> {
     const value = this.getMappedValue(country, HIMovieCountryCode);
 
     return await this.fetchPaginated(`/country/${value}`, page);
@@ -863,7 +861,7 @@ export class FlixHQ extends BaseClass {
   /**
    * Fetches detailed information about a specific movie or TV show.
    * @param {string} mediaId - The unique identifier for the movie or TV show (required).
-   * @returns { Promise<IMovieInfoResponse<IMovieInfo | null>>} A promise that resolves to an object containing detailed media information, recommendations, including episodes for TV shows.
+   * @returns A promise that resolves to an object containing detailed media information, recommendations, including episodes for TV shows.
    */
   async fetchMediaInfo(mediaId: string): Promise<IMovieInfoResponse<IMovieInfo | null>> {
     if (!mediaId) {
@@ -994,13 +992,13 @@ export class FlixHQ extends BaseClass {
   /**
    * Fetches streaming sources for a selected media episode from a specified server.
    * @param {string} episodeId - The unique identifier for the episode/movie (required). Found in the episodes array
-   * @param {IMovieStreamingServers} [server] - The server to use (optional, defaults to Megacloud). Note: Upcloud is CORS protected (Error 403). Use a proxy or switch to Megacloud or Akcloud(🤷) .
-   * @returns {Promise<IVideoSourceResponse<IVideoSource | null>>} A promise that resolves to an object containing streaming sources for the media.
+   * @param  [server] - The server to use (optional, defaults to Vidcloud). Note: Upcloud is CORS protected (Error 403). Use a proxy or switch to Vidcloud or Akcloud(🤷) .
+   * @returns  A promise that resolves to an object containing streaming sources for the media.
    */
   async fetchSources(
     episodeId: string,
     server: 'upcloud' | 'vidcloud' | 'akcloud' = 'vidcloud',
-  ): Promise<IVideoSourceResponse<IVideoSource | null>> {
+  ): Promise<ISourceBaseResponse<IVideoSource | null>> {
     if (episodeId.includes('https')) {
       const serverUrl = new URL(episodeId);
 

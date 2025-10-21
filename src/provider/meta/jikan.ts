@@ -1,20 +1,20 @@
-import { Meta } from '../../models/base-meta.js';
+import { BaseAnimeMeta } from '../../models/anime-meta.js';
+
+import type { HiAnimeServers } from '../../types/anime/zoro.js';
+import type { IResponse, ISubOrDub } from '../../types/base.js';
+
 import type {
-  IAnimePaginated,
   IMetaAnime,
-  IResponse,
+  IMetaAnimePaginated,
   IMetaCharacters,
-  JSort,
-  IMetaEpisodes,
-  IMetaProviderIdResponse,
-  IMetaProviderEpisodesResponse,
   Seasons,
-  ISubOrDub,
-  HiAnimeServers,
+  JSort,
   IMetaFormat,
-  IMetaData,
+  IMetaProviderEpisodesResponse,
   IMetaProviderEpisodes,
-} from '../../models/types.js';
+  IMetaProviderIdResponse,
+  IMetaData,
+} from '../../types/meta/meta-anime.js';
 
 /**
  * A class for interacting with the Jikan API (MyAnimeList unofficial API) to search for anime,
@@ -23,12 +23,12 @@ import type {
  *
  *
  */
-export class Jikan extends Meta {
+export class Jikan extends BaseAnimeMeta {
   /** Base URL for the Jikan API (MyAnimeList unofficial API) */
   private readonly baseUrl: string = 'https://api.jikan.moe/v4';
 
   constructor() {
-    super();
+    super('jikan');
   }
 
   /**
@@ -59,7 +59,7 @@ export class Jikan extends Meta {
       }
 
       const year = release ? new Date(release).getFullYear() : null;
-      const titleSlug = titles ? this.createSlug(titles) : null;
+      const titleSlug = titles ? this.createTitleSlug(titles) : null;
 
       let malData: IMetaData | null = null;
 
@@ -77,12 +77,15 @@ export class Jikan extends Meta {
 
       let zoroResults = null;
       if (titleSlug) {
-        zoroResults = await this.searchZoro(titleSlug);
+        const response = await this.hianime.search(titleSlug);
+        if (response && response.data.length > 0) {
+          zoroResults = response.data;
+        }
       }
 
       return {
         data: mal.data,
-        provider: this.mapAnimeId(malData, zoroResults, 'hianime'),
+        provider: this.mapAnimeProviderId(malData, zoroResults, 'hianime'),
       };
     } catch (error) {
       return {
@@ -139,12 +142,15 @@ export class Jikan extends Meta {
       let allAnimeResults = null;
 
       if (titles) {
-        allAnimeResults = await this.searchAllAnime(titles);
+        const response = await this.allanime.search(titles);
+        if (response && response.data.length > 0) {
+          allAnimeResults = response.data;
+        }
       }
 
       return {
         data: mal.data,
-        provider: this.mapAnimeId(malData, allAnimeResults, 'allanime'),
+        provider: this.mapAnimeProviderId(malData, allAnimeResults, 'allanime'),
       };
     } catch (error) {
       return {
@@ -183,7 +189,7 @@ export class Jikan extends Meta {
       }
 
       const year = release ? new Date(release).getFullYear() : null;
-      const titleSlug = titles ? this.createSlug(titles) : null;
+      const titleSlug = titles ? this.createTitleSlug(titles) : null;
 
       let malData: IMetaData | null = null;
 
@@ -201,12 +207,15 @@ export class Jikan extends Meta {
 
       let paheResults = null;
       if (titleSlug) {
-        paheResults = await this.searchPahe(titleSlug);
+        const response = await this.animepahe.search(titleSlug);
+        if (response && response.data.length > 0) {
+          paheResults = response.data;
+        }
       }
 
       return {
         data: mal.data,
-        provider: this.mapAnimeId(malData, paheResults, 'pahe'),
+        provider: this.mapAnimeProviderId(malData, paheResults, 'pahe'),
       };
     } catch (error) {
       return {
@@ -243,7 +252,7 @@ export class Jikan extends Meta {
       }
 
       const [allanimeResult, anizipResult] = await Promise.allSettled([
-        this.fetchAllAnimeEpisodes(initialResponse.provider?.id as string),
+        this.allanime.fetchEpisodes(initialResponse.provider?.id as string),
         this.malAnizip(malId),
       ]);
 
@@ -259,9 +268,9 @@ export class Jikan extends Meta {
       const anizipEpisodes = anizipResult.status === 'fulfilled' ? anizipResult.value.episodes : [];
       const aniZipMap = new Map((anizipEpisodes || []).map(item => [item.episodeAnizipNumber, item]));
 
-      const enrichedEpisodes = allanime.map((episode: any) => {
+      const enrichedEpisodes = allanime.data.map((episode: any) => {
         const aniZipEpisode = aniZipMap.get(episode.episodeNumber);
-        return this.mergeEpisodeData(episode, aniZipEpisode);
+        return this.mergeEpisodeData(episode, aniZipEpisode, 'allanime');
       });
 
       return {
@@ -304,7 +313,7 @@ export class Jikan extends Meta {
       }
 
       const [hianimeResult, anizipResult] = await Promise.allSettled([
-        this.fetchZoroEpisodes(initialResponse.provider?.id as string),
+        this.hianime.fetchEpisodes(initialResponse.provider?.id as string),
         this.malAnizip(malId),
       ]);
 
@@ -320,9 +329,9 @@ export class Jikan extends Meta {
       const anizipEpisodes = anizipResult.status === 'fulfilled' ? anizipResult.value.episodes : [];
       const aniZipMap = new Map((anizipEpisodes || []).map(item => [item.episodeAnizipNumber, item]));
 
-      const enrichedEpisodes = hianime.map((episode: any) => {
+      const enrichedEpisodes = hianime.data.map((episode: any) => {
         const aniZipEpisode = aniZipMap.get(episode.episodeNumber);
-        return this.mergeEpisodeData(episode, aniZipEpisode);
+        return this.mergeEpisodeData(episode, aniZipEpisode, 'hianime');
       });
 
       return {
@@ -365,7 +374,7 @@ export class Jikan extends Meta {
       }
 
       const [paheResult, anizipResult] = await Promise.allSettled([
-        this.fetchPaheEpisodes(initialResponse.provider?.id as string),
+        this.animepahe.fetchEpisodes(initialResponse.provider?.id as string),
         this.malAnizip(malId),
       ]);
 
@@ -379,7 +388,7 @@ export class Jikan extends Meta {
 
       const animepahe = paheResult.value;
       const anizipEpisodes = anizipResult.status === 'fulfilled' ? anizipResult.value.episodes : [];
-      const paheNumbers = animepahe.map((e: any) => Number(e.episodeNumber));
+      const paheNumbers = animepahe.data.map((e: any) => Number(e.episodeNumber));
 
       let enrichedEpisodes;
       if (anizipEpisodes) {
@@ -391,10 +400,10 @@ export class Jikan extends Meta {
           anizipEpisodes.map((item: { episodeAnizipNumber: any }) => [Number(item.episodeAnizipNumber), item]),
         );
 
-        enrichedEpisodes = animepahe.map((episode: any) => {
+        enrichedEpisodes = animepahe.data.map((episode: any) => {
           const matchKey = Number(episode.episodeNumber) - offset;
           const aniZipEpisode = aniZipMap.get(matchKey) || null;
-          return this.mergeEpisodeData(episode, aniZipEpisode);
+          return this.mergeEpisodeData(episode, aniZipEpisode, 'animepahe');
         });
       }
       return {
@@ -418,12 +427,11 @@ export class Jikan extends Meta {
    * @param perPage - The number of results per page (optional, defaults to 20, maximum 25)
    * @returns Promise that resolves to paginated search results containing anime data
    */
-  async search(query: string, page: number = 1, perPage: number = 20): Promise<IAnimePaginated<IMetaAnime[] | []>> {
+  async search(query: string, page: number = 1, perPage: number = 20): Promise<IMetaAnimePaginated<IMetaAnime[] | []>> {
     if (!query) {
       return {
         hasNextPage: false,
         lastPage: 0,
-        totalResults: 0,
         currentPage: 0,
         perPage: 0,
         data: [],
@@ -444,7 +452,6 @@ export class Jikan extends Meta {
         return {
           hasNextPage: false,
           currentPage: 0,
-          totalResults: 0,
           lastPage: 0,
           perPage: 0,
           data: [],
@@ -456,7 +463,6 @@ export class Jikan extends Meta {
         hasNextPage: response.data.pagination.has_next_page,
         lastPage: response.data.pagination.last_visible_page,
         currentPage: page,
-        total: response.data.pagination.items.total,
         perPage: response.data.pagination.items.per_page,
       };
 
@@ -514,7 +520,6 @@ export class Jikan extends Meta {
       return {
         hasNextPage: pagination.hasNextPage,
         currentPage: pagination.currentPage,
-        totalResults: pagination.total,
         lastPage: pagination.lastPage,
         perPage: pagination.perPage,
         data: search as IMetaAnime[],
@@ -522,7 +527,6 @@ export class Jikan extends Meta {
     } catch (error) {
       return {
         hasNextPage: false,
-        totalResults: 0,
         currentPage: 0,
         lastPage: 0,
         perPage: 0,
@@ -684,12 +688,11 @@ export class Jikan extends Meta {
     page: number = 1,
     perPage: number = 20,
     format: IMetaFormat = 'TV',
-  ): Promise<IAnimePaginated<IMetaAnime[] | []>> {
+  ): Promise<IMetaAnimePaginated<IMetaAnime[] | []>> {
     if (!format) {
       return {
         hasNextPage: false,
         currentPage: 0,
-        totalResults: 0,
         lastPage: 0,
         perPage: 0,
         data: [],
@@ -711,7 +714,6 @@ export class Jikan extends Meta {
         return {
           hasNextPage: false,
           currentPage: 0,
-          totalResults: 0,
           lastPage: 0,
           perPage: 0,
           data: [],
@@ -724,7 +726,6 @@ export class Jikan extends Meta {
         hasNextPage: res.pagination.has_next_page,
         lastPage: res.pagination.last_visible_page,
         currentPage: page,
-        total: res.pagination.items.total,
         perPage: res.pagination.items.per_page,
       };
 
@@ -781,7 +782,6 @@ export class Jikan extends Meta {
       return {
         hasNextPage: pagination.hasNextPage,
         currentPage: pagination.currentPage,
-        totalResults: pagination.total,
         lastPage: pagination.lastPage,
         perPage: pagination.perPage,
         data: currentSeason,
@@ -790,7 +790,6 @@ export class Jikan extends Meta {
       return {
         hasNextPage: false,
         currentPage: 0,
-        totalResults: 0,
         lastPage: 0,
         perPage: 0,
         data: [],
@@ -811,12 +810,11 @@ export class Jikan extends Meta {
     page: number = 1,
     perPage: number = 20,
     format: IMetaFormat = 'TV',
-  ): Promise<IAnimePaginated<IMetaAnime[] | []>> {
+  ): Promise<IMetaAnimePaginated<IMetaAnime[] | []>> {
     if (!format) {
       return {
         hasNextPage: false,
         currentPage: 0,
-        totalResults: 0,
         lastPage: 0,
         perPage: 0,
         data: [],
@@ -838,7 +836,6 @@ export class Jikan extends Meta {
         return {
           hasNextPage: false,
           currentPage: 0,
-          totalResults: 0,
           lastPage: 0,
           perPage: 0,
           data: [],
@@ -909,7 +906,6 @@ export class Jikan extends Meta {
       return {
         hasNextPage: pagination.hasNextPage,
         currentPage: pagination.currentPage,
-        totalResults: pagination.total,
         lastPage: pagination.lastPage,
         perPage: pagination.perPage,
         data: NextSeason as IMetaAnime[],
@@ -918,7 +914,6 @@ export class Jikan extends Meta {
       return {
         hasNextPage: false,
         currentPage: 0,
-        totalResults: 0,
         lastPage: 0,
         perPage: 0,
         data: [],
@@ -943,12 +938,11 @@ export class Jikan extends Meta {
     format: IMetaFormat = 'TV',
     page: number = 1,
     perPage: number = 20,
-  ): Promise<IAnimePaginated<IMetaAnime[] | []>> {
+  ): Promise<IMetaAnimePaginated<IMetaAnime[] | []>> {
     if (!year || !season) {
       return {
         hasNextPage: false,
         currentPage: 0,
-        totalResults: 0,
         lastPage: 0,
         perPage: 0,
         data: [],
@@ -970,7 +964,6 @@ export class Jikan extends Meta {
         return {
           hasNextPage: false,
           currentPage: 0,
-          totalResults: 0,
           lastPage: 0,
           perPage: 0,
           data: [],
@@ -983,7 +976,6 @@ export class Jikan extends Meta {
         hasNextPage: res.pagination.has_next_page,
         lastPage: res.pagination.last_visible_page,
         currentPage: page,
-        total: res.pagination.items.total,
         perPage: res.pagination.items.per_page,
       };
 
@@ -1042,7 +1034,6 @@ export class Jikan extends Meta {
       return {
         hasNextPage: pagination.hasNextPage,
         currentPage: pagination.currentPage,
-        totalResults: pagination.total,
         lastPage: pagination.lastPage,
         perPage: pagination.perPage,
         data: Season as IMetaAnime[],
@@ -1051,7 +1042,6 @@ export class Jikan extends Meta {
       return {
         hasNextPage: false,
         currentPage: 0,
-        totalResults: 0,
         lastPage: 0,
         perPage: 0,
         data: [],
@@ -1067,7 +1057,7 @@ export class Jikan extends Meta {
    * @param perPage - The number of results per page (optional, defaults to 20, maximum 25)
    * @returns Promise that resolves to paginated list of upcoming anime resources
    */
-  async fetchTopUpcoming(page: number = 1, perPage: number = 20): Promise<IAnimePaginated<IMetaAnime[] | []>> {
+  async fetchTopUpcoming(page: number = 1, perPage: number = 20): Promise<IMetaAnimePaginated<IMetaAnime[] | []>> {
     try {
       const response = await this.client.get(`${this.baseUrl}/top/anime`, {
         params: {
@@ -1082,7 +1072,6 @@ export class Jikan extends Meta {
         return {
           hasNextPage: false,
           currentPage: 0,
-          totalResults: 0,
           lastPage: 0,
           perPage: 0,
           data: [],
@@ -1155,7 +1144,6 @@ export class Jikan extends Meta {
       return {
         hasNextPage: pagination.hasNextPage,
         currentPage: pagination.currentPage,
-        totalResults: pagination.total,
         lastPage: pagination.lastPage,
         perPage: pagination.perPage,
         data: topAnime as IMetaAnime[],
@@ -1164,7 +1152,6 @@ export class Jikan extends Meta {
       return {
         hasNextPage: false,
         currentPage: 0,
-        totalResults: 0,
         lastPage: 0,
         perPage: 0,
         data: [],
@@ -1187,7 +1174,7 @@ export class Jikan extends Meta {
     perPage: number = 20,
     format: IMetaFormat = 'TV',
     sort: JSort = 'rating',
-  ): Promise<IAnimePaginated<IMetaAnime[] | []>> {
+  ): Promise<IMetaAnimePaginated<IMetaAnime[] | []>> {
     try {
       const params: Record<string, string> = {
         type: format.toLowerCase(),
@@ -1206,7 +1193,6 @@ export class Jikan extends Meta {
         return {
           hasNextPage: false,
           currentPage: 0,
-          totalResults: 0,
           lastPage: 0,
           perPage: 0,
           data: [],
@@ -1278,7 +1264,6 @@ export class Jikan extends Meta {
       return {
         hasNextPage: pagination.hasNextPage,
         currentPage: pagination.currentPage,
-        totalResults: pagination.total,
         lastPage: pagination.lastPage,
         perPage: pagination.perPage,
         data: topAnime as IMetaAnime[],
@@ -1287,7 +1272,6 @@ export class Jikan extends Meta {
       return {
         hasNextPage: false,
         currentPage: 0,
-        totalResults: 0,
         lastPage: 0,
         perPage: 0,
         data: [],
@@ -1310,7 +1294,7 @@ export class Jikan extends Meta {
     perPage: number = 20,
     format: IMetaFormat = 'TV',
     sort: JSort = 'airing',
-  ): Promise<IAnimePaginated<IMetaAnime[] | []>> {
+  ): Promise<IMetaAnimePaginated<IMetaAnime[] | []>> {
     return this.fetchTopAnime(page, perPage, format, sort);
   }
 
@@ -1328,7 +1312,7 @@ export class Jikan extends Meta {
     sort: JSort,
     page: number,
     perPage: number,
-  ): Promise<IAnimePaginated<IMetaAnime[] | []>> {
+  ): Promise<IMetaAnimePaginated<IMetaAnime[] | []>> {
     return this.fetchTopAnime(page, perPage, format, sort);
   }
 
@@ -1346,7 +1330,7 @@ export class Jikan extends Meta {
     perPage: number = 20,
     format: IMetaFormat = 'TV',
     sort: JSort = 'bypopularity',
-  ): Promise<IAnimePaginated<IMetaAnime[] | []>> {
+  ): Promise<IMetaAnimePaginated<IMetaAnime[] | []>> {
     return this.fetchTopAnime(page, perPage, format, sort);
   }
 
@@ -1364,129 +1348,8 @@ export class Jikan extends Meta {
     perPage: number = 20,
     format: IMetaFormat = 'MOVIE',
     sort: JSort = 'bypopularity',
-  ): Promise<IAnimePaginated<IMetaAnime[] | []>> {
+  ): Promise<IMetaAnimePaginated<IMetaAnime[] | []>> {
     return this.fetchTopAnime(page, perPage, format, sort);
-  }
-
-  /**
-   * Fetches the episode list for a given anime directly from MyAnimeList (MAL).
-   *
-   * @param malId - The unique MyAnimeList (MAL) ID for the anime (required)
-   * @param page - The page number for pagination (optional, defaults to 1)
-   * @returns Promise that resolves to paginated list of anime episodes
-   */
-  async fetchEpisodes(malId: number, page: number = 1): Promise<IAnimePaginated<IMetaEpisodes[] | []>> {
-    if (!malId) {
-      return {
-        error: 'Missing required parameter : Malid!',
-        data: [],
-        hasNextPage: false,
-        currentPage: 0,
-        lastPage: 0,
-      };
-    }
-
-    try {
-      const response = await this.client.get(`${this.baseUrl}/anime/${malId}/episodes`, {
-        params: {
-          page: String(page),
-        },
-      });
-
-      if (!response.data) {
-        return {
-          hasNextPage: false,
-          currentPage: 0,
-          lastPage: 0,
-          data: [],
-          error: response.statusText || 'Server returned an empty response',
-        };
-      }
-
-      const pagination = {
-        hasNextPage: response.data.pagination.has_next_page,
-        lastPage: response.data.pagination.last_visible_page,
-        currentPage: page,
-      };
-
-      const data: IMetaEpisodes[] = response.data.data.map((item: any) => ({
-        number: item.mal_id,
-        url: item.url,
-        title: {
-          english: item.title,
-          romaji: item.title_romanji,
-          japanese: item.title_japanese,
-        },
-        filler: item.filler,
-        recap: item.recap,
-        score: item.score,
-      }));
-
-      return {
-        hasNextPage: pagination.hasNextPage,
-        currentPage: pagination.currentPage,
-        lastPage: pagination.lastPage,
-        data: data as IMetaEpisodes[],
-      };
-    } catch (error) {
-      return {
-        hasNextPage: false,
-        currentPage: 0,
-        lastPage: 0,
-        data: [],
-        error: error instanceof Error ? error.message : 'Unknown err ',
-      };
-    }
-  }
-
-  /**
-   * Fetches detailed information about a specific episode from MyAnimeList (MAL).
-   *
-   * @param malId - The unique MyAnimeList (MAL) ID for the anime (required)
-   * @param episodeNumber - The specific episode number (required)
-   * @returns Promise that resolves to detailed episode information
-   */
-  async fetchEpisodeInfo(malId: number, episodeNumber: number): Promise<IResponse<IMetaEpisodes | null>> {
-    if (!malId && !episodeNumber) {
-      return {
-        error: 'Missing required parameter : Malid! || episodeNumber',
-        data: null,
-      };
-    }
-
-    try {
-      const response = await this.client.get(`${this.baseUrl}/anime/${malId}/episodes/${episodeNumber}`);
-
-      if (!response.data) {
-        return {
-          error: response.statusText || 'Server returned an empty response',
-          data: null,
-        };
-      }
-
-      const data: IMetaEpisodes = {
-        number: response.data.data.mal_id,
-        url: response.data.data.url,
-        title: {
-          english: response.data.data.title,
-          romaji: response.data.data.title_romanji,
-          japanese: response.data.data.title_japanese,
-        },
-        duration: Number(response.data.data.duration) / 60 || null,
-        filler: response.data.data.filler,
-        recap: response.data.data.recap,
-        synopsis: response.data.data.synopsis,
-      };
-
-      return {
-        data: data,
-      };
-    } catch (error) {
-      return {
-        error: error instanceof Error ? error.message : 'Unknown err ',
-        data: null,
-      };
-    }
   }
 
   /**

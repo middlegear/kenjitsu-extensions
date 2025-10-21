@@ -14,6 +14,7 @@
     "test-anilist": "vitest anilist.test.ts  --config vitest.config.ts",
     "test-hianime": "vitest hianime.test.ts  --config vitest.config.ts",
     "test-kaido": "vitest kaido.test.ts  --config vitest.config.ts",
+    "test-anizone": "vitest anizone.test.ts   --config vitest.config.ts",
     "test-flixhq": "vitest flixhq.test.ts --config vitest.config.ts",
     "test-tmdb": "vitest tmdb.test.ts --config vitest.config.ts",
     "test-himovies": "vitest himovies.test.ts --config vitest.config.ts",

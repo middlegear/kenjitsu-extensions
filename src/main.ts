@@ -8,23 +8,11 @@ import { Animepahe } from './provider/anime/animepahe.js';
 import { HiMovies } from './provider/movies/himovies.js';
 import { Kaido } from './provider/anime/kaido.js';
 import { Anizone } from './provider/anime/anizone.js';
-import {
-  type IMovieCountry,
-  type IMovieGenre,
-  type KaiGenres,
-  type HIGenre,
-  type IMetaFormat,
-  type Seasons,
-  type IAnimeCategory,
-  type IAnime,
-  type IMetaAnime,
-  type IMetaMovie,
-  type IAnimeInfo,
-  type IVideoSource,
-  type IMetaMovieInfo,
-  type IMovieOrTv,
-  type ISubOrDub,
-} from './models/types.js';
+
+import type { IMovieCountry, IMovieGenre } from './types/movies/movie.js';
+import type { HIGenre } from './types/anime/zoro.js';
+import type { IMetaFormat, Seasons } from './types/meta/meta-anime.js';
+import type { IAnimeCategory } from './types/base.js';
 
 export {
   Anilist,
@@ -39,19 +27,11 @@ export {
   FlixHQ,
   type IMovieCountry,
   type IMovieGenre,
-  type KaiGenres,
   type HIGenre,
   type IMetaFormat,
   type Seasons,
   type IAnimeCategory,
-  type IAnime,
-  type IMetaAnime,
-  type IMetaMovie,
-  type IAnimeInfo,
-  type IVideoSource,
-  type IMetaMovieInfo,
-  type IMovieOrTv,
-  type ISubOrDub,
 };
-// const data = await new Anizone().fetchInfo('bleach-sennen-kessen-hen-soukoku-tan-gwna8xmk');
-// console.log(data);
+
+const data = await new Anizone().fetchSources('bleach-sennen-kessen-hen-soukoku-tan-gwna8xmk-episode-12');
+console.log(data);

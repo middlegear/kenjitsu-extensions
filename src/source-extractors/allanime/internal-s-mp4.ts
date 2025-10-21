@@ -1,5 +1,5 @@
-import { BaseClass } from '../../models/base-anime.js';
-import type { IVideoSource } from '../../models/types.js';
+import { BaseClass } from '../../models/base.js';
+import type { IVideoSource } from '../../types/base.js';
 
 class InternalSMP4 extends BaseClass {
   async extract(videoUrl: URL): Promise<IVideoSource | null> {

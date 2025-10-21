@@ -1,5 +1,6 @@
 import { FetchClient } from '../config/client.js';
-import type { IVideoSource } from '../models/types.js';
+import type { IVideoSource } from '../types/base.js';
+
 /**
  * Class used to extract sources from mp4 upload
  * expects an embed url which yields to html containing  streaming sources and download url if present

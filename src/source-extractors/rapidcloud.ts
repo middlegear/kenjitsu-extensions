@@ -1,6 +1,6 @@
 /// used by kaido.to
 import { FetchClient } from '../config/client.js';
-import type { IVideoSource } from '../models/types.js';
+import type { IVideoSource } from '../types/base.js';
 
 const client = new FetchClient();
 

@@ -1,5 +1,5 @@
-import type { IVideoSource } from '../../main.js';
-import { BaseClass } from '../../models/base-anime.js';
+import { BaseClass } from '../../models/base.js';
+import type { IVideoSource } from '../../types/base.js';
 
 class InternalAK extends BaseClass {
   async extract(videoUrl: URL): Promise<IVideoSource | null> {

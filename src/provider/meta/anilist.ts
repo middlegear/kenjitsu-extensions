@@ -1,21 +1,20 @@
-import { Meta } from '../../models/base-meta.js';
+import { BaseAnimeMeta } from '../../models/anime-meta.js';
+import type { HiAnimeServers } from '../../types/anime/zoro.js';
+import type { IBasePaginated, IResponse, ISubOrDub } from '../../types/base.js';
 import type {
-  HiAnimeServers,
-  ISubOrDub,
   IAnilistCharacters,
-  IAnimePaginated,
   IMetaAnime,
-  IMetaProviderEpisodesResponse,
-  IMetaProviderIdResponse,
-  IRelatedAnilistData,
-  IResponse,
-  Seasons,
+  IMetaAnimePaginated,
   IMetaFormat,
-  IMetaData,
+  IRelatedAnilistData,
+  Seasons,
   MediaSchedule,
   AiringSchedule,
   IMetaProviderEpisodes,
-} from '../../models/types.js';
+  IMetaProviderEpisodesResponse,
+  IMetaProviderIdResponse,
+  IMetaData,
+} from '../../types/meta/meta-anime.js';
 import {
   airingSchedule,
   characterQuery,
@@ -36,11 +35,11 @@ import {
  *
  *
  */
-export class Anilist extends Meta {
+export class Anilist extends BaseAnimeMeta {
   private readonly baseUrl: string = 'https://graphql.anilist.co';
 
   constructor() {
-    super();
+    super('anilist');
   }
 
   /**
@@ -71,7 +70,7 @@ export class Anilist extends Meta {
       }
 
       const year = release ? new Date(release).getFullYear() : null;
-      const titleSlug = titles ? this.createSlug(titles) : null;
+      const titleSlug = titles ? this.createTitleSlug(titles) : null;
 
       let anilistData: IMetaData | null = null;
 
@@ -89,12 +88,15 @@ export class Anilist extends Meta {
 
       let zoroResults = null;
       if (titleSlug) {
-        zoroResults = await this.searchZoro(titleSlug);
+        const response = await this.hianime.search(titleSlug);
+        if (response && response.data && response.data.length > 0) {
+          zoroResults = response.data;
+        }
       }
 
       return {
         data: anilist.data,
-        provider: this.mapAnimeId(anilistData, zoroResults, 'hianime'),
+        provider: this.mapAnimeProviderId(anilistData, zoroResults, 'hianime'),
       };
     } catch (error) {
       return {
@@ -105,6 +107,76 @@ export class Anilist extends Meta {
     }
   }
 
+  /**
+   * Maps Anilist anime data to HiAnime (Zoro) provider ID.
+   *
+   * @private
+   * @param anilistId - The Anilist ID of the anime
+   * @returns Promise resolving to provider mapping data
+   */
+  private async fetchAnizoneProviderId(anilistId: number): Promise<IMetaProviderIdResponse<IMetaAnime | null>> {
+    if (!anilistId) {
+      return {
+        error: 'Invalid or missing required parameter: anilistId!',
+        data: null,
+        provider: null,
+      };
+    }
+
+    try {
+      const response = await this.anilistAnizip(anilistId);
+
+      const anilist = await this.fetchInfo(anilistId);
+
+      const titles =
+        response.titles?.japanese ||
+        response.titles?.simplifiedChinese ||
+        response.titles?.romanizedJapanese ||
+        response.titles?.traditionalChinese;
+
+      let release: string | null = null;
+
+      if (anilist.data) {
+        release = anilist.data.releaseDate;
+      }
+
+      const year = release ? new Date(release).getFullYear() : null;
+
+      let anilistData: IMetaData | null = null;
+
+      if (anilist.data) {
+        anilistData = {
+          english: anilist.data.title.english,
+          romaji: anilist.data.title.romaji,
+          native: anilist.data.title.native,
+          type: anilist.data.format,
+          episodes: anilist.data.episodes,
+          season: anilist.data.season,
+          year: year as number,
+        };
+      }
+
+      let searchResults = null;
+      if (titles) {
+        const results = await this.anizone.search(titles);
+
+        if (results && results.data.length > 0) {
+          searchResults = results.data;
+        }
+      }
+
+      return {
+        data: anilist.data,
+        provider: this.mapAnimeProviderId(anilistData, searchResults, 'anizone'),
+      };
+    } catch (error) {
+      return {
+        error: error instanceof Error ? error.message : 'Unknown error occurred',
+        data: null,
+        provider: null,
+      };
+    }
+  }
   /**
    * Maps Anilist anime data to AllAnime provider ID.
    *
@@ -150,12 +222,15 @@ export class Anilist extends Meta {
 
       let allanimeResult = null;
       if (titles) {
-        allanimeResult = await this.searchAllAnime(titles);
+        const response = await this.allanime.search(titles);
+        if (response && response.data.length > 0) {
+          allanimeResult = response.data;
+        }
       }
 
       return {
         data: anilist.data,
-        provider: this.mapAnimeId(anilistData, allanimeResult, 'allanime'),
+        provider: this.mapAnimeProviderId(anilistData, allanimeResult, 'allanime'),
       };
     } catch (error) {
       return {
@@ -194,7 +269,7 @@ export class Anilist extends Meta {
       }
 
       const year = release ? new Date(release).getFullYear() : null;
-      const titleSlug = titles ? this.createSlug(titles) : null;
+      const titleSlug = titles ? this.createTitleSlug(titles) : null;
 
       let anilistData: IMetaData | null = null;
 
@@ -212,12 +287,15 @@ export class Anilist extends Meta {
 
       let paheResult = null;
       if (titleSlug) {
-        paheResult = await this.searchPahe(titleSlug);
+        const response = await this.animepahe.search(titleSlug);
+        if (response && response.data.length > 0) {
+          paheResult = response.data;
+        }
       }
 
       return {
         data: anilist.data,
-        provider: this.mapAnimeId(anilistData, paheResult, 'pahe'),
+        provider: this.mapAnimeProviderId(anilistData, paheResult, 'pahe'),
       };
     } catch (error) {
       return {
@@ -256,7 +334,7 @@ export class Anilist extends Meta {
       }
 
       const [allanimeResult, anizipResult] = await Promise.allSettled([
-        this.fetchAllAnimeEpisodes(initialResponse.provider?.id as string),
+        this.allanime.fetchEpisodes(initialResponse.provider?.id as string),
         this.anilistAnizip(anilistId),
       ]);
 
@@ -272,9 +350,10 @@ export class Anilist extends Meta {
       const anizipEpisodes = anizipResult.status === 'fulfilled' ? anizipResult.value.episodes : [];
       const aniZipMap = new Map((anizipEpisodes || []).map(item => [item.episodeAnizipNumber, item]));
 
-      const enrichedEpisodes = allanime.map((episode: any) => {
+      const enrichedEpisodes = allanime.data.map((episode: any) => {
         const aniZipEpisode = aniZipMap.get(episode.episodeNumber);
-        return this.mergeEpisodeData(episode, aniZipEpisode);
+
+        return this.mergeEpisodeData(episode, aniZipEpisode, 'allanime');
       });
 
       return {
@@ -318,7 +397,7 @@ export class Anilist extends Meta {
       }
 
       const [hianimeResult, anizipResult] = await Promise.allSettled([
-        this.fetchZoroEpisodes(initialResponse.provider?.id as string),
+        this.hianime.fetchEpisodes(initialResponse.provider?.id as string),
         this.anilistAnizip(anilistId),
       ]);
 
@@ -334,9 +413,9 @@ export class Anilist extends Meta {
       const anizipEpisodes = anizipResult.status === 'fulfilled' ? anizipResult.value.episodes : [];
       const aniZipMap = new Map((anizipEpisodes || []).map(item => [item.episodeAnizipNumber, item]));
 
-      const enrichedEpisodes = hianime.map((episode: any) => {
+      const enrichedEpisodes = hianime.data.map((episode: any) => {
         const aniZipEpisode = aniZipMap.get(episode.episodeNumber);
-        return this.mergeEpisodeData(episode, aniZipEpisode);
+        return this.mergeEpisodeData(episode, aniZipEpisode, 'hianime');
       });
 
       return {
@@ -380,7 +459,7 @@ export class Anilist extends Meta {
       }
 
       const [paheResult, anizipResult] = await Promise.allSettled([
-        this.fetchPaheEpisodes(initialResponse.provider?.id as string),
+        this.animepahe.fetchEpisodes(initialResponse.provider?.id as string),
         this.anilistAnizip(anilistId),
       ]);
 
@@ -394,7 +473,7 @@ export class Anilist extends Meta {
 
       const animepahe = paheResult.value;
       const anizipEpisodes = anizipResult.status === 'fulfilled' ? anizipResult.value.episodes : [];
-      const paheNumbers = animepahe.map((e: any) => Number(e.episodeNumber));
+      const paheNumbers = animepahe.data.map((e: any) => Number(e.episodeNumber));
 
       let enrichedEpisodes;
       if (anizipEpisodes) {
@@ -406,10 +485,10 @@ export class Anilist extends Meta {
           anizipEpisodes.map((item: { episodeAnizipNumber: any }) => [Number(item.episodeAnizipNumber), item]),
         );
 
-        enrichedEpisodes = animepahe.map((episode: any) => {
+        enrichedEpisodes = animepahe.data.map((episode: any) => {
           const matchKey = Number(episode.episodeNumber) - offset;
           const aniZipEpisode = aniZipMap.get(matchKey) || null;
-          return this.mergeEpisodeData(episode, aniZipEpisode);
+          return this.mergeEpisodeData(episode, aniZipEpisode, 'animepahe');
         });
       }
       return {
@@ -433,7 +512,7 @@ export class Anilist extends Meta {
    * @param perPage - The number of results per page (optional, defaults to 20)
    * @returns Promise that resolves to paginated search results containing anime data
    */
-  async search(search: string, page: number = 1, perPage: number = 20): Promise<IAnimePaginated<IMetaAnime[] | []>> {
+  async search(search: string, page: number = 1, perPage: number = 20): Promise<IMetaAnimePaginated<IMetaAnime[] | []>> {
     if (!search) {
       return {
         hasNextPage: false,
@@ -644,7 +723,7 @@ export class Anilist extends Meta {
     perPage: number = 20,
     sort: 'SCORE_DESC' | 'POPULARITY_DESC' = 'POPULARITY_DESC',
     status: 'NOT_YET_RELEASED' | 'RELEASING' = 'NOT_YET_RELEASED',
-  ): Promise<IAnimePaginated<IMetaAnime[] | []>> {
+  ): Promise<IMetaAnimePaginated<IMetaAnime[] | []>> {
     try {
       const variables = { page, perPage, type: 'ANIME', status, isAdult: false, sort };
       const response = await this.client.post(this.baseUrl, {
@@ -731,7 +810,7 @@ export class Anilist extends Meta {
     perPage: number = 20,
     sort: 'SCORE_DESC' | 'POPULARITY_DESC' = 'POPULARITY_DESC',
     status: 'NOT_YET_RELEASED' | 'RELEASING' = 'RELEASING',
-  ): Promise<IAnimePaginated<IMetaAnime[] | []>> {
+  ): Promise<IMetaAnimePaginated<IMetaAnime[] | []>> {
     return this.fetchTopUpcoming(page, perPage, sort, status);
   }
 
@@ -748,7 +827,7 @@ export class Anilist extends Meta {
     perPage: number = 20,
     format: IMetaFormat = 'TV',
     sort: 'SCORE_DESC' | 'POPULARITY_DESC' = 'POPULARITY_DESC',
-  ): Promise<IAnimePaginated<IMetaAnime[] | []>> {
+  ): Promise<IMetaAnimePaginated<IMetaAnime[] | []>> {
     try {
       const variables = { page, perPage, type: 'ANIME', format, isAdult: false, sort };
       const response = await this.client.post(this.baseUrl, {
@@ -849,7 +928,7 @@ export class Anilist extends Meta {
     perPage: number = 20,
     format: IMetaFormat = 'TV',
     sort: 'SCORE_DESC' | 'POPULARITY_DESC' = 'SCORE_DESC',
-  ): Promise<IAnimePaginated<IMetaAnime[] | []>> {
+  ): Promise<IMetaAnimePaginated<IMetaAnime[] | []>> {
     return this.fetchMostPopular(page, perPage, format, sort);
   }
 
@@ -869,7 +948,7 @@ export class Anilist extends Meta {
     page: number = 1,
     perPage: number = 20,
     format: IMetaFormat = 'TV',
-  ): Promise<IAnimePaginated<IMetaAnime[] | []>> {
+  ): Promise<IMetaAnimePaginated<IMetaAnime[] | []>> {
     if (!season || !seasonYear) {
       return {
         hasNextPage: false,
@@ -984,7 +1063,7 @@ export class Anilist extends Meta {
    * @param perPage - The number of results per page (optional, defaults to 20)
    * @returns Promise that resolves to paginated list of trending anime
    */
-  async fetchTrending(page: number = 1, perPage: number = 20): Promise<IAnimePaginated<IMetaAnime[] | []>> {
+  async fetchTrending(page: number = 1, perPage: number = 20): Promise<IMetaAnimePaginated<IMetaAnime[] | []>> {
     const variables = {
       page,
       perPage,
@@ -1295,7 +1374,7 @@ export class Anilist extends Meta {
    * @param {number} page - The page number to fetch (deafault=1).
    * @param {number} [score=60] - The minimum average or mean score for filtering anime (default: 60).If you have bad taste you can lower this
    * **/
-  async fetchAiringSchedule(page: number = 1, score: number = 60): Promise<IAnimePaginated<AiringSchedule[] | []>> {
+  async fetchAiringSchedule(page: number = 1, score: number = 60): Promise<IBasePaginated<AiringSchedule[] | []>> {
     try {
       const variables = {
         page: page,
@@ -1311,8 +1390,6 @@ export class Anilist extends Meta {
         return {
           hasNextPage: false,
           currentPage: 0,
-          lastPage: 0,
-          perPage: 0,
           data: [],
           error: response.statusText || 'Server returned an empty response',
         };
@@ -1390,8 +1467,6 @@ export class Anilist extends Meta {
       return {
         hasNextPage: false,
         currentPage: 0,
-        lastPage: 0,
-        perPage: 0,
         data: [],
         error: error instanceof Error ? error.message : 'Unknown err',
       };
@@ -1407,7 +1482,7 @@ export class Anilist extends Meta {
    */
   async fetchProviderId(
     anilistId: number,
-    provider: 'hianime' | 'allanime' | 'animepahe' = 'hianime',
+    provider: 'hianime' | 'allanime' | 'animepahe' | 'anizone' = 'hianime',
   ): Promise<IMetaProviderIdResponse<IMetaAnime | null>> {
     if (!anilistId) {
       return {
@@ -1439,6 +1514,12 @@ export class Anilist extends Meta {
             throw new Error(animepahe.error);
           }
           return { data: animepahe.data, provider: animepahe.provider };
+        case 'anizone':
+          const anizone = await this.fetchAnizoneProviderId(anilistId);
+          if ('error ' in anizone) {
+            throw new Error(anizone.error);
+          }
+          return { data: anizone.data, provider: anizone.provider };
       }
     } catch (error) {
       return {

@@ -1,4 +1,4 @@
-import { BaseClass } from '../../models/base-anime.js';
+import { BaseClass } from '../../models/base.js';
 
 export class PrimeWire extends BaseClass {
   private baseUrl: string;

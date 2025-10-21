@@ -3,8 +3,14 @@ import { FetchClient } from '../config/client.js';
 export abstract class BaseClass {
   protected readonly client: FetchClient;
 
-  protected constructor() {
-    this.client = new FetchClient();
+  constructor(provider: 'animekai' | 'hianime' = 'hianime') {
+    let delay = null;
+    if (provider === 'animekai') {
+      delay = 200;
+    } else {
+      delay = 100;
+    }
+    this.client = new FetchClient({ delayBetweenRequests: delay });
   }
 
   protected createSlug(text: string): string {
@@ -31,25 +37,4 @@ export abstract class BaseClass {
     }
     return mapping[normalized];
   }
-}
-
-interface AnimeSchedule {
-  malId: number;
-  anilistId: number;
-  bannerImage: string;
-  image: string;
-  title: { romaji: string; english: string | null; native: string | null };
-  format: string;
-  status?: string;
-  popularity?: number;
-  score?: number;
-  genres?: string[];
-  episodes?: number | null;
-  synopsis?: string;
-  season?: string | null;
-  releaseDate: string;
-  endDate: string;
-  nextAiringEpisode: { episode: number; id: number; airingAt: number; timeUntilAiring: number };
-  color?: string;
-  duration?: number | null;
 }

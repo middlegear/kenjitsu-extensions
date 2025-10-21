@@ -1,25 +1,23 @@
 import * as cheerio from 'cheerio';
-import { BaseClass } from '../../models/base-anime.js';
-import type { ISubOrDub, IAnimeCategory, IHIAnimeInfoResponse } from '../../models/types.js';
+import { BaseClass } from '../../models/base.js';
+import type { IAnimeCategory, IResponse, IServerInfo, ISubOrDub, IVideoSource } from '../../types/base.js';
 import {
-  type IAnime,
-  type IAnimePaginated,
-  type ISearchSuggestions,
-  type IResponse,
-  type IAnimeInfo,
-  type ICharacters,
-  type IRelatedSeasons,
-  type IPromotionVIds,
-  type IAnimeInfoResponse,
-  type IBaseAnime,
-  type IHomeResponse,
-  type IRepetitiveSections,
   HIGenres,
-  type IEpisodes,
-  type HIServerInfo,
-  type HISourceResponse,
-  type IVideoSource,
-} from '../../models/types.js';
+  type IZAnime,
+  type IZAnimeInfo,
+  type IZAnimeInfoResponse,
+  type IZBase,
+  type IZCharacters,
+  type IZEpisodes,
+  type IZHomeResponse,
+  type IZPaginated,
+  type IZPaginatedSections,
+  type IZPromotionVIds,
+  type IZRelatedSeasons,
+  type IZSearchSuggestions,
+  type IZSourceResponse,
+  type IZSpotlight,
+} from '../../types/anime/zoro.js';
 import RapidCloud from '../../source-extractors/rapidcloud.js';
 
 /**
@@ -41,8 +39,8 @@ export class Kaido extends BaseClass {
    * @param selector CSS selector for anime items
    * @returns An object containing anime list and pagination details
    */
-  private parsePaginatedResults($: cheerio.CheerioAPI, selector: cheerio.SelectorType): IAnimePaginated<IAnime[] | []> {
-    const anime: IAnime[] = [];
+  private parsePaginatedResults($: cheerio.CheerioAPI, selector: cheerio.SelectorType): IZPaginated<IZAnime[] | []> {
+    const anime: IZAnime[] = [];
     $(selector).each((_, element) => {
       anime.push({
         id:
@@ -52,7 +50,7 @@ export class Kaido extends BaseClass {
         name: $(element).find('.film-detail .film-name .dynamic-name').text().trim() || null,
         romaji: $(element).find('.film-detail .film-name .dynamic-name').attr('data-jname') || null,
         posterImage: $(element).find(' .film-poster .film-poster-img').attr('data-src') || null,
-        duration: $(element).find('.fd-infor .fdi-item.fdi-duration').text().trim() || null,
+        // duration: $(element).find('.fd-infor .fdi-item.fdi-duration').text().trim() || null,
         type: $(element).find('.fd-infor .fdi-item:nth-of-type(1)').text().trim() || null,
         episodes: {
           sub: Number($(element).find('.film-poster .tick .tick-sub').text()) || null,
@@ -102,8 +100,8 @@ export class Kaido extends BaseClass {
    * @param $ CheerioAPI instance
    * @returns An array containing an array of search suggestions
    */
-  private parseSearchSuggestions($: cheerio.CheerioAPI): IResponse<ISearchSuggestions[]> {
-    const animeSuggestions: ISearchSuggestions[] = [];
+  private parseSearchSuggestions($: cheerio.CheerioAPI): IResponse<IZSearchSuggestions[]> {
+    const animeSuggestions: IZSearchSuggestions[] = [];
     $('a.nav-item').each((_, element) => {
       const info = $(element).find('div.film-infor');
       animeSuggestions.push({
@@ -140,78 +138,58 @@ export class Kaido extends BaseClass {
    * @param $ CheerioAPI instance
    * @returns Object containing anime details and related data
    */
-  private parseAnimeInfo($: cheerio.CheerioAPI): IAnimeInfoResponse<IAnimeInfo | null> {
-    const animeInfo: IAnimeInfo = {
-      id: null,
-      name: null,
-      romaji: null,
-      anilistId: null,
-      malId: null,
-      rating: null,
-      quality: null,
-      altnames: null,
-      japanese: null,
-      releaseDate: null,
-      studios: null,
-      score: null,
-      producers: null,
-      status: null,
-      genres: null,
-      posterImage: null,
-      duration: null,
-      type: null,
-      synopsis: null,
-      episodes: {
-        sub: null,
-        dub: null,
-      },
-      totalEpisodes: null,
-    };
+  private parseAnimeInfo($: cheerio.CheerioAPI): IZAnimeInfoResponse<IZAnimeInfo | null> {
     const selector: cheerio.SelectorType = '.ani_detail-stage .anis-content ';
     const section = $(selector);
-
-    animeInfo.id = section?.find('.film-buttons .btn')?.attr('href')?.split('/')?.at(-1) || null;
-    animeInfo.name = $(selector)?.find('.anisc-detail .film-name.dynamic-name')?.text()?.trim() || null;
-    animeInfo.japanese = $(`div.item.item-title:has(.item-head:contains("Japanese:")) .name`).text().trim() || null;
-    animeInfo.romaji = $(selector).find('h2.film-name.dynamic-name').attr('data-jname') || null;
-    animeInfo.quality = $(selector).find('div.tick-item.tick-quality').text().trim() || null;
-    animeInfo.rating = $(selector).find('div.tick-item.tick-pg').text().trim() || null;
-
-    animeInfo.altnames = $(`div.item.item-title:has(.item-head:contains("Synonyms:")) .name`).text().trim() || null;
-
-    animeInfo.releaseDate = $(`div.item.item-title:has(.item-head:contains("Aired:")) .name`).text().trim() || null;
-
-    animeInfo.status = $(`div.item.item-title:has(.item-head:contains("Status:")) .name`).text().trim() || null;
-
-    animeInfo.score = $(`div.item.item-title:has(.item-head:contains("MAL Score:")) .name`).text().trim() || null;
-
     const { mal_id, anilist_id } = JSON.parse($('#syncData').text().trim());
-    animeInfo.anilistId = Number(anilist_id) || null;
-    animeInfo.malId = Number(mal_id) || null;
-    animeInfo.posterImage = section?.find('.film-poster .film-poster-img')?.attr('src') || null;
-    animeInfo.genres =
-      $(`div.item.item-list:has(.item-head:contains("Genres:")) a`)
-        .map((i, el) => $(el).text().replace('Genres:', '').replace(/\s+/g, '').trim())
-        .get() || null;
-    animeInfo.studios =
-      $(`div.item.item-title:has(.item-head:contains("Studios:")) .name`)
-        .map((i, el) => $(el).text().trim())
-        .get() || null;
-    animeInfo.producers =
-      $(`div.item.item-title:has(.item-head:contains("Producers:")) .name`)
-        .map((i, el) => $(el).text().trim())
-        .get() || null;
-    animeInfo.synopsis = section?.find('.anisc-info .text').text().trim() || null;
-    animeInfo.episodes.dub = Number(section?.find('.tick .tick-item.tick-dub')?.text().trim() || null);
-    animeInfo.episodes.sub = Number(section?.find('.tick .tick-item.tick-sub')?.text().trim() || null);
-    animeInfo.totalEpisodes = Number(
-      section?.find('.tick .tick-item.tick-eps')?.text().trim() || animeInfo.episodes.sub || null,
-    );
-    animeInfo.type = $('span.item').last().prev().prev().text().toUpperCase().trim() || null;
-    const duration = $('span.item').last().text().trim();
-    animeInfo.duration = duration;
 
-    const characters: ICharacters[] = [];
+    const animeInfo: IZAnimeInfo = {
+      id: section?.find('.film-buttons .btn')?.attr('href')?.split('/')?.at(-1) || null,
+      name: $(selector)?.find('.anisc-detail .film-name.dynamic-name')?.text()?.trim() || null,
+      japanese: $(`div.item.item-title:has(.item-head:contains("Japanese:")) .name`).text().trim() || null,
+      romaji: $(selector).find('h2.film-name.dynamic-name').attr('data-jname') || null,
+      quality: $(selector).find('div.tick-item.tick-quality').text().trim() || null,
+      rating: $(selector).find('div.tick-item.tick-pg').text().trim() || null,
+
+      altnames: $(`div.item.item-title:has(.item-head:contains("Synonyms:")) .name`).text().trim() || null,
+
+      releaseDate: $(`div.item.item-title:has(.item-head:contains("Aired:")) .name`).text().trim() || null,
+
+      status: $(`div.item.item-title:has(.item-head:contains("Status:")) .name`).text().trim() || null,
+
+      score: $(`div.item.item-title:has(.item-head:contains("MAL Score:")) .name`).text().trim() || null,
+
+      anilistId: Number(anilist_id) || null,
+      malId: Number(mal_id) || null,
+      posterImage: section?.find('.film-poster .film-poster-img')?.attr('src') || null,
+      genres:
+        $(`div.item.item-list:has(.item-head:contains("Genres:")) a`)
+          .map((i, el) => $(el).text().replace('Genres:', '').replace(/\s+/g, '').trim())
+          .get() || null,
+      studios:
+        $(`div.item.item-title:has(.item-head:contains("Studios:")) .name`)
+          .map((i, el) => $(el).text().trim())
+          .get() || null,
+      producers:
+        $(`div.item.item-title:has(.item-head:contains("Producers:")) .name`)
+          .map((i, el) => $(el).text().trim())
+          .get() || null,
+      synopsis: section?.find('.anisc-info .text').text().trim() || null,
+      episodes: {
+        dub: Number(section?.find('.tick .tick-item.tick-dub')?.text().trim() || null),
+        sub: Number(section?.find('.tick .tick-item.tick-sub')?.text().trim()) || null,
+      },
+      totalEpisodes: Number(
+        section?.find('.tick .tick-item.tick-eps')?.text().trim() ||
+          Number(section?.find('.tick .tick-item.tick-sub')?.text().trim()) ||
+          null,
+      ),
+      type: $('span.item').last().prev().prev().text().toUpperCase().trim() || null,
+      // const duration = $('span.item').last().text().trim();
+      // animeInfo.duration = duration;
+    };
+
+    const characters: IZCharacters[] = [];
     const charactersSelector = 'div.block-actors-content > div.bac-list-wrap > div.bac-item';
 
     $(charactersSelector).each((_, element) => {
@@ -234,7 +212,7 @@ export class Kaido extends BaseClass {
       });
     });
 
-    const recommendedAnime: IAnime[] = [];
+    const recommendedAnime: IZAnime[] = [];
     const recommendationsSelector: cheerio.SelectorType =
       'section.block_area.block_area_category div.tab-content div.film_list-wrap > div.flw-item';
 
@@ -244,7 +222,7 @@ export class Kaido extends BaseClass {
         name: $(element).find('a.film-poster-ahref').attr('title') || null,
         romaji: $(element).find('div.film-detail  a.dynamic-name').attr('data-jname') || null,
         type: $(element).find('div.fd-infor span.fdi-item:first').text().trim() || null,
-        duration: $(element).find('div.fd-infor span.fdi-duration').text().trim() || null,
+        // duration: $(element).find('div.fd-infor span.fdi-duration').text().trim() || null,
         posterImage: $(element).find('div.film-poster  img.film-poster-img').attr('data-src') || null,
         episodes: {
           sub: Number($(element).find('div.tick > div.tick-sub:has(.fa-closed-captioning)').text().trim()) || null,
@@ -257,7 +235,7 @@ export class Kaido extends BaseClass {
       });
     });
 
-    const relatedAnime: IAnime[] = [];
+    const relatedAnime: IZAnime[] = [];
     const relatedAnimeSelector: cheerio.SelectorType =
       '#main-sidebar section.block_area.block_area_sidebar.block_area-realtime:has(h2.cat-heading:contains("Related")) div.anif-block-ul > ul.ulclear > li';
 
@@ -288,7 +266,7 @@ export class Kaido extends BaseClass {
       });
     });
 
-    const mostPopular: IAnime[] = [];
+    const mostPopular: IZAnime[] = [];
     const mostPopularSelector: cheerio.SelectorType =
       '#main-sidebar section.block_area.block_area_sidebar.block_area-realtime:has(.bah-heading > h2.cat-heading:contains("Most Popular")) div.anif-block-ul > ul.ulclear > li';
 
@@ -319,7 +297,7 @@ export class Kaido extends BaseClass {
     });
     const relatedSeasonsSelector: cheerio.SelectorType =
       'div.container  section.block_area.block_area-seasons div.os-list a';
-    const relatedSeasons: IRelatedSeasons[] = [];
+    const relatedSeasons: IZRelatedSeasons[] = [];
     $(relatedSeasonsSelector).each((_, element) => {
       relatedSeasons.push({
         id: $(element).attr('href')?.split('/').at(1) || null,
@@ -332,7 +310,7 @@ export class Kaido extends BaseClass {
       });
     });
 
-    const promotionVideos: IPromotionVIds[] = [];
+    const promotionVideos: IZPromotionVIds[] = [];
     const promotionVideosSelector = 'section.block_area.block_area-promotions  div.item';
     $(promotionVideosSelector).each((_, element) => {
       promotionVideos.push({
@@ -358,9 +336,9 @@ export class Kaido extends BaseClass {
    * @param $ CheerioAPI instance
    * @returns An object containing various curated anime lists
    */
-  private parseHome($: cheerio.CheerioAPI): IHomeResponse<IAnime[] | []> {
+  private parseHome($: cheerio.CheerioAPI): IZHomeResponse<IZSpotlight[] | []> {
     const selector: cheerio.SelectorType = 'div#slider  div.deslide-item';
-    const data: IAnime[] = [];
+    const data: IZSpotlight[] = [];
     $(selector).each((_, element) => {
       data.push({
         spotlight: $(element).find('div.deslide-item-content > div.desi-sub-text').text().trim() || null,
@@ -373,8 +351,8 @@ export class Kaido extends BaseClass {
         type:
           $(element).find('div.deslide-item-content > div.sc-detail > div.scd-item:has(.fa-play-circle)').text().trim() ||
           null,
-        duration:
-          $(element).find('div.deslide-item-content > div.sc-detail > div.scd-item:has(.fa-clock)').text().trim() || null,
+        // duration:
+        //   $(element).find('div.deslide-item-content > div.sc-detail > div.scd-item:has(.fa-clock)').text().trim() || null,
         releaseDate:
           $(element).find('div.deslide-item-content > div.sc-detail > div.scd-item:has(.fa-calendar)').text().trim() || null,
         quality:
@@ -420,7 +398,7 @@ export class Kaido extends BaseClass {
       });
     });
 
-    const trending: IBaseAnime[] = [];
+    const trending: IZBase[] = [];
     const trendingSelector: cheerio.SelectorType = 'div#anime-trending .swiper-slide';
 
     $(trendingSelector).each((_, element) => {
@@ -432,7 +410,7 @@ export class Kaido extends BaseClass {
       });
     });
 
-    const topAiring: IAnime[] = [];
+    const topAiring: IZAnime[] = [];
     const topAiringSelector: cheerio.SelectorType = 'div#anime-featured .anif-block-01 li';
 
     $(topAiringSelector).each((_, element) => {
@@ -453,7 +431,7 @@ export class Kaido extends BaseClass {
       });
     });
 
-    const mostPopular: IAnime[] = [];
+    const mostPopular: IZAnime[] = [];
     const mostPopularSelector: cheerio.SelectorType = 'div#anime-featured .anif-block-03 li';
 
     $(mostPopularSelector).each((_, element) => {
@@ -474,7 +452,7 @@ export class Kaido extends BaseClass {
       });
     });
 
-    const favourites: IAnime[] = [];
+    const favourites: IZAnime[] = [];
     const favouritesSelector: cheerio.SelectorType = 'div#anime-featured .anif-block-02:first li';
 
     $(favouritesSelector).each((_, element) => {
@@ -495,7 +473,7 @@ export class Kaido extends BaseClass {
       });
     });
 
-    const recentlyCompleted: IAnime[] = [];
+    const recentlyCompleted: IZAnime[] = [];
     const completedSelector: cheerio.SelectorType = 'div#anime-featured .anif-block-02:last li';
 
     $(completedSelector).each((_, element) => {
@@ -516,7 +494,7 @@ export class Kaido extends BaseClass {
       });
     });
 
-    const recentlyUpdated: IAnime[] = [];
+    const recentlyUpdated: IZAnime[] = [];
     const recentlyUpdatedSelector: cheerio.SelectorType =
       'div#main-content section.block_area:first div.tab-content div.flw-item ';
 
@@ -526,7 +504,7 @@ export class Kaido extends BaseClass {
         name: $(element).find('div.film-detail  a.dynamic-name').text().trim() || null,
         romaji: $(element).find('div.film-detail  a.dynamic-name').attr('data-jname') || null,
         type: $(element).find('div.fd-infor span.fdi-item:first').text().trim() || null,
-        duration: $(element).find('div.fd-infor span.fdi-duration').text().trim() || null,
+        // duration: $(element).find('div.fd-infor span.fdi-duration').text().trim() || null,
         posterImage: $(element).find('div.film-poster  img.film-poster-img').attr('data-src') || null,
         episodes: {
           sub: Number($(element).find('div.tick > div.tick-sub:has(.fa-closed-captioning)').text().trim()) || null,
@@ -539,7 +517,7 @@ export class Kaido extends BaseClass {
       });
     });
 
-    const topUpcoming: IAnime[] = [];
+    const topUpcoming: IZAnime[] = [];
     const topUpcomingSelector: cheerio.SelectorType =
       'div#main-content section.block_area:last div.tab-content div.flw-item ';
 
@@ -549,7 +527,7 @@ export class Kaido extends BaseClass {
         name: $(element).find('div.film-detail  a.dynamic-name').text().trim() || null,
         romaji: $(element).find('div.film-detail  a.dynamic-name').attr('data-jname') || null,
         type: $(element).find('div.fd-infor span.fdi-item:first').text().trim() || null,
-        duration: $(element).find('div.fd-infor span.fdi-duration').text().trim() || null,
+        // duration: $(element).find('div.fd-infor span.fdi-duration').text().trim() || null,
         posterImage: $(element).find('div.film-poster  img.film-poster-img').attr('data-src') || null,
         episodes: {
           sub: Number($(element).find('div.tick > div.tick-sub:has(.fa-closed-captioning)').text().trim()) || null,
@@ -562,7 +540,7 @@ export class Kaido extends BaseClass {
       });
     });
 
-    const recentlyAdded: IAnime[] = [];
+    const recentlyAdded: IZAnime[] = [];
     const recentlyAddedSelector: cheerio.SelectorType =
       'div#main-content section.block_area:eq(1) div.tab-content div.flw-item ';
 
@@ -572,7 +550,7 @@ export class Kaido extends BaseClass {
         name: $(element).find('div.film-detail  a.dynamic-name').text().trim() || null,
         romaji: $(element).find('div.film-detail  a.dynamic-name').attr('data-jname') || null,
         type: $(element).find('div.fd-infor span.fdi-item:first').text().trim() || null,
-        duration: $(element).find('div.fd-infor span.fdi-duration').text().trim() || null,
+        // duration: $(element).find('div.fd-infor span.fdi-duration').text().trim() || null,
         posterImage: $(element).find('div.film-poster  img.film-poster-img').attr('data-src') || null,
         episodes: {
           sub: Number($(element).find('div.tick > div.tick-sub:has(.fa-closed-captioning)').text().trim()) || null,
@@ -585,9 +563,9 @@ export class Kaido extends BaseClass {
       });
     });
 
-    const topDailyAnime: IAnime[] = [];
-    const topWeeklyAnime: IAnime[] = [];
-    const topMonthlyAnime: IAnime[] = [];
+    const topDailyAnime: IZAnime[] = [];
+    const topWeeklyAnime: IZAnime[] = [];
+    const topMonthlyAnime: IZAnime[] = [];
 
     const topDailySelector: cheerio.SelectorType = 'div#main-sidebar div#top-viewed-day li';
     const topWeeklySelector: cheerio.SelectorType = 'div#main-sidebar div#top-viewed-week li';
@@ -667,9 +645,9 @@ export class Kaido extends BaseClass {
    * @param $ CheerioAPI instance
    * @returns RepetitiveSections containing anime list, pagination details, and top anime rankings
    */
-  private parsePaginatedSections($: cheerio.CheerioAPI): IRepetitiveSections<IAnime[] | []> {
+  private parsePaginatedSections($: cheerio.CheerioAPI): IZPaginatedSections<IZAnime[] | []> {
     const topAiringSelector: cheerio.SelectorType = 'div#main-content section.block_area_category div.flw-item';
-    const data: IAnime[] = [];
+    const data: IZAnime[] = [];
 
     $(topAiringSelector).each((_, element) => {
       data.push({
@@ -677,7 +655,7 @@ export class Kaido extends BaseClass {
         name: $(element).find('a.film-poster-ahref').attr('title') || null,
         romaji: $(element).find('div.film-detail  a.dynamic-name').attr('data-jname') || null,
         type: $(element).find('div.fd-infor span.fdi-item:first').text().trim() || null,
-        duration: $(element).find('div.fd-infor span.fdi-duration').text().trim() || null,
+        // duration: $(element).find('div.fd-infor span.fdi-duration').text().trim() || null,
         posterImage: $(element).find('div.film-poster  img.film-poster-img').attr('data-src') || null,
         episodes: {
           sub: Number($(element).find('div.tick > div.tick-sub:has(.fa-closed-captioning)').text().trim()) || null,
@@ -702,9 +680,9 @@ export class Kaido extends BaseClass {
         $('.pagination .page-item').last().text().trim(),
     );
 
-    const topDailyAnime: IAnime[] = [];
-    const topWeeklyAnime: IAnime[] = [];
-    const topMonthlyAnime: IAnime[] = [];
+    const topDailyAnime: IZAnime[] = [];
+    const topWeeklyAnime: IZAnime[] = [];
+    const topMonthlyAnime: IZAnime[] = [];
 
     const topDailySelector: cheerio.SelectorType = 'div#main-sidebar div#top-viewed-day li';
     const topWeeklySelector: cheerio.SelectorType = 'div#main-sidebar div#top-viewed-week li';
@@ -789,8 +767,8 @@ export class Kaido extends BaseClass {
    * @param $ CheerioAPI instance
    * @returns Response containing an array of episode information
    */
-  private parseEpisodes($: cheerio.CheerioAPI): IResponse<IEpisodes[] | []> {
-    const episodesList: IEpisodes[] = [];
+  private parseEpisodes($: cheerio.CheerioAPI): IResponse<IZEpisodes[] | []> {
+    const episodesList: IZEpisodes[] = [];
     const selector: cheerio.SelectorType = '.detail-infor-content .ss-list a';
     $(selector).each((_, element) => {
       episodesList.push({
@@ -816,8 +794,8 @@ export class Kaido extends BaseClass {
    * @param $ CheerioAPI instance
    * @returns Response containing server information
    */
-  private parseServerData($: cheerio.CheerioAPI): IResponse<HIServerInfo | null> {
-    const servers: HIServerInfo = {
+  private parseServerData($: cheerio.CheerioAPI): IResponse<IServerInfo | null> {
+    const servers: IServerInfo = {
       sub: [],
       dub: [],
       raw: [],
@@ -863,7 +841,7 @@ export class Kaido extends BaseClass {
    * @returns The media ID of the matching server
    * @throws Error if the category or server is not found
    */
-  private findServerId(servers: HIServerInfo, category: ISubOrDub, server: 'vidstreaming' | 'vidcloud'): number {
+  private findServerId(servers: IServerInfo, category: ISubOrDub, server: 'vidstreaming' | 'vidcloud'): number {
     const availableCategories: string[] = [];
     if (servers.sub?.length > 0) availableCategories.push('sub');
     if (servers.dub?.length > 0) availableCategories.push('dub');
@@ -894,9 +872,9 @@ export class Kaido extends BaseClass {
    * Searches for anime based on the provided query string.
    * @param {string} query - The search query string (required).
    * @param {number} [page=1] - The page number for pagination (optional, defaults to 1).
-   * @returns { Promise<IAnimePaginated<IAnime[] | []>>} A promise that resolves to an object containing an array of anime titles, pagination details, or an error message.
+   * @returns  A promise that resolves to an object containing an array of anime titles, pagination details, or an error message.
    */
-  async search(query: string, page: number = 1): Promise<IAnimePaginated<IAnime[] | []>> {
+  async search(query: string, page: number = 1): Promise<IZPaginated<IZAnime[] | []>> {
     if (!query) {
       return {
         hasNextPage: false,
@@ -942,9 +920,9 @@ export class Kaido extends BaseClass {
   /**
    * Fetches search suggestions for a given query string from the HiAnime platform.
    * @param {string} query - The search query string (required).
-   @returns {Promise<IResponse<ISearchSuggestions[] | []>>} A promise that resolves to an object containing an array of anime titles or an error message.
+   @returns A promise that resolves to an object containing an array of anime titles or an error message.
    */
-  async searchSuggestions(query: string): Promise<IResponse<ISearchSuggestions[] | []>> {
+  async searchSuggestions(query: string): Promise<IResponse<IZSearchSuggestions[] | []>> {
     if (!query) {
       return {
         data: [],
@@ -976,9 +954,9 @@ export class Kaido extends BaseClass {
   /**
    * Fetches detailed information about a specific anime including episodes.
    * @param {string} animeId - The unique identifier for the anime (e.g., "bleach-806") (required).
-   * @returns {Promise<HIAnimeInfoResponse<IAnimeInfo | null>>} A promise that resolves to an object containing anime details,provider episodes, related seasons, characters, recommendations, or an error message.
+   * @returns  A promise that resolves to an object containing anime details,provider episodes, related seasons, characters, recommendations, or an error message.
    */
-  async fetchAnimeInfo(animeId: string): Promise<IHIAnimeInfoResponse<IAnimeInfo | null>> {
+  async fetchAnimeInfo(animeId: string): Promise<IZAnimeInfoResponse<IZAnimeInfo | null>> {
     if (!animeId.trim())
       return {
         error: 'Missing required params :animeId',
@@ -1051,7 +1029,7 @@ export class Kaido extends BaseClass {
    * Fetches curated lists from the HiAnime homepage.
    * @returns Promise resolving to an object with various curated anime lists
    */
-  async fetchHome(): Promise<IHomeResponse<IAnime[] | []>> {
+  async fetchHome(): Promise<IZHomeResponse<IZSpotlight[] | []>> {
     try {
       const response = await this.client.get(`${this.baseUrl}/home`, {
         headers: {
@@ -1093,9 +1071,9 @@ export class Kaido extends BaseClass {
   /**
    * Fetches a paginated list of top airing anime.
    * @param {number} page - Page number for pagination (default: 1)
-   * @returns { Promise<IRepetitiveSections<IAnime[] | []>>} Promise resolving to an object with top airing anime and pagination details
+   * @returns  Promise resolving to an object with top airing anime and pagination details
    */
-  async fetchTopAiring(page: number = 1): Promise<IRepetitiveSections<IAnime[] | []>> {
+  async fetchTopAiring(page: number = 1): Promise<IZPaginatedSections<IZAnime[] | []>> {
     try {
       const response = await this.client.get(`${this.baseUrl}/top-airing`, {
         params: {
@@ -1130,9 +1108,9 @@ export class Kaido extends BaseClass {
   /**
    * Fetches a paginated list of the most favorited anime.
    * @param {number} page - Page number for pagination (default: 1)
-   * @returns { Promise<IRepetitiveSections<IAnime[] | []>>} Promise resolving to an object  with favorited anime and pagination details
+   * @returns  Promise resolving to an object  with favorited anime and pagination details
    */
-  async fetchMostFavourites(page: number = 1): Promise<IRepetitiveSections<IAnime[] | []>> {
+  async fetchMostFavourites(page: number = 1): Promise<IZPaginatedSections<IZAnime[] | []>> {
     try {
       const response = await this.client.get(`${this.baseUrl}/most-favorite`, {
         params: {
@@ -1167,9 +1145,9 @@ export class Kaido extends BaseClass {
   /**
    * Fetches a paginated list of the most popular anime.
    * @param {number} page - Page number for pagination (default: 1)
-   * @returns { Promise<IRepetitiveSections<IAnime[] | []>>} Promise resolving to an object  with popular anime and pagination details
+   * @returns  Promise resolving to an object  with popular anime and pagination details
    */
-  async fetchMostPopular(page: number = 1): Promise<IRepetitiveSections<IAnime[] | []>> {
+  async fetchMostPopular(page: number = 1): Promise<IZPaginatedSections<IZAnime[] | []>> {
     try {
       const response = await this.client.get(`${this.baseUrl}/most-popular`, {
         params: {
@@ -1204,9 +1182,9 @@ export class Kaido extends BaseClass {
   /**
    * Fetches a paginated list of recently completed anime.
    * @param {number} page - Page number for pagination (default: 1)
-   * @returns { Promise<IRepetitiveSections<IAnime[] | []>>} Promise resolving to an object  with recently completed anime and pagination details
+   * @returns  Promise resolving to an object  with recently completed anime and pagination details
    */
-  async fetchRecentlyCompleted(page: number = 1): Promise<IRepetitiveSections<IAnime[] | []>> {
+  async fetchRecentlyCompleted(page: number = 1): Promise<IZPaginatedSections<IZAnime[] | []>> {
     try {
       const response = await this.client.get(`${this.baseUrl}/completed`, {
         params: {
@@ -1242,9 +1220,9 @@ export class Kaido extends BaseClass {
   /**
    * Fetches a paginated list of recently added anime.
    * @param {number} page - Page number for pagination (default: 1)
-   * @returns { Promise<IRepetitiveSections<IAnime[] | []>>} Promise resolving to an object with recently added anime and pagination details
+   * @returns  Promise resolving to an object with recently added anime and pagination details
    */
-  async fetchRecentlyAdded(page: number = 1): Promise<IRepetitiveSections<IAnime[] | []>> {
+  async fetchRecentlyAdded(page: number = 1): Promise<IZPaginatedSections<IZAnime[] | []>> {
     try {
       const response = await this.client.get(`${this.baseUrl}/recently-added`, {
         params: {
@@ -1279,9 +1257,9 @@ export class Kaido extends BaseClass {
   /**
    * Fetches a paginated list of recently updated anime.
    * @param {number} page - Page number for pagination (default: 1)
-   * @returns { Promise<IRepetitiveSections<IAnime[] | []>>} Promise resolving to an object  with recently updated anime and pagination details
+   * @returns  Promise resolving to an object  with recently updated anime and pagination details
    */
-  async fetchRecentlyUpdated(page: number = 1): Promise<IRepetitiveSections<IAnime[] | []>> {
+  async fetchRecentlyUpdated(page: number = 1): Promise<IZPaginatedSections<IZAnime[] | []>> {
     try {
       const response = await this.client.get(`${this.baseUrl}/recently-updated`, {
         params: {
@@ -1317,9 +1295,9 @@ export class Kaido extends BaseClass {
    * Fetches a list of anime titles sorted alphabetically, optionally filtered by a starting character.
    * @param {any} sort Optional letter (A-Z) or "0-9" to filter anime
    * @param {number} page - Page number for pagination (default: 1)
-   *@returns {  Promise<IAnimePaginated<IAnime[] | []>>} Promise resolving to an object  with alphabetically sorted anime and pagination details
+   *@returns Promise resolving to an object  with alphabetically sorted anime and pagination details
    */
-  async fetchAtoZList(sort?: any, page: number = 1): Promise<IAnimePaginated<IAnime[] | []>> {
+  async fetchAtoZList(sort?: any, page: number = 1): Promise<IZPaginated<IZAnime[] | []>> {
     const sortValue = (sort ?? '').toString().trim();
 
     const sortCategory = !sortValue
@@ -1366,9 +1344,9 @@ export class Kaido extends BaseClass {
    * Fetches a list of anime by genre.
    * @param {string} genre -The genre to filter anime by
    * @param {number} page - Page number for pagination (default: 1)
-   * @returns {  Promise<IAnimePaginated<IAnime[] | []>>} Promise resolving to an object with genre-specific anime and pagination details
+   * @returns  Promise resolving to an object with genre-specific anime and pagination details
    */
-  async fetchGenre(genre: string, page: number = 1): Promise<IAnimePaginated<IAnime[] | []>> {
+  async fetchGenre(genre: string, page: number = 1): Promise<IZPaginated<IZAnime[] | []>> {
     if (!genre) {
       return {
         hasNextPage: false,
@@ -1412,9 +1390,9 @@ export class Kaido extends BaseClass {
   /**
    * Fetches a list of subbed anime.
    * @param {number} page - Page number for pagination (default: 1)
-   * @returns {  Promise<IAnimePaginated<IAnime[] | []>>} Promise resolving to an object with subbed anime and pagination details
+   * @returns  Promise resolving to an object with subbed anime and pagination details
    */
-  async fetchSubbedAnime(page: number = 1): Promise<IAnimePaginated<IAnime[] | []>> {
+  async fetchSubbedAnime(page: number = 1): Promise<IZPaginated<IZAnime[] | []>> {
     try {
       const response = await this.client.get(`${this.baseUrl}/subbed-anime`, {
         params: {
@@ -1450,7 +1428,7 @@ export class Kaido extends BaseClass {
    * @param {number} page - Page number for pagination (default: 1)
    * @returns {  Promise<IAnimePaginated<IAnime[] | []>>} Promise resolving to an object with dubbed anime and pagination details
    */
-  async fetchDubbedAnime(page: number = 1): Promise<IAnimePaginated<IAnime[] | []>> {
+  async fetchDubbedAnime(page: number = 1): Promise<IZPaginated<IZAnime[] | []>> {
     try {
       const response = await this.client.get(`${this.baseUrl}/dubbed-anime`, {
         params: {
@@ -1485,9 +1463,9 @@ export class Kaido extends BaseClass {
    * Fetches a list of anime by category.
    * @param { IAnimeCategory} category - The category of anime to fetch (MOVIE, TV, ONA, OVA, SPECIALS).
    * @param {number} [page=1] - The page number for pagination (default: 1).
-   * @returns {Promise<IAnimePaginated<IAnime[] | []>>} - Promise resolving to paginated anime results.
+   * @returns - Promise resolving to paginated anime results.
    */
-  async fetchAnimeCategory(category: IAnimeCategory, page: number = 1): Promise<IAnimePaginated<IAnime[] | []>> {
+  async fetchAnimeCategory(category: IAnimeCategory, page: number = 1): Promise<IZPaginated<IZAnime[] | []>> {
     try {
       let endpoint: string;
 
@@ -1543,9 +1521,9 @@ export class Kaido extends BaseClass {
   /**
    * Fetches episode data for a specific anime.
    * @param {string} animeId - The unique identifier for the anime (e.g., "bleach-806") (required).
-   * @returns {Promise<IResponse<IEpisodes[] | []>>} A promise that resolves to an object containing an array of episode information or an error message.
+   * @returns  A promise that resolves to an object containing an array of episode information or an error message.
    */
-  async fetchEpisodes(animeId: string): Promise<IResponse<IEpisodes[] | []>> {
+  async fetchEpisodes(animeId: string): Promise<IResponse<IZEpisodes[] | []>> {
     if (!animeId)
       return {
         data: [],
@@ -1578,9 +1556,9 @@ export class Kaido extends BaseClass {
   /**
    * Fetches available streaming servers for a specific anime episode.
    * @param {string} episodeId - The unique identifier for the episode  (required).
-   * @returns { Promise<IResponse<HIServerInfo | null>>} A promise that resolves to an object containing available streaming server details (sub, dub, raw) or an error message.
+   * @returns  A promise that resolves to an object containing available streaming server details (sub, dub, raw) or an error message.
    */
-  async fetchServers(episodeId: string): Promise<IResponse<HIServerInfo | null>> {
+  async fetchServers(episodeId: string): Promise<IResponse<IServerInfo | null>> {
     if (!episodeId || episodeId.includes('ep=')) {
       if (episodeId.includes('ep=')) {
         return {
@@ -1624,16 +1602,16 @@ export class Kaido extends BaseClass {
   /**
    * Fetches streaming sources for a given anime episode from a specified server and category.
    * @param {string} episodeId - The unique identifier for the episode (required).
-   * @param {HiAnimeServers}  server - The streaming server to use (optional, defaults to hd-2). Note: hd-1 may return a 403 error due to CORS restrictions; use a proxy or switch to hd-2 or hd-3
-   * @param {HISubOrDub} category  - The audio category (Subtitled or Dubbed) (optional, defaults to SubOrDub.SUB).
-   * @returns {Promise<HISourceResponse<IVideoSource | null>>} A promise that resolves to an object containing streaming sources, headers, sync data (AniList/MAL IDs), or an error message.
+   * @param   server - The streaming server to use (optional, defaults to vidcloud). Note: vidstreaming may return a 403 error due to CORS restrictions; use a proxy.
+   * @param {ISubOrDub} category  - The audio category (Subtitled or Dubbed) (optional, defaults to SubOrDub.SUB).
+   * @returns  A promise that resolves to an object containing streaming sources, headers, sync data (AniList/MAL IDs), or an error message.
    */
 
   async fetchSources(
     episodeId: string,
     server: 'vidstreaming' | 'vidcloud' = 'vidcloud',
     category: ISubOrDub = 'sub',
-  ): Promise<HISourceResponse<IVideoSource | null>> {
+  ): Promise<IZSourceResponse<IVideoSource | null>> {
     if (!episodeId || episodeId.includes('ep=') || episodeId.includes('$')) {
       if (episodeId.includes('ep=') || episodeId.includes('$')) {
         return {
@@ -1661,7 +1639,7 @@ export class Kaido extends BaseClass {
     }
 
     try {
-      const fetchedServers = (await this.fetchServers(episodeId)).data as HIServerInfo;
+      const fetchedServers = (await this.fetchServers(episodeId)).data as IServerInfo;
       if ('error' in fetchedServers) {
         return {
           data: null,

@@ -1,6 +1,8 @@
-import { BaseClass } from '../../models/base-anime.js';
+import { BaseClass } from '../../models/base.js';
 import * as cheerio from 'cheerio';
-import type { IMovieServers, IResponse, IVideoSource } from '../../models/types.js';
+
+import type { IResponse, IVideoSource } from '../../types/base.js';
+import type { IMovieServers } from '../../types/movies/movie.js';
 
 /**
  * A class for interacting with the VidSrc video streaming service to fetch movie and TV show sources.
