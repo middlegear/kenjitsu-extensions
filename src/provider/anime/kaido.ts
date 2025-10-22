@@ -5,7 +5,8 @@ import {
   HIGenres,
   type IZAnime,
   type IZAnimeInfo,
-  type IZAnimeInfoResponse,
+  type IZoroInfoResponse,
+  type IZoroAnimeInfoScrape,
   type IZBase,
   type IZCharacters,
   type IZEpisodes,
@@ -100,7 +101,7 @@ export class Kaido extends BaseClass {
    * @param $ CheerioAPI instance
    * @returns An array containing an array of search suggestions
    */
-  private parseSearchSuggestions($: cheerio.CheerioAPI): IResponse<IZSearchSuggestions[]> {
+  private parseSearchSuggestions($: cheerio.CheerioAPI): IResponse<IZSearchSuggestions[] | []> {
     const animeSuggestions: IZSearchSuggestions[] = [];
     $('a.nav-item').each((_, element) => {
       const info = $(element).find('div.film-infor');
@@ -138,7 +139,7 @@ export class Kaido extends BaseClass {
    * @param $ CheerioAPI instance
    * @returns Object containing anime details and related data
    */
-  private parseAnimeInfo($: cheerio.CheerioAPI): IZAnimeInfoResponse<IZAnimeInfo | null> {
+  private parseAnimeInfo($: cheerio.CheerioAPI): IZoroAnimeInfoScrape<IZAnimeInfo | null> {
     const selector: cheerio.SelectorType = '.ani_detail-stage .anis-content ';
     const section = $(selector);
     const { mal_id, anilist_id } = JSON.parse($('#syncData').text().trim());
@@ -956,7 +957,7 @@ export class Kaido extends BaseClass {
    * @param {string} animeId - The unique identifier for the anime (e.g., "bleach-806") (required).
    * @returns  A promise that resolves to an object containing anime details,provider episodes, related seasons, characters, recommendations, or an error message.
    */
-  async fetchAnimeInfo(animeId: string): Promise<IZAnimeInfoResponse<IZAnimeInfo | null>> {
+  async fetchAnimeInfo(animeId: string): Promise<IZoroInfoResponse<IZAnimeInfo | null>> {
     if (!animeId.trim())
       return {
         error: 'Missing required params :animeId',

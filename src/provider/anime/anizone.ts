@@ -69,7 +69,12 @@ export class Anizone extends BaseClass {
         })(),
       });
     });
-
+    if (!Array.isArray(anime) || anime.length === 0) {
+      return {
+        data: [],
+        error: 'No results found for that query ',
+      };
+    }
     return { data: anime };
   }
 
@@ -148,7 +153,7 @@ export class Anizone extends BaseClass {
    * Parses video sources, subtitles, and other media data from an episode page.
    * @private
    * @param {cheerio.CheerioAPI} $ - Cheerio instance for parsing HTML.
-   * @returns {{ extractedData: IVideoSource }} - An object containing parsed video source data.
+   * @returns  - An object containing parsed video source data.
    */
   private parseSources($: cheerio.CheerioAPI): { extractedData: IVideoSource } {
     const player = $('media-player');
@@ -208,7 +213,7 @@ export class Anizone extends BaseClass {
    * Parses recent updates from the Anizone homepage, including recently added anime and latest episodes.
    * @private
    * @param {cheerio.CheerioAPI} $ - Cheerio instance for parsing HTML.
-   * @returns {IAnizoneUpdates<IAniZoneEpisodes[] | []>} - An object containing arrays of recently added anime and latest episodes.
+   * @returns  - An object containing arrays of recently added anime and latest episodes.
    */
   private parseUpdates($: cheerio.CheerioAPI): IAnizoneUpdates<IAniZoneEpisodes[] | []> {
     const recentlyAdded: IBaseAnime[] = [];
@@ -269,7 +274,7 @@ export class Anizone extends BaseClass {
   /**
    * Searches for anime on the Anizone platform using a query string.
    * @param {string} query - The search query for finding anime.
-   * @returns {Promise<IResponse<IAnizone[] | []>>} - A promise resolving to an object containing search results or an error message.
+   * @returns - A promise resolving to an object containing search results or an error message.
    */
   async search(query: string): Promise<IResponse<IAnizone[] | []>> {
     if (!query) {
@@ -293,7 +298,7 @@ export class Anizone extends BaseClass {
 
   /**
    * Fetches recent updates from the Anizone homepage, including recently added anime and latest episodes.
-   * @returns {Promise<IAnizoneUpdates<IAniZoneEpisodes[] | []>>} - A promise resolving to an object containing arrays of recently added anime, latest episodes, or an error message.
+   * @returns - A promise resolving to an object containing arrays of recently added anime, latest episodes, or an error message.
    */
 
   async fetchUpdates(): Promise<IAnizoneUpdates<IAniZoneEpisodes[] | []>> {
@@ -317,7 +322,7 @@ export class Anizone extends BaseClass {
   /**
    * Fetches detailed information and episode list for a specific anime.
    * @param {string} animeId - The unique identifier for the anime.
-   * @returns {Promise<IAnizoneInfoResponse<IAnizoneInfo | null>>} - A promise resolving to an object containing anime details and episodes or an error message.
+   * @returns - A promise resolving to an object containing anime details and episodes or an error message.
    */
   async fetchAnimeInfo(animeId: string): Promise<IAnizoneInfoResponse<IAnizoneInfo | null>> {
     if (!animeId) {

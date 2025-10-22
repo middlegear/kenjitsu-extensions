@@ -89,14 +89,17 @@ export interface IZSourceResponse<T> extends ISourceBaseResponse<T> {
   };
 }
 
-export interface IZAnimeInfoResponse<T> extends IResponse<T> {
+export interface IZoroAnimeInfoScrape<T> extends IResponse<T> {
   relatedSeasons: IZRelatedSeasons[] | [];
   recommendedAnime: IZAnime[] | [];
   relatedAnime: IZAnime[] | [];
-  providerEpisodes?: IZEpisodes[] | [];
   mostPopular: IZAnime[];
   promotionVideos: IZPromotionVIds[];
   characters: IZCharacters[];
+}
+
+export interface IZoroInfoResponse<T> extends IZoroAnimeInfoScrape<T> {
+  providerEpisodes: IZEpisodes[] | [];
 }
 
 export const HIGenres = {
