@@ -948,6 +948,7 @@ class Animekai extends BaseClass {
       );
 
       const ani_id = rateBox.dataId as string;
+      // console.log(ani_id);
 
       const token = await this.megaup.GenerateToken(ani_id);
 
@@ -1004,7 +1005,7 @@ class Animekai extends BaseClass {
 
     const token = episodeId.includes('-token-') ? episodeId.split('-token-').at(1) : null;
     if (!token) {
-      throw new Error(`Invalid episodeId format: expected "-token-" part in "${episodeId}"`);
+      throw new Error(`Invalid episodeId: "${episodeId}"`);
     }
 
     try {
@@ -1062,9 +1063,9 @@ class Animekai extends BaseClass {
         };
       }
 
-      // const decodedData = await this.megaup.DecodeIframeData(data.result); /// removed json.parse
+      const decodedData = await this.megaup.DecodeIframeData(response.data.result); /// removed json.parse
       try {
-        const decodedData = JSON.parse(await this.megaup.DecodeIframeData(response.data.result));
+        // const decodedData = JSON.parse(await this.megaup.DecodeIframeData(response.data.result));
         servers.push({
           url: decodedData.url,
           intro: {
