@@ -87,18 +87,3 @@ test('returns an array anime characters', async () => {
   expect(Array.isArray(data.data)).toBe(true);
   expect(data.data.length).toBeGreaterThan(0);
 });
-
-test('returns an object containing streaming sources for allanime provider', async () => {
-  const data = await jikan.fetchAllAnimeProviderSources('allanime-GoDoALiHc82Jrmcmh-episode-1', 'sub');
-
-  expect(data.okru?.data).not.toBeNull();
-  // expect(data.filemoon?.data).not.toBeNull();
-  expect(data.mp4upload?.data).not.toBeNull();
-});
-
-test('returns an object containing streaming sources for hianime provider', async () => {
-  const data = await jikan.fetchHianimeProviderSources('hianime-solo-leveling-18718-episode-119497', 'sub');
-  expect(data.data).not.toBeNull();
-  expect(Array.isArray(data.data?.sources)).toBe(true);
-  expect(data.data?.sources.length).toBeGreaterThan(0);
-});

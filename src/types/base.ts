@@ -57,7 +57,7 @@ export interface IVideoSource {
   download?: string | null;
   posterImage?: string | null;
 }
-interface ISource {
+export interface ISource {
   url: string | null;
   isM3u8: boolean | null;
   type: string | null;

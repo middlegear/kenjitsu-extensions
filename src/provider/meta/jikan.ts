@@ -32,7 +32,7 @@ export class Jikan extends BaseAnimeMeta {
   }
 
   /**
-   * Maps MyAnimeList anime data to HiAnime (Zoro) provider ID.
+   * Maps MyAnimeList anime data to Anizone provider ID.
    *
    * @private
    * @param malId - The MyAnimeList ID of the anime
@@ -96,6 +96,73 @@ export class Jikan extends BaseAnimeMeta {
     }
   }
 
+  /**
+   * Maps MyAnimeList anime data to HiAnime (Zoro) provider ID.
+   *
+   * @private
+   * @param malId - The MyAnimeList ID of the anime
+   * @returns Promise resolving to provider mapping data
+   */
+  private async fetchAnizoneProviderId(malId: number): Promise<IMetaProviderIdResponse<IMetaAnime | null>> {
+    if (!malId) {
+      return {
+        error: 'Invalid or missing required parameter: malId!',
+        data: null,
+        provider: null,
+      };
+    }
+
+    try {
+      const response = await this.malAnizip(malId);
+      const mal = await this.fetchInfo(malId);
+
+      let release: string | null = null;
+
+      if (mal.data) {
+        release = mal.data.releaseDate;
+      }
+
+      const year = release ? new Date(release).getFullYear() : null;
+      const titles =
+        response.titles?.japanese ||
+        response.titles?.simplifiedChinese ||
+        response.titles?.romanizedJapanese ||
+        response.titles?.traditionalChinese;
+
+      let malData: IMetaData | null = null;
+
+      if (mal.data) {
+        malData = {
+          english: mal.data.title.english,
+          romaji: mal.data.title.romaji,
+          native: mal.data.title.native,
+          type: mal.data.format,
+          episodes: mal.data.episodes,
+          season: mal.data.season,
+          year: year as number,
+        };
+      }
+
+      let result = null;
+      if (titles) {
+        const response = await this.anizone.search(titles);
+        if (response && response.data.length > 0) {
+          result = response.data;
+        }
+      }
+
+      return {
+        data: mal.data,
+        provider: this.mapAnimeProviderId(malData, result, 'anizone'),
+      };
+    } catch (error) {
+      return {
+        error: error instanceof Error ? error.message : 'Unknown error occurred',
+        data: null,
+        provider: null,
+      };
+    }
+  }
   /**
    * Maps MyAnimeList anime data to AllAnime provider ID.
    *
@@ -225,6 +292,7 @@ export class Jikan extends BaseAnimeMeta {
       };
     }
   }
+
   /**
    * Fetches episodes from AllAnime provider and enriches with Anizip data for a given MAL ID.
    *
@@ -271,6 +339,67 @@ export class Jikan extends BaseAnimeMeta {
       const enrichedEpisodes = allanime.data.map((episode: any) => {
         const aniZipEpisode = aniZipMap.get(episode.episodeNumber);
         return this.mergeEpisodeData(episode, aniZipEpisode, 'allanime');
+      });
+
+      return {
+        data: initialResponse.data,
+        providerEpisodes: enrichedEpisodes,
+      };
+    } catch (error) {
+      return {
+        error: error instanceof Error ? error.message : 'Unknown Err',
+        data: null,
+        providerEpisodes: [],
+      };
+    }
+  }
+
+  /**
+   * Fetches episodes from AllAnime provider and enriches with Anizip data for a given MAL ID.
+   *
+   * @private
+   * @param malId - The MyAnimeList ID of the anime
+   * @returns Promise resolving to episode data enriched with additional metadata
+   */
+  private async fetchAnizoneProviderEpisodes(malId: number): Promise<IMetaProviderEpisodesResponse<IMetaAnime | null>> {
+    if (!malId) {
+      return {
+        error: 'Invalid or missing required parameter: malId!',
+        data: null,
+        providerEpisodes: [],
+      };
+    }
+
+    try {
+      const initialResponse = await this.fetchAnizoneProviderId(malId);
+      if (!initialResponse.provider?.id) {
+        return {
+          error: 'Provider not found for given MAL ID.',
+          data: initialResponse.data,
+          providerEpisodes: [],
+        };
+      }
+
+      const [anizoneResult, anizipResult] = await Promise.allSettled([
+        this.anizone.fetchAnimeInfo(initialResponse.provider?.id as string),
+        this.malAnizip(malId),
+      ]);
+
+      if (anizoneResult.status === 'rejected') {
+        return {
+          error: `Failed to fetch provider episodes: ${anizoneResult.reason}`,
+          data: initialResponse.data,
+          providerEpisodes: [],
+        };
+      }
+
+      const anizone = anizoneResult.value;
+      const anizipEpisodes = anizipResult.status === 'fulfilled' ? anizipResult.value.episodes : [];
+      const aniZipMap = new Map((anizipEpisodes || []).map(item => [item.episodeAnizipNumber, item]));
+
+      const enrichedEpisodes = anizone.providerEpisodes.map((episode: any) => {
+        const aniZipEpisode = aniZipMap.get(episode.episodeNumber);
+        return this.mergeEpisodeData(episode, aniZipEpisode, 'anizone');
       });
 
       return {
@@ -1361,7 +1490,7 @@ export class Jikan extends BaseAnimeMeta {
    */
   async fetchProviderId(
     malId: number,
-    provider: 'hianime' | 'allanime' | 'animepahe' = 'hianime',
+    provider: 'hianime' | 'allanime' | 'animepahe' | 'anizone' = 'hianime',
   ): Promise<IMetaProviderIdResponse<IMetaAnime | null>> {
     if (!malId) {
       return {
@@ -1393,6 +1522,12 @@ export class Jikan extends BaseAnimeMeta {
             throw new Error(animepahe.error);
           }
           return { data: animepahe.data, provider: animepahe.provider };
+        case 'anizone':
+          const anizone = await this.fetchAnizoneProviderId(malId);
+          if ('error ' in anizone) {
+            throw new Error(anizone.error);
+          }
+          return { data: anizone.data, provider: anizone.provider };
       }
     } catch (error) {
       return {
@@ -1412,7 +1547,7 @@ export class Jikan extends BaseAnimeMeta {
    */
   async fetchAnimeProviderEpisodes(
     malId: number,
-    provider: 'hianime' | 'allanime' | 'animepahe' = 'hianime',
+    provider: 'hianime' | 'allanime' | 'animepahe' | 'anizone' = 'hianime',
   ): Promise<IMetaProviderEpisodesResponse<IMetaAnime | null>> {
     if (!malId) {
       return {
@@ -1444,6 +1579,13 @@ export class Jikan extends BaseAnimeMeta {
             throw new Error(animepahe.error);
           }
           return { data: animepahe.data, providerEpisodes: animepahe.providerEpisodes };
+
+        case 'anizone':
+          const anizone = await this.fetchAnizoneProviderEpisodes(malId);
+          if ('error ' in anizone) {
+            throw new Error(anizone.error);
+          }
+          return { data: anizone.data, providerEpisodes: anizone.providerEpisodes };
       }
     } catch (error) {
       return {
@@ -1452,39 +1594,5 @@ export class Jikan extends BaseAnimeMeta {
         providerEpisodes: [],
       };
     }
-  }
-
-  /**
-   * Fetches video sources for a given episode from multiple servers for AllAnime provider.
-   *
-   * @param episodeId - The unique ID of the episode from providerEpisodes array
-   * @param category - The translation category (sub, dub, or raw, default: 'sub')
-   * @returns Promise resolving to video sources for streaming
-   */
-  async fetchAllAnimeProviderSources(episodeId: string, category: ISubOrDub = 'sub') {
-    return await this.allanime.fetchSources(episodeId, category);
-  }
-
-  /**
-   * Fetches video sources for a given episode for HiAnime provider.
-   *
-   * @param episodeId - The unique ID of the episode from providerEpisodes array
-   * @param category - The translation category (sub, dub, or raw, default: 'sub')
-   * @param server - The streaming server to use (optional, defaults to hd-2)
-   * @returns Promise resolving to video sources for streaming
-   */
-  async fetchHianimeProviderSources(episodeId: string, category: ISubOrDub = 'sub', server: HiAnimeServers = 'hd-2') {
-    return await this.hianime.fetchSources(episodeId, server, category);
-  }
-
-  /**
-   * Fetches streaming sources for a given anime episode from a specified category for AnimePahe provider.
-   *
-   * @param episodeId - The unique identifier for the episode (required)
-   * @param category - The audio category (Subtitled or Dubbed) (optional, defaults to 'sub')
-   * @returns Promise that resolves to streaming sources, headers, or an error message
-   */
-  async fetchAnimePaheProviderSources(episodeId: string, category: ISubOrDub = 'sub') {
-    return await this.animepahe.fetchSources(episodeId, category);
   }
 }

@@ -773,7 +773,7 @@ export class HiAnime extends BaseClass {
     const selector: cheerio.SelectorType = '.detail-infor-content .ss-list a';
     $(selector).each((_, element) => {
       episodesList.push({
-        episodeId: `hianime-${$(element)?.attr('href')?.split('/')?.at(2)?.trim()?.replace('?ep=', '-episode-')}` || null,
+        episodeId: $(element)?.attr('href')?.split('/')?.at(2)?.trim()?.replace('?ep=', '-episode-') || null,
         title: $(element)?.attr('title')?.trim() || null,
         romaji: $(element).find('div.ep-name.e-dynamic-name').attr('data-jname') || null,
         episodeNumber: Number($(element).attr('data-number')),

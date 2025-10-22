@@ -151,27 +151,7 @@ export abstract class BaseAnimeMeta {
       score: bestScore,
     };
   }
-  /**
-   * Extract year from ISO date string (YYYY-MM-DD format)
-   * Handles both full dates and partial years
-   * @param dateString - Full date like "2018-10-16" or just "2018"
-   * @returns Year as number or null if invalid
-   */
-  private extractYear(dateString: string | null): number | null {
-    if (!dateString) return null;
 
-    // Handle full ISO dates (YYYY-MM-DD) or just years (YYYY)
-    const yearMatch = dateString.match(/^(\d{4})/);
-    if (yearMatch) {
-      const year = parseInt(yearMatch[1], 10);
-
-      if (year >= 1900 && year <= 2050) {
-        return year;
-      }
-    }
-
-    return null;
-  }
   // ------------------------
   // Anizip integration
   // ------------------------
@@ -246,10 +226,14 @@ export abstract class BaseAnimeMeta {
     const episodeNumber = providerEp.episodeNumber || aniZipEp.episodeAnizipNumber || null;
     const rating = aniZipEp?.rating || null;
     const aired = aniZipEp?.aired || null;
-    const episodeId = providerEp?.episodeId || null;
-    const title = aniZipEp?.title?.english || aniZipEp?.title?.romanizedJapanese || providerEp.title || null;
+    let episodeId;
+    if (provider === 'hianime' || provider === 'anizone') {
+      episodeId = `${provider}-${providerEp?.episodeId}`;
+    } else episodeId = providerEp?.episodeId || null;
+    const title = providerEp.title || aniZipEp?.title?.english || aniZipEp?.title?.romanizedJapanese || null;
     const overview = aniZipEp?.overview || null;
-    const thumbnail = aniZipEp?.image || providerEp.thumbnail || null;
+    const thumbnail = providerEp.teaser || providerEp.thumbnail || aniZipEp?.image || null;
+    const airDate = providerEp.airDate || aniZipEp.airDate || null;
     const hasDub = providerEp.hasDub || null;
     const hasSub = providerEp.hasDub || null;
     // const hasRaw = providerEp.hasDub || null; disabled since i cant fetch raw sources from allanime
@@ -260,6 +244,7 @@ export abstract class BaseAnimeMeta {
       title,
       rating,
       aired,
+      airDate,
       overview,
       thumbnail,
       provider,

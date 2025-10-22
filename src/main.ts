@@ -8,7 +8,7 @@ import { Animepahe } from './provider/anime/animepahe.js';
 import { HiMovies } from './provider/movies/himovies.js';
 import { Kaido } from './provider/anime/kaido.js';
 import { Anizone } from './provider/anime/anizone.js';
-
+import { AllAnime } from './provider/anime/allanime.js';
 import type { IMovieCountry, IMovieGenre } from './types/movies/movie.js';
 import type { HIGenre } from './types/anime/zoro.js';
 import type { IMetaFormat, Seasons } from './types/meta/meta-anime.js';
@@ -25,6 +25,7 @@ export {
   Anizone,
   HiMovies,
   FlixHQ,
+  AllAnime,
   type IMovieCountry,
   type IMovieGenre,
   type HIGenre,
@@ -32,6 +33,3 @@ export {
   type Seasons,
   type IAnimeCategory,
 };
-
-const data = await new Anizone().fetchSources('bleach-sennen-kessen-hen-soukoku-tan-gwna8xmk-episode-12');
-console.log(data);
