@@ -6,7 +6,7 @@ export abstract class BaseClass {
   constructor(provider: 'animekai' | 'hianime' = 'hianime') {
     let delay = null;
     if (provider === 'animekai') {
-      delay = 200;
+      delay = 1500;
     } else {
       delay = 100;
     }
