@@ -131,7 +131,7 @@ export class Anilist extends BaseAnimeMeta {
       const titles =
         response.titles?.japanese ||
         response.titles?.simplifiedChinese ||
-        response.titles?.romanizedJapanese ||
+        response.titles?.romanized ||
         response.titles?.traditionalChinese;
 
       let release: string | null = null;

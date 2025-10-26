@@ -640,16 +640,6 @@ export class TheMovieDatabase extends BaseMovieMeta {
   }
 
   /**
-   * Fetches data on upcoming movies from TMDb.
-   *
-   * @param page - The page number for pagination (optional, defaults to 1)
-   * @returns Promise resolving to paginated list of upcoming movies
-   */
-  async fetchUpcomingMovies(page: number = 1): Promise<IMetaMoviePaginated<IMetaMovie[] | []>> {
-    return this.fetchPaginatedMovieData('/movie/upcoming', { page: String(page) });
-  }
-
-  /**
    * Fetches movie streaming sources using TMDB ID through VidSrc integration.
    *
    * @param tmdbId - The unique TMDb ID for the movie (required)
@@ -684,7 +674,7 @@ export class TheMovieDatabase extends BaseMovieMeta {
 
       const tmdbdata: IMediaTitle = {
         name: title as string,
-        seasons: tvShowData.data?.latestEpisode?.season,
+        seasons: tvShowData.data?.latestEpisode?.season || tvShowData.data?.seasons,
         totalEpisodes: tvShowData.data?.latestEpisode?.episodeNumber,
       };
 
@@ -708,7 +698,7 @@ export class TheMovieDatabase extends BaseMovieMeta {
 
       return {
         data: tvShowData.data,
-        provider: this.mapMediaProviderId(tmdbdata, result, 'TV') as IMovieProviderResults,
+        provider: this.mapMediaProviderId(tmdbdata, result, 'TV'),
       };
     } catch (error) {
       return { error: error instanceof Error ? error.message : 'Unknown error', data: null, provider: null };

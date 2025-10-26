@@ -13,7 +13,7 @@ export interface MediaSearchResults {
   // Movie-specific
   releaseDate?: number | null;
   duration?: number | null;
-  //   provider?: string | null;
+  provider?: string | null;
 }
 
 export interface IMediaTitle {
@@ -54,124 +54,129 @@ export abstract class BaseMovieMeta {
     results: MediaSearchResults[] | null,
     mediaType: 'TV' | 'Movie',
   ): IMovieProviderResults | null {
-    if (!results || results.length === 0 || !title) {
+    if (!results || results.length === 0 || !title || !title.name) {
+      console.error('Invalid input: title or results missing');
       return null;
     }
 
     let bestMatch: MediaSearchResults | null = null;
     let bestScore = 0;
+    let bestCompared = 0; // Track number of comparisons for tie-breaking
 
-    // Extract year from full date for movies
+    // Extract year for movies
     const titleYear = mediaType === 'Movie' && title.releaseDate ? this.extractYear(title.releaseDate) : null;
 
     for (const r of results) {
+      if (!r.name) {
+        // console.log(`Skipping result with missing name: ${r.id}`);
+        continue;
+      }
+
       let totalScore = 0;
       let weightSum = 0;
       let compared = 0;
 
-      // Title comparison (50% weight for both types)
-      if (title.name && r.name) {
-        const titleSimilarity = compareTwoStrings(title.name, r.name);
-        totalScore += titleSimilarity * 0.5;
-        weightSum += 0.5;
+      // Title comparison (40% weight)
+      const titleSimilarity = compareTwoStrings(title.name, r.name);
+      // console.log(`Comparing titles "${title.name}" vs "${r.name}": ${titleSimilarity}`);
+      totalScore += titleSimilarity * 0.4;
+      weightSum += 0.4;
+      compared++;
+
+      if (mediaType === 'TV') {
+        // Seasons comparison (40% weight)
+        let seasonMatch = 0;
+        if (title.seasons != null && r.seasons != null && !isNaN(Number(title.seasons)) && !isNaN(Number(r.seasons))) {
+          const seasonDiff = Math.abs(Number(title.seasons) - Number(r.seasons));
+          seasonMatch = Math.max(0, 1 - seasonDiff / Math.max(Number(title.seasons), Number(r.seasons)));
+        }
+        // console.log(`Seasons diff for ${r.name}: ${title.seasons} vs ${r.seasons}, Match: ${seasonMatch}`);
+        totalScore += seasonMatch * 0.4;
+        weightSum += 0.4;
+        compared++;
+
+        // Episodes comparison (20% weight)
+        let episodeMatch = 0;
+        if (
+          title.totalEpisodes != null &&
+          r.totalEpisodes != null &&
+          !isNaN(Number(title.totalEpisodes)) &&
+          !isNaN(Number(r.totalEpisodes))
+        ) {
+          const episodeDiff = Math.abs(Number(title.totalEpisodes) - Number(r.totalEpisodes));
+          episodeMatch = Math.max(0, 1 - episodeDiff / Math.max(Number(title.totalEpisodes), Number(r.totalEpisodes)));
+        }
+        // console.log(`Episodes diff for ${r.name}: ${title.totalEpisodes} vs ${r.totalEpisodes}, Match: ${episodeMatch}`);
+        totalScore += episodeMatch * 0.2;
+        weightSum += 0.2;
+        compared++;
+      } else if (mediaType === 'Movie') {
+        // Year comparison (40% weight)
+        let yearMatch = 0;
+        const resultYear = r.releaseDate ? this.extractYear(r.releaseDate.toString()) : null;
+        if (titleYear !== null && resultYear !== null && !isNaN(titleYear) && !isNaN(resultYear)) {
+          const yearDiff = Math.abs(titleYear - resultYear);
+          if (yearDiff === 0) yearMatch = 1.0;
+          else if (yearDiff === 1) yearMatch = 0.8;
+          else if (yearDiff === 2) yearMatch = 0.5;
+          else yearMatch = 0.2;
+        }
+        // console.log(`Year diff for ${r.name}: ${titleYear} vs ${resultYear}, Match: ${yearMatch}`);
+        totalScore += yearMatch * 0.4;
+        weightSum += 0.4;
+        compared++;
+
+        // Runtime comparison (20% weight)
+        let runtimeMatch = 0;
+        if (title.runtime != null && r.duration != null && !isNaN(Number(title.runtime)) && !isNaN(Number(r.duration))) {
+          const runtimeDiff = Math.abs(Number(title.runtime) - Number(r.duration));
+          if (runtimeDiff <= 10) runtimeMatch = 1.0;
+          else if (runtimeDiff <= 30) runtimeMatch = 0.7;
+          else if (runtimeDiff <= 60) runtimeMatch = 0.4;
+          else runtimeMatch = 0.1;
+        }
+        // console.log(`Runtime diff for ${r.name}: ${title.runtime} vs ${r.duration}, Match: ${runtimeMatch}`);
+        totalScore += runtimeMatch * 0.2;
+        weightSum += 0.2;
         compared++;
       }
 
-      // Type-specific comparisons
-      if (mediaType === 'TV') {
-        // TV: Seasons comparison (35% weight)
-        if (title.seasons !== null && r.seasons !== null) {
-          const seasonDiff = Math.abs(Number(title.seasons) - Number(r.seasons));
-          const seasonMatch = Math.max(0, 1 - seasonDiff / Math.max(Number(title.seasons), Number(r.seasons)));
-          totalScore += seasonMatch * 0.35;
-          weightSum += 0.35;
-          compared++;
-        }
-
-        // TV: Total episodes comparison (15% weight)
-        if (title.totalEpisodes !== null && r.totalEpisodes !== null) {
-          const episodeDiff = Math.abs(Number(title.totalEpisodes) - Number(r.totalEpisodes));
-
-          const episodeMatch = Math.max(0, 1 - episodeDiff / Math.max(Number(title.totalEpisodes), Number(r.totalEpisodes)));
-
-          totalScore += episodeMatch * 0.15;
-          weightSum += 0.15;
-          compared++;
-        }
-      } else if (mediaType === 'Movie') {
-        // Movie: Year comparison (35% weight)
-        if (titleYear !== null && r.releaseDate !== null) {
-          const yearDiff = Math.abs(titleYear - Number(r.releaseDate));
-          let yearMatch: number;
-
-          if (yearDiff === 0) {
-            yearMatch = 1.0;
-          } else if (yearDiff === 1) {
-            yearMatch = 0.8;
-          } else if (yearDiff === 2) {
-            yearMatch = 0.5;
-          } else {
-            yearMatch = 0.2;
-          }
-
-          totalScore += yearMatch * 0.35;
-          weightSum += 0.35;
-          compared++;
-        }
-
-        // Movie: Runtime comparison (15% weight)
-        if (title.runtime !== null && r.duration !== null) {
-          const runtimeDiff = Math.abs(Number(title.runtime) - Number(r.duration));
-          let runtimeMatch: number;
-
-          if (runtimeDiff <= 10) {
-            runtimeMatch = 1.0;
-          } else if (runtimeDiff <= 30) {
-            runtimeMatch = 0.7;
-          } else if (runtimeDiff <= 60) {
-            runtimeMatch = 0.4;
-          } else {
-            runtimeMatch = 0.1;
-          }
-
-          totalScore += runtimeMatch * 0.15;
-          weightSum += 0.15;
-          compared++;
-        }
+      if (compared === 0) {
+        // console.log(`No comparisons for ${r.name}`);
+        continue;
       }
 
-      if (compared === 0) continue;
-
       const weightedAvgScore = totalScore / weightSum;
+      // console.log(`Result: ${r.name}, Score: ${weightedAvgScore}, Comparisons: ${compared}`);
 
-      if (weightedAvgScore > bestScore) {
+      if (weightedAvgScore > bestScore || (weightedAvgScore === bestScore && compared > bestCompared)) {
         bestScore = weightedAvgScore;
         bestMatch = r;
+        bestCompared = compared;
       }
     }
 
-    if (!bestMatch || bestScore < 0.3) {
+    if (!bestMatch || bestScore < 0.3 || !bestMatch.id || !bestMatch.name) {
+      // console.log('No valid match found or score too low:', bestScore);
       return null;
     }
 
     const result: IMovieProviderResults = {
-      id: bestMatch.id || null,
-      name: bestMatch.name || null,
+      id: bestMatch.id,
+      name: bestMatch.name,
+      score: bestScore,
+      provider: bestMatch.provider || null,
     };
 
-    // Add type-specific fields
     if (mediaType === 'TV') {
       result.seasons = bestMatch.seasons || null;
       result.totalEpisodes = bestMatch.totalEpisodes || null;
-      //   result.provider = bestMatch.provider || null;
-      result.score = bestScore;
     } else {
       result.releaseDate = bestMatch.releaseDate || null;
-      result.duration = bestMatch.duration + ' ' + 'minutes' || null;
-      //   result.provider = bestMatch.provider || null;
-      result.score = bestScore;
+      result.duration = bestMatch.duration ? `${bestMatch.duration} minutes` : null;
     }
 
+    // console.log('Best match:', result);
     return result;
   }
 

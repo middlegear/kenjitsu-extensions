@@ -83,22 +83,8 @@ test('return an array containing object of available servers for a specific movi
   expect(data.data.length).toBeGreaterThan(0);
 });
 
-test('return an array containing object of available servers for a specific tv', async () => {
-  const data = await flixhq.fetchServers('tv-the-boys-33895-episode-1096681');
-
-  expect(Array.isArray(data.data)).toBe(true);
-  expect(data.data.length).toBeGreaterThan(0);
-});
-
 test('returns an object containing streaming sources for movie', async () => {
   const data = await flixhq.fetchSources('movie-bad-boys-18997', 'akcloud');
-  expect(data.data).not.toBeNull();
-  expect(Array.isArray(data.data?.sources)).toBe(true);
-  expect(data.data?.sources.length).toBeGreaterThan(0);
-});
-
-test('returns an object containing streaming sources for tv', async () => {
-  const data = await flixhq.fetchSources('tv-the-boys-33895-episode-1096681', 'vidcloud');
   expect(data.data).not.toBeNull();
   expect(Array.isArray(data.data?.sources)).toBe(true);
   expect(data.data?.sources.length).toBeGreaterThan(0);

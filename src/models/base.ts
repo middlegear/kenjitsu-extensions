@@ -3,14 +3,8 @@ import { FetchClient } from '../config/client.js';
 export abstract class BaseClass {
   protected readonly client: FetchClient;
 
-  constructor(provider: 'animekai' | 'hianime' = 'hianime') {
-    let delay = null;
-    if (provider === 'animekai') {
-      delay = 1500;
-    } else {
-      delay = 100;
-    }
-    this.client = new FetchClient({ delayBetweenRequests: delay });
+  constructor() {
+    this.client = new FetchClient();
   }
 
   protected createSlug(text: string): string {

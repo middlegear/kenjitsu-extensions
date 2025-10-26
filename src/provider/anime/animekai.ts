@@ -32,7 +32,7 @@ import type { IMetaFormat } from '../../types/meta/meta-anime.js';
  */
 class Animekai extends BaseClass {
   constructor(baseUrl: string = 'https://anikai.to') {
-    super('animekai');
+    super();
     this.baseUrl = baseUrl;
     this.megaup = new MegaUp();
     this.headers = {
@@ -998,7 +998,7 @@ class Animekai extends BaseClass {
    * @returns {Promise<IResponse<IServerInfo | null>>} A promise resolving to server information or an error.
    * @throws {Error} If the episodeId is missing or has invalid format.
    */
-  private async scrapefetchServers(episodeId: string): Promise<IResponse<IServerInfo | null>> {
+  async fetchServers(episodeId: string): Promise<IResponse<IServerInfo | null>> {
     if (!episodeId) {
       throw new Error('Missing required parameter: episodeId');
     }
@@ -1016,6 +1016,10 @@ class Animekai extends BaseClass {
 
       const response = await this.client.get(`${this.baseUrl}/ajax/links/list?token=${token}&_=${generatedToken}`);
 
+      if (!response.data) {
+        throw new Error(response.statusText);
+      }
+
       return this.parseServers(cheerio.load(response.data.result));
     } catch (error) {
       return {
@@ -1026,13 +1030,13 @@ class Animekai extends BaseClass {
   }
 
   /**
-   * Fetches available streaming servers for a specific anime episode.
+   * Fetches available embed streaming servers for a specific anime episode.
    * @param {string} episodeId - The unique identifier for the episode  (required).
    * @param {ISubOrDub} category  - The audio category (Subtitled or Dubbed) (optional, defaults to Sub).
    * @param  {string}  server - The streaming server to use (optional, defaults to server-1).
    * @returns  A promise that resolves to an object containing available streaming server details (sub, dub, raw) or an error message.
    */
-  async fetchServers(
+  async fetchEmbedServers(
     episodeId: string,
     category: ISubOrDub = 'sub',
     server: 'server-1' | 'server-2' = 'server-1',
@@ -1042,12 +1046,12 @@ class Animekai extends BaseClass {
     }
 
     try {
-      const serverInfo = (await this.scrapefetchServers(episodeId)).data as IServerInfo;
+      const serverInfo = await this.fetchServers(episodeId);
       if ('error' in serverInfo) {
-        throw new Error((serverInfo.error as Error).message);
+        throw new Error(serverInfo.error);
       }
 
-      const mediaId = this.findServerIds(serverInfo, category, server);
+      const mediaId = this.findServerIds(serverInfo.data as IServerInfo, category, server);
       const servers: AKserver[] = [];
 
       const token = await this.megaup.GenerateToken(mediaId);
@@ -1065,7 +1069,7 @@ class Animekai extends BaseClass {
 
       const decodedData = await this.megaup.DecodeIframeData(response.data.result); /// removed json.parse
       try {
-        // const decodedData = JSON.parse(await this.megaup.DecodeIframeData(response.data.result));
+        // const decodedData = JSON.parse(await this.megaup.DecodeIframeData(response.data.result)); // dont remove
         servers.push({
           url: decodedData.url,
           intro: {
@@ -1122,14 +1126,28 @@ class Animekai extends BaseClass {
     }
 
     try {
-      const servers = await this.fetchServers(episodeId, category, server);
+      const serverInfo = await this.fetchServers(episodeId);
 
-      if ('error' in servers) {
-        throw new Error(servers.error).message;
+      if ('error' in serverInfo) {
+        throw new Error(serverInfo.error);
       }
 
-      const firstServer = servers.data[0];
-      const serverUrl = new URL(firstServer.url);
+      const mediaId = this.findServerIds(serverInfo.data as IServerInfo, category, server);
+
+      const token = await this.megaup.GenerateToken(mediaId);
+
+      const response = await this.client.get(`${this.baseUrl}/ajax/links/view?id=${mediaId}&_=${token}`, {
+        headers: this.headers,
+      });
+
+      if (!response.data) {
+        throw new Error(`Server responded with error:${response.statusText}` || 'Unknown error in server');
+      }
+      const decodedIframe = await this.megaup.DecodeIframeData(response.data.result);
+
+      const firstServer = decodedIframe.url;
+
+      const serverUrl = new URL(firstServer);
 
       const source = await this.fetchSources(serverUrl.href, category, server);
 
@@ -1138,8 +1156,15 @@ class Animekai extends BaseClass {
         data: source.data
           ? {
               ...source.data,
-              intro: firstServer.intro,
-              outro: firstServer.outro,
+              intro: {
+                start: decodedIframe?.skip?.intro?.[0] ?? null,
+                end: decodedIframe?.skip?.intro?.[1] ?? null,
+              },
+              outro: {
+                start: decodedIframe?.skip?.outro?.[0] ?? null,
+                end: decodedIframe?.skip?.outro?.[1] ?? null,
+              },
+              // download: decodedIframe.url.replace(/\/e\//, '/download/'),
             }
           : null,
       };

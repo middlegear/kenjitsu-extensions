@@ -12,7 +12,6 @@ import {
   type IZEpisodes,
   type IZHomeResponse,
   type IZPaginated,
-  type IZPaginatedSections,
   type IZPromotionVIds,
   type IZRelatedSeasons,
   type IZSearchSuggestions,
@@ -642,11 +641,11 @@ export class Kaido extends BaseClass {
 
   /**
    * Parses paginated sections like top airing, most popular, etc., from a Cheerio instance.
-   * Extracts anime details, pagination information, and top anime rankings.
+   * Extracts anime details, pagination information
    * @param $ CheerioAPI instance
    * @returns RepetitiveSections containing anime list, pagination details, and top anime rankings
    */
-  private parsePaginatedSections($: cheerio.CheerioAPI): IZPaginatedSections<IZAnime[] | []> {
+  private parsePaginatedSections($: cheerio.CheerioAPI): IZPaginated<IZAnime[] | []> {
     const topAiringSelector: cheerio.SelectorType = 'div#main-content section.block_area_category div.flw-item';
     const data: IZAnime[] = [];
 
@@ -681,74 +680,12 @@ export class Kaido extends BaseClass {
         $('.pagination .page-item').last().text().trim(),
     );
 
-    const topDailyAnime: IZAnime[] = [];
-    const topWeeklyAnime: IZAnime[] = [];
-    const topMonthlyAnime: IZAnime[] = [];
-
-    const topDailySelector: cheerio.SelectorType = 'div#main-sidebar div#top-viewed-day li';
-    const topWeeklySelector: cheerio.SelectorType = 'div#main-sidebar div#top-viewed-week li';
-    const topMonthlySelector: cheerio.SelectorType = 'div#main-sidebar div#top-viewed-month li';
-
-    $(topDailySelector).each((_, element) => {
-      topDailyAnime.push({
-        id: $(element).find('div.film-detail  a.dynamic-name').attr('href')?.split('/').at(1) || null,
-        name: $(element).find('div.film-detail  a.dynamic-name').text().trim() || null,
-        romaji: $(element).find('div.film-detail  a.dynamic-name').attr('data-jname') || null,
-        posterImage: $(element).find('div.film-poster  img.film-poster-img').attr('data-src') || null,
-        episodes: {
-          sub: Number($(element).find('div.tick > div.tick-sub:has(.fa-closed-captioning)').text().trim()) || null,
-          dub: Number($(element).find('div.tick > div.tick-dub:has(.fa-microphone)').text().trim()) || null,
-        },
-        totalEpisodes:
-          Number($(element).find('div.tick > div.tick-eps').text().trim()) ||
-          Number($(element).find('div.tick > div.tick-sub:has(.fa-closed-captioning)').text().trim()) ||
-          null,
-      });
-    });
-    $(topWeeklySelector).each((_, element) => {
-      topWeeklyAnime.push({
-        id: $(element).find('div.film-detail  a.dynamic-name').attr('href')?.split('/').at(1) || null,
-        name: $(element).find('div.film-detail  a.dynamic-name').text().trim() || null,
-        romaji: $(element).find('div.film-detail  a.dynamic-name').attr('data-jname') || null,
-        posterImage: $(element).find('div.film-poster  img.film-poster-img').attr('data-src') || null,
-        episodes: {
-          sub: Number($(element).find('div.tick > div.tick-sub:has(.fa-closed-captioning)').text().trim()) || null,
-          dub: Number($(element).find('div.tick > div.tick-dub:has(.fa-microphone)').text().trim()) || null,
-        },
-        totalEpisodes:
-          Number($(element).find('div.tick > div.tick-eps').text().trim()) ||
-          Number($(element).find('div.tick > div.tick-sub:has(.fa-closed-captioning)').text().trim()) ||
-          null,
-      });
-    });
-    $(topMonthlySelector).each((_, element) => {
-      topMonthlyAnime.push({
-        id: $(element).find('div.film-detail  a.dynamic-name').attr('href')?.split('/').at(1) || null,
-        name: $(element).find('div.film-detail  a.dynamic-name').text().trim() || null,
-        romaji: $(element).find('div.film-detail  a.dynamic-name').attr('data-jname') || null,
-        posterImage: $(element).find('div.film-poster  img.film-poster-img').attr('data-src') || null,
-        episodes: {
-          sub: Number($(element).find('div.tick > div.tick-sub:has(.fa-closed-captioning)').text().trim()) || null,
-          dub: Number($(element).find('div.tick > div.tick-dub:has(.fa-microphone)').text().trim()) || null,
-        },
-        totalEpisodes:
-          Number($(element).find('div.tick > div.tick-eps').text().trim()) ||
-          Number($(element).find('div.tick > div.tick-sub:has(.fa-closed-captioning)').text().trim()) ||
-          null,
-      });
-    });
-    const topAnime = {
-      daily: topDailyAnime,
-      weekly: topWeeklyAnime,
-      monthly: topMonthlyAnime,
-    };
     if (!Array.isArray(data) || data.length === 0) {
       return {
         hasNextPage: false,
         currentPage: 0,
         lastPage: 0,
         data: [],
-        topAnime: topAnime,
         error: 'Cheerio Error: No results found',
       };
     }
@@ -758,7 +695,6 @@ export class Kaido extends BaseClass {
       currentPage,
       lastPage,
       data,
-      topAnime,
     };
   }
 
@@ -1074,7 +1010,7 @@ export class Kaido extends BaseClass {
    * @param {number} page - Page number for pagination (default: 1)
    * @returns  Promise resolving to an object with top airing anime and pagination details
    */
-  async fetchTopAiring(page: number = 1): Promise<IZPaginatedSections<IZAnime[] | []>> {
+  async fetchTopAiring(page: number = 1): Promise<IZPaginated<IZAnime[] | []>> {
     try {
       const response = await this.client.get(`${this.baseUrl}/top-airing`, {
         params: {
@@ -1087,7 +1023,6 @@ export class Kaido extends BaseClass {
           currentPage: 0,
           lastPage: 0,
           data: [],
-          topAnime: { daily: [], weekly: [], monthly: [] },
           error: response.statusText || 'Received empty response from server',
         };
       }
@@ -1100,7 +1035,6 @@ export class Kaido extends BaseClass {
         currentPage: 0,
         lastPage: 0,
         data: [],
-        topAnime: { daily: [], weekly: [], monthly: [] },
         error: error instanceof Error ? error.message : 'Unknown Error',
       };
     }
@@ -1111,7 +1045,7 @@ export class Kaido extends BaseClass {
    * @param {number} page - Page number for pagination (default: 1)
    * @returns  Promise resolving to an object  with favorited anime and pagination details
    */
-  async fetchMostFavourites(page: number = 1): Promise<IZPaginatedSections<IZAnime[] | []>> {
+  async fetchMostFavourites(page: number = 1): Promise<IZPaginated<IZAnime[] | []>> {
     try {
       const response = await this.client.get(`${this.baseUrl}/most-favorite`, {
         params: {
@@ -1124,7 +1058,6 @@ export class Kaido extends BaseClass {
           currentPage: 0,
           lastPage: 0,
           data: [],
-          topAnime: { daily: [], weekly: [], monthly: [] },
           error: response.statusText || 'Received empty response from server',
         };
       }
@@ -1137,7 +1070,6 @@ export class Kaido extends BaseClass {
         currentPage: 0,
         lastPage: 0,
         data: [],
-        topAnime: { daily: [], weekly: [], monthly: [] },
         error: error instanceof Error ? error.message : 'Unknown Error',
       };
     }
@@ -1148,7 +1080,7 @@ export class Kaido extends BaseClass {
    * @param {number} page - Page number for pagination (default: 1)
    * @returns  Promise resolving to an object  with popular anime and pagination details
    */
-  async fetchMostPopular(page: number = 1): Promise<IZPaginatedSections<IZAnime[] | []>> {
+  async fetchMostPopular(page: number = 1): Promise<IZPaginated<IZAnime[] | []>> {
     try {
       const response = await this.client.get(`${this.baseUrl}/most-popular`, {
         params: {
@@ -1161,7 +1093,6 @@ export class Kaido extends BaseClass {
           currentPage: 0,
           lastPage: 0,
           data: [],
-          topAnime: { daily: [], weekly: [], monthly: [] },
           error: response.statusText || 'Received empty response from server',
         };
       }
@@ -1174,7 +1105,6 @@ export class Kaido extends BaseClass {
         currentPage: 0,
         lastPage: 0,
         data: [],
-        topAnime: { daily: [], weekly: [], monthly: [] },
         error: error instanceof Error ? error.message : 'Unknown Error',
       };
     }
@@ -1185,7 +1115,7 @@ export class Kaido extends BaseClass {
    * @param {number} page - Page number for pagination (default: 1)
    * @returns  Promise resolving to an object  with recently completed anime and pagination details
    */
-  async fetchRecentlyCompleted(page: number = 1): Promise<IZPaginatedSections<IZAnime[] | []>> {
+  async fetchRecentlyCompleted(page: number = 1): Promise<IZPaginated<IZAnime[] | []>> {
     try {
       const response = await this.client.get(`${this.baseUrl}/completed`, {
         params: {
@@ -1197,9 +1127,7 @@ export class Kaido extends BaseClass {
           hasNextPage: false,
           currentPage: 0,
           lastPage: 0,
-
           data: [],
-          topAnime: { daily: [], weekly: [], monthly: [] },
           error: response.statusText || 'Received empty response from server',
         };
       }
@@ -1212,7 +1140,6 @@ export class Kaido extends BaseClass {
         currentPage: 0,
         lastPage: 0,
         data: [],
-        topAnime: { daily: [], weekly: [], monthly: [] },
         error: error instanceof Error ? error.message : 'Unknown Error',
       };
     }
@@ -1223,7 +1150,7 @@ export class Kaido extends BaseClass {
    * @param {number} page - Page number for pagination (default: 1)
    * @returns  Promise resolving to an object with recently added anime and pagination details
    */
-  async fetchRecentlyAdded(page: number = 1): Promise<IZPaginatedSections<IZAnime[] | []>> {
+  async fetchRecentlyAdded(page: number = 1): Promise<IZPaginated<IZAnime[] | []>> {
     try {
       const response = await this.client.get(`${this.baseUrl}/recently-added`, {
         params: {
@@ -1236,7 +1163,6 @@ export class Kaido extends BaseClass {
           currentPage: 0,
           lastPage: 0,
           data: [],
-          topAnime: { daily: [], weekly: [], monthly: [] },
           error: response.statusText || 'Received empty response from server',
         };
       }
@@ -1249,7 +1175,6 @@ export class Kaido extends BaseClass {
         currentPage: 0,
         lastPage: 0,
         data: [],
-        topAnime: { daily: [], weekly: [], monthly: [] },
         error: error instanceof Error ? error.message : 'Unknown Error',
       };
     }
@@ -1260,7 +1185,7 @@ export class Kaido extends BaseClass {
    * @param {number} page - Page number for pagination (default: 1)
    * @returns  Promise resolving to an object  with recently updated anime and pagination details
    */
-  async fetchRecentlyUpdated(page: number = 1): Promise<IZPaginatedSections<IZAnime[] | []>> {
+  async fetchRecentlyUpdated(page: number = 1): Promise<IZPaginated<IZAnime[] | []>> {
     try {
       const response = await this.client.get(`${this.baseUrl}/recently-updated`, {
         params: {
@@ -1272,7 +1197,6 @@ export class Kaido extends BaseClass {
           hasNextPage: false,
           currentPage: 0,
           lastPage: 0,
-          topAnime: { daily: [], weekly: [], monthly: [] },
           data: [],
           error: response.statusText || 'Received empty response from server',
         };
@@ -1285,7 +1209,6 @@ export class Kaido extends BaseClass {
         hasNextPage: false,
         currentPage: 0,
         lastPage: 0,
-        topAnime: { daily: [], weekly: [], monthly: [] },
         data: [],
         error: error instanceof Error ? error.message : 'Unknown Error',
       };

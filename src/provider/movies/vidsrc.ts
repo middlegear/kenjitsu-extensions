@@ -207,9 +207,10 @@ export class VidSrc extends BaseClass {
       const result = this.parseM3u8(cheerio.load(response));
 
       const extractedData: IVideoSource = {
-        sources: [],
         subtitles: [],
+        sources: [],
       };
+
       const subtitlesRes = await this.client.get(`${this.subtitlesUrl}/search?id=${tmdbId}`);
       extractedData.subtitles = subtitlesRes.data.map((item: any) => ({
         url: item.url,

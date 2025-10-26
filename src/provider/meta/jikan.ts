@@ -1,7 +1,5 @@
 import { BaseAnimeMeta } from '../../models/anime-meta.js';
-
-import type { HiAnimeServers } from '../../types/anime/zoro.js';
-import type { IResponse, ISubOrDub } from '../../types/base.js';
+import type { IResponse } from '../../types/base.js';
 
 import type {
   IMetaAnime,
@@ -126,7 +124,7 @@ export class Jikan extends BaseAnimeMeta {
       const titles =
         response.titles?.japanese ||
         response.titles?.simplifiedChinese ||
-        response.titles?.romanizedJapanese ||
+        response.titles?.romanized ||
         response.titles?.traditionalChinese;
 
       let malData: IMetaData | null = null;
@@ -1180,116 +1178,6 @@ export class Jikan extends BaseAnimeMeta {
   }
 
   /**
-   * Fetches a list of the most anticipated upcoming anime from MyAnimeList.
-   *
-   * @param page - The page number for pagination (optional, defaults to 1)
-   * @param perPage - The number of results per page (optional, defaults to 20, maximum 25)
-   * @returns Promise that resolves to paginated list of upcoming anime resources
-   */
-  async fetchTopUpcoming(page: number = 1, perPage: number = 20): Promise<IMetaAnimePaginated<IMetaAnime[] | []>> {
-    try {
-      const response = await this.client.get(`${this.baseUrl}/top/anime`, {
-        params: {
-          filter: 'upcoming',
-          sfw: 'true',
-          page: String(page),
-          limit: String(perPage),
-        },
-      });
-
-      if (!response.data) {
-        return {
-          hasNextPage: false,
-          currentPage: 0,
-          lastPage: 0,
-          perPage: 0,
-          data: [],
-          error: response.statusText || 'Server returned an empty response',
-        };
-      }
-
-      const res = response.data;
-      const pagination = {
-        hasNextPage: res.pagination.has_next_page,
-        lastPage: res.pagination.last_visible_page,
-        currentPage: page,
-        total: res.pagination.items.total,
-        perPage: res.pagination.items.per_page,
-      };
-
-      const topAnime: IMetaAnime[] = res.data.map((item: any) => ({
-        malId: item.mal_id,
-        title: {
-          romaji: item.title,
-          english: item.title_english,
-          native: item.title_japanese,
-        },
-        image:
-          item.images.webp.large_image_url ||
-          item.images.jpg.large_image_url ||
-          item.images.jpg.image_url ||
-          item.images.webp.image_url ||
-          item.images.webp.small_image_url ||
-          item.images.jpg.small_image_url,
-
-        trailer: item.trailer.embed_url ?? item.trailer.url,
-        episodes: item.episodes,
-
-        releaseDate:
-          item.aired.prop && item.aired.prop.from.year
-            ? new Date(item.aired.prop.from.year, item.aired.prop.from.month - 1, item.aired.prop.from.day).toLocaleString(
-                'en-US',
-                {
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric',
-                },
-              )
-            : item.aired.from || 'Unknown',
-
-        endDate:
-          item.aired.prop && item.aired.prop.to.year
-            ? new Date(item.aired.prop.to.year, item.aired.prop.to.month - 1, item.aired.prop.to.day).toLocaleString(
-                'en-US',
-                {
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric',
-                },
-              )
-            : item.aired.to || 'Unknown',
-
-        format: item.type,
-        status: item.status,
-        genres: item.genres.map((item2: any) => item2.name),
-        duration: item.duration,
-        score: item.score,
-        synopsis: item.synopsis,
-        season: item.season,
-        studio: item.studios,
-        producers: item.producers,
-      }));
-
-      return {
-        hasNextPage: pagination.hasNextPage,
-        currentPage: pagination.currentPage,
-        lastPage: pagination.lastPage,
-        perPage: pagination.perPage,
-        data: topAnime as IMetaAnime[],
-      };
-    } catch (error) {
-      return {
-        hasNextPage: false,
-        currentPage: 0,
-        lastPage: 0,
-        perPage: 0,
-        data: [],
-        error: error instanceof Error ? error.message : 'Unknown err ',
-      };
-    }
-  }
-
-  /**
    * Fetches a list of the top-rated anime from MyAnimeList.
    *
    * @param page - The page number for pagination (optional, defaults to 1)
@@ -1415,7 +1303,6 @@ export class Jikan extends BaseAnimeMeta {
    * @param page - The page number for pagination (optional, defaults to 1)
    * @param perPage - The number of results per page (optional, defaults to 20, maximum 25)
    * @param format - The format type to filter by (optional, defaults to TV)
-   * @param sort - The sorting criteria (optional, defaults to 'airing')
    * @returns Promise that resolves to paginated list of top airing anime
    */
   async fetchTopAiring(
@@ -1426,21 +1313,19 @@ export class Jikan extends BaseAnimeMeta {
   ): Promise<IMetaAnimePaginated<IMetaAnime[] | []>> {
     return this.fetchTopAnime(page, perPage, format, sort);
   }
-
   /**
-   * Fetches a list of the top anime by category from MyAnimeList.
+   * Fetches a list of the most anticipated upcoming anime from MyAnimeList.
    *
-   * @param format - The anime format type to filter by (required)
-   * @param sort - The sorting order for results (required)
-   * @param page - The page number for pagination (required)
-   * @param perPage - The number of results per page (required, maximum 25)
-   * @returns Promise that resolves to paginated list of top anime by category
+   * @param page - The page number for pagination (optional, defaults to 1)
+   * @param perPage - The number of results per page (optional, defaults to 20, maximum 25)
+   * @param format - The format type to filter by (optional, defaults to TV)
+   * @returns Promise that resolves to paginated list of upcoming anime resources
    */
-  async fetchTopCategory(
-    format: IMetaFormat,
-    sort: JSort,
-    page: number,
-    perPage: number,
+  async fetchTopUpcoming(
+    page: number = 1,
+    perPage: number = 20,
+    format: IMetaFormat = 'TV',
+    sort: JSort = 'upcoming',
   ): Promise<IMetaAnimePaginated<IMetaAnime[] | []>> {
     return this.fetchTopAnime(page, perPage, format, sort);
   }
@@ -1464,19 +1349,19 @@ export class Jikan extends BaseAnimeMeta {
   }
 
   /**
-   * Fetches a list of the top anime movies from MyAnimeList.
+   * Fetches a list of the most favorite anime from MyAnimeList.
    *
    * @param page - The page number for pagination (optional, defaults to 1)
    * @param perPage - The number of results per page (optional, defaults to 20, maximum 25)
-   * @param format - The anime format type (optional, defaults to 'MOVIE')
+   * @param format - The format type to filter by (optional, defaults to TV)
    * @param sort - The sorting criteria (optional, defaults to 'bypopularity')
-   * @returns Promise that resolves to paginated list of top anime movies
+   * @returns Promise that resolves to paginated list of most favorite anime
    */
-  async fetchTopMovies(
+  async fetchMostFavorite(
     page: number = 1,
     perPage: number = 20,
-    format: IMetaFormat = 'MOVIE',
-    sort: JSort = 'bypopularity',
+    format: IMetaFormat = 'TV',
+    sort: JSort = 'favorite',
   ): Promise<IMetaAnimePaginated<IMetaAnime[] | []>> {
     return this.fetchTopAnime(page, perPage, format, sort);
   }

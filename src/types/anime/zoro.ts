@@ -78,9 +78,7 @@ export interface IZHomeResponse<T> extends IHomeResSpecialPages {
   favourites: IZAnime[];
   topAnime: { daily: IZAnime[]; weekly: IZAnime[]; monthly: IZAnime[] };
 }
-export interface IZPaginatedSections<T> extends IZPaginated<T> {
-  topAnime: { daily: IZAnime[]; weekly: IZAnime[]; monthly: IZAnime[] };
-}
+
 export interface IZSourceResponse<T> extends ISourceBaseResponse<T> {
   syncData?: {
     anilistId: string | null;

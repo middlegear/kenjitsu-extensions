@@ -13,7 +13,7 @@ export class MegaUp extends BaseClass {
   private readonly decodeM3u8: string = 'https://enc-dec.app/api/dec-mega';
 
   constructor() {
-    super('animekai');
+    super();
   }
 
   async GenerateToken(token: string) {
@@ -21,11 +21,13 @@ export class MegaUp extends BaseClass {
       const url = `${this.tokenUrl}${encodeURIComponent(token)}`;
 
       const response = await this.client.get(url);
-
+      if (!response.data) {
+        throw new Error(`Generate token failed with error:${response.statusText}`);
+      }
       return response.data.result; /// added result
       // return response.data;
     } catch (error) {
-      return error instanceof Error ? error.message : 'GenerateToken function failed';
+      throw new Error(`Generate token failed with error ${error}`);
     }
   }
 
@@ -34,11 +36,13 @@ export class MegaUp extends BaseClass {
       const url = `${this.decodeUrlIframe}${iframe}`;
 
       const response = await this.client.get(url);
-
+      if (!response.data) {
+        throw new Error(`Decode iframe failed with error ${response.statusText}`);
+      }
       return response.data.result; /// added result
       // return response.data;
     } catch (error) {
-      return error instanceof Error ? error.message : 'Decode function failed';
+      throw new Error(`Decode iframe failed with error ${error}`);
     }
   }
 
@@ -48,10 +52,12 @@ export class MegaUp extends BaseClass {
         text: encryptedData,
         agent: userAgent,
       });
-
+      if (!response.data) {
+        throw new Error(`Sources decode failed with error ${response.statusText}`);
+      }
       return response.data.result;
     } catch (error) {
-      return error instanceof Error ? error.message : 'decrypt function failed';
+      throw new Error(`Sources decode failed with error ${error}`);
     }
   }
 

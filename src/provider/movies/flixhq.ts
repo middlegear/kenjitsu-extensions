@@ -639,6 +639,7 @@ export class FlixHQ extends BaseClass {
   async fetchHome(): Promise<IHomeHIResponse<IMovieOrTv[] | []>> {
     try {
       const response = await this.client.get(`${this.baseUrl}/home`);
+
       if (!response.data) {
         throw new Error(response.statusText);
       }
