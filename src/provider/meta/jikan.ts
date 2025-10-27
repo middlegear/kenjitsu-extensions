@@ -280,7 +280,7 @@ export class Jikan extends BaseAnimeMeta {
 
       return {
         data: mal.data,
-        provider: this.mapAnimeProviderId(malData, paheResults, 'pahe'),
+        provider: this.mapAnimeProviderId(malData, paheResults, 'animepahe'),
       };
     } catch (error) {
       return {

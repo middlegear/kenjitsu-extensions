@@ -738,11 +738,12 @@ export class FlixHQ extends BaseClass {
     quality: 'all' | 'HD' | 'SD' | 'CAM',
     genre: string = 'all',
     country: string = 'all',
+    year: string = 'all',
     page: number = 1,
   ): Promise<IZPaginated<IMovieOrTv[] | []>> {
     const genreIdValue = this.getMappedValue(genre, HIMoviesGenreID);
     const countryIdValue = this.getMappedValue(country, HIMoviesCountryID);
-    const url = `${type}&quality=${quality}&release_year=all&genre=${genreIdValue}&country=${countryIdValue}`;
+    const url = `${type}&quality=${quality}&release_year=${year}&genre=${genreIdValue}&country=${countryIdValue}`;
 
     return await this.fetchPaginated(url, page);
   }

@@ -72,7 +72,7 @@ export abstract class BaseAnimeMeta {
   protected mapAnimeProviderId(
     metadata: IMetaDataMap | null,
     results: AnimeSearchResults[] | null,
-    provider: 'pahe' | 'allanime' | 'hianime' | 'anizone',
+    provider: 'animepahe' | 'allanime' | 'hianime' | 'anizone',
   ) {
     if (!results || results.length === 0 || !metadata || (!metadata.english && !metadata.romaji)) {
       console.log('Invalid input: metadata, results, or both english and romaji titles missing');
@@ -130,7 +130,7 @@ export abstract class BaseAnimeMeta {
 
       // Type comparison (5% weight, for pahe, anizone, hianime)
       let typeMatch = 0;
-      if (['pahe', 'anizone', 'hianime'].includes(provider) && metadata.type && r.type) {
+      if (['animepahe', 'anizone', 'hianime'].includes(provider) && metadata.type && r.type) {
         typeMatch = compareTwoStrings(metadata.type, r.type);
         console.log(`Type match for ${r.name} (${provider}): "${metadata.type}" vs "${r.type}" = ${typeMatch}`);
         totalScore += typeMatch * 0.05;
@@ -140,7 +140,7 @@ export abstract class BaseAnimeMeta {
 
       // Season comparison (5% weight, only for pahe)
       let seasonMatch = 0;
-      if (provider === 'pahe' && metadata.season && r.season) {
+      if (provider === 'animepahe' && metadata.season && r.season) {
         seasonMatch = compareTwoStrings(metadata.season, r.season);
         console.log(`Season match for ${r.name} (${provider}): "${metadata.season}" vs "${r.season}" = ${seasonMatch}`);
         totalScore += seasonMatch * 0.05;

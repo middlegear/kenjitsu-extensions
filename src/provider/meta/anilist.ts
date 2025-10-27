@@ -295,7 +295,7 @@ export class Anilist extends BaseAnimeMeta {
 
       return {
         data: anilist.data,
-        provider: this.mapAnimeProviderId(anilistData, paheResult, 'pahe'),
+        provider: this.mapAnimeProviderId(anilistData, paheResult, 'animepahe'),
       };
     } catch (error) {
       return {

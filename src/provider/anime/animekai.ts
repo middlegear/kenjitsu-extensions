@@ -412,7 +412,7 @@ class Animekai extends BaseClass {
       servers.sub.push({
         serverId: Number($(element).attr('data-sid')) || null,
         mediaId: $(element).attr('data-lid') || null,
-        eid: $(element).attr('data-eid') || null,
+        // eid: $(element).attr('data-eid') || null,
         serverName:
           $(element)
             .text()
@@ -425,7 +425,7 @@ class Animekai extends BaseClass {
       servers.dub.push({
         serverId: Number($(element).attr('data-sid')) || null,
         mediaId: $(element).attr('data-lid') || null,
-        eid: $(element).attr('data-eid') || null,
+        // eid: $(element).attr('data-eid') || null,
         serverName:
           $(element)
             .text()
@@ -438,7 +438,7 @@ class Animekai extends BaseClass {
       servers.raw.push({
         serverId: Number($(element).attr('data-sid')) || null,
         mediaId: $(element).attr('data-lid') || null,
-        eid: $(element).attr('data-eid') || null,
+        // eid: $(element).attr('data-eid') || null,
         serverName:
           $(element)
             .text()

@@ -797,8 +797,7 @@ export class Kaido extends BaseClass {
 
     if (serverIndex === -1) {
       throw new Error(
-        `Server '${server}' not found in category '${category}'. ` +
-          `Try one of the available servers: ${availableServers.join(', ')}.`,
+        `Server '${server}' not found in category '${category}'.Try one of the available servers: ${availableServers.join(', ')}.`,
       );
     }
 

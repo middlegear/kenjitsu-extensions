@@ -33,5 +33,3 @@ export {
   type Seasons,
   type IAnimeCategory,
 };
-// const data = await new Anilist().fetchProviderId(156092, 'hianime');
-// console.log(data);

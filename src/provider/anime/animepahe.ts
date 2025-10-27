@@ -8,7 +8,6 @@ import type {
   IPaheEpisodes,
   IPaheInfo,
   IPahePaginated,
-  IPaheReleases,
   IPaheServersResponse,
 } from '../../types/anime/animepahe.js';
 import type { IResponse, IServerInfo, ISourceBaseResponse, ISubOrDub, IVideoSource } from '../../types/base.js';
@@ -274,11 +273,12 @@ export class Animepahe extends BaseClass {
    * @param {number} [page] - The page number for pagination (optional, defaults to 1).
    * @returns
    */
-  async fetchRecentlyUpdated(page: number = 1): Promise<IPahePaginated<IPaheReleases[] | []>> {
+  async fetchRecentEpisodes(page: number = 1): Promise<IPahePaginated<IPaheEpisodes[] | []>> {
     try {
       const response = await this.client.get(`${this.baseUrl}/api?m=airing&page=${page}`, {
         headers: this.headers(false),
       });
+
       if (!response.data) {
         return {
           hasNextPage: false,
@@ -291,9 +291,9 @@ export class Animepahe extends BaseClass {
         };
       }
 
-      const data: IPaheReleases[] = response.data.data.map((item: any) => ({
-        id: item.session,
-        name: item.anime_title,
+      const data: IPaheEpisodes[] = response.data.data.map((item: any) => ({
+        episodeId: `pahe-${item.anime_session}-$session$-${item.session}`,
+        title: item.anime_title,
         thumbnail: item.snapshot,
         episodeNumber: item.episode,
       }));
@@ -303,7 +303,7 @@ export class Animepahe extends BaseClass {
         perPage: response.data.per_page,
         totalResults: response.data.total,
         lastPage: response.data.last_page,
-        data: data as IPaheReleases[],
+        data: data as IPaheEpisodes[],
       };
     } catch (error) {
       return {

@@ -7,12 +7,6 @@ export interface IPaheAnime extends IBaseAnime {
   season: string | null;
   totalEpisodes: number | null;
 }
-export interface IPaheReleases {
-  id: string | null;
-  name: string | null;
-  episodeNumber: number | null;
-  thumbnail: string | null;
-}
 
 export interface IPaheInfo extends IBaseAnime {
   anilistId: number | null;
