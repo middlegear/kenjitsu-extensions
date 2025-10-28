@@ -725,8 +725,9 @@ export class FlixHQ extends BaseClass {
   /**
    * Performs an advanced search with multiple filter criteria including type, quality, genre, and country.
    *
-   * @param type - The media type filter (all, movie, tv) (required)
-   * @param quality - The quality filter (all, HD, SD, CAM) (required)
+   * Performs an advanced search with filters.
+   * @param {'all' | 'movie' | 'tv'} [type] - The media type filter (default=all).
+   * @param {'all' | 'HD' | 'SD' | 'CAM'} [quality] - The quality filter (default=all).
    * @param genre - Genre filter using HIMoviesGenreID mapping (optional, defaults to 'all')
    * @param country - Country filter using HIMoviesCountryID mapping (optional, defaults to 'all')
    * @param page - Page number for pagination (optional, defaults to 1)
@@ -734,8 +735,8 @@ export class FlixHQ extends BaseClass {
    */
 
   async advancedSearch(
-    type: 'all' | 'movie' | 'tv',
-    quality: 'all' | 'HD' | 'SD' | 'CAM',
+    type: 'all' | 'movie' | 'tv' = 'all',
+    quality: 'all' | 'HD' | 'SD' | 'CAM' = 'all',
     genre: string = 'all',
     country: string = 'all',
     year: string = 'all',

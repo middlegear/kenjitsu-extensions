@@ -7,7 +7,7 @@ IMPROVEMENTS
 below might need cloudflare caching 
 7. Can i use the TMDB to enrich both anime and movies(will need good mapping)
 8. TMDB coverImages for anilist and mal info that are missing. do season and pick the index from tmdb  if there is none
-
+13. TMDB anime tv episodes mapping
 14. Collapse jikan seasons
 
 

@@ -676,16 +676,16 @@ export class HiMovies extends BaseClass {
   }
   /**
    * Performs an advanced search with filters.
-   * @param {'all' | 'movie' | 'tv'} [type] - The media type filter (required).
-   * @param {'all' | 'HD' | 'SD' | 'CAM'} [quality] - The quality filter (required).
+   * @param {'all' | 'movie' | 'tv'} [type] - The media type filter (default=all).
+   * @param {'all' | 'HD' | 'SD' | 'CAM'} [quality] - The quality filter (default=all).
    * @param {HIMoviesGenreID} [genre] - Genre filter (default ='all').
    * @param {HIMoviesCountryID} [country] - Country filter (default ='all').
    * @param {number} [page=1] - Page number for pagination (default ='all').
    * @returns  Paginated filtered search results
    */
   async advancedSearch(
-    type: 'all' | 'movie' | 'tv',
-    quality: 'all' | 'HD' | 'SD' | 'CAM',
+    type: 'all' | 'movie' | 'tv' = 'all',
+    quality: 'all' | 'HD' | 'SD' | 'CAM' = 'all',
     genre: string = 'all',
     country: string = 'all',
     year: string = 'all',

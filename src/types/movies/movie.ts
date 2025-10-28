@@ -146,6 +146,7 @@ export const HIMovieCountryCode = {
 export type IMovieCountry = keyof typeof HIMovieCountryCode;
 
 export const HIMoviesCountryID = {
+  all: 'all',
   argentina: '11',
   australia: '151',
   austria: '4',
@@ -186,6 +187,7 @@ export const HIMoviesCountryID = {
 
 export const HIMoviesGenreID = {
   action: '10',
+  all: 'all',
   actionandadventure: '24',
   adventure: '18',
   animation: '3',
