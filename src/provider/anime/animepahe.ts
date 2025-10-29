@@ -181,17 +181,17 @@ export class Animepahe extends BaseClass {
     download: IServerInfo,
     category: ISubOrDub,
   ): { serverId: string; serverName: string; downloadId: string | null }[] {
-    const availableCategories: string[] = [];
-    if (servers.sub?.length > 0) availableCategories.push('sub');
-    if (servers.dub?.length > 0) availableCategories.push('dub');
-    if (servers.raw?.length > 0) availableCategories.push('raw');
+    const availableVersions: string[] = [];
+    if (servers.sub?.length > 0) availableVersions.push('sub');
+    if (servers.dub?.length > 0) availableVersions.push('dub');
+    if (servers.raw?.length > 0) availableVersions.push('raw');
 
     if (!servers[category] || servers[category].length === 0) {
       const suggestionMessage =
-        availableCategories.length > 0
-          ? ` Available categories: ${availableCategories.join(' or ')}.`
-          : ' No servers available in any category right now.';
-      throw new Error(`Category '${category}' has no servers.${suggestionMessage}`);
+        availableVersions.length > 0
+          ? ` Available versions: ${availableVersions.join(' or ')}.`
+          : ' No servers available in any version right now.';
+      throw new Error(`Version '${category}' has no servers.${suggestionMessage}`);
     }
 
     const parseQuality = (name?: string | null): number => {

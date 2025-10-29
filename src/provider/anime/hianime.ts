@@ -780,17 +780,17 @@ export class HiAnime extends BaseClass {
    * @throws Error if the category or server is not found
    */
   private findServerId(servers: IServerInfo, category: ISubOrDub, server: HiAnimeServers): number {
-    const availableCategories: string[] = [];
-    if (servers.sub?.length > 0) availableCategories.push('sub');
-    if (servers.dub?.length > 0) availableCategories.push('dub');
-    if (servers.raw?.length > 0) availableCategories.push('raw');
+    const availableVersions: string[] = [];
+    if (servers.sub?.length > 0) availableVersions.push('sub');
+    if (servers.dub?.length > 0) availableVersions.push('dub');
+    if (servers.raw?.length > 0) availableVersions.push('raw');
 
     if (!servers[category] || servers[category].length === 0) {
       const suggestionMessage =
-        availableCategories.length > 0
-          ? ` Available categories: ${availableCategories.join(' or ')}.`
-          : ' No servers available in any category right now.';
-      throw new Error(`Category '${category}' has no servers.${suggestionMessage}`);
+        availableVersions.length > 0
+          ? ` Available versions: ${availableVersions.join(' or ')}.`
+          : ' No servers available in any version right now.';
+      throw new Error(`Version '${category}' has no servers.${suggestionMessage}`);
     }
 
     const availableServers = servers[category].map(s => s.serverName || 'unknown');
@@ -798,7 +798,7 @@ export class HiAnime extends BaseClass {
 
     if (serverIndex === -1) {
       throw new Error(
-        `Server '${server}' not found in category '${category}'.Try one of the available servers: ${availableServers.join(', ')}.`,
+        `Server '${server}' not found in version '${category}'.Try one of the available servers: ${availableServers.join(', ')}.`,
       );
     }
 
