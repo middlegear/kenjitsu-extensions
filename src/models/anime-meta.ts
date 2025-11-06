@@ -75,7 +75,7 @@ export abstract class BaseAnimeMeta {
     provider: 'animepahe' | 'allanime' | 'hianime' | 'anizone',
   ) {
     if (!results || results.length === 0 || !metadata || (!metadata.english && !metadata.romaji)) {
-      // console.log('Invalid input: metadata, results, or both english and romaji titles missing');
+      console.error('Invalid input: metadata, results, or both english and romaji titles missing');
       return null;
     }
 
@@ -93,80 +93,60 @@ export abstract class BaseAnimeMeta {
       let weightSum = 0;
       let compared = 0;
 
-      // Title comparison (30% weight)
+      // Title comparison (now 35% weight)
       let titleMatch = 0;
       if (provider === 'anizone' && metadata.romaji && r.name) {
-        // For anizone, compare metadata.romaji to r.name (Romaji title)
         titleMatch = compareTwoStrings(metadata.romaji, r.name);
         // console.log(`Romaji title match for ${r.name} (anizone): "${metadata.romaji}" vs "${r.name}" = ${titleMatch}`);
-      } else if (metadata.english && r.name && ['pahe', 'hianime', 'allanime'].includes(provider)) {
-        // For other providers, compare metadata.english to r.name (English title)
+      } else if (metadata.english && r.name && ['animepahe', 'hianime', 'allanime'].includes(provider)) {
         titleMatch = compareTwoStrings(metadata.english, r.name);
         // console.log(`English title match for ${r.name} (${provider}): "${metadata.english}" vs "${r.name}" = ${titleMatch}`);
       }
-      totalScore += titleMatch * 0.3;
-      weightSum += 0.3;
+      totalScore += titleMatch * 0.35;
+      weightSum += 0.35;
       compared++;
 
-      // Romaji comparison (20% weight, only for hianime and allanime)
+      // Romaji comparison (now 25% weight, only for hianime and allanime)
       let romajiMatch = 0;
       if (['hianime', 'allanime'].includes(provider) && metadata.romaji && r.romaji) {
         romajiMatch = compareTwoStrings(metadata.romaji, r.romaji);
         // console.log(`Romaji match for ${r.name} (${provider}): "${metadata.romaji}" vs "${r.romaji}" = ${romajiMatch}`);
-        totalScore += romajiMatch * 0.2;
-        weightSum += 0.2;
+        totalScore += romajiMatch * 0.25;
+        weightSum += 0.25;
         compared++;
       }
 
-      // Native comparison (15% weight, only for allanime)
+      // Native comparison (now 20% weight, only for allanime)
       let nativeMatch = 0;
       if (provider === 'allanime' && metadata.native && r.native) {
         nativeMatch = compareTwoStrings(metadata.native, r.native);
         // console.log(`Native match for ${r.name} (${provider}): "${metadata.native}" vs "${r.native}" = ${nativeMatch}`);
-        totalScore += nativeMatch * 0.15;
-        weightSum += 0.15;
+        totalScore += nativeMatch * 0.2;
+        weightSum += 0.2;
         compared++;
       }
 
-      // Type comparison (5% weight, for pahe, anizone, hianime)
+      // Type comparison (now 10% weight, for pahe, anizone, hianime)
       let typeMatch = 0;
       if (['animepahe', 'anizone', 'hianime'].includes(provider) && metadata.type && r.type) {
         typeMatch = compareTwoStrings(metadata.type, r.type);
         // console.log(`Type match for ${r.name} (${provider}): "${metadata.type}" vs "${r.type}" = ${typeMatch}`);
-        totalScore += typeMatch * 0.05;
-        weightSum += 0.05;
+        totalScore += typeMatch * 0.1;
+        weightSum += 0.1;
         compared++;
       }
 
-      // Season comparison (5% weight, only for pahe)
+      // Season comparison (now 10% weight, only for pahe)
       let seasonMatch = 0;
       if (provider === 'animepahe' && metadata.season && r.season) {
         seasonMatch = compareTwoStrings(metadata.season, r.season);
         // console.log(`Season match for ${r.name} (${provider}): "${metadata.season}" vs "${r.season}" = ${seasonMatch}`);
-        totalScore += seasonMatch * 0.05;
-        weightSum += 0.05;
+        totalScore += seasonMatch * 0.1;
+        weightSum += 0.1;
         compared++;
       }
 
-      // Episodes comparison (15% weight, if available)
-      let episodeMatch = 0;
-      if (
-        metadata.episodes != null &&
-        r.totalEpisodes != null &&
-        !isNaN(Number(metadata.episodes)) &&
-        !isNaN(Number(r.totalEpisodes))
-      ) {
-        const episodeDiff = Math.abs(Number(metadata.episodes) - Number(r.totalEpisodes));
-        episodeMatch = Math.max(0, 1 - episodeDiff / Math.max(Number(metadata.episodes), Number(r.totalEpisodes)));
-        // console.log(
-        //   `Episodes match for ${r.name} (${provider}): ${metadata.episodes} vs ${r.totalEpisodes} = ${episodeMatch}`,
-        // );
-        totalScore += episodeMatch * 0.15;
-        weightSum += 0.15;
-        compared++;
-      }
-
-      // Year comparison (15% weight, for pahe and anizone)
+      // Year comparison (still 15% weight, for pahe and anizone)
       let yearMatch = 0;
       const resultYear = r.releaseDate ? this.extractYear(r.releaseDate.toString()) : null;
       if (
@@ -188,7 +168,7 @@ export abstract class BaseAnimeMeta {
       }
 
       if (compared === 0) {
-        // console.log(`No comparisons for ${r.name}`);
+        console.log(`No comparisons for ${r.name}`);
         continue;
       }
 
@@ -203,7 +183,7 @@ export abstract class BaseAnimeMeta {
     }
 
     if (!bestMatch || bestScore < 0.3 || !bestMatch.id || !bestMatch.name) {
-      // console.log('No valid match found or score too low:', bestScore);
+      console.log('No valid match found or score too low:', bestScore);
       return null;
     }
 
@@ -218,7 +198,6 @@ export abstract class BaseAnimeMeta {
     // console.log('Best match:', result);
     return result;
   }
-
   // ------------------------
   // Anizip integration
   // ------------------------

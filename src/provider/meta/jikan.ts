@@ -334,10 +334,12 @@ export class Jikan extends BaseAnimeMeta {
       const anizipEpisodes = anizipResult.status === 'fulfilled' ? anizipResult.value.episodes : [];
       const aniZipMap = new Map((anizipEpisodes || []).map(item => [item.episodeAnizipNumber, item]));
 
-      const enrichedEpisodes = allanime.data.map((episode: any) => {
-        const aniZipEpisode = aniZipMap.get(episode.episodeNumber);
-        return this.mergeEpisodeData(episode, aniZipEpisode, 'allanime');
-      });
+      const enrichedEpisodes = allanime.data
+        .filter((ep: any) => typeof ep.episodeNumber === 'number' && !isNaN(ep.episodeNumber) && ep.episodeNumber > 0)
+        .map((episode: any) => {
+          const aniZipEpisode = aniZipMap.get(episode.episodeNumber) ?? null;
+          return this.mergeEpisodeData(episode, aniZipEpisode, 'allanime');
+        });
 
       return {
         data: initialResponse.data,
@@ -391,14 +393,15 @@ export class Jikan extends BaseAnimeMeta {
         };
       }
 
-      const anizone = anizoneResult.value;
       const anizipEpisodes = anizipResult.status === 'fulfilled' ? anizipResult.value.episodes : [];
       const aniZipMap = new Map((anizipEpisodes || []).map(item => [item.episodeAnizipNumber, item]));
 
-      const enrichedEpisodes = anizone.providerEpisodes.map((episode: any) => {
-        const aniZipEpisode = aniZipMap.get(episode.episodeNumber);
-        return this.mergeEpisodeData(episode, aniZipEpisode, 'anizone');
-      });
+      const enrichedEpisodes = anizoneResult.value.providerEpisodes
+        .filter((ep: any) => typeof ep.episodeNumber === 'number' && !isNaN(ep.episodeNumber))
+        .map((episode: any) => {
+          const aniZipEpisode = aniZipMap.get(episode.episodeNumber) ?? null;
+          return this.mergeEpisodeData(episode, aniZipEpisode, 'anizone');
+        });
 
       return {
         data: initialResponse.data,
