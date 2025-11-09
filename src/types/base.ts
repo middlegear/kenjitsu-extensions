@@ -74,9 +74,6 @@ export interface ISourceBaseResponse<T> extends IResponse<T> {
 export interface IBasePaginated<T> extends IResponse<T> {
   hasNextPage: boolean;
   currentPage: number;
-  // lastPage?: number;
-  // perPage?: number;
-  // totalResults?: number;
 }
 
 export interface IHomeResSpecialPages {

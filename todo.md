@@ -9,7 +9,7 @@ IMPROVEMENTS
 
 14. Collapse jikan seasons
 15. Rework on tracks and subtitles. use filter to seperate the subtitles 
-16. One punch man season 3 isnt working for anilist mappings for allanime anizone animepahe
+16. Is there a way i can expose api endpoint status to make sure and check provider status if they work
 
 
 New Sites(TO DO last)

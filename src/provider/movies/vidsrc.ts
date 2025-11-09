@@ -8,10 +8,12 @@ import type { IMovieServers } from '../../types/movies/movie.js';
  * A class for interacting with the VidSrc video streaming service to fetch movie and TV show sources.
  * Extends the BaseClass for shared functionality.
  */
+/// https://github.com/theajack/disable-devtool  this is the script to get past
 export class VidSrc extends BaseClass {
-  private readonly baseUrl: string = 'https://vidsrc.io';
+  private readonly baseUrl: string = 'https://vsrc.su/';
   private readonly cloudnestraUrl: string = 'https://cloudnestra.com';
   private readonly subtitlesUrl: string = 'https://sub.wyzie.ru';
+  private readonly decUrl: string = 'https://enc-dec.app/api/dec-cloudnestra';
 
   constructor() {
     super();
@@ -91,39 +93,68 @@ export class VidSrc extends BaseClass {
     return servers[serverIndex].serverId as string;
   }
 
+  // /**
+  //  * Parses M3U8 file information from a script tag containing 'new Playerjs'.
+  //  * @private
+  //  * @param $ - The Cheerio API instance loaded with HTML content.
+  //  * @returns An object containing the M3U8 file URL and optional cuid.
+  //  */
+
+  // private parseM3u8($: cheerio.CheerioAPI) {
+  //   const playerScript = $('script').filter((_, el) => {
+  //     const content = $(el).html();
+  //     return content?.includes('new Playerjs') ?? false;
+  //   });
+
+  //   const scriptContent = playerScript.length > 0 ? playerScript.html() : null;
+
+  //   if (!scriptContent) {
+  //     return {
+  //       file: null,
+  //       cuid: null,
+  //     };
+  //   }
+
+  //   const fileRegex = /file:\s*'(.*?)'/;
+  //   const cuidRegex = /cuid:\s*"(.*?)"/;
+
+  //   const fileMatch = scriptContent.match(fileRegex);
+  //   // const cuidMatch = scriptContent.match(cuidRegex);
+
+  //   return {
+  //     file: fileMatch?.[1] ?? null,
+  //     // cuid: cuidMatch?.[1] ?? null,
+  //   };
+  // }
+
   /**
-   * Parses M3U8 file information from a script tag containing 'new Playerjs'.
-   * @private
-   * @param $ - The Cheerio API instance loaded with HTML content.
-   * @returns An object containing the M3U8 file URL and optional cuid.
+   *
+   * @param html
+   * Thanks to https://github.com/AzartX47/EncDecEndpoints#-cloudnestra-cloudnestracom. OP person indeed
    */
+  private async fetchStreams(html: any): Promise<string[] | []> {
+    try {
+      const hiddenDivMatch = html.match(
+        /<div id="([^"]+)"[^>]*style=["']display\s*:\s*none;?["'][^>]*>([a-zA-Z0-9:\/.,{}\-_=+ ]+)<\/div>/,
+      );
+      const id = hiddenDivMatch ? hiddenDivMatch[1] : null;
+      const text = hiddenDivMatch ? hiddenDivMatch[2] : null;
 
-  private parseM3u8($: cheerio.CheerioAPI) {
-    const playerScript = $('script').filter((_, el) => {
-      const content = $(el).html();
-      return content?.includes('new Playerjs') ?? false;
-    });
+      const response = await this.client.post(this.decUrl, {
+        text: text,
+        div_id: id,
+      });
 
-    const scriptContent = playerScript.length > 0 ? playerScript.html() : null;
+      if (!response.data) {
+        throw new Error(`Sources decode failed with error ${response.statusText}`);
+      }
 
-    if (!scriptContent) {
-      return {
-        file: null,
-        cuid: null,
-      };
+      return response.data.result;
+    } catch (error) {
+      throw new Error(`Sources decode failed with error ${error}`);
     }
-
-    const fileRegex = /file:\s*'(.*?)'/;
-    const cuidRegex = /cuid:\s*"(.*?)"/;
-
-    const fileMatch = scriptContent.match(fileRegex);
-    // const cuidMatch = scriptContent.match(cuidRegex);
-
-    return {
-      file: fileMatch?.[1] ?? null,
-      // cuid: cuidMatch?.[1] ?? null,
-    };
   }
+
   /**
    * Fetches RCP data for a given server ID.
    * @private
@@ -170,7 +201,7 @@ export class VidSrc extends BaseClass {
    * @returns The RCP data or an error object if the request fails.
    */
 
-  private async fetchMediaHash(tmdbId: number, season?: number, episode?: number, server: 'cloudstream' = 'cloudstream') {
+  private async fetchMediaProRcp(tmdbId: number, season?: number, episode?: number, server: 'cloudstream' = 'cloudstream') {
     try {
       let url: string;
       season && episode
@@ -202,9 +233,9 @@ export class VidSrc extends BaseClass {
     }
 
     try {
-      const response = await this.fetchMediaHash(tmdbId);
+      const response = await this.fetchMediaProRcp(tmdbId);
 
-      const result = this.parseM3u8(cheerio.load(response));
+      const result = await this.fetchStreams(response);
 
       const extractedData: IVideoSource = {
         subtitles: [],
@@ -218,12 +249,12 @@ export class VidSrc extends BaseClass {
         default: item.language === 'en',
       }));
 
-      if (result.file) {
-        extractedData.sources.push({
-          url: result.file,
-          isM3u8: result.file.endsWith('.m3u8'),
-          type: result.file.endsWith('.m3u8') ? 'hls' : 'unknown',
-        });
+      if (result) {
+        extractedData.sources = result.map((s: any) => ({
+          url: s,
+          isM3u8: s.endsWith('.m3u8'),
+          type: s.endsWith('.m3u8') ? 'hls' : 'unknown',
+        }));
       }
 
       return { data: extractedData };
@@ -252,9 +283,9 @@ export class VidSrc extends BaseClass {
       }
     }
     try {
-      const response = await this.fetchMediaHash(tmdbId, season, episodeNumber);
+      const response = await this.fetchMediaProRcp(tmdbId, season, episodeNumber);
 
-      const result = this.parseM3u8(cheerio.load(response));
+      const result = await this.fetchStreams(response);
 
       const extractedData: IVideoSource = {
         subtitles: [],
@@ -269,12 +300,12 @@ export class VidSrc extends BaseClass {
         default: item.language === 'en',
       }));
 
-      if (result.file) {
-        extractedData.sources.push({
-          url: result.file,
-          isM3u8: result.file.endsWith('.m3u8'),
-          type: result.file.endsWith('.m3u8') ? 'hls' : 'unknown',
-        });
+      if (result) {
+        extractedData.sources = result.map((s: any) => ({
+          url: s,
+          isM3u8: s.endsWith('.m3u8'),
+          type: s.endsWith('.m3u8') ? 'hls' : 'unknown',
+        }));
       }
 
       return { data: extractedData };
