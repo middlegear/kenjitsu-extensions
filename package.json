@@ -9,7 +9,6 @@
   "scripts": {
     "build": "tsup",
     "dev": "pnpm build && node dist/main.js",
-    "commit": "tsc && cz",
     "test-jikan": "vitest jikan.test.ts   --config vitest.config.ts",
     "test-anilist": "vitest anilist.test.ts  --config vitest.config.ts",
     "test-hianime": "vitest hianime.test.ts  --config vitest.config.ts",
@@ -45,11 +44,7 @@
   },
   "homepage": "https://github.com/middlegear/kenjitsu-extensions",
   "devDependencies": {
-    "@commitlint/cli": "^19.8.1",
-    "@commitlint/config-conventional": "^19.8.1",
-    "@types/node": "^24.9.1",
-    "commitizen": "^4.3.1",
-    "cz-conventional-changelog": "^3.3.0",
+    "@types/node": "^24.10.0",
     "prettier": "^3.6.2",
     "semantic-release": "^24.2.9",
     "tsup": "^8.5.0",
@@ -59,10 +54,5 @@
   "dependencies": {
     "cheerio": "^1.1.2",
     "got-scraping": "^4.1.2"
-  },
-  "config": {
-    "commitizen": {
-      "path": "cz-conventional-changelog"
-    }
   }
 }
