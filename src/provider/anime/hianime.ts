@@ -780,29 +780,59 @@ export class HiAnime extends BaseClass {
    * @throws Error if the category or server is not found
    */
   private findServerId(servers: IServerInfo, category: ISubOrDub, server: HiAnimeServers): number {
-    const availableVersions: string[] = [];
-    if (servers.sub?.length > 0) availableVersions.push('sub');
-    if (servers.dub?.length > 0) availableVersions.push('dub');
-    if (servers.raw?.length > 0) availableVersions.push('raw');
+    const serverPreference: HiAnimeServers[] = ['hd-2', 'hd-1', 'hd-3'];
 
-    if (!servers[category] || servers[category].length === 0) {
-      const suggestionMessage =
-        availableVersions.length > 0
-          ? ` Available versions: ${availableVersions.join(' or ')}.`
-          : ' No servers available in any version right now.';
-      throw new Error(`Version '${category}' has no servers.${suggestionMessage}`);
+    const versionPreference: ISubOrDub[] = ['sub', 'raw', 'dub'];
+
+    const versionCandidates: ISubOrDub[] = [category, ...versionPreference.filter(v => v !== category)];
+
+    let selectedMediaId: number | null = null;
+    let usedVersion: ISubOrDub | null = null;
+    let usedServer: HiAnimeServers | null = null;
+
+    for (const ver of versionCandidates) {
+      const list = servers[ver];
+      if (!list || list.length === 0) continue;
+
+      const exactIdx = list.findIndex(s => (s.serverName || '').toLowerCase() === server.toLowerCase());
+      if (exactIdx !== -1) {
+        selectedMediaId = list[exactIdx].mediaId as number;
+        usedVersion = ver;
+        usedServer = server;
+        break;
+      }
+
+      for (const pref of serverPreference) {
+        const prefIdx = list.findIndex(s => (s.serverName || '').toLowerCase() === pref.toLowerCase());
+        if (prefIdx !== -1) {
+          selectedMediaId = list[prefIdx].mediaId as number;
+          usedVersion = ver;
+          usedServer = pref;
+          break;
+        }
+      }
+
+      if (selectedMediaId !== null) break;
     }
 
-    const availableServers = servers[category].map(s => s.serverName || 'unknown');
-    const serverIndex = servers[category].findIndex(s => (s.serverName || '').toLowerCase() === server.toLowerCase());
+    if (selectedMediaId === null) {
+      const available = versionPreference.filter(v => servers[v]?.length > 0).join(', ') || 'none';
+      throw new Error(`No servers available in any version. Available versions: ${available}.`);
+    }
 
-    if (serverIndex === -1) {
-      throw new Error(
-        `Server '${server}' not found in version '${category}'.Try one of the available servers: ${availableServers.join(', ')}.`,
+    const requestedServerLower = server.toLowerCase();
+    const usedServerLower = usedServer!.toLowerCase();
+
+    if (usedVersion !== category) {
+      console.warn(`Fallback: version '${category}' not available → using '${usedVersion}' with server '${usedServer}'.`);
+    } else if (usedServerLower !== requestedServerLower) {
+      const serversInVersion = servers[category].map(s => s.serverName || 'unknown').join(', ');
+      console.warn(
+        `Fallback: server '${server}' not found in '${category}'. Using '${usedServer}'. Available in this version: ${serversInVersion}.`,
       );
     }
 
-    return servers[category][serverIndex].mediaId as number;
+    return selectedMediaId;
   }
 
   /**

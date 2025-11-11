@@ -461,28 +461,47 @@ class Animekai extends BaseClass {
    * @throws {Error} If no servers or valid media IDs are found for the category.
    */
   private findServerIds(servers: IServerInfo, category: ISubOrDub, server: 'server-1' | 'server-2'): string {
-    const availableVersions: string[] = [];
-    if (servers.sub?.length > 0) availableVersions.push('sub');
-    if (servers.dub?.length > 0) availableVersions.push('dub');
-    if (servers.raw?.length > 0) availableVersions.push('raw');
+    // Preference order: sub > raw > dub
+    const preferenceOrder: ('sub' | 'raw' | 'dub')[] = ['sub', 'raw', 'dub'];
 
-    if (!servers[category] || servers[category].length === 0) {
-      const suggestionMessage =
-        availableVersions.length > 0
-          ? ` Available versions: ${availableVersions.join(' or ')}.`
-          : ' No servers available in any version right now.';
-      throw new Error(`Version '${category}' has no servers.${suggestionMessage}`);
+    const candidates = [category, ...preferenceOrder.filter(c => c !== category)];
+
+    let selectedMediaId: string | null = null;
+    let usedCategory: 'sub' | 'raw' | 'dub' | null = null;
+    let usedServer: string | null = null;
+
+    for (const cat of candidates) {
+      if (!servers[cat] || servers[cat].length === 0) continue;
+
+      const serverIndex = servers[cat].findIndex(s => (s.serverName || '').toLowerCase() === server.toLowerCase());
+
+      if (serverIndex !== -1) {
+        selectedMediaId = servers[cat][serverIndex].mediaId as string;
+        usedCategory = cat;
+        usedServer = servers[cat][serverIndex].serverName || 'unknown';
+        break;
+      }
+
+      if (servers[cat].length > 0) {
+        selectedMediaId = servers[cat][0].mediaId as string;
+        usedCategory = cat;
+        usedServer = servers[cat][0].serverName || 'unknown';
+
+        if (serverIndex === -1) continue;
+      }
     }
-    const availableServers = servers[category].map(s => s.serverName || 'unknown');
-    const serverIndex = servers[category].findIndex(s => (s.serverName || '').toLowerCase() === server.toLowerCase());
 
-    if (serverIndex === -1) {
-      throw new Error(
-        `Server '${server}' not found in  version '${category}'.Try one of the available servers: ${availableServers.join(', ')}.`,
-      );
+    if (!selectedMediaId) {
+      throw new Error('No servers available in any version (sub, raw, dub).');
     }
 
-    return servers[category][serverIndex].mediaId as string;
+    if (usedCategory !== category) {
+      console.warn(`Fallback: Requested '${category}' not available. Using '${usedCategory}' with server '${usedServer}'.`);
+    } else if (usedServer?.toLowerCase() !== server.toLowerCase()) {
+      console.warn(`Fallback: Server '${server}' not found in '${category}'. Using '${usedServer}' instead.`);
+    }
+
+    return selectedMediaId;
   }
 
   /**
