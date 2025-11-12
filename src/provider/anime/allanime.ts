@@ -72,6 +72,8 @@ export class AllAnime extends BaseClass {
         _id: $_id
       ) {
         _id
+        englishName
+        nativeName
         availableEpisodesDetail
       }
     }
@@ -192,6 +194,7 @@ export class AllAnime extends BaseClass {
       const episodePayload = buildPayload(this.EpisodesQuery, { _id: id });
       const episodeResponse = await this.client.post(this.baseUrl, episodePayload);
       const available = episodeResponse.data.data.show.availableEpisodesDetail;
+      const episodeTitle = episodeResponse.data.data.show.englishName || episodeResponse.data.data.show.nativeName;
 
       if (!episodeResponse.data) {
         return { error: episodeResponse.statusText || 'No episodes available.', data: [] };
@@ -202,7 +205,7 @@ export class AllAnime extends BaseClass {
         .sort((a, b) => parseInt(a) - parseInt(b))
         .map(ep => ({
           episodeNumber: parseInt(ep),
-          episodeId: `allanime-${id}-episode-${ep}`,
+          episodeId: `${this.createSlug(episodeTitle)}-${id}-episode-${ep}`,
           hasSub: available.sub?.includes(ep) || false,
           hasDub: available.dub?.includes(ep) || false,
           hasRaw: available.raw?.includes(ep) || false,
@@ -227,8 +230,15 @@ export class AllAnime extends BaseClass {
       query,
       variables,
     });
-    const showId = id.split('-').at(1);
-    const episode = id.split('-').at(-1);
+    // const showId = id.split('-').at(1);
+    // const episode = id.split('-').at(-1);
+
+    const match = id.match(/([a-z0-9]+)-episode-(\d+)/i);
+    if (!match) throw new Error('Invalid episodeId format');
+
+    const showId = `${match[1]}`;
+    const episode = `${match[2]}`;
+
     try {
       const serverPayload = buildPayload(this.StreamsQuery, {
         showId: showId,

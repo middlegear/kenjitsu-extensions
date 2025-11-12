@@ -272,10 +272,7 @@ export abstract class BaseAnimeMeta {
     const episodeNumber = providerEp.episodeNumber || aniZipEp.episodeAnizipNumber || null;
     const rating = aniZipEp?.rating || null;
     const aired = aniZipEp?.aired || null;
-    let episodeId;
-    if (provider === 'hianime' || provider === 'anizone') {
-      episodeId = `${provider}-${providerEp?.episodeId}`;
-    } else episodeId = providerEp?.episodeId || null;
+    const episodeId = providerEp?.episodeId || null;
     const title = providerEp.title || aniZipEp?.title?.english || aniZipEp?.title?.romanizedJapanese || null;
     const overview = aniZipEp?.overview || null;
     const thumbnail = providerEp.teaser || providerEp.thumbnail || aniZipEp?.image || null;

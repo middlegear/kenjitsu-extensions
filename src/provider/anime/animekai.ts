@@ -952,7 +952,8 @@ class Animekai extends BaseClass {
     }
     if (animeId.trim()) {
       return {
-        error: 'Would be better if you used this :https://github.com/consumet/api.consumet.org',
+        error:
+          'Would be better if you used this :https://github.com/consumet/api.consumet.org. I am dropping support for animekai',
         relatedSeasons: [],
         recommendedAnime: [],
         relatedAnime: [],
@@ -1030,7 +1031,9 @@ class Animekai extends BaseClass {
     if (!episodeId) {
       throw new Error('Missing required parameter: episodeId');
     }
-
+    if (episodeId) {
+      throw new Error('I am dropping support for animekai.Use this https://github.com/consumet/api.consumet.org');
+    }
     const token = episodeId.includes('-token-') ? episodeId.split('-token-').at(1) : null;
     if (!token) {
       throw new Error(`Invalid episodeId: "${episodeId}"`);
@@ -1072,7 +1075,9 @@ class Animekai extends BaseClass {
     if (!episodeId) {
       throw new Error('Missing required parameter: episodeId');
     }
-
+    if (episodeId) {
+      throw new Error('I am dropping support for animekai.Use this https://github.com/consumet/api.consumet.org');
+    }
     try {
       const serverInfo = await this.fetchServers(episodeId);
       if ('error' in serverInfo) {
@@ -1145,7 +1150,7 @@ class Animekai extends BaseClass {
       return {
         data: null,
         headers: { Referer: null },
-        error: 'Would be better if you used this :https://github.com/consumet/api.consumet.org',
+        error: 'I am dropping support for animekai better go use  this :https://github.com/consumet/api.consumet.org',
       };
     }
 
