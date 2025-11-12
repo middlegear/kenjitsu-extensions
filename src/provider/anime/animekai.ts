@@ -950,6 +950,16 @@ class Animekai extends BaseClass {
         providerEpisodes: [],
       };
     }
+    if (animeId.trim()) {
+      return {
+        error: 'Would be better if you used this :https://github.com/consumet/api.consumet.org',
+        relatedSeasons: [],
+        recommendedAnime: [],
+        relatedAnime: [],
+        data: null,
+        providerEpisodes: [],
+      };
+    }
 
     try {
       const response = await this.client.get(`${this.baseUrl}/watch/${encodeURIComponent(animeId.trim())}`, {
@@ -1128,6 +1138,14 @@ class Animekai extends BaseClass {
         data: null,
         headers: { Referer: null },
         error: 'Missing required param: episodeId',
+      };
+    }
+
+    if (episodeId) {
+      return {
+        data: null,
+        headers: { Referer: null },
+        error: 'Would be better if you used this :https://github.com/consumet/api.consumet.org',
       };
     }
 

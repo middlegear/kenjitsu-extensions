@@ -57,6 +57,6 @@ jobs:
           pnpm publish \
             --registry=https://npm.pkg.github.com \
             --no-git-checks \
-            --access public
+            --access restricted
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
