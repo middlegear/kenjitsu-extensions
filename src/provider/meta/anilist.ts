@@ -14,6 +14,7 @@ import type {
   IMetaProviderEpisodesResponse,
   IMetaProviderIdResponse,
   IMetaData,
+  Provider,
 } from '../../types/meta/meta-anime.js';
 import {
   airingSchedule,
@@ -478,7 +479,7 @@ export class Anilist extends BaseAnimeMeta {
 
       const enrichedEpisodes = hianime.data.map((episode: any) => {
         const aniZipEpisode = aniZipMap.get(episode.episodeNumber);
-        return this.mergeEpisodeData(episode, aniZipEpisode, 'hianime');
+        return this.mergeEpisodeData(episode, aniZipEpisode, 'hianime & kaido');
       });
 
       return {
@@ -1545,7 +1546,7 @@ export class Anilist extends BaseAnimeMeta {
    */
   async fetchProviderId(
     anilistId: number,
-    provider: 'hianime' | 'allanime' | 'animepahe' | 'anizone' = 'hianime',
+    provider: Provider = 'hianime',
   ): Promise<IMetaProviderIdResponse<IMetaAnime | null>> {
     if (!anilistId) {
       return {
@@ -1602,7 +1603,7 @@ export class Anilist extends BaseAnimeMeta {
    */
   async fetchAnimeProviderEpisodes(
     anilistId: number,
-    provider: 'hianime' | 'allanime' | 'animepahe' | 'anizone' = 'hianime',
+    provider: Provider = 'hianime',
   ): Promise<IMetaProviderEpisodesResponse<IMetaAnime | null>> {
     if (!anilistId) {
       return {

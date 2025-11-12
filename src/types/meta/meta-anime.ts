@@ -97,6 +97,8 @@ export interface AiringSchedule extends BaseAnimeSchedule {
   season: string | null;
 }
 
+export type Provider = 'hianime' | 'allanime' | 'animepahe' | 'anizone';
+
 export const Seasons = ['WINTER', 'SPRING', 'SUMMER', 'FALL'] as const;
 export type Seasons = (typeof Seasons)[number];
 

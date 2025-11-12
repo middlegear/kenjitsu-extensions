@@ -3,7 +3,7 @@ import { AllAnime } from '../provider/anime/allanime.js';
 import { Anizone } from '../provider/anime/anizone.js';
 import { HiAnime } from '../provider/anime/hianime.js';
 import { Animepahe } from '../provider/anime/animepahe.js';
-import type { IMetaDataMap } from '../types/meta/meta-anime.js';
+import type { IMetaDataMap, Provider } from '../types/meta/meta-anime.js';
 import { compareTwoStrings } from '../utils/string-similarity.js';
 
 type AnimeSearchResults = {
@@ -69,11 +69,7 @@ export abstract class BaseAnimeMeta {
       .replace(/^-+|-+$/g, '');
   }
 
-  protected mapAnimeProviderId(
-    metadata: IMetaDataMap | null,
-    results: AnimeSearchResults[] | null,
-    provider: 'animepahe' | 'allanime' | 'hianime' | 'anizone',
-  ) {
+  protected mapAnimeProviderId(metadata: IMetaDataMap | null, results: AnimeSearchResults[] | null, provider: Provider) {
     if (!results || results.length === 0 || !metadata || (!metadata.english && !metadata.romaji)) {
       console.error('Invalid input: metadata, results, or both english and romaji titles missing');
       return null;
