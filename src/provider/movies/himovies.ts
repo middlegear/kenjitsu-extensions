@@ -533,17 +533,38 @@ export class HiMovies extends BaseClass {
    * @returns The server ID for the specified server
    * @throws Error if the specified server is not available
    */
-  private findServerId(servers: IMovieServers[], server: 'upcloud' | 'megacloud' | 'akcloud'): string {
-    const availableServers = servers.map(s => s.serverName || 'unknown');
-    const serverIndex = servers.findIndex(s => (s.serverName || '').toLowerCase() === server.toLowerCase());
 
-    if (serverIndex === -1) {
-      throw new Error(
-        `Server '${server}' not found '. ` + `Try one of the available streaming servers: ${availableServers.join(', ')}.`,
-      );
+  private findServerId(servers: IMovieServers[], preferred: 'upcloud' | 'megacloud' | 'akcloud'): string {
+    const availableNames = servers.map(s => s.serverName || 'unknown');
+
+    const priorityOrder: Array<'megacloud' | 'akcloud' | 'upcloud'> = [preferred, 'megacloud', 'akcloud', 'upcloud'];
+
+    const searchOrder = [...new Set(priorityOrder)];
+
+    let selectedServer: IMovieServers | undefined;
+
+    for (const serverName of searchOrder) {
+      selectedServer = servers.find(s => (s.serverName || '').toLowerCase() === serverName.toLowerCase());
+      if (selectedServer?.serverId) {
+        if (serverName !== preferred) {
+          console.warn(
+            `Server fallback: '${preferred}' not available → using '${serverName}' instead.\n` +
+              `Available servers: ${availableNames.join(', ')}`,
+          );
+        } else {
+          console.info(`Preferred server '${preferred}' found and selected.`);
+        }
+
+        return selectedServer.serverId;
+      }
     }
 
-    return servers[serverIndex].serverId as string;
+    throw new Error(
+      `No supported server found.\n` +
+        `Requested: '${preferred}'\n` +
+        `Tried fallback order: megacloud → akcloud → upcloud\n` +
+        `Available servers: ${availableNames.join(', ')}`,
+    );
   }
 
   /**

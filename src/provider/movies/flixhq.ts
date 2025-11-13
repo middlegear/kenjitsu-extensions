@@ -571,17 +571,37 @@ export class FlixHQ extends BaseClass {
    * @throws Error if the specified server is not available
    */
 
-  private findServerId(servers: IMovieServers[], server: 'upcloud' | 'vidcloud' | 'akcloud'): string {
-    const availableServers = servers.map(s => s.serverName || 'unknown');
-    const serverIndex = servers.findIndex(s => (s.serverName || '').toLowerCase() === server.toLowerCase());
+  private findServerId(servers: IMovieServers[], preferred: 'upcloud' | 'vidcloud' | 'akcloud'): string {
+    const availableNames = servers.map(s => s.serverName || 'unknown');
 
-    if (serverIndex === -1) {
-      throw new Error(
-        `Server '${server}' not found '. ` + `Try one of the available servers: ${availableServers.join(', ')}.`,
-      );
+    const priorityOrder: Array<'vidcloud' | 'akcloud' | 'upcloud'> = [preferred, 'vidcloud', 'akcloud', 'upcloud'];
+
+    const searchOrder = [...new Set(priorityOrder)];
+
+    let selectedServer: IMovieServers | undefined;
+
+    for (const serverName of searchOrder) {
+      selectedServer = servers.find(s => (s.serverName || '').toLowerCase() === serverName.toLowerCase());
+      if (selectedServer?.serverId) {
+        if (serverName !== preferred) {
+          console.warn(
+            `Server fallback: '${preferred}' not available → using '${serverName}' instead.\n` +
+              `Available servers: ${availableNames.join(', ')}`,
+          );
+        } else {
+          console.info(`Preferred server '${preferred}' found and selected.`);
+        }
+
+        return selectedServer.serverId;
+      }
     }
 
-    return servers[serverIndex].serverId as string;
+    throw new Error(
+      `No supported server found.\n` +
+        `Requested: '${preferred}'\n` +
+        `Tried fallback order: vidcloud → akcloud → upcloud\n` +
+        `Available servers: ${availableNames.join(', ')}`,
+    );
   }
 
   /**
