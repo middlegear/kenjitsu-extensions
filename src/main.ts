@@ -33,5 +33,3 @@ export {
   type Seasons,
   type IAnimeCategory,
 };
-const data = await new AllAnime().search('bleach');
-console.log(data);
