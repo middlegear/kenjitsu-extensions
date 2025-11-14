@@ -33,3 +33,5 @@ export {
   type Seasons,
   type IAnimeCategory,
 };
+// const data = await new AllAnime().fetchSources('bleach-sennen-kessen-hen-soukoku-tan-GoDoALiHc82Jrmcmh-episode-14', 'okru');
+// console.log(JSON.stringify(data));

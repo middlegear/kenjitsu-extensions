@@ -1,4 +1,4 @@
-import type { IBaseAnime, IBaseEpisodes, ISourceBaseResponse, IVideoSource } from '../base.js';
+import type { IBaseAnime, IBaseEpisodes } from '../base.js';
 
 export interface IAllAnime extends IBaseAnime {
   native: string | null;
@@ -11,7 +11,7 @@ export interface IAllAnimeEpisodes extends IBaseEpisodes {
   hasRaw: boolean;
 }
 
-export interface IAllAnimeServers {
+export interface IAllAnimeServersInfo {
   serverUrl: string;
   type: string;
   serverName: string;
@@ -21,11 +21,7 @@ export interface IAllAnimeServers {
 export type AllAnimeServers =
   | 'okru'
   | 'mp4upload'
-  | 'Internal-S-mp4'
-  | 'Internal-default-hls'
-  | 'Internal-AK'
-  | 'Internal-Yt-mp4'; // | 'filemoon'
-
-export type AllAnimeSourceResponseMap = {
-  [key in AllAnimeServers]?: ISourceBaseResponse<IVideoSource | null>;
-};
+  | 'internal-s-mp4'
+  | 'internal-default-hls'
+  | 'internal-ak'
+  | 'internal-yt-mp4'; // | 'filemoon'
