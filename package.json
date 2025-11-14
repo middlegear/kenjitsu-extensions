@@ -44,10 +44,10 @@
   },
   "homepage": "https://github.com/middlegear/kenjitsu-extensions",
   "devDependencies": {
-    "@types/node": "^24.10.0",
+    "@types/node": "^24.10.1",
     "prettier": "^3.6.2",
     "semantic-release": "^24.2.9",
-    "tsup": "^8.5.0",
+    "tsup": "^8.5.1",
     "typescript": "^5.9.3",
     "vitest": "^3.2.4"
   },

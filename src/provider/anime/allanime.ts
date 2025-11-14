@@ -33,7 +33,7 @@ export class AllAnime extends BaseClass {
    * Number of items per page for search results.
    * @private
    */
-  private readonly pageSize: number = 26;
+  private readonly pageSize: number = 30;
 
   /**
    * GraphQL query for searching anime shows.
@@ -179,7 +179,7 @@ export class AllAnime extends BaseClass {
    * @returns A promise resolving to paginated anime search results.
    * @throws Error if the search query is empty.
    */
-  async search(query: string, page: number = 1): Promise<IBasePaginated<IAllAnime[] | []>> {
+  async search(query: string): Promise<IResponse<IAllAnime[] | []>> {
     if (query.length === 0) {
       throw new Error('Search query cannot be empty.');
     }
@@ -191,7 +191,7 @@ export class AllAnime extends BaseClass {
           allowUnknown: false,
         },
         limit: this.pageSize,
-        page: page,
+        page: 1,
         countryOrigin: 'ALL',
       },
       query: this.SearchQuery,
@@ -204,7 +204,7 @@ export class AllAnime extends BaseClass {
       });
 
       if (!response.data) {
-        return { hasNextPage: false, currentPage: 0, data: [], error: response.statusText };
+        return { data: [], error: response.statusText };
       }
       const anime: IAllAnime[] = response.data.data.shows.edges.map((item: any) => ({
         id: `${this.createSlug(item.name || item.englishName || item.nativeName)}-${item._id}`,
@@ -215,14 +215,10 @@ export class AllAnime extends BaseClass {
         // slugTime: item.slugTime,
       }));
       return {
-        hasNextPage: response.data.data.shows.pageInfo.hasNextPage,
-        currentPage: page,
         data: anime,
       };
     } catch (error) {
       return {
-        hasNextPage: false,
-        currentPage: 0,
         data: [],
         error: error instanceof Error ? error.message : 'Unknown Error',
       };
@@ -419,7 +415,7 @@ export class AllAnime extends BaseClass {
   }
 
   /**
-   * **⚠️ . Very unstable
+   
    * Fetches streaming sources for a given anime episode from a specified server and category.
    * @param {string} episodeId - The unique identifier for the episode (required).
    * @param {HISubOrDub} version  - The audio category (Subtitled or Dubbed) (optional, defaults to SubOrDub.SUB).
@@ -445,7 +441,7 @@ export class AllAnime extends BaseClass {
       'internal-yt-mp4',
       'internal-ak',
       'mp4upload',
-    ].filter((id, index, arr) => arr.indexOf(id) === index) as AllAnimeServers[]; // remove duplicates
+    ].filter((id, index, arr) => arr.indexOf(id) === index) as AllAnimeServers[];
 
     const extractorRegistry: Record<AllAnimeServers, (url: URL) => Promise<IVideoSource | null>> = {
       okru: url => new Okru().extract(url),
