@@ -123,7 +123,7 @@ export class AllAnime extends BaseClass {
     // Server priority: preferred first, then best quality
     const serverPriority: AllAnimeServers[] = [
       preferred,
-      'okru',
+      // 'okru',
       'internal-default-hls',
       'internal-ak',
       'internal-s-mp4',
@@ -305,7 +305,7 @@ export class AllAnime extends BaseClass {
       }
 
       const serverIdMap: Record<string, string> = {
-        ok: 'okru',
+        // ok: 'okru', disabled for similar reasons as filemoon
         // 'fm-hls': 'filemoon', // disabled for reseaons that the stream is IP bound and tokenised  //fm-hls
         mp4: 'mp4upload',
         's-mp4': 'internal-s-mp4',
@@ -315,7 +315,7 @@ export class AllAnime extends BaseClass {
         // 'luf-mp4': 'Internal-Luf-Mp4', //might be similar to smp4 doesnt work better to just disable it
         'yt-mp4': 'internal-yt-mp4', ///http://127.0.0.1:8080?url=https://tools.fast4speed.rsvp//media9/videos/LYKSutL2PaAjYyXWz/sub/23?v=22&headers={"Referer":"https://allmanga.to/"}
       };
-      const allowed = ['ok', 'mp4', 's-mp4', 'ak', 'yt-mp4', 'default'];
+      const allowed = ['mp4', 's-mp4', 'ak', 'yt-mp4', 'default'];
       const servers = sourceUrls
         .filter((src: { sourceName: string }) => allowed.includes(src.sourceName.toLowerCase()))
         .map((src: { sourceUrl: string; type: string; sourceName: string }) => {
@@ -372,7 +372,7 @@ export class AllAnime extends BaseClass {
       }
 
       const serverIdMap: Record<string, string> = {
-        ok: 'okru',
+        // ok: 'okru',
         // 'fm-hls': 'filemoon', // disabled for reseaons that the stream is IP bound and tokenised  //fm-hls
         mp4: 'mp4upload',
         's-mp4': 'internal-s-mp4',
@@ -382,7 +382,7 @@ export class AllAnime extends BaseClass {
         // 'luf-mp4': 'Internal-Luf-Mp4', //might be similar to smp4 doesnt work better to just disable it
         'yt-mp4': 'internal-yt-mp4', ///http://127.0.0.1:8080?url=https://tools.fast4speed.rsvp//media9/videos/LYKSutL2PaAjYyXWz/sub/23?v=22&headers={"Referer":"https://allmanga.to/"}
       };
-      const allowed = ['ok', 'mp4', 's-mp4', 'ak', 'yt-mp4', 'default'];
+      const allowed = ['mp4', 's-mp4', 'ak', 'yt-mp4', 'default'];
       const servers = sourceUrls
         .filter((src: { sourceName: string }) => allowed.includes(src.sourceName.toLowerCase()))
         .map((src: { sourceUrl: string; type: string; sourceName: string }) => {
@@ -424,7 +424,7 @@ export class AllAnime extends BaseClass {
    */
   async fetchSources(
     episodeId: string,
-    server: AllAnimeServers = 'okru',
+    server: AllAnimeServers = 'internal-ak',
     version: ISubOrDub = 'sub',
   ): Promise<ISourceBaseResponse<IVideoSource | null>> {
     const { data: availableServers, error } = await this.fetchServersInternal(episodeId, version);
@@ -435,7 +435,7 @@ export class AllAnime extends BaseClass {
 
     const extractionPriority: AllAnimeServers[] = [
       server,
-      'okru',
+      // 'okru',
       'internal-default-hls',
       'internal-s-mp4',
       'internal-yt-mp4',
@@ -444,7 +444,7 @@ export class AllAnime extends BaseClass {
     ].filter((id, index, arr) => arr.indexOf(id) === index) as AllAnimeServers[];
 
     const extractorRegistry: Record<AllAnimeServers, (url: URL) => Promise<IVideoSource | null>> = {
-      okru: url => new Okru().extract(url),
+      // okru: url => new Okru().extract(url),
       mp4upload: url => new MP4Upload().extract(url),
       'internal-ak': url => new InternalAK().extract(url),
       'internal-default-hls': url => new InternalDefaultHls().extract(url),
