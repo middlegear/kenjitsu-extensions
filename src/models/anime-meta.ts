@@ -70,6 +70,27 @@ export abstract class BaseAnimeMeta {
   }
 
   protected mapAnimeProviderId(metadata: IMetaDataMap | null, results: AnimeSearchResults[] | null, provider: Provider) {
+    const norm = (s: string): string => {
+      return s
+        .replace(/\s+/g, ' ')
+        .trim()
+        .toLowerCase()
+        .replace(/[!:?.,;'"()[\]]/g, '');
+    };
+
+    const stripSeason = (s: string): string => {
+      return s.replace(/\b(?:season|cour|part)\s*\d+\b|\s+\d+$/gi, '');
+    };
+
+    const seasonNumber = (title: string): number => {
+      const m = title.match(/(?:season|cour|part)\s*(\d+)|(\d+)$/i);
+      return m ? Number(m[1] || m[2]) : 1;
+    };
+
+    const ratio = (a: string, b: string): number => {
+      return compareTwoStrings(a, b);
+    };
+
     if (!results || results.length === 0 || !metadata || (!metadata.english && !metadata.romaji)) {
       console.error('Invalid input: metadata, results, or both english and romaji titles missing');
       return null;
@@ -77,7 +98,7 @@ export abstract class BaseAnimeMeta {
 
     let bestMatch: AnimeSearchResults | null = null;
     let bestScore = 0;
-    let bestCompared = 0; // Track number of comparisons for tie-breaking
+    let bestCompared = 0;
 
     for (const r of results) {
       if (!r.name) {
@@ -89,30 +110,49 @@ export abstract class BaseAnimeMeta {
       let weightSum = 0;
       let compared = 0;
 
-      // Title comparison (now 35% weight)
+      // ---------- TITLE COMPARISON (35%) ----------
       let titleMatch = 0;
       if (provider === 'anizone' && metadata.romaji && r.name) {
-        titleMatch = compareTwoStrings(metadata.romaji, r.name);
-        // console.log(`Romaji title match for ${r.name} (anizone): "${metadata.romaji}" vs "${r.name}" = ${titleMatch}`);
+        const cleanMeta = stripSeason(norm(metadata.romaji));
+        const cleanRes = stripSeason(norm(r.name));
+        titleMatch = ratio(cleanMeta, cleanRes);
+        // console.log(
+        //   `Romaji title match for ${r.name} (anizone): "${metadata.romaji}" → "${cleanMeta}" vs "${r.name}" → "${cleanRes}" = ${titleMatch}`,
+        // );
       } else if (metadata.english && r.name && ['animepahe', 'hianime', 'allanime'].includes(provider)) {
-        titleMatch = compareTwoStrings(metadata.english, r.name);
-        // console.log(`English title match for ${r.name} (${provider}): "${metadata.english}" vs "${r.name}" = ${titleMatch}`);
+        const cleanMeta = stripSeason(norm(metadata.english));
+        const cleanRes = stripSeason(norm(r.name));
+        titleMatch = ratio(cleanMeta, cleanRes);
+        // console.log(
+        //   `English title match for ${r.name} (${provider}): "${metadata.english}" → "${cleanMeta}" vs "${r.name}" → "${cleanRes}" = ${titleMatch}`,
+        // );
       }
       totalScore += titleMatch * 0.35;
       weightSum += 0.35;
       compared++;
 
-      // Romaji comparison (now 25% weight, only for hianime and allanime)
+      // ---------- ROMAJI COMPARISON (25%) ----------
       let romajiMatch = 0;
       if (['hianime', 'allanime'].includes(provider) && metadata.romaji && r.romaji) {
-        romajiMatch = compareTwoStrings(metadata.romaji, r.romaji);
-        // console.log(`Romaji match for ${r.name} (${provider}): "${metadata.romaji}" vs "${r.romaji}" = ${romajiMatch}`);
+        const cleanMeta = stripSeason(norm(metadata.romaji));
+        let cleanRes = stripSeason(norm(r.romaji));
+        romajiMatch = ratio(cleanMeta, cleanRes);
+
+        // Boost if romaji is exactly "base + 2" (e.g. "shitai 2")
+        const trimmedRes = cleanRes.trim();
+        if (trimmedRes.endsWith(' 2') && cleanMeta === trimmedRes.slice(0, -2).trim()) {
+          romajiMatch = Math.min(1.0, romajiMatch + 0.15);
+        }
+
+        // console.log(
+        //   `Romaji match for ${r.name} (${provider}): "${metadata.romaji}" → "${cleanMeta}" vs "${r.romaji}" → "${cleanRes}" = ${romajiMatch}`,
+        // );
         totalScore += romajiMatch * 0.25;
         weightSum += 0.25;
         compared++;
       }
 
-      // Native comparison (now 20% weight, only for allanime)
+      // ---------- NATIVE COMPARISON (20%) ----------
       let nativeMatch = 0;
       if (provider === 'allanime' && metadata.native && r.native) {
         nativeMatch = compareTwoStrings(metadata.native, r.native);
@@ -122,7 +162,7 @@ export abstract class BaseAnimeMeta {
         compared++;
       }
 
-      // Type comparison (now 10% weight, for pahe, anizone, hianime)
+      // ---------- TYPE COMPARISON (10%) ----------
       let typeMatch = 0;
       if (['animepahe', 'anizone', 'hianime'].includes(provider) && metadata.type && r.type) {
         typeMatch = compareTwoStrings(metadata.type, r.type);
@@ -132,17 +172,19 @@ export abstract class BaseAnimeMeta {
         compared++;
       }
 
-      // Season comparison (now 10% weight, only for pahe)
+      // ---------- SEASON  TITLE COMPARISON(10%) ----------
       let seasonMatch = 0;
-      if (provider === 'animepahe' && metadata.season && r.season) {
-        seasonMatch = compareTwoStrings(metadata.season, r.season);
-        // console.log(`Season match for ${r.name} (${provider}): "${metadata.season}" vs "${r.season}" = ${seasonMatch}`);
+      if (metadata.english && r.name) {
+        const sMeta = seasonNumber(metadata.english);
+        const sRes = seasonNumber(r.name);
+        seasonMatch = sMeta === sRes ? 1.0 : 0.0;
+        // console.log(`Season match for ${r.name}: ${sMeta} vs ${sRes} = ${seasonMatch}`);
         totalScore += seasonMatch * 0.1;
         weightSum += 0.1;
         compared++;
       }
 
-      // Year comparison (still 15% weight, for pahe and anizone)
+      // ---------- YEAR COMPARISON (15%) ----------
       let yearMatch = 0;
       const resultYear = r.releaseDate ? this.extractYear(r.releaseDate.toString()) : null;
       if (
@@ -179,7 +221,7 @@ export abstract class BaseAnimeMeta {
     }
 
     if (!bestMatch || bestScore < 0.3 || !bestMatch.id || !bestMatch.name) {
-      console.log('No valid match found or score too low:', bestScore);
+      // console.log('No valid match found or score too low:', bestScore);
       return null;
     }
 
