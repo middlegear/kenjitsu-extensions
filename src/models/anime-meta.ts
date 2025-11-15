@@ -269,12 +269,12 @@ export abstract class BaseAnimeMeta {
     const rating = aniZipEp?.rating || null;
     const aired = aniZipEp?.aired || null;
     const episodeId = providerEp?.episodeId || null;
-    const title = providerEp.title || aniZipEp?.title?.english || aniZipEp?.title?.romanizedJapanese || null;
+    const title = providerEp?.title || aniZipEp?.title?.english || aniZipEp?.title?.romanizedJapanese || null;
     const overview = aniZipEp?.overview || null;
-    const thumbnail = providerEp.teaser || providerEp.thumbnail || aniZipEp?.image || null;
-    const airDate = providerEp.airDate || aniZipEp.airDate || null;
-    const hasDub = providerEp.hasDub || null;
-    const hasSub = providerEp.hasDub || null;
+    const thumbnail = providerEp?.teaser || providerEp?.thumbnail || aniZipEp?.image || null;
+    const airDate = providerEp?.airDate || aniZipEp?.airDate || null;
+    const hasDub = providerEp?.hasDub || null;
+    const hasSub = providerEp?.hasDub || null;
     // const hasRaw = providerEp.hasDub || null; disabled since i cant fetch raw sources from allanime
 
     return {
