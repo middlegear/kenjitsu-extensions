@@ -726,6 +726,9 @@ export class Anilist extends BaseAnimeMeta {
         },
         trailer: response.data.data.Media.trailer,
         format: response.data.data.Media.format,
+        country: response.data.data.Media.countryOfOrigin || null,
+        synonyms: response.data.data.Media.synonyms || null,
+        year: response.data.data.Media.seasonYear || null,
         status: response.data.data.Media.status,
         duration: response.data.data.Media.duration,
         score: response.data.data.Media.meanScore || response.data.data.Media.averageScore,
@@ -1254,12 +1257,16 @@ export class Anilist extends BaseAnimeMeta {
         .map((item: any) => ({
           anilistId: item.node.id,
           malId: item.node.idMal,
+
           title: {
             romaji: item.node.title.romaji ?? item.node.title.userPreferred,
             english: item.node.title.english,
             native: item.node.title.native,
           },
           type: item.node.type,
+          country: item.node.countryOfOrigin || null,
+          synonyms: item.node.synonyms || null,
+          year: item.node.seasonYear || null,
           score: item.node.averageScore ?? item.node.meanScore,
           image: item.node.coverImage.extraLarge ?? item.node.coverImage.large ?? item.node.coverImage.medium,
           bannerImage: item.node.bannerImage ?? item.node.coverImage.extraLarge ?? item.node.coverImage.large,

@@ -11,6 +11,9 @@ export const fetchByIdQuery = `query ($id: Int , $asHtml:Boolean = true) {
     type
     format
     status
+    countryOfOrigin
+    seasonYear
+    synonyms
     description(asHtml: $asHtml)
       startDate {
         year
@@ -39,7 +42,7 @@ export const fetchByIdQuery = `query ($id: Int , $asHtml:Boolean = true) {
       site
       thumbnail
     }
-    
+  
     genres
     bannerImage
     studios {
@@ -394,6 +397,9 @@ export const relatedQuery = `query Media($mediaId: Int, $type: MediaType) {
             native
             userPreferred
           }
+          countryOfOrigin
+          seasonYear
+          synonyms
           type
           bannerImage
           coverImage {

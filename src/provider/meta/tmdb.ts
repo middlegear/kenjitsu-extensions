@@ -77,8 +77,8 @@ export class TheMovieDatabase extends BaseMovieMeta {
 
       const data = response.data.results.map((item: any) => ({
         tmdbId: item.id || null,
-        name: item.name || null,
-        originalName: item.original_name || null,
+        name: item.name || item.title || null,
+        originalName: item.original_name || item.original_title || null,
         posterImage: {
           small: item.poster_path ? `https://image.tmdb.org/t/p/w185${item.poster_path}` : null,
           medium: item.poster_path ? `https://image.tmdb.org/t/p/w342${item.poster_path}` : null,
@@ -92,6 +92,7 @@ export class TheMovieDatabase extends BaseMovieMeta {
           original: item.backdrop_path ? `https://image.tmdb.org/t/p/original${item.backdrop_path}` : null,
         },
         country: item.origin_country || null,
+        type: item.media_type || null,
         language: item.original_language || null,
         releaseDate: item.first_air_date || null,
         summary: item.overview || null,

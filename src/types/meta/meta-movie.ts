@@ -17,6 +17,7 @@ export interface IMetaMovie {
     original: string;
   };
   country?: string;
+  type?: string;
   language: string;
   runtime?: number;
   releaseDate: string;

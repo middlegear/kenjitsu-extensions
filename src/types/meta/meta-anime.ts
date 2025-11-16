@@ -14,6 +14,9 @@ export interface IMetaAnime {
   trailer: string;
   format: string;
   status: string;
+  synonyms?: string[];
+  country?: string;
+  year?: number;
   duration: number;
   score: number;
   genres: string[];
@@ -62,6 +65,9 @@ export interface IRelatedAnilistData {
   image: string;
   bannerImage: string;
   color: string;
+  synonyms: string[];
+  country: string;
+  year: number;
 }
 interface NextAiringEpisode {
   episode: number;
