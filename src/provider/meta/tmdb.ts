@@ -52,6 +52,9 @@ export class TheMovieDatabase extends BaseMovieMeta {
           api_key: this.apiKey,
           ...params,
         },
+        headers: {
+          accept: 'application/json',
+        },
       });
 
       if (!response.data) {
@@ -74,7 +77,8 @@ export class TheMovieDatabase extends BaseMovieMeta {
 
       const data = response.data.results.map((item: any) => ({
         tmdbId: item.id || null,
-        name: item.name || item.original_name || null,
+        name: item.name || null,
+        originalName: item.original_name || null,
         posterImage: {
           small: item.poster_path ? `https://image.tmdb.org/t/p/w185${item.poster_path}` : null,
           medium: item.poster_path ? `https://image.tmdb.org/t/p/w342${item.poster_path}` : null,
@@ -133,6 +137,9 @@ export class TheMovieDatabase extends BaseMovieMeta {
           api_key: this.apiKey,
           ...params,
         },
+        headers: {
+          accept: 'application/json',
+        },
       });
 
       if (!response.data) {
@@ -155,7 +162,8 @@ export class TheMovieDatabase extends BaseMovieMeta {
 
       const data = response.data.results.map((item: any) => ({
         tmdbId: item.id || null,
-        name: item.title || item.original_title || null,
+        name: item.title || null,
+        originalName: item.original_title || null,
         posterImage: {
           small: item.poster_path ? `https://image.tmdb.org/t/p/w185${item.poster_path}` : null,
           medium: item.poster_path ? `https://image.tmdb.org/t/p/w342${item.poster_path}` : null,
@@ -242,6 +250,9 @@ export class TheMovieDatabase extends BaseMovieMeta {
           api_key: this.apiKey,
           append_to_response: `external_ids`,
         },
+        headers: {
+          accept: 'application/json',
+        },
       });
 
       if (!response.data) {
@@ -255,6 +266,7 @@ export class TheMovieDatabase extends BaseMovieMeta {
       const data = {
         tmdbId: response.data.id || null,
         name: response.data.name || null,
+        originalName: response.data.original_name || null,
         posterImage: {
           small: response.data.poster_path ? `https://image.tmdb.org/t/p/w185${response.data.poster_path}` : null,
           medium: response.data.poster_path ? `https://image.tmdb.org/t/p/w342${response.data.poster_path}` : null,
@@ -516,13 +528,17 @@ export class TheMovieDatabase extends BaseMovieMeta {
           api_key: this.apiKey,
           append_to_response: `external_ids`,
         },
+        headers: {
+          accept: 'application/json',
+        },
       });
 
       if (!response.data) return { error: response.statusText, data: null };
 
       const data = {
         tmdbId: response.data.id || null,
-        name: response.data.original_title || response.data.title || null,
+        name: response.data.title || null,
+        originalName: response.data.original_title || null,
         posterImage: {
           small: response.data.poster_path ? `https://image.tmdb.org/t/p/w185${response.data.poster_path}` : null,
           medium: response.data.poster_path ? `https://image.tmdb.org/t/p/w342${response.data.poster_path}` : null,
@@ -742,5 +758,33 @@ export class TheMovieDatabase extends BaseMovieMeta {
     } catch (error) {
       return { error: error instanceof Error ? error.message : 'Unknown error', data: null, provider: null };
     }
+  }
+
+  /**
+   * Searches for movies and shows based on the provided query string using TMDb API.
+   *
+   * @param query - The search query string (required)
+   * @param year - The Search the first air date
+   * @param page - The page number for pagination (optional, defaults to 1)
+   * @returns Promise resolving to paginated list of TV shows matching the search query
+   */
+  async advancedMultiSearch(query: string, page: number = 1): Promise<IMetaMoviePaginated<IMetaMovie[] | []>> {
+    if (!query) {
+      return {
+        hasNextPage: false,
+        currentPage: 0,
+        totalResults: 0,
+        lastPage: 0,
+        data: [],
+        error: 'Missing required parameter. Query',
+      };
+    }
+
+    return this.fetchPaginatedData('/search/multi', {
+      include_adult: 'true',
+      page: String(page),
+
+      query,
+    });
   }
 }

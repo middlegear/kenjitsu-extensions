@@ -3,6 +3,7 @@ import type { IBasePaginated, IResponse } from '../base.js';
 export interface IMetaMovie {
   tmdbId: number;
   name: string;
+  originalName: string;
   posterImage: {
     small: string;
     medium: string;

@@ -2,53 +2,42 @@
  * Improved string similarity comparison focusing on TV show title matching
  */
 export function compareTwoStrings(first: string, second: string): number {
-  const normalize = (str: string) => {
-    if (typeof str !== 'string') {
-      return '';
-    }
-    return str
+  const normalize = (s: string): string => {
+    if (typeof s !== 'string') return '';
+    return s
       .toLowerCase()
-      .replace(/[^\w\s]|_/g, ' ')
+      .replace(/[^\w]/g, ' ') // keep letters, numbers, spaces
       .replace(/\s+/g, ' ')
       .trim();
+  };
+
+  const getBigrams = (s: string): Set<string> => {
+    const cleaned = s.replace(/\s+/g, ''); // remove spaces for bigrams
+    const bigrams = new Set<string>();
+    for (let i = 0; i < cleaned.length - 1; i++) {
+      bigrams.add(cleaned.substr(i, 2));
+    }
+    return bigrams;
   };
 
   first = normalize(first);
   second = normalize(second);
 
   if (first === second) return 1;
+  if (!first || !second) return 0;
 
-  const len1 = first.length;
-  const len2 = second.length;
+  const set1 = getBigrams(first);
+  const set2 = getBigrams(second);
 
-  // More lenient minimum length check
-  if (len1 < 1 || len2 < 1) return 0;
+  if (set1.size === 0 || set2.size === 0) return 0;
 
-  // Special case for very short strings
-  if (len1 === 1 && len2 === 1) {
-    return first[0] === second[0] ? 1 : 0;
+  let intersection = 0;
+  for (const bg of set2) {
+    if (set1.has(bg)) intersection++;
   }
 
-  const bigrams1 = new Set<string>();
-  for (let i = 0; i < len1 - 1; i++) {
-    const bigram = first.substr(i, 2);
-    if (bigram.trim().length === 2) {
-      // Only add proper 2-character bigrams
-      bigrams1.add(bigram);
-    }
-  }
-
-  let matches = 0;
-  for (let i = 0; i < len2 - 1; i++) {
-    const bigram = second.substr(i, 2);
-    if (bigrams1.has(bigram)) {
-      matches++;
-    }
-  }
-
-  // More accurate denominator calculation
-  const totalPossible = Math.max(len1, len2) - 1;
-  return totalPossible > 0 ? matches / totalPossible : 0;
+  // Sørensen–Dice coefficient
+  return (2 * intersection) / (set1.size + set2.size);
 }
 
 /**

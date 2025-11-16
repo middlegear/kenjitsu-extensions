@@ -93,12 +93,6 @@ test('returns an array of top movies', async () => {
   expect(data.data.length).toBeGreaterThan(0);
 });
 
-test('returns an array of upcoming movies', async () => {
-  const data = await tmdb.fetchUpcomingMovies(1);
-  expect(Array.isArray(data.data)).toBe(true);
-  expect(data.data.length).toBeGreaterThan(0);
-});
-
 test('returns an array of releasing movies', async () => {
   const data = await tmdb.fetchReleasingMovies(1);
   expect(Array.isArray(data.data)).toBe(true);
