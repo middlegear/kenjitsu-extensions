@@ -700,7 +700,7 @@ export class FlixHQ extends BaseClass {
       };
     }
     try {
-      const response = await this.client.get(`${this.baseUrl}/search/${this.createSlug(query)}`, {
+      const response = await this.client.get(`${this.baseUrl}/search/${query}`, {
         params: {
           page: page.toString(),
         },
