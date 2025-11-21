@@ -143,6 +143,10 @@ class VidCloud {
   }
 
   async extract(videoUrl: URL, referer: string = 'https://flixhq.to/'): Promise<IVideoSource> {
+    const clientKey = await getClientKey(videoUrl.href, referer);
+      if (!clientKey) {
+        throw new Error('Failed to fetch ClientKey');
+      }
     const extractedData: IVideoSource = {
       subtitles: [],
       sources: [],
@@ -160,11 +164,6 @@ class VidCloud {
     const basePathname = fullPathname.substring(0, lastSlashIndex);
     const sourcesBaseUrl = `${videoUrl.origin}${basePathname}/getSources`;
     try {
-      const clientKey = await getClientKey(videoUrl.href, referer);
-      if (!clientKey) {
-        throw new Error('Failed to fetch ClientKey');
-      }
-
       const { data: initialResponse } = await client.get(sourcesBaseUrl, {
         params: {
           id: sourceId,
