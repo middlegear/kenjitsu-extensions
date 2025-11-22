@@ -350,7 +350,7 @@ export class FlixHQ extends BaseClass {
 
     if (!Array.isArray(items) || items.length === 0) {
       return {
-        error: 'No results found. Try adding a space between words. This issue cant be fixed',
+        error: 'No results found.',
         data: [],
       };
     }
@@ -596,12 +596,7 @@ export class FlixHQ extends BaseClass {
       }
     }
 
-    throw new Error(
-      `No supported server found.\n` +
-        `Requested: '${preferred}'\n` +
-        `Tried fallback order: vidcloud → akcloud → upcloud\n` +
-        `Available servers: ${availableNames.join(', ')}`,
-    );
+    throw new Error(`No supported server found.`);
   }
 
   /**
@@ -721,7 +716,7 @@ export class FlixHQ extends BaseClass {
           hasNextPage: false,
           currentPage: 0,
           lastPage: 0,
-          error: 'No results found. Try adding a space between words. This issue cant be fixed',
+          error: 'No results found.',
           data: [],
         };
       }

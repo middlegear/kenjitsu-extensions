@@ -63,7 +63,7 @@ class VidCloud {
     return decryptedGrid.flat().join('');
   }
 
-  public decrypt(encrypted: string, nonce: string, secret: string, iterations: number = 3): string {
+  private decrypt(encrypted: string, nonce: string, secret: string, iterations: number = 3): string {
     if (!encrypted || !nonce || !secret) {
       throw new Error('Missing encrypted data, nonce, or secret.');
     }
@@ -120,7 +120,7 @@ class VidCloud {
   }
 
   private primaryKeyUrl = 'https://raw.githubusercontent.com/yogesh-hacker/MegacloudKeys/refs/heads/main/keys.json';
-  async fetchKey(url: string): Promise<string> {
+  private async fetchKey(url: string): Promise<string> {
     try {
       const response = await fetch(url);
 
@@ -142,11 +142,31 @@ class VidCloud {
     }
   }
 
-  async extract(videoUrl: URL, referer: string = 'https://flixhq.to/'): Promise<IVideoSource> {
-    const clientKey = await getClientKey(videoUrl.href, referer);
-      if (!clientKey) {
-        throw new Error('Failed to fetch ClientKey');
+  async extract(videoUrl: URL, referer: string): Promise<IVideoSource> {
+    let clientKey: string | null = null;
+    const MAX_RETRIES = 5;
+
+    for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+      try {
+        clientKey = await getClientKey(videoUrl.href, referer);
+
+        if (clientKey) {
+          break;
+        }
+      } catch (error) {
+        console.error(`Attempt ${attempt + 1} failed to fetch ClientKey: ${error}`);
       }
+
+      if (attempt < MAX_RETRIES - 1) {
+        const delay = Math.pow(2, attempt) * 1000;
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+    }
+
+    if (!clientKey) {
+      throw new Error('Failed to fetch ClientKey after multiple retries.');
+    }
+
     const extractedData: IVideoSource = {
       subtitles: [],
       sources: [],

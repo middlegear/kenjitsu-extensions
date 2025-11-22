@@ -96,7 +96,7 @@ class VideoStream {
     }
   }
 
-  public decrypt(secret: string, nonce: string, encrypted: string, rounds = 3): string {
+  private decrypt(secret: string, nonce: string, encrypted: string, rounds = 3): string {
     let data = Buffer.from(encrypted, 'base64').toString('utf-8');
     const keyphrase = this.deriveKey(secret, nonce);
 
@@ -135,6 +135,29 @@ class VideoStream {
   }
 
   async extract(videoUrl: URL, referer: string): Promise<IVideoSource> {
+    let clientKey: string | null = null;
+    const MAX_RETRIES = 5;
+
+    for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+      try {
+        clientKey = await getClientKey(videoUrl.href, referer);
+
+        if (clientKey) {
+          break;
+        }
+      } catch (error) {
+        console.error(`Attempt ${attempt + 1} failed to fetch ClientKey: ${error}`);
+      }
+
+      if (attempt < MAX_RETRIES - 1) {
+        const delay = Math.pow(2, attempt) * 1000;
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+    }
+
+    if (!clientKey) {
+      throw new Error('Failed to fetch ClientKey after multiple retries.');
+    }
     const extractedData: IVideoSource = {
       intro: {
         start: 0,
@@ -161,10 +184,6 @@ class VideoStream {
     const sourcesBaseUrl = `${videoUrl.origin}${basePathname}/getSources`;
 
     try {
-      const clientKey = await getClientKey(videoUrl.href, referer);
-      if (!clientKey) {
-        throw new Error('Failed to fetch ClientKey');
-      }
       const { data: initialResponse } = await client.get(sourcesBaseUrl, {
         params: {
           id: sourceId,
