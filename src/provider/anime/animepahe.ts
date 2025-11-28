@@ -333,20 +333,28 @@ export class Animepahe extends BaseClass {
       if (!response.data) {
         return { error: response.statusText, data: null, providerEpisodes: [] };
       }
-      const {
-        data: { last_page, data },
-      } = await this.client.get(`${this.baseUrl}/api?m=release&id=${animeId}&sort=episode_asc&page=1`, {
+
+      const releaseRes = await this.client.get(`${this.baseUrl}/api?m=release&id=${animeId}&sort=episode_asc&page=1`, {
         headers: this.headers(animeId),
       });
 
-      let episodes = data.map((item: any) => ({
+      const last_page = releaseRes.data?.last_page ?? 1;
+      const episodesList = releaseRes.data?.data ?? [];
+
+      let episodes = episodesList.map((item: any) => ({
         episodeId: `pahe-${animeId}-$session$-${item.session}`,
         episodeNumber: item.episode || null,
         title: item.title || null,
         thumbnail: item.snapshot || null,
-        // duration: item.duration,
-        // url: `${this.baseUrl}/play/${id}/${item.session}`,
       }));
+
+      if (episodes.length === 0) {
+        return {
+          data: this.parseAnimeInfo(cheerio.load(response.data), animeId),
+          providerEpisodes: [],
+          error: 'No episodes found',
+        };
+      }
 
       if (last_page > 1) {
         const pageRequests = [];
@@ -394,18 +402,26 @@ export class Animepahe extends BaseClass {
       throw new Error('Missing required params: animeid');
     }
     try {
-      const {
-        data: { last_page, data },
-      } = await this.client.get(`${this.baseUrl}/api?m=release&id=${animeId}&sort=episode_asc&page=1`, {
+      const releaseRes = await this.client.get(`${this.baseUrl}/api?m=release&id=${animeId}&sort=episode_asc&page=1`, {
         headers: this.headers(animeId),
       });
 
-      let episodes = data.map((item: any) => ({
+      const last_page = releaseRes.data?.last_page ?? 1;
+      const episodesList = releaseRes.data?.data ?? [];
+
+      let episodes = episodesList.map((item: any) => ({
         episodeId: `pahe-${animeId}-$session$-${item.session}`,
         episodeNumber: item.episode || null,
         title: item.title || null,
         thumbnail: item.snapshot || null,
       }));
+
+      if (episodes.length === 0) {
+        return {
+          data: [],
+          error: 'No episodes found',
+        };
+      }
 
       if (last_page > 1) {
         const pageRequests = [];

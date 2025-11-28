@@ -21,7 +21,10 @@ New Sites(TO DO last)
 https://rentry.co/sflix#yflix-clones
 
 
+///https://kenjitsu.vercel.app/api/anilist/mappings/165530 releaseDate is showing as null
 
+///https://multiembed.mov/?video_id=522931&tmdb=1 js unscramble this
 
+//// need to stop people from quering unreleased stuff https://kenjitsu.vercel.app/api/anilist/episodes/199448
 
-
+animepahe animeinfo for chainsaw reze movie
