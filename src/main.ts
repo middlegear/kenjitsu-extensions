@@ -33,5 +33,5 @@ export {
   type Seasons,
   type IAnimeCategory,
 };
-// const data = await new Animekai().fetchSources('bleach-thousand-year-blood-war-k70q-token-KMuz9vPkqhruinFC0Yk', 'sub');
+// const data = await new Anilist().fetchProviderId(116674, 'animekai');
 // console.log(data);

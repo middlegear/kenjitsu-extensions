@@ -1377,7 +1377,10 @@ export class Jikan extends BaseAnimeMeta {
    * @param provider - The anime provider to fetch data from (optional, defaults to HiAnime)
    * @returns Promise that resolves to provider-specific anime ID and core anime info
    */
-  async fetchProviderId(malId: number, provider: Provider = 'hianime'): Promise<IMetaProviderIdResponse<IMetaAnime | null>> {
+  async fetchProviderId(
+    malId: number,
+    provider: 'hianime' | 'allanime' | 'animepahe' | 'anizone' = 'hianime',
+  ): Promise<IMetaProviderIdResponse<IMetaAnime | null>> {
     if (!malId) {
       return {
         error: 'Invalid or missing required parameter: malId!',
@@ -1433,7 +1436,7 @@ export class Jikan extends BaseAnimeMeta {
    */
   async fetchAnimeProviderEpisodes(
     malId: number,
-    provider: Provider = 'hianime',
+    provider: 'hianime' | 'allanime' | 'animepahe' | 'anizone' = 'hianime',
   ): Promise<IMetaProviderEpisodesResponse<IMetaAnime | null>> {
     if (!malId) {
       return {

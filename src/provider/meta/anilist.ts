@@ -306,6 +306,70 @@ export class Anilist extends BaseAnimeMeta {
       };
     }
   }
+  /**
+   * Maps Anilist anime data to AnimeKai provider ID.
+   *
+   * @private
+   * @param anilistId - The Anilist ID of the anime
+   * @returns Promise resolving to provider mapping data
+   */
+  private async fetchAnimeKaiProviderId(anilistId: number): Promise<IMetaProviderIdResponse<IMetaAnime | null>> {
+    if (!anilistId) {
+      return {
+        error: 'Invalid or missing required parameter: anilistId!',
+        data: null,
+        provider: null,
+      };
+    }
+
+    try {
+      const anilist = await this.fetchInfo(anilistId);
+
+      let titles: string | null = null;
+      let release: string | null = null;
+
+      if (anilist.data) {
+        titles = anilist.data.title.english || anilist.data.title.romaji || anilist.data.title.native || null;
+        release = anilist.data.releaseDate;
+      }
+
+      const year = release ? new Date(release).getFullYear() : null;
+      const titleSlug = titles ? this.createTitleSlug(titles) : null;
+
+      let anilistData: IMetaData | null = null;
+
+      if (anilist.data) {
+        anilistData = {
+          english: anilist.data.title.english,
+          romaji: anilist.data.title.romaji,
+          native: anilist.data.title.native,
+          type: anilist.data.format,
+          episodes: anilist.data.episodes,
+          season: anilist.data.season,
+          year: year as number,
+        };
+      }
+
+      let kaiResult = null;
+      if (titleSlug) {
+        const response = await this.animekai.search(titleSlug);
+        if (response && response.data.length > 0) {
+          kaiResult = response.data;
+        }
+      }
+
+      return {
+        data: anilist.data,
+        provider: this.mapAnimeProviderId(anilistData, kaiResult, 'animekai'),
+      };
+    } catch (error) {
+      return {
+        error: error instanceof Error ? error.message : 'Unknown error occurred',
+        data: null,
+        provider: null,
+      };
+    }
+  }
 
   /**
    * Fetches episodes from AllAnime provider and enriches with Anizip data.
@@ -1591,6 +1655,12 @@ export class Anilist extends BaseAnimeMeta {
             throw new Error(anizone.error);
           }
           return { data: anizone.data, provider: anizone.provider };
+        case 'animekai':
+          const animekai = await this.fetchAnimeKaiProviderId(anilistId);
+          if ('error' in animekai) {
+            throw new Error(animekai.error);
+          }
+          return { data: animekai.data, provider: animekai.provider };
       }
     } catch (error) {
       return {
@@ -1610,7 +1680,7 @@ export class Anilist extends BaseAnimeMeta {
    */
   async fetchAnimeProviderEpisodes(
     anilistId: number,
-    provider: Provider = 'hianime',
+    provider: 'hianime' | 'allanime' | 'animepahe' | 'anizone' = 'hianime',
   ): Promise<IMetaProviderEpisodesResponse<IMetaAnime | null>> {
     if (!anilistId) {
       return {

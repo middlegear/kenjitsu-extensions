@@ -5,6 +5,7 @@ import { HiAnime } from '../provider/anime/hianime.js';
 import { Animepahe } from '../provider/anime/animepahe.js';
 import type { IMetaDataMap, Provider } from '../types/meta/meta-anime.js';
 import { compareTwoStrings } from '../utils/string-similarity.js';
+import { Animekai } from '../main.js';
 
 type AnimeSearchResults = {
   id: string | null;
@@ -21,6 +22,7 @@ type AnimeSearchResults = {
 export abstract class BaseAnimeMeta {
   protected client: FetchClient;
   protected allanime: AllAnime;
+  protected animekai: Animekai;
   protected anizone: Anizone;
   protected hianime: HiAnime;
   protected animepahe: Animepahe;
@@ -33,7 +35,7 @@ export abstract class BaseAnimeMeta {
       delay = 200;
     }
     this.client = new FetchClient({ delayBetweenRequests: delay });
-
+    this.animekai = new Animekai();
     this.allanime = new AllAnime();
     this.hianime = new HiAnime();
     this.animepahe = new Animepahe();
@@ -119,7 +121,7 @@ export abstract class BaseAnimeMeta {
         // console.log(
         //   `Romaji title match for ${r.name} (anizone): "${metadata.romaji}" → "${cleanMeta}" vs "${r.name}" → "${cleanRes}" = ${titleMatch}`,
         // );
-      } else if (metadata.english && r.name && ['animepahe', 'hianime', 'allanime'].includes(provider)) {
+      } else if (metadata.english && r.name && ['animepahe', 'hianime', 'animekai', 'allanime'].includes(provider)) {
         const cleanMeta = stripSeason(norm(metadata.english));
         const cleanRes = stripSeason(norm(r.name));
         titleMatch = ratio(cleanMeta, cleanRes);
@@ -133,7 +135,7 @@ export abstract class BaseAnimeMeta {
 
       // ---------- ROMAJI COMPARISON (25%) ----------
       let romajiMatch = 0;
-      if (['hianime', 'allanime'].includes(provider) && metadata.romaji && r.romaji) {
+      if (['hianime', 'animekai', 'allanime'].includes(provider) && metadata.romaji && r.romaji) {
         const cleanMeta = stripSeason(norm(metadata.romaji));
         let cleanRes = stripSeason(norm(r.romaji));
         romajiMatch = ratio(cleanMeta, cleanRes);
@@ -164,7 +166,7 @@ export abstract class BaseAnimeMeta {
 
       // ---------- TYPE COMPARISON (10%) ----------
       let typeMatch = 0;
-      if (['animepahe', 'anizone', 'hianime'].includes(provider) && metadata.type && r.type) {
+      if (['animepahe', 'anizone', 'hianime', 'animekai'].includes(provider) && metadata.type && r.type) {
         typeMatch = compareTwoStrings(metadata.type, r.type);
         // console.log(`Type match for ${r.name} (${provider}): "${metadata.type}" vs "${r.type}" = ${typeMatch}`);
         totalScore += typeMatch * 0.1;
