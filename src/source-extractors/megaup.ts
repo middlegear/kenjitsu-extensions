@@ -54,6 +54,9 @@ export class MegaUp extends BaseClass {
       if (!response.data) {
         throw new Error(`Sources decode failed with error ${response.statusText}`);
       }
+
+      console.log(response.data.result.tracks);
+
       return response.data.result;
     } catch (error) {
       throw new Error(`Sources decode failed with error ${error}`);
@@ -90,9 +93,10 @@ export class MegaUp extends BaseClass {
           isM3u8: s.file.includes('.m3u8') || s.file.endsWith('m3u8'),
           type: s.file.includes('.m3u8') ? 'hls' : 'idk',
         })),
-        subtitles: (decryptedResult.tracks || []).map((t: { kind: any; file: any }) => ({
+        subtitles: (decryptedResult.tracks || []).map((t: { label: any; kind: any; file: any }) => ({
           kind: t.kind,
           url: t.file,
+          lang: t.label || null,
         })),
         download: decryptedResult.download,
       };
