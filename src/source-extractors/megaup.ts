@@ -96,7 +96,7 @@ export class MegaUp extends BaseClass {
         subtitles: (decryptedResult.tracks || []).map((t: { label: any; kind: any; file: any }) => ({
           kind: t.kind,
           url: t.file,
-          lang: t.label || null,
+          lang: t.label || 'N/A',
         })),
         download: decryptedResult.download,
       };
