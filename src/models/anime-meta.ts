@@ -70,7 +70,15 @@ export abstract class BaseAnimeMeta {
       .replace(/[\s_-]+/g, '-')
       .replace(/^-+|-+$/g, '');
   }
-
+  protected createTitleSlugV2(text: string): string {
+    return text
+      .toLowerCase() // Convert the entire string to lowercase.
+      .replace(/:/g, '-')
+      .replace(/;/g, '-')
+      .replace(/[\s_-]+/g, '-') // Remove all non-word characters EXCEPT spaces.
+      .replace(/\s+/g, '-') // Remove all remaining whitespace (spaces, tabs, newlines).
+      .trim(); // Remove any leading or trailing whitespace (though the previous step handles most of it).
+  }
   protected mapAnimeProviderId(metadata: IMetaDataMap | null, results: AnimeSearchResults[] | null, provider: Provider) {
     const norm = (s: string): string => {
       return s

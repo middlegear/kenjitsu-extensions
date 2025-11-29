@@ -334,7 +334,7 @@ export class Anilist extends BaseAnimeMeta {
       }
 
       const year = release ? new Date(release).getFullYear() : null;
-      const titleSlug = titles ? this.createTitleSlug(titles) : null;
+      const titleSlug = titles ? this.createTitleSlugV2(titles) : null;
 
       let anilistData: IMetaData | null = null;
 
@@ -352,7 +352,10 @@ export class Anilist extends BaseAnimeMeta {
 
       let kaiResult = null;
       if (titles) {
-        const response = await this.animekai.search(titles);
+        // console.log(titleSlug);
+        const response = await this.animekai.search(titleSlug as string);
+        // console.log(response);
+
         if (response && response.data.length > 0) {
           kaiResult = response.data;
         }
