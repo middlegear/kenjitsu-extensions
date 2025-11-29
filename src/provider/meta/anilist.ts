@@ -351,8 +351,8 @@ export class Anilist extends BaseAnimeMeta {
       }
 
       let kaiResult = null;
-      if (titleSlug) {
-        const response = await this.animekai.search(titleSlug);
+      if (titles) {
+        const response = await this.animekai.search(titles);
         if (response && response.data.length > 0) {
           kaiResult = response.data;
         }
