@@ -33,5 +33,5 @@ export {
   type Seasons,
   type IAnimeCategory,
 };
-// const data = await new Anilist().fetchProviderId(99263, 'animekai');
+// const data = await new Anilist().fetchAnimeProviderEpisodes(5114, 'allanime');
 // console.log(data);

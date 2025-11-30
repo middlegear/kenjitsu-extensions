@@ -31,7 +31,7 @@ export class Jikan extends BaseAnimeMeta {
   }
 
   /**
-   * Maps MyAnimeList anime data to Anizone provider ID.
+   * Maps MyAnimeList anime data to Zoro provider ID.
    *
    * @private
    * @param malId - The MyAnimeList ID of the anime
@@ -56,7 +56,9 @@ export class Jikan extends BaseAnimeMeta {
         titles = mal.data.title.english || mal.data.title.romaji || mal.data.title.native || null;
         release = mal.data.releaseDate;
       }
-
+      if (mal.data?.status.toLowerCase() === 'not yet aired' || mal.data?.status.toLowerCase() === null) {
+        throw new Error('No');
+      }
       const year = release ? new Date(release).getFullYear() : null;
       const titleSlug = titles ? this.createTitleSlug(titles) : null;
 
@@ -96,7 +98,73 @@ export class Jikan extends BaseAnimeMeta {
   }
 
   /**
-   * Maps MyAnimeList anime data to HiAnime (Zoro) provider ID.
+   * Maps MyAnimeList anime data to Animekai provider ID.
+   *
+   * @private
+   * @param malId - The MyAnimeList ID of the anime
+   * @returns Promise resolving to provider mapping data
+   */
+  private async fetchAnimekaiProviderId(malId: number): Promise<IMetaProviderIdResponse<IMetaAnime | null>> {
+    if (!malId) {
+      return {
+        error: 'Invalid or missing required parameter: malId!',
+        data: null,
+        provider: null,
+      };
+    }
+
+    try {
+      const mal = await this.fetchInfo(malId);
+
+      let titles: string | null = null;
+      let release: string | null = null;
+
+      if (mal.data) {
+        titles = mal.data.title.english || mal.data.title.romaji || mal.data.title.native || null;
+        release = mal.data.releaseDate;
+      }
+      if (mal.data?.status.toLowerCase() === 'not yet aired' || mal.data?.status.toLowerCase() === null) {
+        throw new Error('No');
+      }
+      const year = release ? new Date(release).getFullYear() : null;
+      const titleSlug = titles ? this.createTitleSlugV2(titles) : null;
+
+      let malData: IMetaData | null = null;
+
+      if (mal.data) {
+        malData = {
+          english: mal.data.title.english,
+          romaji: mal.data.title.romaji,
+          native: mal.data.title.native,
+          type: mal.data.format,
+          episodes: mal.data.episodes,
+          season: mal.data.season,
+          year: year as number,
+        };
+      }
+
+      let kaiResults = null;
+      if (titleSlug) {
+        const response = await this.animekai.search(titleSlug);
+        if (response && response.data.length > 0) {
+          kaiResults = response.data;
+        }
+      }
+
+      return {
+        data: mal.data,
+        provider: this.mapAnimeProviderId(malData, kaiResults, 'animekai'),
+      };
+    } catch (error) {
+      return {
+        error: error instanceof Error ? error.message : 'Unknown error occurred',
+        data: null,
+        provider: null,
+      };
+    }
+  }
+  /**
+   * Maps MyAnimeList anime data to Anizone provider ID.
    *
    * @private
    * @param malId - The MyAnimeList ID of the anime
@@ -129,7 +197,9 @@ export class Jikan extends BaseAnimeMeta {
         response.titles?.traditionalChinese;
 
       let malData: IMetaData | null = null;
-
+      if (mal.data?.status.toLowerCase() === 'not yet aired' || mal.data?.status.toLowerCase() === null) {
+        throw new Error('No');
+      }
       if (mal.data) {
         malData = {
           english: mal.data.title.english,
@@ -188,7 +258,9 @@ export class Jikan extends BaseAnimeMeta {
         titles = mal.data.title.english || mal.data.title.romaji || mal.data.title.native || null;
         release = mal.data.releaseDate;
       }
-
+      if (mal.data?.status.toLowerCase() === 'not yet aired' || mal.data?.status.toLowerCase() === null) {
+        throw new Error('No');
+      }
       const year = release ? new Date(release).getFullYear() : null;
 
       let malData: IMetaData | null = null;
@@ -253,7 +325,9 @@ export class Jikan extends BaseAnimeMeta {
         titles = mal.data.title.english || mal.data.title.romaji || mal.data.title.native || null;
         release = mal.data.releaseDate;
       }
-
+      if (mal.data?.status.toLowerCase() === 'not yet aired' || mal.data?.status.toLowerCase() === null) {
+        throw new Error('No');
+      }
       const year = release ? new Date(release).getFullYear() : null;
       const titleSlug = titles ? this.createTitleSlug(titles) : null;
 
@@ -463,6 +537,66 @@ export class Jikan extends BaseAnimeMeta {
       const enrichedEpisodes = hianime.data.map((episode: any) => {
         const aniZipEpisode = aniZipMap.get(episode.episodeNumber);
         return this.mergeEpisodeData(episode, aniZipEpisode, 'hianime & kaido');
+      });
+
+      return {
+        data: initialResponse.data,
+        providerEpisodes: enrichedEpisodes,
+      };
+    } catch (error) {
+      return {
+        error: error instanceof Error ? error.message : 'Unknown Err',
+        data: null,
+        providerEpisodes: [],
+      };
+    }
+  }
+  /**
+   * Fetches episodes from Animekai provider and enriches with Anizip data for a given MAL ID.
+   *
+   * @private
+   * @param malId - The MyAnimeList ID of the anime
+   * @returns Promise resolving to episode data enriched with additional metadata
+   */
+  private async fetchAnimekaiProviderEpisodes(malId: number): Promise<IMetaProviderEpisodesResponse<IMetaAnime | null>> {
+    if (!malId) {
+      return {
+        error: 'Invalid or missing required parameter: malId!',
+        data: null,
+        providerEpisodes: [],
+      };
+    }
+
+    try {
+      const initialResponse = await this.fetchAnimekaiProviderId(malId);
+      if (!initialResponse.provider?.id) {
+        return {
+          error: 'Provider not found for given mal ID.',
+          data: initialResponse.data,
+          providerEpisodes: [],
+        };
+      }
+
+      const [animekaiResult, anizipResult] = await Promise.allSettled([
+        this.animekai.fetchAnimeInfo(initialResponse.provider?.id as string),
+        this.malAnizip(malId),
+      ]);
+
+      if (animekaiResult.status === 'rejected') {
+        return {
+          error: `Failed to fetch provider episodes: ${animekaiResult.reason}`,
+          data: initialResponse.data,
+          providerEpisodes: [],
+        };
+      }
+
+      const animekai = animekaiResult.value;
+      const anizipEpisodes = anizipResult.status === 'fulfilled' ? anizipResult.value.episodes : [];
+      const aniZipMap = new Map((anizipEpisodes || []).map(item => [item.episodeAnizipNumber, item]));
+
+      const enrichedEpisodes = animekai.providerEpisodes.map((episode: any) => {
+        const aniZipEpisode = aniZipMap.get(episode.episodeNumber);
+        return this.mergeEpisodeData(episode, aniZipEpisode, 'animekai');
       });
 
       return {
@@ -735,7 +869,7 @@ export class Jikan extends BaseAnimeMeta {
               })
             : response.data.data.aired.to || 'Unknown',
         format: response.data.data.type,
-        status: response.data.data.status,
+        status: response.data.data.status || null,
         genres: response.data.data.genres.map((item2: any) => item2.name),
         duration: response.data.data.duration,
         score: response.data.data.score,
@@ -1379,7 +1513,7 @@ export class Jikan extends BaseAnimeMeta {
    */
   async fetchProviderId(
     malId: number,
-    provider: 'hianime' | 'allanime' | 'animepahe' | 'anizone' = 'hianime',
+    provider: 'hianime' | 'allanime' | 'animepahe' | 'anizone' | 'animekai' = 'hianime',
   ): Promise<IMetaProviderIdResponse<IMetaAnime | null>> {
     if (!malId) {
       return {
@@ -1411,12 +1545,20 @@ export class Jikan extends BaseAnimeMeta {
             throw new Error(animepahe.error);
           }
           return { data: animepahe.data, provider: animepahe.provider };
+
         case 'anizone':
           const anizone = await this.fetchAnizoneProviderId(malId);
           if ('error ' in anizone) {
             throw new Error(anizone.error);
           }
           return { data: anizone.data, provider: anizone.provider };
+
+        case 'animekai':
+          const animekai = await this.fetchAnimekaiProviderId(malId);
+          if ('error ' in animekai) {
+            throw new Error(animekai.error);
+          }
+          return { data: animekai.data, provider: animekai.provider };
       }
     } catch (error) {
       return {
@@ -1436,7 +1578,7 @@ export class Jikan extends BaseAnimeMeta {
    */
   async fetchAnimeProviderEpisodes(
     malId: number,
-    provider: 'hianime' | 'allanime' | 'animepahe' | 'anizone' = 'hianime',
+    provider: 'hianime' | 'allanime' | 'animepahe' | 'anizone' | 'animekai' = 'hianime',
   ): Promise<IMetaProviderEpisodesResponse<IMetaAnime | null>> {
     if (!malId) {
       return {
@@ -1475,6 +1617,13 @@ export class Jikan extends BaseAnimeMeta {
             throw new Error(anizone.error);
           }
           return { data: anizone.data, providerEpisodes: anizone.providerEpisodes };
+
+        case 'animekai':
+          const animekai = await this.fetchAnimekaiProviderEpisodes(malId);
+          if ('error ' in animekai) {
+            throw new Error(animekai.error);
+          }
+          return { data: animekai.data, providerEpisodes: animekai.providerEpisodes };
       }
     } catch (error) {
       return {
