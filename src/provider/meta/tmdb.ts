@@ -332,7 +332,7 @@ export class TheMovieDatabase extends BaseMovieMeta {
         name: item.name || null,
         rating: item.vote_average || null,
         summary: item.overview || null,
-        seasonNumber: item.season_number || null,
+        seasonNumber: item.season_number,
         posterImage: {
           small: item.poster_path ? `https://image.tmdb.org/t/p/w185${item.poster_path}` : null,
           medium: item.poster_path ? `https://image.tmdb.org/t/p/w342${item.poster_path}` : null,
