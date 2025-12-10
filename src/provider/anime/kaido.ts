@@ -704,15 +704,23 @@ export class Kaido extends BaseClass {
    * @param $ CheerioAPI instance
    * @returns Response containing an array of episode information
    */
-  private parseEpisodes($: cheerio.CheerioAPI): IResponse<IZEpisodes[] | []> {
+  private parseEpisodes($: cheerio.CheerioAPI, sub?: number | null, dub?: number | null): IResponse<IZEpisodes[] | []> {
     const episodesList: IZEpisodes[] = [];
     const selector: cheerio.SelectorType = '.detail-infor-content .ss-list a';
     $(selector).each((_, element) => {
+      const episodeNumber = Number($(element).attr('data-number'));
+
+      const isSubbed = sub !== null && sub !== undefined ? episodeNumber <= sub : false;
+      const isDubbed = dub !== null && dub !== undefined ? episodeNumber <= dub : false;
+
       episodesList.push({
         episodeId: $(element)?.attr('href')?.split('/')?.at(2)?.trim()?.replace('?ep=', '-episode-') || null,
-        title: $(element)?.attr('title')?.trim() || null,
-        romaji: $(element).find('div.ep-name.e-dynamic-name').attr('data-jname') || null,
-        episodeNumber: Number($(element).attr('data-number')),
+        title: $(element)?.attr('title')?.trim() || $(element).find('div.ep-name.e-dynamic-name').attr('data-jname') || null,
+        romaji:
+          $(element).find('div.ep-name.e-dynamic-name').attr('data-jname') || $(element)?.attr('title')?.trim() || null,
+        episodeNumber: episodeNumber,
+        hasSub: isSubbed,
+        hasDub: isDubbed,
       });
     });
     if (!Array.isArray(episodesList) || episodesList.length === 0) {
@@ -913,79 +921,6 @@ export class Kaido extends BaseClass {
       return {
         error: error instanceof Error ? error.message : 'Unknown Error',
         data: [],
-      };
-    }
-  }
-
-  /**
-   * Fetches detailed information about a specific anime including episodes.
-   * @param {string} animeId - The unique identifier for the anime (e.g., "bleach-806") (required).
-   * @returns  A promise that resolves to an object containing anime details,provider episodes, related seasons, characters, recommendations, or an error message.
-   */
-  async fetchAnimeInfo(animeId: string): Promise<IZoroInfoResponse<IZAnimeInfo | null>> {
-    if (!animeId.trim())
-      return {
-        error: 'Missing required params :animeId',
-        data: null,
-        providerEpisodes: [],
-        recommendedAnime: [],
-        promotionVideos: [],
-        mostPopular: [],
-        relatedAnime: [],
-        relatedSeasons: [],
-        characters: [],
-      };
-
-    try {
-      const [response, episodes] = await Promise.all([
-        this.client.get(`${this.baseUrl}/${animeId}`),
-        this.client.get(`${this.baseUrl}/ajax/episode/list/${animeId.split('-').pop()}`, {
-          headers: {
-            'X-Requested-With': 'XMLHttpRequest',
-            Referer: `${this.baseUrl}/watch/${animeId}`,
-          },
-        }),
-      ]);
-
-      if (!response.data || !episodes.data) {
-        return {
-          error: response.statusText || episodes.statusText || 'Server returned an empty response',
-          data: null,
-          providerEpisodes: [],
-          recommendedAnime: [],
-          promotionVideos: [],
-          mostPopular: [],
-          relatedAnime: [],
-          relatedSeasons: [],
-          characters: [],
-        };
-      }
-
-      const { data, recommendedAnime, promotionVideos, mostPopular, relatedAnime, relatedSeasons, characters } =
-        this.parseAnimeInfo(cheerio.load(response.data));
-      const { data: providerEpisodes } = this.parseEpisodes(cheerio.load(episodes.data.html));
-
-      return {
-        data,
-        providerEpisodes,
-        recommendedAnime,
-        promotionVideos,
-        mostPopular,
-        relatedAnime,
-        relatedSeasons,
-        characters,
-      };
-    } catch (error) {
-      return {
-        error: error instanceof Error ? error.message : 'Fatal error',
-        data: null,
-        providerEpisodes: [],
-        recommendedAnime: [],
-        promotionVideos: [],
-        mostPopular: [],
-        relatedAnime: [],
-        relatedSeasons: [],
-        characters: [],
       };
     }
   }
@@ -1469,7 +1404,86 @@ export class Kaido extends BaseClass {
       };
     }
   }
+  /**
+   * Fetches detailed information about a specific anime including episodes.
+   * @param {string} animeId - The unique identifier for the anime (e.g., "bleach-806") (required).
+   * @returns  A promise that resolves to an object containing anime details,provider episodes, related seasons, characters, recommendations, or an error message.
+   */
+  async fetchAnimeInfo(animeId: string): Promise<IZoroInfoResponse<IZAnimeInfo | null>> {
+    if (!animeId.trim())
+      return {
+        error: 'Missing required params :animeId',
+        data: null,
+        providerEpisodes: [],
+        recommendedAnime: [],
+        promotionVideos: [],
+        mostPopular: [],
+        relatedAnime: [],
+        relatedSeasons: [],
+        characters: [],
+      };
 
+    try {
+      const [response, episodes] = await Promise.all([
+        this.client.get(`${this.baseUrl}/${animeId}`),
+        this.client.get(`${this.baseUrl}/ajax/episode/list/${animeId.split('-').pop()}`, {
+          headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            Referer: `${this.baseUrl}/watch/${animeId}`,
+          },
+        }),
+      ]);
+
+      if (!response.data || !episodes.data) {
+        return {
+          error: response.statusText || episodes.statusText || 'Server returned an empty response',
+          data: null,
+          providerEpisodes: [],
+          recommendedAnime: [],
+          promotionVideos: [],
+          mostPopular: [],
+          relatedAnime: [],
+          relatedSeasons: [],
+          characters: [],
+        };
+      }
+
+      const { data, recommendedAnime, promotionVideos, mostPopular, relatedAnime, relatedSeasons, characters } =
+        this.parseAnimeInfo(cheerio.load(response.data));
+
+      let subbed;
+      let dubbed;
+      if (data && data != null) {
+        subbed = data.episodes.sub;
+        dubbed = data.episodes.dub;
+      }
+
+      const { data: providerEpisodes } = this.parseEpisodes(cheerio.load(episodes.data.html), subbed, dubbed);
+
+      return {
+        data,
+        providerEpisodes,
+        recommendedAnime,
+        promotionVideos,
+        mostPopular,
+        relatedAnime,
+        relatedSeasons,
+        characters,
+      };
+    } catch (error) {
+      return {
+        error: error instanceof Error ? error.message : 'Fatal error',
+        data: null,
+        providerEpisodes: [],
+        recommendedAnime: [],
+        promotionVideos: [],
+        mostPopular: [],
+        relatedAnime: [],
+        relatedSeasons: [],
+        characters: [],
+      };
+    }
+  }
   /**
    * Fetches episode data for a specific anime.
    * @param {string} animeId - The unique identifier for the anime (e.g., "bleach-806") (required).
@@ -1482,21 +1496,32 @@ export class Kaido extends BaseClass {
         error: 'Missing required params :animeId',
       };
     try {
-      const response = await this.client.get(`${this.baseUrl}/ajax/episode/list/${animeId.split('-').pop()}`, {
-        headers: {
-          'X-Requested-With': 'XMLHttpRequest',
-          Referer: `${this.baseUrl}/watch/${animeId}`,
-        },
-      });
+      const [response, episodes] = await Promise.all([
+        this.client.get(`${this.baseUrl}/${animeId}`),
+        this.client.get(`${this.baseUrl}/ajax/episode/list/${animeId.split('-').pop()}`, {
+          headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            Referer: `${this.baseUrl}/watch/${animeId}`,
+          },
+        }),
+      ]);
 
-      if (!response.data)
+      if (!episodes.data || !response.data)
         return {
-          error: response.statusText || 'Server returned an empty response',
+          error: episodes.statusText || response.statusText || 'Server returned an empty response',
           data: [],
         };
 
-      const $episodes = cheerio.load(response.data.html);
-      return this.parseEpisodes($episodes);
+      const { data } = this.parseAnimeInfo(cheerio.load(response.data));
+      let subbed;
+      let dubbed;
+      if (data && data != null) {
+        subbed = data.episodes.sub;
+        dubbed = data.episodes.dub;
+      }
+
+      const $episodes = cheerio.load(episodes.data.html);
+      return this.parseEpisodes($episodes, subbed, dubbed);
     } catch (error) {
       return {
         data: [],
@@ -1515,7 +1540,7 @@ export class Kaido extends BaseClass {
       if (episodeId.includes('ep=')) {
         return {
           data: null,
-          error: "Invalid format! Please use the '-episode-' format instead of ?ep=.",
+          error: 'No way!.Look who came to take a peek.',
         };
       }
       return {

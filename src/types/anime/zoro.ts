@@ -61,6 +61,8 @@ export interface IZEpisodes {
   episodeNumber: number | null;
   romaji: string | null;
   title: string | null;
+  hasSub: boolean;
+  hasDub: boolean;
 }
 export type HiAnimeServers = 'hd-1' | 'hd-2' | 'hd-3';
 
