@@ -33,5 +33,5 @@ export {
   type Seasons,
   type IAnimeCategory,
 };
-// const data = await new HiAnime().fetchAnimeInfo('my-hero-academia-final-season-19930');
+// const data = await new HiAnime().fetchHome();
 // console.log(data);

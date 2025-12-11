@@ -934,9 +934,9 @@ export class HiAnime extends BaseClass {
   async fetchHome(): Promise<IZHomeResponse<IZSpotlight[] | []>> {
     try {
       const response = await this.client.get(`${this.baseUrl}/home`, {
-        headers: {
-          Referer: this.baseUrl,
-        },
+        // headers: {
+        //   Referer: this.baseUrl,
+        // },
       });
       if (!response.data) {
         return {
