@@ -33,5 +33,7 @@ export {
   type Seasons,
   type IAnimeCategory,
 };
-// const data = await new HiAnime().fetchHome();
-// console.log(data);
+// const data = await new HiAnime().fetchSources(
+//   'the-banished-court-magician-aims-to-become-the-strongest-19902-episode-145527','hd-1'
+// );
+// console.log(data.data);

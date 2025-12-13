@@ -64,7 +64,7 @@ export interface IZEpisodes {
   hasSub: boolean;
   hasDub: boolean;
 }
-export type HiAnimeServers = 'hd-1' | 'hd-2' | 'hd-3';
+export type HiAnimeServers = 'hd-1' | 'hd-2'; // removed hd-3
 
 export interface IZPaginated<T> extends IBasePaginated<T> {
   lastPage: number;

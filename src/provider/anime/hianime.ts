@@ -754,24 +754,32 @@ export class HiAnime extends BaseClass {
     const episodeNo = $('.content .server-notice')?.find('b')?.text().split(' ').pop();
     servers.episodeNumber = Number(episodeNo) || null;
     $(subSelector).each((_, element) => {
+      const serverName = $(element).find('.btn').text().trim().toLowerCase() || null;
+      if (serverName && serverName.includes('hd-3')) return; // <--Tempoarily nuking hd-3
       servers.sub.push({
         serverId: Number($(element)?.attr('data-server-id') || null),
         mediaId: Number($(element).attr('data-id') || null),
-        serverName: $(element).find('.btn').text().trim().toLowerCase() || null,
+        serverName: serverName,
       });
     });
+
     $(dubSelector).each((_, element) => {
+      const serverName = $(element).find('.btn').text().trim().toLowerCase() || null;
+      if (serverName && serverName.includes('hd-3')) return; // <--Tempoarily nuking hd-3
       servers.dub.push({
         serverId: Number($(element)?.attr('data-server-id') || null),
         mediaId: Number($(element).attr('data-id') || null),
-        serverName: $(element)?.find('.btn')?.text().trim().toLowerCase() || null,
+        serverName: serverName,
       });
     });
+
     $(rawSelector).each((_, element) => {
+      const serverName = $(element).find('.btn').text().trim().toLowerCase() || null;
+      if (serverName && serverName.includes('hd-3')) return; // <--Tempoarily nuking hd-3
       servers.raw.push({
         serverId: Number($(element)?.attr('data-server-id') || null),
         mediaId: Number($(element).attr('data-id') || null),
-        serverName: $(element).find('.btn').text().trim().toLowerCase() || null,
+        serverName: serverName,
       });
     });
 
@@ -789,7 +797,7 @@ export class HiAnime extends BaseClass {
    * @throws Error if the category or server is not found
    */
   private findServerId(servers: IServerInfo, category: ISubOrDub, server: HiAnimeServers): number {
-    const serverPreference: HiAnimeServers[] = ['hd-2', 'hd-1', 'hd-3'];
+    const serverPreference: HiAnimeServers[] = ['hd-2', 'hd-1']; /// removed hd-3
 
     const versionPreference: ISubOrDub[] = ['sub', 'raw', 'dub'];
 
@@ -933,11 +941,7 @@ export class HiAnime extends BaseClass {
    */
   async fetchHome(): Promise<IZHomeResponse<IZSpotlight[] | []>> {
     try {
-      const response = await this.client.get(`${this.baseUrl}/home`, {
-        // headers: {
-        //   Referer: this.baseUrl,
-        // },
-      });
+      const response = await this.client.get(`${this.baseUrl}/home`, {});
       if (!response.data) {
         return {
           error: response.statusText || 'Received empty response from server',
@@ -1617,7 +1621,7 @@ export class HiAnime extends BaseClass {
       switch (server) {
         case 'hd-1':
         case 'hd-2':
-        case 'hd-3':
+          // case 'hd-3': // removed hd-3
           return {
             headers: { Referer: `${serverUrl.origin}/` },
             data: await new MegaCloud().extract(serverUrl, `${this.baseUrl}/`),

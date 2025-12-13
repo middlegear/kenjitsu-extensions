@@ -931,11 +931,7 @@ export class Kaido extends BaseClass {
    */
   async fetchHome(): Promise<IZHomeResponse<IZSpotlight[] | []>> {
     try {
-      const response = await this.client.get(`${this.baseUrl}/home`, {
-        headers: {
-          Referer: this.baseUrl,
-        },
-      });
+      const response = await this.client.get(`${this.baseUrl}/home`, {});
       if (!response.data) {
         return {
           error: response.statusText || 'Received empty response from server',
