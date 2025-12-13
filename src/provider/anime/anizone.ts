@@ -134,7 +134,12 @@ export class Anizone extends BaseClass {
           $el
             .find('div.absolute img')
             .attr(':src')
-            ?.match(/'([^']*teaser\.webp)'/)?.[1] || null,
+            ?.match(/'([^']*teaser\.webp)'/)?.[0] ||
+          $el
+            .find('div.absolute img')
+            .attr(':src')
+            ?.match(/'([^']*teaser\.webp)'/)?.[1] ||
+          null,
         title,
         airDate:
           $el
