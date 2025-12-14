@@ -3,7 +3,7 @@ import { BaseClass } from '../../models/base.js';
 
 import MegaCloud from '../../source-extractors/megacloud.js';
 
-import type { IAnimeCategory, IResponse, IServerInfo, ISubOrDub, IVideoSource } from '../../types/base.js';
+import type { IAnimeCategory, IResponse, IServerInfo, ISubOrDub, ISubServers, IVideoSource } from '../../types/base.js';
 import {
   HIGenres,
   type HiAnimeServers,
@@ -755,7 +755,7 @@ export class HiAnime extends BaseClass {
     servers.episodeNumber = Number(episodeNo) || null;
     $(subSelector).each((_, element) => {
       const serverName = $(element).find('.btn').text().trim().toLowerCase() || null;
-      if (serverName && serverName.includes('hd-3')) return; // <--Tempoarily nuking hd-3
+
       servers.sub.push({
         serverId: Number($(element)?.attr('data-server-id') || null),
         mediaId: Number($(element).attr('data-id') || null),
@@ -765,7 +765,7 @@ export class HiAnime extends BaseClass {
 
     $(dubSelector).each((_, element) => {
       const serverName = $(element).find('.btn').text().trim().toLowerCase() || null;
-      if (serverName && serverName.includes('hd-3')) return; // <--Tempoarily nuking hd-3
+
       servers.dub.push({
         serverId: Number($(element)?.attr('data-server-id') || null),
         mediaId: Number($(element).attr('data-id') || null),
@@ -775,13 +775,23 @@ export class HiAnime extends BaseClass {
 
     $(rawSelector).each((_, element) => {
       const serverName = $(element).find('.btn').text().trim().toLowerCase() || null;
-      if (serverName && serverName.includes('hd-3')) return; // <--Tempoarily nuking hd-3
+
       servers.raw.push({
         serverId: Number($(element)?.attr('data-server-id') || null),
         mediaId: Number($(element).attr('data-id') || null),
         serverName: serverName,
       });
     });
+
+    const filterHd3 = (serverArray: ISubServers[]): ISubServers[] => {
+      return serverArray.filter(server => {
+        return server.serverName && !server.serverName.includes('hd-3');
+      });
+    };
+
+    servers.sub = filterHd3(servers.sub);
+    servers.dub = filterHd3(servers.dub);
+    servers.raw = filterHd3(servers.raw);
 
     if (servers.sub.length === 0 && servers.dub.length === 0 && servers.raw.length === 0) {
       throw new Error('No server data received. Use a different category');

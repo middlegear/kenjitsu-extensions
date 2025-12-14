@@ -376,7 +376,7 @@ export class TheMovieDatabase extends BaseMovieMeta {
         title: item.name || null,
         summary: item.overview || null,
         rating: item.vote_average || null,
-        seasonNumber: item.season_number || null,
+        seasonNumber: item.season_number,
         tmdbId: item.show_id || null,
         runtime: item.runtime || null,
         images: {
