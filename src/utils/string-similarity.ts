@@ -91,3 +91,53 @@ compareTwoStrings.normalize = (str: string) => {
     .replace(/\s+/g, ' ')
     .trim();
 };
+
+/// for the japanese stuff
+function normalizeJapaneseTitle(s: string): string {
+  if (!s) return '';
+  return (
+    s
+      .trim()
+      // Normalize fullwidth digits to halfwidth
+      .replace(/[０-９]/g, d => String.fromCharCode(d.charCodeAt(0) - 0xfee0))
+      // Remove common suffixes that vary (season markers, OVA, etc.)
+      .replace(/\s*(?:SEASON\s*\d+|OVA\s*\d+|シーズン|記念スペシャル).*$/gi, '')
+      .replace(/\s+\d+$/, '') // Remove trailing season number if isolated
+      .trim()
+  );
+}
+
+export function nativeSimilarity(a: string, b: string): number {
+  if (!a || !b) return 0;
+
+  // Exact match after basic trim
+  if (a.trim() === b.trim()) return 1.0;
+
+  const normA = normalizeJapaneseTitle(a);
+  const normB = normalizeJapaneseTitle(b);
+
+  if (normA === normB) return 1.0;
+
+  const bigramsA = new Set();
+  for (let i = 0; i < normA.length - 1; i++) {
+    bigramsA.add(normA.substr(i, 2));
+  }
+  const bigramsB = new Set();
+  for (let i = 0; i < normB.length - 1; i++) {
+    bigramsB.add(normB.substr(i, 2));
+  }
+
+  const intersection = [...bigramsA].filter(x => bigramsB.has(x)).length;
+  const union = bigramsA.size + bigramsB.size - intersection;
+
+  const diceScore = union > 0 ? (2 * intersection) / union : 0;
+
+  // If strings are short and very similar, boost with substring check
+  const shorter = normA.length < normB.length ? normA : normB;
+  const longer = normA.length >= normB.length ? normA : normB;
+  if (longer.includes(shorter) || shorter.length >= longer.length * 0.8) {
+    return Math.max(diceScore, 0.9); // Treat near-substrings as very high
+  }
+
+  return diceScore;
+}

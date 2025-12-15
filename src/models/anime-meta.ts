@@ -4,7 +4,7 @@ import { Anizone } from '../provider/anime/anizone.js';
 import { HiAnime } from '../provider/anime/hianime.js';
 import { Animepahe } from '../provider/anime/animepahe.js';
 import type { IMetaDataMap, Provider } from '../types/meta/meta-anime.js';
-import { compareTwoStrings } from '../utils/string-similarity.js';
+import { compareTwoStrings, nativeSimilarity } from '../utils/string-similarity.js';
 import { Animekai } from '../main.js';
 
 type AnimeSearchResults = {
@@ -162,15 +162,15 @@ export abstract class BaseAnimeMeta {
         compared++;
       }
 
-      // ---------- NATIVE COMPARISON (20%) ----------
-      let nativeMatch = 0;
-      if (provider === 'allanime' && metadata.native && r.native) {
-        nativeMatch = compareTwoStrings(metadata.native, r.native);
-        // console.log(`Native match for ${r.name} (${provider}): "${metadata.native}" vs "${r.native}" = ${nativeMatch}`);
-        totalScore += nativeMatch * 0.2;
-        weightSum += 0.2;
-        compared++;
-      }
+      // // ---------- NATIVE COMPARISON (20%) ---------- This might cause problems incase it does then comment it out
+      // let nativeMatch = 0;
+      // if (provider === 'allanime' && metadata.native && r.native) {
+      //   nativeMatch = nativeSimilarity(metadata.native, r.native);
+      //   console.log(`Native match for ${r.name} (${provider}): "${metadata.native}" vs "${r.native}" = ${nativeMatch}`);
+      //   totalScore += nativeMatch * 0.2;
+      //   weightSum += 0.2;
+      //   compared++;
+      // }
 
       // ---------- TYPE COMPARISON (10%) ----------
       let typeMatch = 0;
