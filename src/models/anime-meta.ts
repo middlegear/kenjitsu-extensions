@@ -339,8 +339,8 @@ export abstract class BaseAnimeMeta {
       overview,
       thumbnail,
       provider,
-      // hasDub,
-      // hasSub,
+      hasDub,
+      hasSub,
       // hasRaw,
     };
   }
