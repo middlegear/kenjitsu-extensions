@@ -401,6 +401,7 @@ export class AllAnime extends BaseClass {
             serverId: serverIdMap[key] || key,
           };
         });
+      console.log(servers);
 
       return { data: servers };
     } catch (error) {
@@ -422,6 +423,7 @@ export class AllAnime extends BaseClass {
    * @param {string}  server - The streaming server to use (optional, defaults to okru).
    * @returns  A promise that resolves to an object containing streaming sources, headers, or an error message.
    */
+
   async fetchSources(
     episodeId: string,
     server: AllAnimeServers = 'internal-ak',
@@ -433,18 +435,18 @@ export class AllAnime extends BaseClass {
       throw new Error(error ?? `No streaming servers found for episode ${episodeId}`);
     }
 
-    const extractionPriority: AllAnimeServers[] = [
-      server,
-      // 'okru',
-      'internal-default-hls',
-      'internal-s-mp4',
-      'internal-yt-mp4',
-      'internal-ak',
-      'mp4upload',
-    ].filter((id, index, arr) => arr.indexOf(id) === index) as AllAnimeServers[];
+    const serverInfo = availableServers.find(s => s.serverId === server);
+
+    if (!serverInfo) {
+      const readableServerList = availableServers.map(s => `${s.serverName} (${s.serverId})`).join(', ');
+      throw new Error(
+        `Requested server '${server}' is not available for episode ${episodeId} (${version}).\n` +
+          `Available servers: ${readableServerList}`,
+      );
+    }
 
     const extractorRegistry: Record<AllAnimeServers, (url: URL) => Promise<IVideoSource | null>> = {
-      // okru: url => new Okru().extract(url),
+      // okru: url => new Okru().extract(url), // Add if using
       mp4upload: url => new MP4Upload().extract(url),
       'internal-ak': url => new InternalAK().extract(url),
       'internal-default-hls': url => new InternalDefaultHls().extract(url),
@@ -452,42 +454,34 @@ export class AllAnime extends BaseClass {
       'internal-yt-mp4': url => new InternalYtMP4().extract(url),
     };
 
-    for (const serverId of extractionPriority) {
-      const serverInfo = availableServers.find(s => s.serverId === serverId);
-      if (!serverInfo) continue; // server 404
-      const extract = extractorRegistry[serverId];
-      if (!extract) {
-        console.warn(`[skip] No extractor defined for server "${serverId}" (${serverInfo.serverName})`);
-        continue;
-      }
-
-      const url = new URL(serverInfo.serverUrl);
-      const refererHeader = this.getReferer(serverId, url);
-
-      console.info(`[attempt] ${serverInfo.serverName} (${serverId})`);
-
-      try {
-        const videoSource = await extract(url);
-
-        if (videoSource) {
-          console.info(`[success] Selected server: ${serverId}`);
-          return {
-            headers: { Referer: refererHeader },
-            data: videoSource,
-          };
-        }
-      } catch (err: any) {
-        console.error(`[error] ${serverId} → ${err.message ?? err}`);
-      }
+    const extract = extractorRegistry[serverInfo.serverId as AllAnimeServers];
+    if (!extract) {
+      throw new Error(`No extractor defined for the requested server "${server}" (${serverInfo.serverName})`);
     }
 
-    const attemptedServers = extractionPriority.filter(id => availableServers.some(s => s.serverId === id));
+    const url = new URL(serverInfo.serverUrl);
+    const refererHeader = this.getReferer(serverInfo.serverId as AllAnimeServers, url);
+
+    console.info(`[attempt] ${serverInfo.serverName} (${serverInfo.serverId})`);
+
+    try {
+      const videoSource = await extract(url);
+
+      if (videoSource) {
+        console.info(`[success] Selected server: ${serverInfo.serverId}`);
+        return {
+          headers: { Referer: refererHeader },
+          data: videoSource,
+        };
+      }
+    } catch (err: any) {
+      console.error(`[error] ${serverInfo.serverId} → ${err.message ?? err}`);
+    }
 
     const readableServerList = availableServers.map(s => `${s.serverName} (${s.serverId})`).join(', ');
 
     throw new Error(
-      `Unable to extract a playable source for episode ${episodeId}\n` +
-        `Tried: ${attemptedServers.join(' → ')}\n` +
+      `Unable to extract a playable source from the selected server ${server} for episode ${episodeId}.\n` +
         `Available servers: ${readableServerList}`,
     );
   }

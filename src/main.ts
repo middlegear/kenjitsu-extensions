@@ -33,5 +33,5 @@ export {
   type Seasons,
   type IAnimeCategory,
 };
-// const data = await new Anilist().fetchProviderId(153800, 'allanime');
+// const data = await new AllAnime().fetchSources('gachiakuta-zNbh9DKcawQbwnApG-episode-1');
 // console.log(data);

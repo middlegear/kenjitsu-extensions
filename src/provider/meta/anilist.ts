@@ -61,6 +61,8 @@ export class Anilist extends BaseAnimeMeta {
 
     try {
       const anilist = await this.fetchInfo(anilistId);
+      const res = await this.anilistAnizip(anilistId);
+      console.log(res.titles);
 
       let titles: string | null = null;
       let release: string | null = null;
@@ -73,7 +75,7 @@ export class Anilist extends BaseAnimeMeta {
         throw new Error('Cant determine whether the anime exits or not');
       }
       const year = release ? new Date(release).getFullYear() : null;
-      const titleSlug = titles ? this.createTitleSlug(titles) : null;
+      const titleSlug = titles ? this.createTitleSlugV2(titles) : null;
 
       let anilistData: IMetaData | null = null;
 
@@ -90,8 +92,12 @@ export class Anilist extends BaseAnimeMeta {
       }
 
       let zoroResults = null;
+      console.log(anilistData);
+
       if (titleSlug) {
         const response = await this.hianime.search(titleSlug);
+        console.log(response);
+
         if (response && response.data && response.data.length > 0) {
           zoroResults = response.data;
         }
