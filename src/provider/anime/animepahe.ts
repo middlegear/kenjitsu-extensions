@@ -43,8 +43,15 @@ export class Animepahe extends BaseClass {
       anilistId: Number($('head').find('meta[name="anilist"]').attr('content')) || null,
       malId: Number($('head').find('meta[name="myanimelist"]').attr('content')) || null,
       id: `${animeId}`,
-      name: $('header.anime-header').find('a.fa.fa-link.text-white').attr('title') || null,
-      romaji: $('header.anime-header').find('h2.japanese').text().trim() || null,
+      name: ($('header.anime-header').find('a.fa.fa-link.text-white').attr('title') || '')
+        .replace(/^Bookmark\s+/i, '')
+        .trim(),
+      romaji:
+        $('header.anime-header')
+          .find('h2.japanese')
+          .text()
+          .replace(/^Bookmark\s+/i, '')
+          .trim() || null,
       posterImage: $('div.anime-poster > a').attr('href') || null,
       altnames: $('div.col-sm-4.anime-info').find('p:contains("Japanese")').text().split(':').at(1)?.trim() || null,
       japanese: $('div.col-sm-4.anime-info').find('p:contains("Japanese")').text().split(':').at(1)?.trim() || null,
