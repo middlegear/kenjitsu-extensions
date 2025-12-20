@@ -1,5 +1,15 @@
 import type { IBaseAnime, IBaseEpisodes } from '../base.js';
-
+export interface IAllAnimeInfo extends IBaseAnime {
+  native: string;
+  type: string;
+  season: string;
+  releaseDate: number;
+  score: number;
+  genres: string[];
+  synopsis: string;
+  studios: string[];
+  status: string;
+}
 export interface IAllAnime extends IBaseAnime {
   native: string | null;
   romaji: string | null;

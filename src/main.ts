@@ -33,5 +33,5 @@ export {
   type Seasons,
   type IAnimeCategory,
 };
-// const data = await new Anilist().fetchAnimeProviderEpisodes(21355, 'animekai');
+// const data = await new AllAnime().fetchAnimeInfo('bleach-sennen-kessen-hen-uP4dqHNypYeYtTnzP');
 // console.log(data);

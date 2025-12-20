@@ -7,7 +7,13 @@ import { InternalAK, InternalDefaultHls, InternalSMP4, InternalYtMP4 } from '../
 import FileMoon from '../../source-extractors/filemoon.js';
 import MP4Upload from '../../source-extractors/mp4upload.js';
 import Okru from '../../source-extractors/okru.js';
-import type { AllAnimeServers, IAllAnime, IAllAnimeEpisodes, IAllAnimeServersInfo } from '../../types/anime/allanime.js';
+import type {
+  AllAnimeServers,
+  IAllAnime,
+  IAllAnimeEpisodes,
+  IAllAnimeInfo,
+  IAllAnimeServersInfo,
+} from '../../types/anime/allanime.js';
 import type { IBasePaginated, IResponse, ISourceBaseResponse, ISubOrDub, IVideoSource } from '../../types/base.js';
 import type { IMovieServers } from '../../types/movies/movie.js';
 
@@ -56,7 +62,29 @@ export class AllAnime extends BaseClass {
     }
   }
 `;
-
+  /**
+   * GraphQL query for fetching animeinfo.
+   * @private
+   */
+  private AnimeInfoQuery = `
+    query ($_id: String!) {
+            show(
+                _id: $_id
+            ) {
+                 _id
+                englishName
+                nativeName
+                thumbnail
+                description
+                type
+                season
+                score
+                genres
+                status
+                studios
+            }
+        }
+`;
   /**
    * GraphQL query for fetching episode details for a specific show.
    * @private
@@ -94,13 +122,10 @@ export class AllAnime extends BaseClass {
     }
 `;
   private decryptSource(input: string): string {
-    // If the string doesn't start with "-", return as-is
     if (!input.startsWith('-')) return input;
 
-    // Get the part after the last "-"
     const encryptedPart = input.substring(input.lastIndexOf('-') + 1);
 
-    // Split into pairs of hex characters
     const hexPairs = encryptedPart.match(/.{1,2}/g);
     if (!hexPairs) return input; // fallback
 
@@ -113,65 +138,7 @@ export class AllAnime extends BaseClass {
 
     return decrypted;
   }
-  private findServerId(
-    servers: IAllAnimeServersInfo[],
-    preferred: AllAnimeServers,
-    version: ISubOrDub = 'sub',
-  ): IAllAnimeServersInfo {
-    const availableNames = servers.map(s => `${s.serverName} (${s.type})`).join(', ') || 'none';
 
-    // Server priority: preferred first, then best quality
-    const serverPriority: AllAnimeServers[] = [
-      preferred,
-      // 'okru',
-      'internal-default-hls',
-      'internal-ak',
-      'internal-s-mp4',
-      'internal-yt-mp4',
-      'mp4upload',
-    ];
-
-    const uniqueServers = serverPriority.filter((v, i, a) => a.indexOf(v) === i);
-
-    let selected: IAllAnimeServersInfo | undefined;
-    let usedServer: AllAnimeServers | null = null;
-
-    // Try each server in priority order
-    for (const serverName of uniqueServers) {
-      selected = servers.find(
-        s =>
-          (s.serverName || '').toLowerCase() === serverName.toLowerCase() ||
-          (s.serverId || '').toLowerCase() === serverName.toLowerCase(),
-      );
-
-      if (selected) {
-        usedServer = serverName as AllAnimeServers;
-        break;
-      }
-    }
-
-    if (!selected) {
-      throw new Error(
-        `No playable server found.\n` +
-          `Requested: '${preferred}' (${version})\n` +
-          `Tried servers: ${uniqueServers.join(' → ')}\n` +
-          `Available: ${availableNames}`,
-      );
-    }
-
-    // Warn if fallback
-    if (usedServer !== preferred) {
-      console.warn(
-        `Fallback → Server: '${preferred}' → '${usedServer}'\n` +
-          `Selected: ${selected.serverName} (${selected.type})\n` +
-          `URL: ${selected.serverUrl}`,
-      );
-    } else {
-      console.info(`Preferred server selected: ${selected.serverName}`);
-    }
-
-    return selected;
-  }
   /**
    * Searches for anime based on a query string and pagination.
    * @param query - The search query string.
@@ -224,7 +191,47 @@ export class AllAnime extends BaseClass {
       };
     }
   }
+  /**
+   * Fetches anime details for a specific anime by its ID.
+   * @param id - The ID of the anime show.
+   * @returns A promise resolving to a anime info or an error.
+  
+   */
+  async fetchAnimeInfo(id: string): Promise<IResponse<IAllAnimeInfo | null>> {
+    if (id.length === 0) {
+      throw new Error('id cannot be empty.');
+    }
+    const buildPayload = (query: string, variables: object) => ({
+      query,
+      variables,
+    });
 
+    const mediaId = id.split('-').at(-1);
+    try {
+      const animeinfoPayload = buildPayload(this.AnimeInfoQuery, { _id: mediaId });
+      const response = await this.client.post(this.baseUrl, animeinfoPayload);
+      const data: IAllAnimeInfo = {
+        id: id,
+        name: response.data.data.show.englishName,
+        native: response.data.data.show.nativeName,
+        posterImage: response.data.data.show.thumbnail,
+        type: response.data.data.show.type,
+        season: response.data.data.show.season.quarter,
+        releaseDate: response.data.data.show.season.year,
+        score: response.data.data.show.score,
+        genres: response.data.data.show.genres,
+        synopsis: response.data.data.show.description,
+        studios: response.data.data.show.studios,
+        status: response.data.data.show.status,
+      };
+      return { data: data };
+    } catch (error) {
+      return {
+        error: error instanceof Error ? error.message : 'Unknown Error',
+        data: null,
+      };
+    }
+  }
   /**
    * Fetches episode details for a specific anime by its ID.
    * @param id - The ID of the anime show.
