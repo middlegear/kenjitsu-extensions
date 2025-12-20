@@ -620,11 +620,13 @@ export class Anilist extends BaseAnimeMeta {
       }
 
       const animekai = animekaiResult.value;
+
       const anizipEpisodes = anizipResult.status === 'fulfilled' ? anizipResult.value.episodes : [];
       const aniZipMap = new Map((anizipEpisodes || []).map(item => [item.episodeAnizipNumber, item]));
 
       const enrichedEpisodes = animekai.providerEpisodes.map((episode: any) => {
         const aniZipEpisode = aniZipMap.get(episode.episodeNumber);
+
         return this.mergeEpisodeData(episode, aniZipEpisode, 'animekai');
       });
 

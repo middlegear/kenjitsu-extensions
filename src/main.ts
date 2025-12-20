@@ -33,5 +33,5 @@ export {
   type Seasons,
   type IAnimeCategory,
 };
-// const data = await new AllAnime().fetchSources('gachiakuta-zNbh9DKcawQbwnApG-episode-1');
+// const data = await new Anilist().fetchAnimeProviderEpisodes(21355, 'animekai');
 // console.log(data);

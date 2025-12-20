@@ -317,7 +317,7 @@ export abstract class BaseAnimeMeta {
   }
 
   protected mergeEpisodeData(providerEp: any, aniZipEp: any, provider: string) {
-    const episodeNumber = providerEp.episodeNumber || aniZipEp.episodeAnizipNumber || null;
+    const episodeNumber = providerEp.episodeNumber || aniZipEp?.episodeAnizipNumber || null;
     const rating = aniZipEp?.rating || null;
     const aired = aniZipEp?.aired || null;
     const episodeId = providerEp?.episodeId || null;
