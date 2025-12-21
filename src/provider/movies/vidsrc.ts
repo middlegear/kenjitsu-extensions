@@ -28,19 +28,28 @@ export class VidSrc extends BaseClass {
   private parseServerHash($: cheerio.CheerioAPI) {
     const servers: IMovieServers[] = [];
 
-    $('div.serversList > div.server').each((i, element) => {
-      const name = $(element)
-        .text()
+    const rawHtml = $.html();
+
+    const regex = /class="server"\s+data-hash="([^"]+)">([^<]+)<\/div>/g;
+
+    let match;
+    while ((match = regex.exec(rawHtml)) !== null) {
+      // match[1] is the data-hash
+      // match[2] is the text inside the div (e.g., "CloudStream Pro")
+
+      const rawName = match[2];
+      const hash = match[1];
+
+      const cleanName = rawName
         .toLowerCase()
         .replace(/\s*pro/i, '')
         .trim();
-      const hash = $(element).attr('data-hash');
 
       servers.push({
-        serverName: name,
-        serverId: hash as string,
+        serverName: cleanName,
+        serverId: hash,
       });
-    });
+    }
 
     return servers;
   }
