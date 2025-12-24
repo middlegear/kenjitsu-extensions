@@ -317,10 +317,11 @@ export class AllAnime extends BaseClass {
         's-mp4': 'internal-s-mp4',
         default: 'internal-default-hls',
         ak: 'internal-ak',
+        ok: 'okru',
         'yt-mp4': 'internal-yt-mp4',
       };
 
-      const allowed = ['mp4', 's-mp4', 'ak', 'yt-mp4', 'default'];
+      const allowed = ['mp4', 'ok', 's-mp4', 'ak', 'yt-mp4', 'default'];
 
       const servers = sourceUrls
         .filter((src: { sourceName: string }) => allowed.includes(src.sourceName.toLowerCase()))
