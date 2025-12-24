@@ -317,11 +317,11 @@ export class AllAnime extends BaseClass {
         's-mp4': 'internal-s-mp4',
         default: 'internal-default-hls',
         ak: 'internal-ak',
-        ok: 'okru',
+        // ok: 'okru',
         'yt-mp4': 'internal-yt-mp4',
       };
 
-      const allowed = ['mp4', 'ok', 's-mp4', 'ak', 'yt-mp4', 'default'];
+      const allowed = ['mp4', 's-mp4', 'ak', 'yt-mp4', 'default'];
 
       const servers = sourceUrls
         .filter((src: { sourceName: string }) => allowed.includes(src.sourceName.toLowerCase()))
@@ -380,7 +380,7 @@ export class AllAnime extends BaseClass {
       }
 
       const serverIdMap: Record<string, string> = {
-        ok: 'okru',
+        // ok: 'okru',
         // 'fm-hls': 'filemoon', // disabled for reseaons that the stream is IP bound and tokenised  //fm-hls
         mp4: 'mp4upload',
         's-mp4': 'internal-s-mp4',
@@ -390,7 +390,7 @@ export class AllAnime extends BaseClass {
         // 'luf-mp4': 'Internal-Luf-Mp4', //might be similar to smp4 doesnt work better to just disable it
         'yt-mp4': 'internal-yt-mp4', ///http://127.0.0.1:8080?url=https://tools.fast4speed.rsvp//media9/videos/LYKSutL2PaAjYyXWz/sub/23?v=22&headers={"Referer":"https://allmanga.to/"}
       };
-      const allowed = ['mp4', 'ok', 's-mp4', 'ak', 'yt-mp4', 'default'];
+      const allowed = ['mp4', 's-mp4', 'ak', 'yt-mp4', 'default'];
       const servers = sourceUrls
         .filter((src: { sourceName: string }) => allowed.includes(src.sourceName.toLowerCase()))
         .map((src: { sourceUrl: string; type: string; sourceName: string }) => {
@@ -409,7 +409,6 @@ export class AllAnime extends BaseClass {
             serverId: serverIdMap[key] || key,
           };
         });
-      console.log(servers);
 
       return { data: servers };
     } catch (error) {
@@ -454,7 +453,7 @@ export class AllAnime extends BaseClass {
     }
 
     const extractorRegistry: Record<AllAnimeServers, (url: URL) => Promise<IVideoSource | null>> = {
-      okru: url => new Okru().extract(url), // Add if using
+      // okru: url => new Okru().extract(url), // Add if using
       mp4upload: url => new MP4Upload().extract(url),
       // filemoon: url => new FileMoon().extract(url), // just for typescript not to be angry
       'internal-ak': url => new InternalAK().extract(url),
