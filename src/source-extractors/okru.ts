@@ -24,8 +24,27 @@ class Okru {
       const extractedData: IVideoSource = {
         sources: [],
       };
+      const headers = {
+        // Host: 'ok.ru',
+        'User-Agent': '',
+        Accept: '*/*',
+        'Accept-Language': 'en-US,en;q=0.5',
+        // 'Accept-Encoding': 'gzip, deflate, br, zstd',
+        // Connection: 'keep-alive',
 
-      const response = await this.client.get(videoUrl.href);
+        // 'Sec-Fetch-Dest': 'document',
+        // 'Sec-Fetch-Mode': 'navigate',
+        // 'Sec-Fetch-Site': 'none',
+        // 'Sec-Fetch-User': '?1',
+        // Priority: 'u=0, i',
+        // TE: 'trailers',
+        //   Cookie:
+        //     'ss_wb=-n37RRvlEUdHpivsvCV1NNAXx58HIn8jsDYSlURTIDBBgISpoekKyISvnptlFBbbvHEzdSu7_i-rXkGUIU1n3_KhrQeKG21Vi10; bci=7600057837743199986; _statid=ebd5e348-de8a-4e93-be18-3db06181d12b; __last_online=1766583579497; ss_wb=lsjPtwelR-20NuqvmY6HB0ilrmx77FmFAreJ7IMDtZsMSgNDi7-VEf7StM-vsS44qvX_K2hzphygxKDdV5zS40MIioLzAAq8AA',
+      };
+
+      const response = await this.client.get(videoUrl.href, {
+        headers,
+      });
 
       if (!response.data) {
         throw new Error(response.statusText);

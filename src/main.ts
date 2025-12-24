@@ -33,5 +33,5 @@ export {
   type Seasons,
   type IAnimeCategory,
 };
-// const data = await new AllAnime().fetchServers('bleach-sennen-kessen-hen-uP4dqHNypYeYtTnzP-episode-1');
+// const data = await new AllAnime().fetchSources('burichi-XqKvkSEty5koms32i-episode-1', 'okru');
 // console.log(data.data);
