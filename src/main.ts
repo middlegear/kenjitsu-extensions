@@ -33,5 +33,5 @@ export {
   type Seasons,
   type IAnimeCategory,
 };
-// const data = await new AllAnime().fetchServers('burichi-XqKvkSEty5koms32i-episode-1');
+// const data = await new AllAnime().fetchAnimeInfo('chronicles-of-ancient-vengeance-wind-splitting-arc-HwJJZKAqiEeparsjH');
 // console.log(data);

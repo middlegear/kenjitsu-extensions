@@ -2,6 +2,7 @@
  * AllAnime class for interacting with the AllAnime API to search for anime,
  * fetch episodes, servers, and video sources.
  */
+import { log } from 'console';
 import { BaseClass } from '../../models/base.js';
 import { InternalAK, InternalDefaultHls, InternalSMP4, InternalYtMP4 } from '../../source-extractors/allanime/index.js';
 import FileMoon from '../../source-extractors/filemoon.js';
@@ -210,14 +211,15 @@ export class AllAnime extends BaseClass {
     try {
       const animeinfoPayload = buildPayload(this.AnimeInfoQuery, { _id: mediaId });
       const response = await this.client.post(this.baseUrl, animeinfoPayload);
+
       const data: IAllAnimeInfo = {
         id: id,
         name: response.data.data.show.englishName,
         native: response.data.data.show.nativeName,
         posterImage: response.data.data.show.thumbnail,
         type: response.data.data.show.type,
-        season: response.data.data.show.season.quarter,
-        releaseDate: response.data.data.show.season.year,
+        season: response.data.data.show.season?.quarter || null,
+        releaseDate: response.data.data.show.season?.year || null,
         score: response.data.data.show.score,
         genres: response.data.data.show.genres,
         synopsis: response.data.data.show.description,
