@@ -30,4 +30,4 @@ export interface IAllAnimeServersInfo {
 
 export type AllAnimeServers =
   // | 'okru'
-  'mp4upload' | 'internal-s-mp4' | 'internal-default-hls' | 'internal-ak' | 'internal-yt-mp4'; // | 'filemoon'
+  'mp4upload' | 'internal-s-mp4' | 'internal-default-hls' | 'internal-ak' | 'internal-yt-mp4' | 'filemoon';

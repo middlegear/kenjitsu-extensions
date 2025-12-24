@@ -312,31 +312,32 @@ export class AllAnime extends BaseClass {
       }
 
       const serverIdMap: Record<string, string> = {
-        // ok: 'okru', disabled for similar reasons as filemoon
-        // 'fm-hls': 'filemoon', // disabled for reseaons that the stream is IP bound and tokenised  //fm-hls
+        'fm-hls': 'filemoon',
         mp4: 'mp4upload',
         's-mp4': 'internal-s-mp4',
-        // vg: 'listeamed', // unsupported server uses  aaaencode (idk)
         default: 'internal-default-hls',
-        ak: 'internal-ak', /// has separate audio and video streams
-        // 'luf-mp4': 'Internal-Luf-Mp4', //might be similar to smp4 doesnt work better to just disable it
-        'yt-mp4': 'internal-yt-mp4', ///http://127.0.0.1:8080?url=https://tools.fast4speed.rsvp//media9/videos/LYKSutL2PaAjYyXWz/sub/23?v=22&headers={"Referer":"https://allmanga.to/"}
+        ak: 'internal-ak',
+        'yt-mp4': 'internal-yt-mp4',
       };
-      const allowed = ['mp4', 's-mp4', 'ak', 'yt-mp4', 'default'];
+
+      const allowed = ['mp4', 'fm-hls', 's-mp4', 'ak', 'yt-mp4', 'default'];
+
       const servers = sourceUrls
         .filter((src: { sourceName: string }) => allowed.includes(src.sourceName.toLowerCase()))
         .map((src: { sourceUrl: string; type: string; sourceName: string }) => {
           const key = src.sourceName.toLowerCase();
+          let decryptedUrl = this.decryptSource(src.sourceUrl);
 
-          let url = this.decryptSource(src.sourceUrl);
-
-          if (url.startsWith('/apivtwo/clock')) {
-            url = url.replace('/apivtwo/clock', 'https://blog.allanime.day/apivtwo/clock.json');
+          if (decryptedUrl.startsWith('/apivtwo/clock')) {
+            decryptedUrl = decryptedUrl.replace('/apivtwo/clock', 'https://blog.allanime.day/apivtwo/clock.json');
           }
 
+          const internalId = serverIdMap[key] || key;
+
           return {
-            serverName: src.sourceName, // swapped this with servername remember to clean this up
-            serverId: serverIdMap[key] || key,
+            serverName: src.sourceName,
+
+            serverId: internalId === 'filemoon' ? decryptedUrl : internalId, //piggyback i dont want to change app side
           };
         });
 
@@ -345,7 +346,6 @@ export class AllAnime extends BaseClass {
       return { error: error instanceof Error ? error.message : 'Unknown Error', data: [] };
     }
   }
-
   private async fetchServersInternal(
     id: string,
     category: ISubOrDub = 'sub',
@@ -455,6 +455,7 @@ export class AllAnime extends BaseClass {
     const extractorRegistry: Record<AllAnimeServers, (url: URL) => Promise<IVideoSource | null>> = {
       // okru: url => new Okru().extract(url), // Add if using
       mp4upload: url => new MP4Upload().extract(url),
+      filemoon: url => new FileMoon().extract(url), // just for typescript not to be angry
       'internal-ak': url => new InternalAK().extract(url),
       'internal-default-hls': url => new InternalDefaultHls().extract(url),
       'internal-s-mp4': url => new InternalSMP4().extract(url),
@@ -469,27 +470,18 @@ export class AllAnime extends BaseClass {
     const url = new URL(serverInfo.serverUrl);
     const refererHeader = this.getReferer(serverInfo.serverId as AllAnimeServers, url);
 
-    console.info(`[attempt] ${serverInfo.serverName} (${serverInfo.serverId})`);
-
     try {
       const videoSource = await extract(url);
-
-      if (videoSource) {
-        console.info(`[success] Selected server: ${serverInfo.serverId}`);
-        return {
-          headers: { Referer: refererHeader },
-          data: videoSource,
-        };
-      }
-    } catch (err: any) {
-      console.error(`[error] ${serverInfo.serverId} → ${err.message ?? err}`);
+      return {
+        headers: { Referer: refererHeader },
+        data: videoSource,
+      };
+    } catch (error) {
+      return {
+        data: null,
+        headers: { Referer: null },
+        error: error instanceof Error ? error.message : 'Unknown error occurred',
+      };
     }
-
-    const readableServerList = availableServers.map(s => `${s.serverName} (${s.serverId})`).join(', ');
-
-    throw new Error(
-      `Unable to extract a playable source from the selected server ${server} for episode ${episodeId}.\n` +
-        `Available servers: ${readableServerList}`,
-    );
   }
 }

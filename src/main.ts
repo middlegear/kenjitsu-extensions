@@ -33,5 +33,5 @@ export {
   type Seasons,
   type IAnimeCategory,
 };
-// const data = await new AllAnime().fetchAnimeInfo('bleach-sennen-kessen-hen-uP4dqHNypYeYtTnzP');
-// console.log(data);
+// const data = await new AllAnime().fetchServers('bleach-sennen-kessen-hen-uP4dqHNypYeYtTnzP-episode-1');
+// console.log(data.data);
