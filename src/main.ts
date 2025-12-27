@@ -33,5 +33,7 @@ export {
   type Seasons,
   type IAnimeCategory,
 };
-// const data = await new AllAnime().fetchAnimeInfo('chronicles-of-ancient-vengeance-wind-splitting-arc-HwJJZKAqiEeparsjH');
-// console.log(data);
+// const data = await new Animepahe().fetchSources(
+//   'pahe-d2fef1fa-2664-8b45-23b7-dac7a48ee01f-$session$-dab0955a166b65c3a3c3818f8485567a3648d894988a686473e214a477be7f69',
+// );
+// console.log(data.data);
