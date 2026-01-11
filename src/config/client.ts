@@ -58,7 +58,7 @@ export class FetchClient {
 
   constructor(options: Partial<RequestConfig> = {}) {
     this.defaultOptions = {
-      timeout: options.timeout || 10000,
+      timeout: options.timeout || 100000,
       retries: options.retries || 2,
       delayBetweenRequests: options.delayBetweenRequests || 0,
     };
