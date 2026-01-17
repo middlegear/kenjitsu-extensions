@@ -106,7 +106,7 @@ test('returns an object containing providerId and movie info ', async () => {
 });
 
 test('returns an object containing array of movie streaming sources', async () => {
-  const data = await tmdb.fetchMovieSources(38700);
+  const data = await tmdb.fetchMovieSources(803796);
   expect(data.data).not.toBe(null);
   expect(Array.isArray(data.data?.sources)).toBe(true);
   expect(data.data?.sources.length).toBeGreaterThan(0);

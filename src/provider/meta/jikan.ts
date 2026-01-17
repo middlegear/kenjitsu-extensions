@@ -1,4 +1,4 @@
-import { BaseAnimeMeta } from '../../models/anime-meta.js';
+import BaseAnimeMeta from '../../models/anime-meta.js';
 import type { IResponse } from '../../types/base.js';
 
 import type {
@@ -23,12 +23,11 @@ import type {
  *
  */
 export class Jikan extends BaseAnimeMeta {
-  /** Base URL for the Jikan API (MyAnimeList unofficial API) */
-  private readonly baseUrl: string = 'https://api.jikan.moe/v4';
-
   constructor() {
     super('jikan');
   }
+  /** Base URL for the Jikan API (MyAnimeList unofficial API) */
+  private readonly baseUrl: string = 'https://api.jikan.moe/v4';
 
   /**
    * Maps MyAnimeList anime data to Zoro provider ID.

@@ -3,9 +3,9 @@ import { AllAnime } from '../provider/anime/allanime.js';
 import { Anizone } from '../provider/anime/anizone.js';
 import { HiAnime } from '../provider/anime/hianime.js';
 import { Animepahe } from '../provider/anime/animepahe.js';
+import { Animekai } from '../provider/anime/animekai.js';
 import type { IMetaDataMap, Provider } from '../types/meta/meta-anime.js';
 import { compareTwoStrings, nativeSimilarity } from '../utils/string-similarity.js';
-import { Animekai } from '../main.js';
 
 type AnimeSearchResults = {
   id: string | null;
@@ -19,7 +19,7 @@ type AnimeSearchResults = {
   releaseDate?: number | string | null;
 };
 
-export abstract class BaseAnimeMeta {
+export default abstract class BaseAnimeMeta {
   protected client: FetchClient;
   protected allanime: AllAnime;
   protected animekai: Animekai;

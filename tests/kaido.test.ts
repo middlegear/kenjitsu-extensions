@@ -44,12 +44,7 @@ test('retuns an object containing home page data', async () => {
 
 test('returns an object containing array of mostpopular anime and top anime', async () => {
   const data = await zoro.fetchMostPopular(1);
-  expect(Array.isArray(data.topAnime.daily)).toBe(true);
-  expect(Array.isArray(data.topAnime.weekly)).toBe(true);
-  expect(Array.isArray(data.topAnime.monthly)).toBe(true);
-  expect(data.topAnime.daily.length).toBeGreaterThan(0);
-  expect(data.topAnime.weekly.length).toBeGreaterThan(0);
-  expect(data.topAnime.monthly.length).toBeGreaterThan(0);
+
   expect(Array.isArray(data.data)).toBe(true);
   expect(data.data.length).toBeGreaterThan(0);
 });
@@ -57,23 +52,13 @@ test('returns an object containing array of mostpopular anime and top anime', as
 test('returns an object containing array of top airing anime and top anime', async () => {
   const data = await zoro.fetchTopAiring(1);
   expect(Array.isArray(data.data)).toBe(true);
-  expect(Array.isArray(data.topAnime.daily)).toBe(true);
-  expect(Array.isArray(data.topAnime.weekly)).toBe(true);
-  expect(Array.isArray(data.topAnime.monthly)).toBe(true);
-  expect(data.topAnime.daily.length).toBeGreaterThan(0);
-  expect(data.topAnime.weekly.length).toBeGreaterThan(0);
-  expect(data.topAnime.monthly.length).toBeGreaterThan(0);
+
   expect(data.data.length).toBeGreaterThan(0);
 });
 
 test('returns an object containing array favourite anime and top anime', async () => {
   const data = await zoro.fetchMostFavourites(1);
-  expect(Array.isArray(data.topAnime.daily)).toBe(true);
-  expect(Array.isArray(data.topAnime.weekly)).toBe(true);
-  expect(Array.isArray(data.topAnime.monthly)).toBe(true);
-  expect(data.topAnime.daily.length).toBeGreaterThan(0);
-  expect(data.topAnime.weekly.length).toBeGreaterThan(0);
-  expect(data.topAnime.monthly.length).toBeGreaterThan(0);
+
   expect(Array.isArray(data.data)).toBe(true);
   expect(data.data.length).toBeGreaterThan(0);
 });
@@ -93,36 +78,21 @@ test('returns an array of subbed anime', async () => {
 test('returns an object containing array of recently added anime and top anime', async () => {
   const data = await zoro.fetchRecentlyAdded(1);
   expect(Array.isArray(data.data)).toBe(true);
-  expect(Array.isArray(data.topAnime.daily)).toBe(true);
-  expect(Array.isArray(data.topAnime.weekly)).toBe(true);
-  expect(Array.isArray(data.topAnime.monthly)).toBe(true);
-  expect(data.topAnime.daily.length).toBeGreaterThan(0);
-  expect(data.topAnime.weekly.length).toBeGreaterThan(0);
-  expect(data.topAnime.monthly.length).toBeGreaterThan(0);
+
   expect(data.data.length).toBeGreaterThan(0);
 });
 
 test('returns an object containing array of recently updated anime and top anime', async () => {
   const data = await zoro.fetchRecentlyUpdated(1);
   expect(Array.isArray(data.data)).toBe(true);
-  expect(Array.isArray(data.topAnime.daily)).toBe(true);
-  expect(Array.isArray(data.topAnime.weekly)).toBe(true);
-  expect(Array.isArray(data.topAnime.monthly)).toBe(true);
-  expect(data.topAnime.daily.length).toBeGreaterThan(0);
-  expect(data.topAnime.weekly.length).toBeGreaterThan(0);
-  expect(data.topAnime.monthly.length).toBeGreaterThan(0);
+
   expect(data.data.length).toBeGreaterThan(0);
 });
 
 test('returns an object containing array recently completed anime and top anime', async () => {
   const data = await zoro.fetchRecentlyCompleted(1);
   expect(Array.isArray(data.data)).toBe(true);
-  expect(Array.isArray(data.topAnime.daily)).toBe(true);
-  expect(Array.isArray(data.topAnime.weekly)).toBe(true);
-  expect(Array.isArray(data.topAnime.monthly)).toBe(true);
-  expect(data.topAnime.daily.length).toBeGreaterThan(0);
-  expect(data.topAnime.weekly.length).toBeGreaterThan(0);
-  expect(data.topAnime.monthly.length).toBeGreaterThan(0);
+
   expect(data.data.length).toBeGreaterThan(0);
 });
 

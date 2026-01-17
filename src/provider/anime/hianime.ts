@@ -928,6 +928,13 @@ export class HiAnime extends BaseClass {
     try {
       const response = await this.client.get(`${this.baseUrl}/ajax/search/suggest`, {
         params: { keyword: query },
+        headers: {
+          'Accept-Encoding': 'gzip, deflate, br, zstd',
+          Accept: '*/*',
+          'Accept-Language': 'en-US,en;q=0.9',
+          Referer: `${this.baseUrl}/home`,
+          'X-Requested-With': 'XMLHttpRequest',
+        },
       });
       if (!response.data) {
         return {

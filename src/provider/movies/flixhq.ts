@@ -29,8 +29,9 @@ import type { IResponse, ISourceBaseResponse, IVideoSource } from '../../types/b
 
 export class FlixHQ extends BaseClass {
   private readonly baseUrl: string;
+
   constructor(baseUrl: string = 'https://flixhq.to') {
-    super();
+    super(20000);
     this.baseUrl = baseUrl;
   }
 

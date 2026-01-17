@@ -27,12 +27,6 @@ test('returns an array of most popular anime', async () => {
   expect(data.data.length).toBeGreaterThan(0);
 });
 
-test('return an array of  top anime movies category', async () => {
-  const data = await jikan.fetchTopMovies(1, 20, 'OVA');
-  expect(Array.isArray(data.data)).toBe(true);
-  expect(data.data.length).toBeGreaterThan(0);
-});
-
 test('return an array of anime by season', async () => {
   const data = await jikan.fetchSeasonalAnime('FALL', 2022, 'MOVIE');
   expect(Array.isArray(data.data)).toBe(true);

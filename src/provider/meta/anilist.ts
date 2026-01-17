@@ -1,5 +1,4 @@
-import { BaseAnimeMeta } from '../../models/anime-meta.js';
-import type { HiAnimeServers } from '../../types/anime/zoro.js';
+import BaseAnimeMeta from '../../models/anime-meta.js';
 import type { IBasePaginated, IResponse, ISubOrDub } from '../../types/base.js';
 import type {
   IAnilistCharacters,
@@ -37,12 +36,11 @@ import {
  *
  */
 export class Anilist extends BaseAnimeMeta {
-  private readonly baseUrl: string = 'https://graphql.anilist.co';
-  private readonly mappingUrl: string = 'https://kenjitsu-mapper.vercel.app';
-
   constructor() {
     super('anilist');
   }
+  private readonly baseUrl: string = 'https://graphql.anilist.co';
+  private readonly mappingUrl: string = 'https://kenjitsu-mapper.vercel.app';
 
   /**
    * Maps Anilist anime data to HiAnime (Zoro) provider ID.

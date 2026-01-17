@@ -11,7 +11,7 @@ test('return an array of search results', async () => {
 });
 
 test('return an array of recent updates', async () => {
-  const data = await animepahe.fetchRecentlyUpdated(1);
+  const data = await animepahe.fetchRecentEpisodes(1);
 
   expect(Array.isArray(data.data)).toBe(true);
   expect(data.data.length).toBeGreaterThan(0);
