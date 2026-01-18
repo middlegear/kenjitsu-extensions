@@ -13,7 +13,7 @@ import type { IMovieCountry, IMovieGenre } from './types/movies/movie.js';
 import type { HIGenre } from './types/anime/zoro.js';
 import type { IMetaFormat, Seasons } from './types/meta/meta-anime.js';
 import type { IAnimeCategory } from './types/base.js';
-import { AkiH } from './provider/anime/aki-h.js';
+import { AkiH } from './provider/hanime/aki-h.js';
 
 export {
   Anilist,
@@ -34,10 +34,6 @@ export {
   type Seasons,
   type IAnimeCategory,
 };
-// const data = await new Animepahe().fetchSources(
-//   'pahe-d2fef1fa-2664-8b45-23b7-dac7a48ee01f-$session$-dab0955a166b65c3a3c3818f8485567a3648d894988a686473e214a477be7f69',
-// );
-// console.log(data.data);
 
-const data = await new AkiH().fetchHomePage();
+const data = await new AkiH().fetchAnimeInfo('mankitsu-happening');
 console.log(data);

@@ -1,0 +1,259 @@
+<!doctype html>
+<html lang="th">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="robots" content="noindex,nofollow">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>0x0</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"
+        integrity="sha512-894YE6QWD5I59HgZOGReFYm4dnWc1Qt5NtvYSaNcOP+u1T9qYdvdihz0PPSiiqn/+/3e7Jo4EaG7TubfWGUrMQ=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <style type="text/css">
+        body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100% !important;
+            overflow: hidden;
+        }
+
+        #server-list {
+            position: fixed;
+            /*right:15px;*/
+            left: 15px;
+            top: 15px;
+            z-index: 9999999999
+        }
+
+        #server-list .menu-btn {
+            padding: 15px;
+            background-image: url(https://v.aki-h.com/assets/images/menu.png);
+            background-repeat: no-repeat;
+            /*background-position:right;*/
+            background-position: left;
+            cursor: pointer
+        }
+
+        #server-list #servers {
+            list-style: none;
+            padding: 0;
+            background-color: #d2d2d2
+        }
+
+        #server-list #servers li a {
+            color: #272727;
+            text-align: right;
+            font-family: sans-serif;
+            font-size: 13px;
+            text-decoration: none;
+            padding: 5px 15px;
+            display: block;
+            border-bottom: 1px solid #888
+        }
+
+        #server-list #servers li:last-child a {
+            border: 0
+        }
+
+        #server-list #servers li a:hover {
+            color: #000;
+            background: #efefef
+        }
+
+        #server-list #servers li a.active {
+            color: #000;
+            font-weight: 700
+        }
+
+        #jw_player {
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            width: auto !important;
+            height: auto !important
+        }
+
+        #loader-wrapper {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1000;
+            background: #0c111f
+        }
+
+        #loader {
+            display: block;
+            position: relative;
+            left: 50%;
+            top: 50%;
+            width: 150px;
+            height: 150px;
+            margin: -75px 0 0 -75px;
+            border-radius: 50%;
+            border: 3px solid transparent;
+            border-top-color: #3498db;
+            -webkit-animation: spin 2s linear infinite;
+            animation: spin 2s linear infinite;
+            z-index: 1001
+        }
+
+        #loader:before {
+            content: "";
+            position: absolute;
+            top: 5px;
+            left: 5px;
+            right: 5px;
+            bottom: 5px;
+            border-radius: 50%;
+            border: 3px solid transparent;
+            border-top-color: #e74c3c;
+            -webkit-animation: spin 3s linear infinite;
+            animation: spin 3s linear infinite
+        }
+
+        #loader:after {
+            content: "";
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            right: 15px;
+            bottom: 15px;
+            border-radius: 50%;
+            border: 3px solid transparent;
+            border-top-color: #f9c922;
+            -webkit-animation: spin 1.5s linear infinite;
+            animation: spin 1.5s linear infinite
+        }
+
+        @-webkit-keyframes spin {
+            0% {
+                -webkit-transform: rotate(0deg);
+                -ms-transform: rotate(0deg);
+                transform: rotate(0deg)
+            }
+
+            100% {
+                -webkit-transform: rotate(360deg);
+                -ms-transform: rotate(360deg);
+                transform: rotate(360deg)
+            }
+        }
+
+        @keyframes spin {
+            0% {
+                -webkit-transform: rotate(0deg);
+                -ms-transform: rotate(0deg);
+                transform: rotate(0deg)
+            }
+
+            100% {
+                -webkit-transform: rotate(360deg);
+                -ms-transform: rotate(360deg);
+                transform: rotate(360deg)
+            }
+        }
+
+        .__000ab {
+            margin-top: 20px;
+            z-index: 9999999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 15px;
+            line-height: 1.3;
+            font-family: sans-serif
+        }
+
+        .__000ab-content {
+            text-align: center;
+            max-width: 600px;
+            background: #fff
+        }
+
+        .__000ab-content .top {
+            padding-top: 25px;
+            padding-bottom: 15px
+        }
+
+        .__000ab-content .bottom {
+            padding: 25px;
+            background: #f2f2f2;
+            border-radius: 8px
+        }
+
+        .d-none {
+            display: none !important
+        }
+
+        .x-servers {
+            display: none
+        }
+
+        #player {
+            max-width: 100vw;
+            width: 100vw !important;
+            height: 100vh !important;
+        }
+
+        .embed-responsive .embed-responsive-item,
+        .embed-responsive iframe,
+        .embed-responsive embed,
+        .embed-responsive object,
+        .embed-responsive video {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: 0;
+        }
+
+        .embed-responsive.embed-responsive-16by9 {
+            padding-bottom: 56.25%;
+        }
+
+        .embed-responsive {
+            position: relative;
+            display: block;
+            height: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+
+        .hide {
+            background: transparent;
+            width: 45px;
+            height: 45px;
+            position: absolute;
+            z-index: 9999;
+            top: 10px;
+            right: 10px
+        }
+
+        .noshow {
+            display: none;
+        }
+    </style>
+    <script> var web_uri = 'https://v.aki-h.com/'; </script>
+</head>
+
+<body>
+    <div id="server-list">
+        <div class="menu-btn" onclick="toggle_visibility()"></div>
+        <ul id="servers" class="x-servers">
+            <li> <a onclick="iframe()">Main</a></li>
+            <li> <a onclick="iframe2()">Backup</a></li>
+        </ul>
+    </div>
+    <div id="jw_player"></div>
+    <script> document.getElementById("jw_player").innerHTML = '<div class="embed-responsive embed-responsive-16by9"><iframe src="https://streaming.aki.today/playback/v/kNqLhRsO/" scrolling="no" allowfullscreen="true" webkitallowfullscreen="true" mozallowfullscreen="true"></iframe></div>'; function iframe() { $('#jw_player').html('<div class="embed-responsive embed-responsive-16by9"><iframe src="https://streaming.aki.today/playback/v/kNqLhRsO/" scrolling="no" allowfullscreen="true" webkitallowfullscreen="true" mozallowfullscreen="true"></iframe></div>'); } function iframe2() { $('#jw_player').html('<div class="embed-responsive embed-responsive-16by9"><iframe src="https://streaming.aki.today/playback/x/kNqLhRsO/" scrolling="no" allowfullscreen="true" webkitallowfullscreen="true" mozallowfullscreen="true"></iframe></div>'); } function toggle_visibility() { var e = document.getElementById("servers"); if (e.style.display == "block") e.style.display = "none"; else e.style.display = "block"; } </script>
+    <noscript> </noscript>
+</body>
+
+</html>
