@@ -35,5 +35,5 @@ export {
   type IAnimeCategory,
 };
 
-const data = await new AkiH().fetchAnimeInfo('mankitsu-happening');
-console.log(data);
+// const data = await new AkiH().fetchAnimeInfo('mankitsu-happening');
+// console.log(data);
