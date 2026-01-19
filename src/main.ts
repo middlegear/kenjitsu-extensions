@@ -27,6 +27,7 @@ export {
   HiMovies,
   FlixHQ,
   AllAnime,
+  AkiH,
   type IMovieCountry,
   type IMovieGenre,
   type HIGenre,
@@ -34,6 +35,3 @@ export {
   type Seasons,
   type IAnimeCategory,
 };
-
-// const data = await new AkiH().fetchAnimeInfo('mankitsu-happening');
-// console.log(data);

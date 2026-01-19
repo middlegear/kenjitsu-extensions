@@ -327,7 +327,7 @@ export class Animepahe extends BaseClass {
 
   /**
    * Fetches detailed information about a specific anime including episodes.
-   * @param {string} animeId - The unique identifier for the anime (e.g., "bleach-806") (required).
+   * @param {string} animeId - The unique identifier for the anime (required).
    * @returns  A promise that resolves to an object containing anime details, or an error message.
    */
   async fetchAnimeInfo(animeId: string): Promise<IPaheAnimeInfoResponse<IPaheInfo | null>> {

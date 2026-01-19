@@ -12,15 +12,30 @@ import type {
   IAKiInfoResponse,
 } from '../../types/hnaime/aki-h.js';
 
-import type { IResponse } from '../../types/base.js';
+import type { IResponse, ISourceBaseResponse, IVideoSource } from '../../types/base.js';
 
 export class AkiH extends BaseClass {
+  private baseUrl: string;
+
+  /**
+   * Creates an instance of the AkiH scraper.
+   * @param baseUrl - Base URL of the website (defaults to https://aki-h.com)
+   */
   constructor(baseUrl: string = 'https://aki-h.com') {
     super();
     this.baseUrl = baseUrl;
   }
-  private baseUrl: string;
 
+  /**
+   * Parses the homepage HTML and extracts:
+   * - Spotlight/carousel items
+   * - Recently updated anime
+   * - Most popular anime (sidebar)
+   *
+   * @param $ - Loaded cheerio instance
+   * @returns Structured homepage data
+   * @private
+   */
   private parseHome($: cheerio.CheerioAPI) {
     const selector: cheerio.SelectorType = 'div#slider  div.deslide-item';
     const data: AKiHSpotlight[] = [];
@@ -81,6 +96,13 @@ export class AkiH extends BaseClass {
     return { data, mostPopular, recentlyUpdated };
   }
 
+  /**
+   * Parses search results HTML and extracts list of matching anime.
+   *
+   * @param $ - Loaded cheerio instance of the search results
+   * @returns Object containing array of found anime
+   * @private
+   */
   private parseSearch($: cheerio.CheerioAPI) {
     const selector: cheerio.SelectorType = 'div.tab-content div.film_list-wrap div.flw-item';
 
@@ -100,6 +122,14 @@ export class AkiH extends BaseClass {
 
     return { data };
   }
+
+  /**
+   * Parses anime detail/info page including metadata and episode list.
+   *
+   * @param $ - Loaded cheerio instance of anime info page
+   * @returns Anime metadata + list of episodes
+   * @private
+   */
 
   private parseAnimeInfo($: cheerio.CheerioAPI) {
     const selector: cheerio.SelectorType = '.ani_detail-stage .anis-content ';
@@ -150,6 +180,12 @@ export class AkiH extends BaseClass {
     });
     return { data: animeInfo, providerEpisodes: episodes };
   }
+
+  /**
+   * Fetches and parses the homepage (spotlight + recent + popular sections).
+   * @returns Promise containing spotlight items, recently updated, most popular anime,
+   *          or error information
+   */
   async fetchHomePage(): Promise<AKiHomeResponse<AKiAnime[] | []>> {
     try {
       const response = await this.client.get(`${this.baseUrl}`);
@@ -173,6 +209,11 @@ export class AkiH extends BaseClass {
     }
   }
 
+  /**
+   * Searches for anime based on the provided query string.
+   * @param {string} query - The search query string (required).
+   * @returns  A promise that resolves to an object containing an array of anime titles, pagination details, or an error message.
+   */
   async search(query: string): Promise<IResponse<AKiAnime[] | []>> {
     if (!query) {
       return { error: 'Missing a search query', data: [] };
@@ -206,6 +247,11 @@ export class AkiH extends BaseClass {
       };
     }
   }
+  /**
+   * Fetches detailed information about a specific anime including episodes.
+   * @param {string} id - The unique identifier for the anime (required).
+   * @returns  A promise that resolves to an object containing anime details, or an error message.
+   */
   async fetchAnimeInfo(id: string): Promise<IAKiInfoResponse<IAKiInfo | null>> {
     if (!id) {
       return { error: 'Missing required params, animeid', data: null, providerEpisodes: [] };
@@ -236,18 +282,117 @@ export class AkiH extends BaseClass {
       };
     }
   }
+
+  /**
+   * Fetches streaming sources for a given anime episode from a specified server and category.
+   * @param {string} episodeId - The unique identifier for the episode (required).
+
+   * @returns  A promise that resolves to an object containing streaming sources, headers,  or an error message.
+   */
+  async fetchSources(episodeId: string): Promise<ISourceBaseResponse<IVideoSource | null>> {
+    if (!episodeId) {
+      throw new Error('Missing required parameter: episodeId');
+    }
+
+    const token = episodeId.includes('-token-') ? episodeId.split('-token-').at(1) : null;
+    if (!token) {
+      throw new Error(`Invalid episodeId: "${episodeId}"`);
+    }
+
+    try {
+      const response = await this.client.get(`${this.baseUrl}/watch/${token}/`);
+      const regex = /window\.displayvideo\((\d+),\s*(\d+)\)/;
+      const match = response.data.match(regex);
+
+      let videoId;
+      if (match) {
+        const numbers = [parseInt(match[1]), parseInt(match[2])];
+        videoId = Math.max(...numbers);
+        console.log(' (Video ID):', videoId);
+      }
+
+      const iframeUrl = await this.client.get(`${this.baseUrl}/video/${videoId}/`, {
+        headers: {
+          Referer: `${this.baseUrl}/watch/${token}/`,
+        },
+      });
+
+      const regexIframe = /'url':\s*'([^']+)'/;
+      const matchIframe = iframeUrl.data.match(regexIframe);
+
+      let iframe = null;
+
+      if (matchIframe) {
+        iframe = new URL(matchIframe[1]);
+        // console.log(iframe);
+      }
+      //might backfire
+      const shortCutOrigin = await this.client.get(`${iframe?.origin}/f/${token}`, {
+        headers: {
+          Referer: `${iframe}`,
+        },
+      });
+
+      // 1. Regex to find everything inside src=" " within iframe tags
+      const regexShort = /<iframe src="([^"]+)"/g;
+      let matches;
+      const urls = [];
+
+      while ((matches = regexShort.exec(shortCutOrigin.data)) !== null) {
+        urls.push(matches[1]);
+      }
+      // console.log(urls);
+      // console.log(iframe?.origin);
+
+      const vidId = await this.client.get(`${urls[1]}`, {
+        headers: {
+          Referer: `${iframe?.origin}/`,
+        },
+      });
+
+      const finalId = vidId.data.match(/<iframe.*?src="([^"]+)"/);
+      let finalIframe = null;
+
+      if (finalId) {
+        finalIframe = new URL(finalId[1]);
+      }
+      // console.log(finalIframe);
+
+      const playlist = await this.client.get(`${finalIframe?.origin}/file/${finalIframe?.pathname.split('/').at(-1)}/`, {
+        headers: {
+          Accept: '*/*',
+
+          Referer: `${finalIframe?.href}`,
+        },
+      });
+
+      const extractedData: IVideoSource = {
+        sources: [],
+      };
+      const regexM3U8 = /(https?:\/\/[^\s]+)/g;
+      const m3u8Matches = playlist.data.match(regexM3U8) || [];
+
+      m3u8Matches.forEach((link: string) => {
+        const qualityMatch = link.match(/\d{3,4}/);
+
+        extractedData.sources.push({
+          url: link,
+          isM3u8: true,
+          type: 'hls',
+          quality: qualityMatch ? `${qualityMatch[0]}p` : 'Auto',
+        });
+      });
+
+      return {
+        headers: { Referer: `${finalIframe?.origin}/` },
+        data: extractedData,
+      };
+    } catch (error) {
+      return {
+        error: error instanceof Error ? error.message : 'Fatal Error',
+        data: null,
+        headers: { Referer: null },
+      };
+    }
+  }
 }
-
-// <script type="text/javascript">window.displayvideo(0, 39801);</script> after the watch url with the episodeId
-
-///  the number is then requests to below
-// https://aki-h.com/video/39801/ contains an iframe that leads to this https://v.aki-h.com/v/39801'
-
-//  <script type="text/javascript">
-//           var vid = 'ek4aeNDoX3';
-//           var web_uri = 'https://v.aki-h.com/';   get the weburl from here
-//
-//       </script>
-// from the vidId the url is made like this using the f below
-// https://v.aki-h.com/f/ek4aeNDoX3
-// / multiple requests for iframe that is hidden then packed url which i belive is a bluff anyways  take the final url and replace v with file to get the m3u8
