@@ -247,16 +247,16 @@ export class VidSrc extends BaseClass {
       const result = await this.fetchStreams(response);
 
       const extractedData: IVideoSource = {
-        subtitles: [],
+        // subtitles: [],
         sources: [],
       };
 
-      const subtitlesRes = await this.client.get(`${this.subtitlesUrl}/search?id=${tmdbId}`);
-      extractedData.subtitles = subtitlesRes.data.map((item: any) => ({
-        url: item.url,
-        lang: item.display,
-        default: item.language === 'en',
-      }));
+      // const subtitlesRes = await this.client.get(`${this.subtitlesUrl}/search?id=${tmdbId}`);
+      // extractedData.subtitles = subtitlesRes.data.map((item: any) => ({
+      //   url: item.url,
+      //   lang: item.display,
+      //   default: item.language === 'en',
+      // }));
 
       if (result) {
         extractedData.sources = result.map((s: any) => ({
@@ -297,17 +297,17 @@ export class VidSrc extends BaseClass {
       const result = await this.fetchStreams(response);
 
       const extractedData: IVideoSource = {
-        subtitles: [],
+        // subtitles: [],
         sources: [],
       };
-      const subtitlesRes = await this.client.get(
-        `${this.subtitlesUrl}/search?id=${tmdbId}&season=${season}&episode=${episodeNumber}`,
-      );
-      extractedData.subtitles = subtitlesRes.data.map((item: any) => ({
-        url: item.url,
-        lang: item.display,
-        default: item.language === 'en',
-      }));
+      // const subtitlesRes = await this.client.get(
+      //   `${this.subtitlesUrl}/search?id=${tmdbId}&season=${season}&episode=${episodeNumber}`,
+      // );
+      // extractedData.subtitles = subtitlesRes.data.map((item: any) => ({
+      //   url: item.url,
+      //   lang: item.display,
+      //   default: item.language === 'en',
+      // }));
 
       if (result) {
         extractedData.sources = result.map((s: any) => ({
