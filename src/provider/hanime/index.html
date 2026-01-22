@@ -1,0 +1,669 @@
+<html lang="en">
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=gb18030">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Player</title>
+    <link rel="shortcut icon" href="favicon.ico" type="image/x-icon" />
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js'></script>
+    <script src="https://ssl.p.jwpcdn.com/player/v/8.26.9/jwplayer.js"></script>
+    <link rel="stylesheet" href="/okay.css">
+    <style>
+        * {
+            margin: 0px;
+        }
+
+        html {
+            overflow: hidden;
+        }
+
+        .jwplayer {
+            width: 100% !important;
+            height: 100% !important;
+        }
+
+        .jw-download-button {
+            order: 0;
+            /* Higher order value to move the button to the right */
+        }
+
+        .jw-icon-settings {
+            display: none !important;
+        }
+
+        /* Custom subtitle controls styling */
+        .jw-subtitle-lang-button {
+            margin-right: 8px;
+            cursor: pointer;
+            opacity: 1;
+            transition: opacity 0.3s ease;
+        }
+
+        .jw-subtitle-lang-button:hover {
+            opacity: 0.8;
+        }
+
+        /* Subtitle dropdown styling */
+        .jw-subtitle-menu {
+            position: absolute;
+            bottom: 50px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            border-radius: 4px;
+            padding: 8px;
+            display: none;
+            z-index: 1000;
+        }
+
+        .jw-subtitle-menu.show {
+            display: block;
+        }
+
+        .jw-subtitle-menu-item {
+            color: white;
+            padding: 6px 12px;
+            cursor: pointer;
+            border-radius: 3px;
+            margin-bottom: 2px;
+        }
+
+        .jw-subtitle-menu-item:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .jw-subtitle-menu-item.active {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        /* Custom subtitle styling */
+        .jw-text-track-display {
+            font-size: 28px !important;
+            font-family: 'Trebuchet MS', Arial, sans-serif !important;
+            font-weight: bold !important;
+            color: #ffffff !important;
+            text-shadow:
+                -2px -2px 0 #000,
+                2px -2px 0 #000,
+                -2px 2px 0 #000,
+                2px 2px 0 #000,
+                -2px 0 0 #000,
+                2px 0 0 #000,
+                0 -2px 0 #000,
+                0 2px 0 #000 !important;
+            line-height: 1.4 !important;
+            background: transparent !important;
+        }
+
+        /* Responsive subtitle sizing for different screen sizes */
+        @media screen and (max-width: 768px) {
+            .jw-text-track-display {
+                font-size: 22px !important;
+            }
+        }
+
+        @media screen and (min-width: 1920px) {
+            .jw-text-track-display {
+                font-size: 32px !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="encrpyt">
+    </div>
+    <script>
+        jwplayer.key = "64HPbvSQorQcd52B8XFuhMtEoitbvY/EXJmMBfKcXZQU2Rnn";
+        var player = jwplayer('encrpyt');
+
+        // Subtitle tracks configuration - you can add multiple subtitle files
+        var subtitleTracks = [
+            {
+                "kind": "captions",
+                "file": "",
+                "label": "English",
+                "default": true
+            }
+            // Add more subtitle tracks here if needed
+            // {
+            //     "kind": "captions",
+            //     "file": "",
+            //     "label": "Spanish",
+            //     "default": false
+            // }
+        ];
+
+        player.setup({
+            sources: [{
+                file: "https://r2.1hanime.com/modaete-yo,-adam-kun-7-uncensored.mp4",
+                type: "video/mp4"
+            }],
+            autostart: false,
+            image: "",
+            advertising: {
+                client: "vast",
+                tag: "https://a.adtng.com/get/10013648",
+                skipoffset: 5
+            },
+            skin: {
+                name: "netflix"
+            },
+            tracks: subtitleTracks,
+            captions: {
+                color: '#ffffff',
+                fontSize: 28,
+                fontFamily: 'Trebuchet MS, Arial, sans-serif',
+                fontWeight: 'bold',
+                backgroundColor: 'transparent',
+                backgroundOpacity: 0,
+                edgeStyle: 'uniform'
+            },
+            playbackRateControls: [0.25, 0.5, 0.75, 1, 1.25, 1.5, 2],
+            width: $(window).width(),
+            height: $(window).height()
+        });
+
+        $(document).ready(function () {
+            $(window).resize(function () {
+                jwplayer().resize($(window).width(), $(window).height())
+            })
+        })
+
+        player.on('ready', function () {
+            const playerContainer = player.getContainer();
+            const buttonContainer = playerContainer.querySelector('.jw-button-container');
+            const spacer = buttonContainer.querySelector('.jw-spacer');
+            const timeSlider = playerContainer.querySelector('.jw-slider-time');
+            buttonContainer.replaceChild(timeSlider, spacer);
+
+            // Subtitle control variables
+            let subtitleMenu = null;
+
+            // Create subtitle language selection button (if multiple tracks)
+            const subtitleLangButton = document.createElement('button');
+            subtitleLangButton.classList.add('jw-icon', 'jw-icon-inline', 'jw-button-color', 'jw-reset', 'jw-subtitle-lang-button');
+            subtitleLangButton.innerHTML = '<svg width="20px" height="20px" viewBox="0 0 24 24" fill="white"><path d="M12.87 15.07L10.33 12.56L10.36 12.53C12.1 10.59 13.34 8.36 14.07 6H17V4H10V2H8V4H1V6H12.17C11.5 7.92 10.44 9.75 9 11.35C8.07 10.32 7.3 9.19 6.69 8H4.69C5.42 9.63 6.42 11.17 7.67 12.56L2.58 17.58L4 19L9 14L12.11 17.11L12.87 15.07ZM18.5 10H16.5L12 22H14L15.12 19H19.87L21 22H23L18.5 10ZM15.88 17L17.5 12.67L19.12 17H15.88Z"/></svg>';
+            subtitleLangButton.title = 'Subtitle Language';
+            subtitleLangButton.style.display = 'none'; // Hide if only one track
+
+            // Show language button if multiple tracks
+            if (subtitleTracks.length > 1) {
+                subtitleLangButton.style.display = 'inline-block';
+            }
+
+            // Create subtitle menu
+            subtitleMenu = document.createElement('div');
+            subtitleMenu.classList.add('jw-subtitle-menu');
+            playerContainer.appendChild(subtitleMenu);
+
+            // Populate subtitle menu
+            function populateSubtitleMenu() {
+                subtitleMenu.innerHTML = '';
+
+                // Add "Off" option
+                const offItem = document.createElement('div');
+                offItem.classList.add('jw-subtitle-menu-item');
+                offItem.textContent = 'Off';
+                offItem.addEventListener('click', function () {
+                    player.setCurrentCaptions(0);
+                    subtitleMenu.classList.remove('show');
+                    updateMenuSelection();
+                });
+                subtitleMenu.appendChild(offItem);
+
+                // Add subtitle tracks
+                const tracks = player.getCaptionsList();
+                tracks.forEach((track, index) => {
+                    if (index > 0) { // Skip the "Off" track
+                        const item = document.createElement('div');
+                        item.classList.add('jw-subtitle-menu-item');
+                        item.textContent = track.label;
+                        item.addEventListener('click', function () {
+                            player.setCurrentCaptions(index);
+                            subtitleMenu.classList.remove('show');
+                            updateMenuSelection();
+                        });
+                        subtitleMenu.appendChild(item);
+                    }
+                });
+            }
+
+            // Update menu selection
+            function updateMenuSelection() {
+                const menuItems = subtitleMenu.querySelectorAll('.jw-subtitle-menu-item');
+                const currentTrack = player.getCurrentCaptions();
+
+                menuItems.forEach((item, index) => {
+                    item.classList.remove('active');
+                    if (index === currentTrack) {
+                        item.classList.add('active');
+                    }
+                });
+            }
+
+            // Language button click handler
+            subtitleLangButton.addEventListener('click', function () {
+                if (subtitleMenu.classList.contains('show')) {
+                    subtitleMenu.classList.remove('show');
+                } else {
+                    populateSubtitleMenu();
+                    updateMenuSelection();
+                    subtitleMenu.classList.add('show');
+                }
+            });
+
+            // Hide menu when clicking outside
+            document.addEventListener('click', function (event) {
+                if (!subtitleLangButton.contains(event.target) && !subtitleMenu.contains(event.target)) {
+                    subtitleMenu.classList.remove('show');
+                }
+            });
+
+            // Create download button
+            const downloadButton = document.createElement('button');
+            downloadButton.classList.add('jw-icon', 'jw-icon-inline', 'jw-button-color', 'jw-reset', 'jw-download-button');
+            downloadButton.innerHTML = '<svg width="64px" height="64px" viewBox="-11.76 -11.76 44.52 44.52" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" fill="#ffffff" stroke="#ffffff"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <title>download [#ffffff]</title> <desc>Created with Sketch.</desc> <defs> </defs> <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd"> <g id="Dribbble-Light-Preview" transform="translate(-139.000000, -480.000000)" fill="#ffffff"> <g id="icons" transform="translate(56.000000, 160.000000)"> <path d="M93.5,336.243 L88.81175,331 L92.45,331 L92.45,324 L94.55,324 L94.55,331 L98.25755,331.032 L93.5,336.243 Z M85.1,338 L101.9,338 L101.9,322 L85.1,322 L85.1,338 Z M83,340 L104,340 L104,320 L83,320 L83,340 Z" id="download-[#ffffff]"> </path> </g> </g> </g> </g></svg>';
+            downloadButton.title = 'Download Video';
+
+            // Download button click event
+            downloadButton.addEventListener('click', function () {
+                const currentSource = player.getPlaylistItem(player.getPlaylistIndex()).file;
+                const link = document.createElement('a');
+                link.href = currentSource;
+                link.download = 'video.mp4';
+                link.style.display = 'none';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            });
+
+            // Add all buttons to the button container
+            buttonContainer.appendChild(subtitleLangButton);
+            buttonContainer.appendChild(downloadButton);
+
+            // Initialize subtitle display
+            console.log('Player ready with subtitles');
+        });
+
+        // Handle subtitle track changes
+        player.on('captionsChanged', function (event) {
+            console.log('Subtitle track changed:', event);
+        });
+
+        // Handle player errors
+        player.on('error', function (event) {
+            console.error('Player error:', event);
+        });
+
+        // Keyboard shortcuts for subtitle controls
+        document.addEventListener('keydown', function (event) {
+            if (event.target.tagName.toLowerCase() !== 'input' && event.target.tagName.toLowerCase() !== 'textarea') {
+                switch (event.key) {
+                    case 'c':
+                    case 'C':
+                        // Open subtitle language menu with 'C' key
+                        const subtitleLangBtn = document.querySelector('.jw-subtitle-lang-button');
+                        if (subtitleLangBtn && subtitleLangBtn.style.display !== 'none') {
+                            subtitleLangBtn.click();
+                        }
+                        break;
+                }
+            }
+        });
+    </script>
+    <script defer
+        src="https://static.cloudflareinsights.com/beacon.min.js/vcd15cbe7772f49c399c6a5babf22c1241717689176015"
+        integrity="sha512-ZpsOmlRQV6y907TI0dKBHq9Md29nnaEIPlkf84rnaERnq6zvWvPUqr2ft8M1aS28oN72PdrCzSjY4U6VaAw1EQ=="
+        data-cf-beacon='{"version":"2024.11.0","token":"bfec4f9995a042bbb48cadaa3e1341e8","r":1,"server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}'
+        crossorigin="anonymous"></script>
+    <script>(function () { function c() { var b = a.contentDocument || a.contentWindow.document; if (b) { var d = b.createElement('script'); d.innerHTML = "window.__CF$cv$params={r:'9c1e8e2eafece224',t:'MTc2OTA3OTcwNw=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);"; b.getElementsByTagName('head')[0].appendChild(d) } } if (document.body) { var a = document.createElement('iframe'); a.height = 1; a.width = 1; a.style.position = 'absolute'; a.style.top = 0; a.style.left = 0; a.style.border = 'none'; a.style.visibility = 'hidden'; document.body.appendChild(a); if ('loading' !== document.readyState) c(); else if (window.addEventListener) document.addEventListener('DOMContentLoaded', c); else { var e = document.onreadystatechange || function () { }; document.onreadystatechange = function (b) { e(b); 'loading' !== document.readyState && (document.onreadystatechange = e, c()) } } } })();</script>
+</body>
+
+</html>
+undefined
+PS C:\Users\otuko\OneDrive\Documents\GitHub\kenjitsu-extensions> pnpm dev
+
+> kenjitsu-extensions@0.0.0-development dev C:\Users\otuko\OneDrive\Documents\GitHub\kenjitsu-extensions
+> pnpm build && node dist/main.js
+
+
+> kenjitsu-extensions@0.0.0-development build C:\Users\otuko\OneDrive\Documents\GitHub\kenjitsu-extensions
+> tsup
+
+CLI Building entry: src/main.ts
+CLI Using tsconfig: tsconfig.json
+CLI tsup v8.5.1
+CLI Using tsup config: C:\Users\otuko\OneDrive\Documents\GitHub\kenjitsu-extensions\tsup.config.ts
+CLI Target: esnext
+CLI Cleaning output folder
+ESM Build start
+ESM dist\main.js 490.01 KB
+ESM ⚡️ Build success in 56ms
+DTS Build start
+DTS ⚡️ Build success in 2934ms
+DTS dist\main.d.ts 120.23 KB
+https://nhplayer.com/v/48565zGcPGVzZXa/
+<html lang="en">
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=gb18030">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Player</title>
+    <link rel="shortcut icon" href="favicon.ico" type="image/x-icon" />
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js'></script>
+    <script src="https://ssl.p.jwpcdn.com/player/v/8.26.9/jwplayer.js"></script>
+    <link rel="stylesheet" href="/okay.css">
+    <style>
+        * {
+            margin: 0px;
+        }
+
+        html {
+            overflow: hidden;
+        }
+
+        .jwplayer {
+            width: 100% !important;
+            height: 100% !important;
+        }
+
+        .jw-download-button {
+            order: 0;
+            /* Higher order value to move the button to the right */
+        }
+
+        .jw-icon-settings {
+            display: none !important;
+        }
+
+        /* Custom subtitle controls styling */
+        .jw-subtitle-lang-button {
+            margin-right: 8px;
+            cursor: pointer;
+            opacity: 1;
+            transition: opacity 0.3s ease;
+        }
+
+        .jw-subtitle-lang-button:hover {
+            opacity: 0.8;
+        }
+
+        /* Subtitle dropdown styling */
+        .jw-subtitle-menu {
+            position: absolute;
+            bottom: 50px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            border-radius: 4px;
+            padding: 8px;
+            display: none;
+            z-index: 1000;
+        }
+
+        .jw-subtitle-menu.show {
+            display: block;
+        }
+
+        .jw-subtitle-menu-item {
+            color: white;
+            padding: 6px 12px;
+            cursor: pointer;
+            border-radius: 3px;
+            margin-bottom: 2px;
+        }
+
+        .jw-subtitle-menu-item:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .jw-subtitle-menu-item.active {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        /* Custom subtitle styling */
+        .jw-text-track-display {
+            font-size: 28px !important;
+            font-family: 'Trebuchet MS', Arial, sans-serif !important;
+            font-weight: bold !important;
+            color: #ffffff !important;
+            text-shadow:
+                -2px -2px 0 #000,
+                2px -2px 0 #000,
+                -2px 2px 0 #000,
+                2px 2px 0 #000,
+                -2px 0 0 #000,
+                2px 0 0 #000,
+                0 -2px 0 #000,
+                0 2px 0 #000 !important;
+            line-height: 1.4 !important;
+            background: transparent !important;
+        }
+
+        /* Responsive subtitle sizing for different screen sizes */
+        @media screen and (max-width: 768px) {
+            .jw-text-track-display {
+                font-size: 22px !important;
+            }
+        }
+
+        @media screen and (min-width: 1920px) {
+            .jw-text-track-display {
+                font-size: 32px !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="encrpyt">
+    </div>
+    <script>
+        jwplayer.key = "64HPbvSQorQcd52B8XFuhMtEoitbvY/EXJmMBfKcXZQU2Rnn";
+        var player = jwplayer('encrpyt');
+
+        // Subtitle tracks configuration - you can add multiple subtitle files
+        var subtitleTracks = [
+            {
+                "kind": "captions",
+                "file": "https://cdn.htstreaming.com/english/Kegareboshi%201%20ENG.srt",
+                "label": "English",
+                "default": true
+            }
+            // Add more subtitle tracks here if needed
+            // {
+            //     "kind": "captions",
+            //     "file": "",
+            //     "label": "Spanish",
+            //     "default": false
+            // }
+        ];
+
+        player.setup({
+            sources: [{
+                file: "https://r2.1hanime.com/kegareboshi-1.mp4?12",
+                type: "video/mp4"
+            }],
+            autostart: false,
+            image: "https://nhplayer.com/content/previews/9f45294966eabdf2ee1d1e39fbfcd604.jpg",
+            advertising: {
+                client: "vast",
+                tag: "https://a.adtng.com/get/10013648",
+                skipoffset: 5
+            },
+            skin: {
+                name: "netflix"
+            },
+            tracks: subtitleTracks,
+            captions: {
+                color: '#ffffff',
+                fontSize: 28,
+                fontFamily: 'Trebuchet MS, Arial, sans-serif',
+                fontWeight: 'bold',
+                backgroundColor: 'transparent',
+                backgroundOpacity: 0,
+                edgeStyle: 'uniform'
+            },
+            playbackRateControls: [0.25, 0.5, 0.75, 1, 1.25, 1.5, 2],
+            width: $(window).width(),
+            height: $(window).height()
+        });
+
+        $(document).ready(function () {
+            $(window).resize(function () {
+                jwplayer().resize($(window).width(), $(window).height())
+            })
+        })
+
+        player.on('ready', function () {
+            const playerContainer = player.getContainer();
+            const buttonContainer = playerContainer.querySelector('.jw-button-container');
+            const spacer = buttonContainer.querySelector('.jw-spacer');
+            const timeSlider = playerContainer.querySelector('.jw-slider-time');
+            buttonContainer.replaceChild(timeSlider, spacer);
+
+            // Subtitle control variables
+            let subtitleMenu = null;
+
+            // Create subtitle language selection button (if multiple tracks)
+            const subtitleLangButton = document.createElement('button');
+            subtitleLangButton.classList.add('jw-icon', 'jw-icon-inline', 'jw-button-color', 'jw-reset', 'jw-subtitle-lang-button');
+            subtitleLangButton.innerHTML = '<svg width="20px" height="20px" viewBox="0 0 24 24" fill="white"><path d="M12.87 15.07L10.33 12.56L10.36 12.53C12.1 10.59 13.34 8.36 14.07 6H17V4H10V2H8V4H1V6H12.17C11.5 7.92 10.44 9.75 9 11.35C8.07 10.32 7.3 9.19 6.69 8H4.69C5.42 9.63 6.42 11.17 7.67 12.56L2.58 17.58L4 19L9 14L12.11 17.11L12.87 15.07ZM18.5 10H16.5L12 22H14L15.12 19H19.87L21 22H23L18.5 10ZM15.88 17L17.5 12.67L19.12 17H15.88Z"/></svg>';
+            subtitleLangButton.title = 'Subtitle Language';
+            subtitleLangButton.style.display = 'none'; // Hide if only one track
+
+            // Show language button if multiple tracks
+            if (subtitleTracks.length > 1) {
+                subtitleLangButton.style.display = 'inline-block';
+            }
+
+            // Create subtitle menu
+            subtitleMenu = document.createElement('div');
+            subtitleMenu.classList.add('jw-subtitle-menu');
+            playerContainer.appendChild(subtitleMenu);
+
+            // Populate subtitle menu
+            function populateSubtitleMenu() {
+                subtitleMenu.innerHTML = '';
+
+                // Add "Off" option
+                const offItem = document.createElement('div');
+                offItem.classList.add('jw-subtitle-menu-item');
+                offItem.textContent = 'Off';
+                offItem.addEventListener('click', function () {
+                    player.setCurrentCaptions(0);
+                    subtitleMenu.classList.remove('show');
+                    updateMenuSelection();
+                });
+                subtitleMenu.appendChild(offItem);
+
+                // Add subtitle tracks
+                const tracks = player.getCaptionsList();
+                tracks.forEach((track, index) => {
+                    if (index > 0) { // Skip the "Off" track
+                        const item = document.createElement('div');
+                        item.classList.add('jw-subtitle-menu-item');
+                        item.textContent = track.label;
+                        item.addEventListener('click', function () {
+                            player.setCurrentCaptions(index);
+                            subtitleMenu.classList.remove('show');
+                            updateMenuSelection();
+                        });
+                        subtitleMenu.appendChild(item);
+                    }
+                });
+            }
+
+            // Update menu selection
+            function updateMenuSelection() {
+                const menuItems = subtitleMenu.querySelectorAll('.jw-subtitle-menu-item');
+                const currentTrack = player.getCurrentCaptions();
+
+                menuItems.forEach((item, index) => {
+                    item.classList.remove('active');
+                    if (index === currentTrack) {
+                        item.classList.add('active');
+                    }
+                });
+            }
+
+            // Language button click handler
+            subtitleLangButton.addEventListener('click', function () {
+                if (subtitleMenu.classList.contains('show')) {
+                    subtitleMenu.classList.remove('show');
+                } else {
+                    populateSubtitleMenu();
+                    updateMenuSelection();
+                    subtitleMenu.classList.add('show');
+                }
+            });
+
+            // Hide menu when clicking outside
+            document.addEventListener('click', function (event) {
+                if (!subtitleLangButton.contains(event.target) && !subtitleMenu.contains(event.target)) {
+                    subtitleMenu.classList.remove('show');
+                }
+            });
+
+            // Create download button
+            const downloadButton = document.createElement('button');
+            downloadButton.classList.add('jw-icon', 'jw-icon-inline', 'jw-button-color', 'jw-reset', 'jw-download-button');
+            downloadButton.innerHTML = '<svg width="64px" height="64px" viewBox="-11.76 -11.76 44.52 44.52" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" fill="#ffffff" stroke="#ffffff"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <title>download [#ffffff]</title> <desc>Created with Sketch.</desc> <defs> </defs> <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd"> <g id="Dribbble-Light-Preview" transform="translate(-139.000000, -480.000000)" fill="#ffffff"> <g id="icons" transform="translate(56.000000, 160.000000)"> <path d="M93.5,336.243 L88.81175,331 L92.45,331 L92.45,324 L94.55,324 L94.55,331 L98.25755,331.032 L93.5,336.243 Z M85.1,338 L101.9,338 L101.9,322 L85.1,322 L85.1,338 Z M83,340 L104,340 L104,320 L83,320 L83,340 Z" id="download-[#ffffff]"> </path> </g> </g> </g> </g></svg>';
+            downloadButton.title = 'Download Video';
+
+            // Download button click event
+            downloadButton.addEventListener('click', function () {
+                const currentSource = player.getPlaylistItem(player.getPlaylistIndex()).file;
+                const link = document.createElement('a');
+                link.href = currentSource;
+                link.download = 'video.mp4';
+                link.style.display = 'none';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            });
+
+            // Add all buttons to the button container
+            buttonContainer.appendChild(subtitleLangButton);
+            buttonContainer.appendChild(downloadButton);
+
+            // Initialize subtitle display
+            console.log('Player ready with subtitles');
+        });
+
+        // Handle subtitle track changes
+        player.on('captionsChanged', function (event) {
+            console.log('Subtitle track changed:', event);
+        });
+
+        // Handle player errors
+        player.on('error', function (event) {
+            console.error('Player error:', event);
+        });
+
+        // Keyboard shortcuts for subtitle controls
+        document.addEventListener('keydown', function (event) {
+            if (event.target.tagName.toLowerCase() !== 'input' && event.target.tagName.toLowerCase() !== 'textarea') {
+                switch (event.key) {
+                    case 'c':
+                    case 'C':
+                        // Open subtitle language menu with 'C' key
+                        const subtitleLangBtn = document.querySelector('.jw-subtitle-lang-button');
+                        if (subtitleLangBtn && subtitleLangBtn.style.display !== 'none') {
+                            subtitleLangBtn.click();
+                        }
+                        break;
+                }
+            }
+        });
+    </script>
+    <script defer
+        src="https://static.cloudflareinsights.com/beacon.min.js/vcd15cbe7772f49c399c6a5babf22c1241717689176015"
+        integrity="sha512-ZpsOmlRQV6y907TI0dKBHq9Md29nnaEIPlkf84rnaERnq6zvWvPUqr2ft8M1aS28oN72PdrCzSjY4U6VaAw1EQ=="
+        data-cf-beacon='{"version":"2024.11.0","token":"bfec4f9995a042bbb48cadaa3e1341e8","r":1,"server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}'
+        crossorigin="anonymous"></script>
+    <script>(function () { function c() { var b = a.contentDocument || a.contentWindow.document; if (b) { var d = b.createElement('script'); d.innerHTML = "window.__CF$cv$params={r:'9c1e91d10a1a0c79',t:'MTc2OTA3OTg1Ng=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);"; b.getElementsByTagName('head')[0].appendChild(d) } } if (document.body) { var a = document.createElement('iframe'); a.height = 1; a.width = 1; a.style.position = 'absolute'; a.style.top = 0; a.style.left = 0; a.style.border = 'none'; a.style.visibility = 'hidden'; document.body.appendChild(a); if ('loading' !== document.readyState) c(); else if (window.addEventListener) document.addEventListener('DOMContentLoaded', c); else { var e = document.onreadystatechange || function () { }; document.onreadystatechange = function (b) { e(b); 'loading' !== document.readyState && (document.onreadystatechange = e, c()) } } } })();</script>
+</body>
+
+</html>

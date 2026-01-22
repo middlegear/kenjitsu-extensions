@@ -183,8 +183,7 @@ export class AkiH extends BaseClass {
 
   /**
    * Fetches and parses the homepage (spotlight + recent + popular sections).
-   * @returns Promise containing spotlight items, recently updated, most popular anime,
-   *          or error information
+   * @returns Promise containing spotlight items, recently updated, most popular anime, or error information
    */
   async fetchHomePage(): Promise<AKiHomeResponse<AKiAnime[] | []>> {
     try {

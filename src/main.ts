@@ -14,6 +14,7 @@ import type { HIGenre } from './types/anime/zoro.js';
 import type { IMetaFormat, Seasons } from './types/meta/meta-anime.js';
 import type { IAnimeCategory } from './types/base.js';
 import { AkiH } from './provider/hanime/aki-h.js';
+import { HentaiTv } from './provider/hanime/hentaitv.js';
 
 export {
   Anilist,
@@ -35,3 +36,6 @@ export {
   type Seasons,
   type IAnimeCategory,
 };
+const data = await new HentaiTv().fetchSources('kegareboshi-episode-2');
+console.log(data);
+// kegareboshi-episode-1
