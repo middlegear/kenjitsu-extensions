@@ -29,6 +29,7 @@ export {
   FlixHQ,
   AllAnime,
   AkiH,
+  HentaiTv,
   type IMovieCountry,
   type IMovieGenre,
   type HIGenre,
@@ -36,6 +37,6 @@ export {
   type Seasons,
   type IAnimeCategory,
 };
-const data = await new HentaiTv().fetchSources('kegareboshi-episode-2');
-console.log(data);
+// const data = await new HentaiTv().fetchSources('kegareboshi-episode-2');
+// console.log(data);
 // kegareboshi-episode-1

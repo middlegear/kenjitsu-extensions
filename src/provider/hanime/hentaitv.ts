@@ -12,6 +12,13 @@ export class HentaiTv extends BaseClass {
     this.baseUrl = baseUrl;
   }
 
+  /**
+   * Parses the search results page into a list of items.
+   *
+   * @private
+   * @param {cheerio.CheerioAPI} $ - Loaded cheerio instance
+   * @returns  Episodes search results (reversed order)
+   */
   private parseSearch($: cheerio.CheerioAPI) {
     const selector: cheerio.SelectorType = 'section [data-results] > div.crsl-slde';
 
@@ -28,7 +35,13 @@ export class HentaiTv extends BaseClass {
 
     return { data: data.reverse() };
   }
-
+  /**
+   * Parses video sources and subtitles from player page scripts.
+   *
+   * @private
+   * @param {cheerio.CheerioAPI} $ - Loaded cheerio instance of the final player page
+   * @returns  Object containing sources and subtitles arrays
+   */
   private parseSources($: cheerio.CheerioAPI) {
     const scripts = $('script')
       .map((_, el) => $(el).html())
@@ -68,6 +81,12 @@ export class HentaiTv extends BaseClass {
 
     return extractedData;
   }
+
+  /**
+   * Searches for anime based on the provided query string.
+   * @param {string} query - The search query string (required).
+   * @returns  A promise that resolves to an object containing an array of anime titles and episodes, or an error message.
+   */
   async search(query: string): Promise<IResponse<IPaheEpisodes[] | []>> {
     if (!query) throw new Error('Missing a search query string');
     try {
@@ -91,6 +110,12 @@ export class HentaiTv extends BaseClass {
       };
     }
   }
+  /**
+   * Fetches streaming sources for a given anime episode from a specified server and category.
+   * @param {string} episodeId - The unique identifier for the episode (required).
+
+   * @returns  A promise that resolves to an object containing streaming sources, headers,  or an error message.
+   */
 
   async fetchSources(episodeId: string): Promise<ISourceBaseResponse<IVideoSource | null>> {
     if (!episodeId) {
@@ -106,7 +131,9 @@ export class HentaiTv extends BaseClass {
           Cookie: 'inter=1',
         },
       });
-
+      if (!response.data) {
+        throw new Error(response.statusText);
+      }
       const match = response.data.match(/<iframe[^>]+src="([^"]+)"/i);
 
       const src = match?.[1] ?? null;
