@@ -258,7 +258,7 @@ export class AkiH extends BaseClass {
     try {
       const url = `${this.baseUrl}/${id}/`;
 
-      const response = await this.client.get(`${this.baseUrl}/${id}/`, {
+      const response = await this.client.get(url, {
         headers: {
           Accept:
             'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
@@ -300,6 +300,9 @@ export class AkiH extends BaseClass {
 
     try {
       const response = await this.client.get(`${this.baseUrl}/watch/${token}/`);
+      if (!response.data) {
+        throw new Error(response.statusText);
+      }
       const regex = /window\.displayvideo\((\d+),\s*(\d+)\)/;
       const match = response.data.match(regex);
 
@@ -316,6 +319,10 @@ export class AkiH extends BaseClass {
         },
       });
 
+      if (!iframeUrl.data) {
+        throw new Error(iframeUrl.statusText);
+      }
+
       const regexIframe = /'url':\s*'([^']+)'/;
       const matchIframe = iframeUrl.data.match(regexIframe);
 
@@ -331,7 +338,9 @@ export class AkiH extends BaseClass {
           Referer: `${iframe}`,
         },
       });
-
+      if (!shortCutOrigin.data) {
+        throw new Error(shortCutOrigin.statusText);
+      }
       // 1. Regex to find everything inside src=" " within iframe tags
       const regexShort = /<iframe src="([^"]+)"/g;
       let matches;
@@ -349,6 +358,10 @@ export class AkiH extends BaseClass {
         },
       });
 
+      if (!vidId.data) {
+        throw new Error(vidId.statusText);
+      }
+
       const finalId = vidId.data.match(/<iframe.*?src="([^"]+)"/);
       let finalIframe = null;
 
@@ -364,6 +377,10 @@ export class AkiH extends BaseClass {
           Referer: `${finalIframe?.href}`,
         },
       });
+
+      if (!playlist.data) {
+        throw new Error(playlist.statusText);
+      }
 
       const extractedData: IVideoSource = {
         sources: [],

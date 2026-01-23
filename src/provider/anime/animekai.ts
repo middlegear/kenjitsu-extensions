@@ -968,14 +968,7 @@ class Animekai extends BaseClass {
       const episodes = this.parseEpisodes(cheerio.load(episodesList.data.result), animeId);
 
       if (!episodesList.data) {
-        return {
-          data: animeInfo,
-          relatedSeasons: relatedSeasons,
-          recommendedAnime: recommendedAnime,
-          relatedAnime: relatedAnime,
-          error: `Cannot fetch provider episodes: ${response.statusText}`,
-          providerEpisodes: [],
-        };
+        throw new Error(episodesList.statusText);
       }
 
       return {
@@ -1032,69 +1025,6 @@ class Animekai extends BaseClass {
         data: null,
         error: error instanceof Error ? error.message : 'Unknown error occurred',
       };
-    }
-  }
-
-  /**
-   * Fetches available embed streaming servers for a specific anime episode.
-   * @param {string} episodeId - The unique identifier for the episode  (required).
-   * @param {ISubOrDub} category  - The audio category (Subtitled or Dubbed) (optional, defaults to Sub).
-   * @param  {string}  server - The streaming server to use (optional, defaults to server-1).
-   * @returns  A promise that resolves to an object containing available streaming server details (sub, dub, raw) or an error message.
-   */
-  async fetchEmbedServers(
-    episodeId: string,
-    category: ISubOrDub = 'sub',
-    server: 'server-1' | 'server-2' = 'server-1',
-  ): Promise<IResponse<AKserver[] | []>> {
-    if (!episodeId) {
-      throw new Error('Missing required parameter: episodeId');
-    }
-
-    try {
-      const serverInfo = await this.fetchServers(episodeId);
-      if ('error' in serverInfo) {
-        throw new Error(serverInfo.error);
-      }
-
-      const mediaId = this.findServerIds(serverInfo.data as IServerInfo, category, server);
-      const servers: AKserver[] = [];
-
-      const token = await this.megaup.GenerateToken(mediaId);
-
-      const response = await this.client.get(`${this.baseUrl}/ajax/links/view?id=${mediaId}&_=${token}`, {
-        // headers: this.headers,
-      });
-
-      if (!response.data) {
-        return {
-          error: `Server responded with error:${response.statusText}` || 'Unknown error in server',
-          data: [],
-        };
-      }
-
-      const decodedData = await this.megaup.DecodeIframeData(response.data.result); /// removed json.parse
-      try {
-        // const decodedData = JSON.parse(await this.megaup.DecodeIframeData(response.data.result)); // dont remove
-        servers.push({
-          url: decodedData.url,
-          intro: {
-            start: decodedData?.skip?.intro?.[0] ?? null,
-            end: decodedData?.skip?.intro?.[1] ?? null,
-          },
-          outro: {
-            start: decodedData?.skip?.outro?.[0] ?? null,
-            end: decodedData?.skip?.outro?.[1] ?? null,
-          },
-          download: decodedData.url.replace(/\/e\//, '/download/'),
-        });
-      } catch (error) {
-        throw new Error((error as Error).message);
-      }
-
-      return { data: servers };
-    } catch (error) {
-      return { error: error instanceof Error ? error.message : 'Unknown error occurred', data: [] };
     }
   }
 

@@ -97,10 +97,7 @@ export class HentaiTv extends BaseClass {
         },
       });
       if (!response.data) {
-        return {
-          error: response.statusText,
-          data: [],
-        };
+        throw new Error(response.statusText);
       }
       return this.parseSearch(cheerio.load(response.data));
     } catch (error) {

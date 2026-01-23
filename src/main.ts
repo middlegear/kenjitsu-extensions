@@ -37,6 +37,5 @@ export {
   type Seasons,
   type IAnimeCategory,
 };
-// const data = await new HentaiTv().fetchSources('kegareboshi-episode-2');
-// console.log(data);
+
 // kegareboshi-episode-1
