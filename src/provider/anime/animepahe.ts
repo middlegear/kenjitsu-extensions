@@ -170,6 +170,7 @@ export class Animepahe extends BaseClass {
 
     // Slice to first 3 download dub servers
     download.dub = download.dub.slice(0, 3);
+    console.log('checkin', download.dub);
 
     return { servers, download };
   }
@@ -214,7 +215,8 @@ export class Animepahe extends BaseClass {
       const qualityMatch = s.serverName?.match(/(\d{3,4}p)/i);
       return {
         serverId: s.serverId! as string,
-        serverName: qualityMatch ? qualityMatch[1] : 'unknown',
+        // serverName: qualityMatch ? qualityMatch[1] : 'unknown',
+        serverName: s.serverName as string,
         downloadId: highestDownload?.serverId as string,
       };
     });
@@ -512,15 +514,14 @@ export class Animepahe extends BaseClass {
     try {
       const servers = await this.fetchServers(episodeId);
       if (servers.error) throw new Error(servers.error);
+      console.log(servers.download);
 
       const serverIds = this.findServerIds(servers.download as IServerInfo, servers.data as IServerInfo, category);
-      console.log(serverIds);
 
       // 1. Map server IDs to an array of extraction promises
       const extractionPromises = serverIds.map(async s => {
         const url = new URL(s.serverId, this.baseUrl);
         // Instantiate Kwik once per server or reuse a singleton if preferred
-        console.log();
 
         const result = await new Kwik().extractMP4(url, s.serverName, this.baseUrl);
         return result;

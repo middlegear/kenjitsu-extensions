@@ -84,15 +84,12 @@ class Kwik extends BaseClass {
       const kwikLinkRegex = /https?:\/\/kwik\.cx\/f\/[a-zA-Z0-9]+/i;
       const kwikLink = kwikFile.data.match(kwikLinkRegex)?.[0];
       if (!kwikLink) throw new Error('Could not find Kwik F-link');
-      console.log(kwikLink);
 
       // 2. Load the download page (Impit handles cookies automatically)
 
       // Capture the cookie properly
       const setCookie = kwikFile.headers['set-cookie'];
       const cookie = Array.isArray(setCookie) ? setCookie.join('; ') : setCookie;
-
-      console.log('PHPSESSID=', cookie);
 
       const res2 = await this.client2.fetch(kwikLink, {
         method: 'GET',
@@ -106,7 +103,7 @@ class Kwik extends BaseClass {
 
       const html2 = await res2.text();
 
-      console.log('obfuscated HTML containing token', html2);
+      // console.log('obfuscated HTML containing token', html2);
 
       const cookieArray = res2.headers.getSetCookie();
       const cookieString = cookieArray.join('; ');
