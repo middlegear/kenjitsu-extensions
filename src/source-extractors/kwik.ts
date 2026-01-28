@@ -72,12 +72,16 @@ class Kwik extends BaseClass {
   async extractMP4(videoUrl: URL, quality: string, referer: string): Promise<IVideoSource> {
     try {
       // 1. Get initial page to find the kwik.cx/f link
-      const res1 = await this.client2.fetch(videoUrl.href, {
-        headers: { Referer: referer },
-      });
-      const html1 = await res1.text();
 
-      const kwikLink = html1.match(/https?:\/\/kwik\.cx\/f\/[a-zA-Z0-9]+/i)?.[0];
+      const kwikFile = await this.client.get(videoUrl.href, {
+        headers: { Referer: videoUrl.href },
+      });
+
+      if (!kwikFile.data) {
+        throw new Error(kwikFile.statusText);
+      }
+      const kwikLinkRegex = /https?:\/\/kwik\.cx\/f\/[a-zA-Z0-9]+/i;
+      const kwikLink = kwikFile.data.match(kwikLinkRegex)?.[0];
       if (!kwikLink) throw new Error('Could not find Kwik F-link');
 
       // 2. Load the download page (Impit handles cookies automatically)

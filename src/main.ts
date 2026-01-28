@@ -38,8 +38,8 @@ export {
   type IAnimeCategory,
 };
 
-const data = await new Animepahe().fetchSources(
-  'pahe-4a9abc55-0a54-c544-3e14-736c79ddafe7-$session$-d5065ceff02b39e97b4b324e7d344606b19c23f97138e0329b2476cffe2a79e2',
-  'dub',
-);
-console.log(data);
+// const data = await new Animepahe().fetchSources(
+//   'pahe-4a9abc55-0a54-c544-3e14-736c79ddafe7-$session$-d5065ceff02b39e97b4b324e7d344606b19c23f97138e0329b2476cffe2a79e2',
+//   'dub',
+// );
+// console.log(data);

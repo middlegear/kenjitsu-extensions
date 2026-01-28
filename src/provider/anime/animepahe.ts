@@ -514,11 +514,14 @@ export class Animepahe extends BaseClass {
       if (servers.error) throw new Error(servers.error);
 
       const serverIds = this.findServerIds(servers.download as IServerInfo, servers.data as IServerInfo, category);
+      console.log(serverIds);
 
       // 1. Map server IDs to an array of extraction promises
       const extractionPromises = serverIds.map(async s => {
         const url = new URL(s.serverId, this.baseUrl);
         // Instantiate Kwik once per server or reuse a singleton if preferred
+        console.log();
+
         const result = await new Kwik().extractMP4(url, s.serverName, this.baseUrl);
         return result;
       });
@@ -549,9 +552,10 @@ export class Animepahe extends BaseClass {
         sources: fulfilled.flatMap(item => item.sources || []),
         download: highestDownloadId || null,
       };
+      //// changed from serverid to downloadId
+      // const firstServerOrigin = serverIds.length > 0 ? `${new URL(serverIds[0].serverId).origin}/` : null;
 
-      const firstServerOrigin = serverIds.length > 0 ? `${new URL(serverIds[0].serverId).origin}/` : null;
-
+      const firstServerOrigin = serverIds.length > 0 ? `${new URL(serverIds[0].downloadId as string).origin}/` : null;
       return {
         headers: { Referer: firstServerOrigin },
         data: merged,
