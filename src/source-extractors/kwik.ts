@@ -85,8 +85,15 @@ class Kwik extends BaseClass {
       if (!kwikLink) throw new Error('Could not find Kwik F-link');
 
       // 2. Load the download page (Impit handles cookies automatically)
+
+      // Capture the cookie properly
+      const setCookie = kwikFile.headers['set-cookie'];
+      const cookie = Array.isArray(setCookie) ? setCookie.join('; ') : setCookie;
+      // console.log(cookie);
+
       const res2 = await this.client2.fetch(kwikLink, {
-        headers: { Referer: videoUrl.href },
+        method: 'GET',
+        headers: { Referer: videoUrl.href, Cookie: cookie },
       });
       const html2 = await res2.text();
       const cookieArray = res2.headers.getSetCookie();
