@@ -7,7 +7,8 @@ class Kwik extends BaseClass {
   // Initialize Impit with browser emulation for better bypass success
   private client2 = new Impit({
     browser: 'chrome',
-    followRedirects: false, // We need the 'location' header for MP4
+    followRedirects: false,
+    http3: true, // We need the 'location' header for MP4
   });
 
   private readonly paramRegex = /\("(\w+)",\d+,"(\w+)",(\d+),(\d+),\d+\)/;
@@ -149,7 +150,7 @@ class Kwik extends BaseClass {
         ],
       };
     } catch (error: any) {
-      throw new Error(`Impit Extraction Failed: ${error.message}`);
+      throw new Error(`CLient Extraction Failed: ${error.message}`);
     }
   }
 
