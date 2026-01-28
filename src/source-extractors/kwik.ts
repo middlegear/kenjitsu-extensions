@@ -1,12 +1,22 @@
 import { BaseClass } from '../models/base.js';
 import type { IVideoSource } from '../types/base.js';
-
 import { unpack } from '../utils/unpacker.js';
+import { Impit } from 'impit';
 
 class Kwik extends BaseClass {
+  // Initialize Impit with browser emulation for better bypass success
+  private client2 = new Impit({
+    browser: 'chrome',
+    followRedirects: false, // We need the 'location' header for MP4
+  });
+
   private readonly paramRegex = /\("(\w+)",\d+,"(\w+)",(\d+),(\d+),\d+\)/;
   private readonly urlRegex = /action="([^"]+)"/;
   private readonly tokenRegex = /value="([^"]+)"/;
+
+  constructor() {
+    super();
+  }
 
   public deobfuscate(kwikHtml: string) {
     const match = kwikHtml.match(this.paramRegex);
@@ -32,7 +42,7 @@ class Kwik extends BaseClass {
 
     let result = '';
     let i = 0;
-    const delimiter = key[v2]; // The separator character
+    const delimiter = key[v2];
 
     while (i < fullString.length) {
       let segment = '';
@@ -46,7 +56,6 @@ class Kwik extends BaseClass {
         for (const char of segment) {
           baseV2NumberStr += keyIndexMap[char];
         }
-
         const charCode = parseInt(baseV2NumberStr, v2) - v1;
         result += String.fromCharCode(charCode);
       }
@@ -60,100 +69,52 @@ class Kwik extends BaseClass {
     }
   }
 
-  constructor() {
-    super();
-  }
-
-  /**
-   *  This extract method successfully unpacks the m3u8 file from kwik. It serves as a fallback incase the mp4 link could not be found
-   * @param videoUrl
-   * @param quality
-   * @param referer
-   * @returns
-   */
-  async extract(videoUrl: URL, quality: string, referer: string) {
+  async extractMP4(videoUrl: URL, quality: string, referer: string): Promise<IVideoSource> {
     try {
-      const extractedData: IVideoSource = {
-        sources: [],
-      };
-
-      const response = await this.client.get(videoUrl.href, {
-        headers: {
-          Referer: `${referer}/`,
-        },
-      });
-
-      const scriptMatch = /(eval\(function.*?<\/script>)/s.exec(response.data);
-      if (!scriptMatch) {
-        throw new Error('No packed script found in response.');
-      }
-
-      // safely unpack instead of eval
-      const unpacked = unpack(scriptMatch[1]);
-
-      if (!unpacked) {
-        throw new Error('Failed to unpack script.');
-      }
-
-      const m3u8Match = unpacked.match(/https.*?\.m3u8/);
-      if (!m3u8Match) {
-        throw new Error('No m3u8 source found in unpacked script.');
-      }
-      extractedData.sources.push({
-        url: m3u8Match[0],
-        isM3u8: m3u8Match[0]?.includes('m3u8'),
-        type: m3u8Match[0].includes('m3u8') ? 'hls' : 'idk',
-        quality: quality,
-      });
-      return extractedData;
-    } catch (error) {
-      throw new Error((error as Error).message);
-    }
-  }
-
-  async extractMP4(videoUrl: URL, quality: string, referer: string) {
-    try {
-      // 1. Get the initial page
-      const kwikFile = await this.client.get(videoUrl.href, {
+      // 1. Get initial page to find the kwik.cx/f link
+      const res1 = await this.client2.fetch(videoUrl.href, {
         headers: { Referer: referer },
       });
+      const html1 = await res1.text();
 
-      const kwikLinkRegex = /https?:\/\/kwik\.cx\/f\/[a-zA-Z0-9]+/i;
-      const kwikLink = kwikFile.data.match(kwikLinkRegex)?.[0];
+      const kwikLink = html1.match(/https?:\/\/kwik\.cx\/f\/[a-zA-Z0-9]+/i)?.[0];
       if (!kwikLink) throw new Error('Could not find Kwik F-link');
 
-      // 2. Load the download page
-      const kwikPage = await this.client.get(kwikLink, {
+      // 2. Load the download page (Impit handles cookies automatically)
+      const res2 = await this.client2.fetch(kwikLink, {
         headers: { Referer: videoUrl.href },
       });
+      const html2 = await res2.text();
+      const cookieArray = res2.headers.getSetCookie();
+      const cookieString = cookieArray.join('; ');
 
-      // Capture the cookie properly
-      const setCookie = kwikPage.headers['set-cookie'];
-      const cookie = Array.isArray(setCookie) ? setCookie.join('; ') : setCookie;
+      // 3. Deobfuscate JS to get token and action URL
+      const { postUrl, token } = this.deobfuscate(html2);
+      if (!postUrl || !token) throw new Error('Failed to extract POST data');
 
-      // 3. Deobfuscate
-      const { postUrl, token } = this.deobfuscate(kwikPage.data);
+      const finalPostUrl = postUrl.startsWith('http') ? postUrl : new URL(postUrl, kwikLink).href;
 
-      // DEBUG: Ensure postUrl is an absolute URL
-      const finalPostUrl = postUrl?.startsWith('http') ? postUrl : new URL(postUrl!, kwikLink).href;
+      // 4. POST the token to get the 302 redirect to the MP4
+      const body = new URLSearchParams();
+      body.append('_token', token);
 
-      if (!finalPostUrl || !token) throw new Error('Failed to extract POST data');
-
-      const params = new URLSearchParams();
-      params.append('_token', token);
-
-      const response = await this.client.post(finalPostUrl, params.toString(), {
+      const res3 = await this.client2.fetch(finalPostUrl, {
+        method: 'POST',
+        body: body,
         headers: {
           Referer: kwikLink,
-          Cookie: cookie,
           'Content-Type': 'application/x-www-form-urlencoded',
-          'User-Agent':
-            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
           Origin: 'https://kwik.cx',
+          Cookie: cookieString,
         },
       });
+      if (!res3.ok && res3.status !== 302) {
+        const errorBody = await res3.text();
+        throw new Error(`Kwik rejected POST: ${res3.status} - ${errorBody}`);
+      }
 
-      const mp4Url = response.headers['location'];
+      const mp4Url = res3.headers.get('location');
+      if (!mp4Url) throw new Error('MP4 location header not found');
 
       return {
         sources: [
@@ -165,10 +126,39 @@ class Kwik extends BaseClass {
           },
         ],
       };
-    } catch (error) {
-      // If POST is disallowed, Kwik might have updated to use a GET with a token
-      console.error('Extraction error (405?):', (error as Error).message);
-      throw error;
+    } catch (error: any) {
+      throw new Error(`Impit Extraction Failed: ${error.message}`);
+    }
+  }
+
+  async extract(videoUrl: URL, quality: string, referer: string): Promise<IVideoSource> {
+    try {
+      const response = await this.client2.fetch(videoUrl.href, {
+        headers: { Referer: `${referer}/` },
+      });
+      const text = await response.text();
+
+      const scriptMatch = /(eval\(function.*?<\/script>)/s.exec(text);
+      if (!scriptMatch) throw new Error('No packed script found.');
+
+      const unpacked = unpack(scriptMatch[1]);
+      if (!unpacked) throw new Error('Failed to unpack script.');
+
+      const m3u8Match = unpacked.match(/https.*?\.m3u8/);
+      if (!m3u8Match) throw new Error('No m3u8 source found.');
+
+      return {
+        sources: [
+          {
+            url: m3u8Match[0],
+            isM3u8: true,
+            type: 'hls',
+            quality: quality,
+          },
+        ],
+      };
+    } catch (error: any) {
+      throw new Error(error.message);
     }
   }
 }

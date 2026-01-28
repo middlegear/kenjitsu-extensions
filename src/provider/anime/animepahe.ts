@@ -511,33 +511,36 @@ export class Animepahe extends BaseClass {
   async fetchSources(episodeId: string, category: ISubOrDub = 'sub'): Promise<ISourceBaseResponse<IVideoSource | null>> {
     try {
       const servers = await this.fetchServers(episodeId);
-      if (servers.error) {
-        throw new Error(servers.error);
-      }
+      if (servers.error) throw new Error(servers.error);
 
       const serverIds = this.findServerIds(servers.download as IServerInfo, servers.data as IServerInfo, category);
 
+      // 1. Map server IDs to an array of extraction promises
+      const extractionPromises = serverIds.map(async s => {
+        const url = new URL(s.serverId, this.baseUrl);
+        // Instantiate Kwik once per server or reuse a singleton if preferred
+        const result = await new Kwik().extractMP4(url, s.serverName, this.baseUrl);
+        return result;
+      });
+
+      // 2. Execute all extractions in parallel
+      const results = await Promise.allSettled(extractionPromises);
+
       const fulfilled: IVideoSource[] = [];
-      const rejected: any[] = [];
+      const rejectedReasons: string[] = [];
 
-      // --- Sequential Processing ---
-      for (const s of serverIds) {
-        try {
-          const url = new URL(s.serverId, this.baseUrl);
-          const result = await new Kwik().extractMP4(url, s.serverName, this.baseUrl);
-
-          if (result) {
-            //@ts-ignore
-            fulfilled.push(result);
-          }
-        } catch (err) {
-          rejected.push(err);
+      // 3. Separate results into fulfilled and rejected
+      for (const result of results) {
+        if (result.status === 'fulfilled' && result.value) {
+          fulfilled.push(result.value);
+        } else if (result.status === 'rejected') {
+          rejectedReasons.push(result.reason?.message || String(result.reason));
         }
       }
 
-      // Handle errors if none succeeded or if you want strict error reporting
-      if (rejected.length > 0 && fulfilled.length === 0) {
-        throw new Error(`All extractions failed: ${rejected.map(e => String(e)).join('; ')}`);
+      // 4. Handle total failure
+      if (fulfilled.length === 0 && rejectedReasons.length > 0) {
+        throw new Error(`All extractions failed: ${rejectedReasons.join('; ')}`);
       }
 
       const highestDownloadId = serverIds.find(s => s.downloadId)?.downloadId || null;

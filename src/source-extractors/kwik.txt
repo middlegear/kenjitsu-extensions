@@ -1,0 +1,115 @@
+  async extractMP4(videoUrl: URL, quality: string, referer: string) {
+    try {
+      // 1. Get the initial page
+      const kwikFile = await this.client.get(videoUrl.href, {
+        headers: { Referer: referer },
+      });
+
+      const kwikLinkRegex = /https?:\/\/kwik\.cx\/f\/[a-zA-Z0-9]+/i;
+      const kwikLink = kwikFile.data.match(kwikLinkRegex)?.[0];
+      if (!kwikLink) throw new Error('Could not find Kwik F-link');
+
+      // 2. Load the download page
+      const kwikPage = await this.client.get(kwikLink, {
+        headers: { Referer: videoUrl.href },
+      });
+
+      // Capture the cookie properly
+      const setCookie = kwikPage.headers['set-cookie'];
+      const cookie = Array.isArray(setCookie) ? setCookie.join('; ') : setCookie;
+
+      // 3. Deobfuscate
+      const { postUrl, token } = this.deobfuscate(kwikPage.data);
+
+      // DEBUG: Ensure postUrl is an absolute URL
+      const finalPostUrl = postUrl?.startsWith('http') ? postUrl : new URL(postUrl!, kwikLink).href;
+
+      if (!finalPostUrl || !token) throw new Error('Failed to extract POST data');
+
+      const params = new URLSearchParams();
+      params.append('_token', token);
+      console.log(kwikLink, finalPostUrl, token);
+
+      const response = await this.client.post(finalPostUrl, params.toString(), {
+        headers: {
+          Referer: `${kwikLink}`,
+          Cookie: cookie,
+          'Content-Type': 'application/x-www-form-urlencoded',
+
+          Origin: 'https://kwik.cx',
+        },
+      });
+
+      const mp4Url = response.headers['location'];
+
+      return {
+        sources: [
+          {
+            url: mp4Url,
+            isM3u8: false,
+            type: 'mp4',
+            quality: quality,
+          },
+        ],
+      };
+    } catch (error) {
+      // If POST is disallowed, Kwik might have updated to use a GET with a token
+      console.error('Extraction error (405?):', (error as Error).message);
+      throw error;
+    }
+  }
+
+
+
+
+   async fetchSources(episodeId: string, category: ISubOrDub = 'sub'): Promise<ISourceBaseResponse<IVideoSource | null>> {
+    try {
+      const servers = await this.fetchServers(episodeId);
+      if (servers.error) {
+        throw new Error(servers.error);
+      }
+
+      const serverIds = this.findServerIds(servers.download as IServerInfo, servers.data as IServerInfo, category);
+
+      const fulfilled: IVideoSource[] = [];
+      const rejected: any[] = [];
+
+      for (const s of serverIds) {
+        try {
+          const url = new URL(s.serverId, this.baseUrl);
+          const result = await new Kwik().extractMP4(url, s.serverName, this.baseUrl);
+
+          if (result) {
+            fulfilled.push(result);
+          }
+        } catch (err) {
+          rejected.push(err);
+        }
+      }
+
+      // Handle errors if none succeeded or if you want strict error reporting
+      if (rejected.length > 0 && fulfilled.length === 0) {
+        throw new Error(`All extractions failed: ${rejected.map(e => String(e)).join('; ')}`);
+      }
+
+      const highestDownloadId = serverIds.find(s => s.downloadId)?.downloadId || null;
+
+      const merged: IVideoSource = {
+        sources: fulfilled.flatMap(item => item.sources || []),
+        download: highestDownloadId || null,
+      };
+
+      const firstServerOrigin = serverIds.length > 0 ? `${new URL(serverIds[0].serverId).origin}/` : null;
+
+      return {
+        headers: { Referer: firstServerOrigin },
+        data: merged,
+      };
+    } catch (error) {
+      return {
+        error: error instanceof Error ? error.message : 'Fatal Error',
+        data: null,
+        headers: { Referer: null },
+      };
+    }
+  }
