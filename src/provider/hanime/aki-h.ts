@@ -120,6 +120,12 @@ export class AkiH extends BaseClass {
       });
     });
 
+    if (Array.isArray(data) && data.length === 0) {
+      return {
+        error: 'No result found',
+        data: [],
+      };
+    }
     return { data };
   }
 

@@ -511,34 +511,39 @@ export class Animepahe extends BaseClass {
   async fetchSources(episodeId: string, category: ISubOrDub = 'sub'): Promise<ISourceBaseResponse<IVideoSource | null>> {
     try {
       const servers = await this.fetchServers(episodeId);
-      if ('error' in servers) {
+      if (servers.error) {
         throw new Error(servers.error);
       }
 
-      const serverIds = this.findServerIds(servers.data as IServerInfo, servers.download as IServerInfo, category);
+      const serverIds = this.findServerIds(servers.download as IServerInfo, servers.data as IServerInfo, category);
 
-      const promises = serverIds.map(s => {
-        const url = new URL(s.serverId, this.baseUrl);
-        return new Kwik().extract(url, s.serverName, this.baseUrl);
-      });
+      const fulfilled: IVideoSource[] = [];
+      const rejected: any[] = [];
 
-      const results = await Promise.allSettled(promises);
+      // --- Sequential Processing ---
+      for (const s of serverIds) {
+        try {
+          const url = new URL(s.serverId, this.baseUrl);
+          const result = await new Kwik().extractMP4(url, s.serverName, this.baseUrl);
 
-      const fulfilled = results
-        .filter((r): r is PromiseFulfilledResult<IVideoSource> => r.status === 'fulfilled')
-        .map(r => r.value);
+          if (result) {
+            //@ts-ignore
+            fulfilled.push(result);
+          }
+        } catch (err) {
+          rejected.push(err);
+        }
+      }
 
-      const rejected = results.filter((r): r is PromiseRejectedResult => r.status === 'rejected').map(r => r.reason);
-
-      if (rejected.length > 0) {
-        throw new Error(`Some server extractions failed: ${rejected.map(e => String(e)).join('; ')}`);
+      // Handle errors if none succeeded or if you want strict error reporting
+      if (rejected.length > 0 && fulfilled.length === 0) {
+        throw new Error(`All extractions failed: ${rejected.map(e => String(e)).join('; ')}`);
       }
 
       const highestDownloadId = serverIds.find(s => s.downloadId)?.downloadId || null;
 
       const merged: IVideoSource = {
         sources: fulfilled.flatMap(item => item.sources || []),
-        // subtitles: fulfilled.flatMap(item => item.subtitles || []), we dont have soft subs
         download: highestDownloadId || null,
       };
 
@@ -549,7 +554,11 @@ export class Animepahe extends BaseClass {
         data: merged,
       };
     } catch (error) {
-      return { error: error instanceof Error ? error.message : 'Fatal Error', data: null, headers: { Referer: null } };
+      return {
+        error: error instanceof Error ? error.message : 'Fatal Error',
+        data: null,
+        headers: { Referer: null },
+      };
     }
   }
 }

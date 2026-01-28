@@ -32,7 +32,12 @@ export class HentaiTv extends BaseClass {
         episodeNumber: Number($(element).find('div a ').text().trim().match(/\d+/g)) || null,
       });
     });
-
+    if (Array.isArray(data) && data.length === 0) {
+      return {
+        error: 'No result found',
+        data: [],
+      };
+    }
     return { data: data.reverse() };
   }
   /**
