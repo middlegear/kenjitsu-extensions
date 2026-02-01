@@ -1,0 +1,934 @@
+{
+    "data": {
+        "show": {
+            "_id": "mKWAWdpvKxnCBZYXX",
+            "name": "Fate/strange Fake",
+            "englishName": "Fate/strange Fake",
+            "nativeName": "Fate/strange Fake",
+            "slugTime": null,
+            "thumbnail": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx166617-34fpC9y47tTx.png",
+            "lastEpisodeInfo": {
+                "dub": {
+                    "episodeString": "5"
+                },
+                "sub": {
+                    "episodeString": "5"
+                }
+            },
+            "lastEpisodeDate": {
+                "raw": {},
+                "sub": {
+                    "hour": 16,
+                    "minute": 13,
+                    "year": 2026,
+                    "month": 0,
+                    "date": 31
+                },
+                "dub": {
+                    "hour": 16,
+                    "minute": 10,
+                    "year": 2026,
+                    "month": 0,
+                    "date": 31
+                }
+            },
+            "type": "TV",
+            "season": {
+                "quarter": "Winter",
+                "year": 2026
+            },
+            "score": 8.51,
+            "airedStart": {
+                "year": 2026,
+                "month": 0,
+                "date": 3,
+                "hour": 14,
+                "minute": 30
+            },
+            "availableEpisodes": {
+                "sub": 5,
+                "dub": 5,
+                "raw": 0
+            },
+            "episodeDuration": "1440000",
+            "episodeCount": "13",
+            "lastUpdateEnd": "2026-02-01T16:48:10.553Z",
+            "description": "<i>Fate/strange Fake</i> centers around an imperfect copy of a Grail War based on the Third Holy Grail War in Fuyuki. Following the conclusion of the third Grail War, a US-based organization with magi distinct from the London-based Mage Association, used data from Fuyuki&apos;s Grail War to plan their own ritual. Seventy years later, they used the city of Snowfield as the Sacred Land for their own Grail War. However, they were unable to successfully replicate every aspect of the ritual, resulting in it acting only as an imitation that has lost the Saber class and allowed for the summoning of strange Servants due to the blurring of the definition of a &quot;hero.&quot;<br>\n<br>\nRohngall and his pupil, Faldeus, have been dispatched by the Mage&apos;s Association to investigate the city and the state of the war. Faldeus, a US organization spy, has Rohngall sniped upon his arrival, despite knowing that Rohngall is a puppet. He declares that their Holy Grail War has been in development and is real, causing a commotion at the Clock Tower, and that he wishes to &quot;advertise&quot; the project to the Association.<br>\n<br>\n(Source: MAL News)",
+            "thumbnails": [
+                "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx166617-34fpC9y47tTx.png"
+            ],
+            "genres": [
+                "Action",
+                "Adventure",
+                "Fantasy",
+                "Mystery",
+                "Supernatural",
+                "Magic",
+                "Police",
+                "Vampire"
+            ],
+            "status": "Releasing",
+            "altNames": [
+                "Судьба/Странная подделка",
+                "Fate/strange Fake",
+                "Fate Strange Fake"
+            ],
+            "averageScore": 82,
+            "rating": "R",
+            "broadcastInterval": "604800000",
+            "banner": "https://s4.anilist.co/file/anilistcdn/media/anime/banner/166617-P4w3p0H4lE1O.jpg",
+            "airedEnd": {
+                "year": 2025,
+                "month": 0,
+                "date": 1
+            },
+            "studios": [
+                "A-1 Pictures"
+            ],
+            "countryOfOrigin": "JP",
+            "characters": [
+                {
+                    "role": "Main",
+                    "name": {
+                        "full": "Ayaka Sajyou",
+                        "native": "沙条綾香"
+                    },
+                    "image": {
+                        "large": "https://s4.anilist.co/file/anilistcdn/character/large/b54223-CEs1n0hKjakd.png",
+                        "medium": "https://s4.anilist.co/file/anilistcdn/character/medium/b54223-CEs1n0hKjakd.png"
+                    },
+                    "aniListId": 54223,
+                    "voiceActors": [
+                        {
+                            "aniListId": 95185,
+                            "language": "Japanese"
+                        },
+                        {
+                            "aniListId": 242720,
+                            "language": "English"
+                        }
+                    ]
+                },
+                {
+                    "role": "Main",
+                    "name": {
+                        "full": "Richard I",
+                        "native": "リチャード一世"
+                    },
+                    "image": {
+                        "large": "https://s4.anilist.co/file/anilistcdn/character/large/b127453-5hx20va8HGzd.png",
+                        "medium": "https://s4.anilist.co/file/anilistcdn/character/medium/b127453-5hx20va8HGzd.png"
+                    },
+                    "aniListId": 127453,
+                    "voiceActors": [
+                        {
+                            "aniListId": 96154,
+                            "language": "Japanese"
+                        },
+                        {
+                            "aniListId": 193208,
+                            "language": "English"
+                        }
+                    ]
+                },
+                {
+                    "role": "Supporting",
+                    "name": {
+                        "full": "Hansa Cervantes",
+                        "native": "ハンザ・セルバンテス"
+                    },
+                    "image": {
+                        "large": "https://s4.anilist.co/file/anilistcdn/character/large/b138621-uoe5RNf2XHV4.png",
+                        "medium": "https://s4.anilist.co/file/anilistcdn/character/medium/b138621-uoe5RNf2XHV4.png"
+                    },
+                    "aniListId": 138621,
+                    "voiceActors": [
+                        {
+                            "aniListId": 95020,
+                            "language": "Japanese"
+                        },
+                        {
+                            "aniListId": 336527,
+                            "language": "English"
+                        }
+                    ]
+                },
+                {
+                    "role": "Supporting",
+                    "name": {
+                        "full": "Sigma",
+                        "native": null
+                    },
+                    "image": {
+                        "large": "https://s4.anilist.co/file/anilistcdn/character/large/b138590-pT2mqjfz9GN4.jpg",
+                        "medium": "https://s4.anilist.co/file/anilistcdn/character/medium/b138590-pT2mqjfz9GN4.jpg"
+                    },
+                    "aniListId": 138590,
+                    "voiceActors": [
+                        {
+                            "aniListId": 123286,
+                            "language": "Japanese"
+                        }
+                    ]
+                },
+                {
+                    "role": "Supporting",
+                    "name": {
+                        "full": "Francesca  Prelati",
+                        "native": "フランチェスカ・プレラーティ"
+                    },
+                    "image": {
+                        "large": "https://s4.anilist.co/file/anilistcdn/character/large/b138620-xfOnWeYJbtBX.jpg",
+                        "medium": "https://s4.anilist.co/file/anilistcdn/character/medium/b138620-xfOnWeYJbtBX.jpg"
+                    },
+                    "aniListId": 138620,
+                    "voiceActors": [
+                        {
+                            "aniListId": 108639,
+                            "language": "Japanese"
+                        },
+                        {
+                            "aniListId": 152956,
+                            "language": "English"
+                        }
+                    ]
+                },
+                {
+                    "role": "Supporting",
+                    "name": {
+                        "full": "Bazdilot Cordelion",
+                        "native": "バズディロットコーデリオン"
+                    },
+                    "image": {
+                        "large": "https://s4.anilist.co/file/anilistcdn/character/large/b225097-vCiYdHLYSYok.png",
+                        "medium": "https://s4.anilist.co/file/anilistcdn/character/medium/b225097-vCiYdHLYSYok.png"
+                    },
+                    "aniListId": 225097,
+                    "voiceActors": []
+                },
+                {
+                    "role": "Supporting",
+                    "name": {
+                        "full": "Tine Chelc",
+                        "native": "ティーネ・チェルク"
+                    },
+                    "image": {
+                        "large": "https://s4.anilist.co/file/anilistcdn/character/large/b87307-naKVYwZXTYuF.jpg",
+                        "medium": "https://s4.anilist.co/file/anilistcdn/character/medium/b87307-naKVYwZXTYuF.jpg"
+                    },
+                    "aniListId": 87307,
+                    "voiceActors": [
+                        {
+                            "aniListId": 106404,
+                            "language": "Japanese"
+                        },
+                        {
+                            "aniListId": 129030,
+                            "language": "English"
+                        }
+                    ]
+                },
+                {
+                    "role": "Supporting",
+                    "name": {
+                        "full": "Jester  Karture",
+                        "native": "ジェスター・カルトゥーレ"
+                    },
+                    "image": {
+                        "large": "https://s4.anilist.co/file/anilistcdn/character/large/b87315-qKBNwZOLxpq6.jpg",
+                        "medium": "https://s4.anilist.co/file/anilistcdn/character/medium/b87315-qKBNwZOLxpq6.jpg"
+                    },
+                    "aniListId": 87315,
+                    "voiceActors": [
+                        {
+                            "aniListId": 137436,
+                            "language": "Japanese"
+                        },
+                        {
+                            "aniListId": 119609,
+                            "language": "English"
+                        }
+                    ]
+                },
+                {
+                    "role": "Supporting",
+                    "name": {
+                        "full": "Orlando Reeve",
+                        "native": "オーランド・リーヴ"
+                    },
+                    "image": {
+                        "large": "https://s4.anilist.co/file/anilistcdn/character/large/b87313-eqVc91PCWGQu.jpg",
+                        "medium": "https://s4.anilist.co/file/anilistcdn/character/medium/b87313-eqVc91PCWGQu.jpg"
+                    },
+                    "aniListId": 87313,
+                    "voiceActors": [
+                        {
+                            "aniListId": 95098,
+                            "language": "Japanese"
+                        },
+                        {
+                            "aniListId": 117629,
+                            "language": "English"
+                        }
+                    ]
+                },
+                {
+                    "role": "Supporting",
+                    "name": {
+                        "full": "Tsubaki Kuruoka",
+                        "native": "繰丘椿"
+                    },
+                    "image": {
+                        "large": "https://s4.anilist.co/file/anilistcdn/character/large/b76522-hJXdbSEazxji.png",
+                        "medium": "https://s4.anilist.co/file/anilistcdn/character/medium/b76522-hJXdbSEazxji.png"
+                    },
+                    "aniListId": 76522,
+                    "voiceActors": [
+                        {
+                            "aniListId": 123268,
+                            "language": "Japanese"
+                        }
+                    ]
+                },
+                {
+                    "role": "Supporting",
+                    "name": {
+                        "full": "Enkidu",
+                        "native": "エルキドゥ"
+                    },
+                    "image": {
+                        "large": "https://s4.anilist.co/file/anilistcdn/character/large/b60059-ErZDIiDz7tKq.png",
+                        "medium": "https://s4.anilist.co/file/anilistcdn/character/medium/b60059-ErZDIiDz7tKq.png"
+                    },
+                    "aniListId": 60059,
+                    "voiceActors": [
+                        {
+                            "aniListId": 95034,
+                            "language": "Japanese"
+                        },
+                        {
+                            "aniListId": 102992,
+                            "language": "English"
+                        }
+                    ]
+                },
+                {
+                    "role": "Supporting",
+                    "name": {
+                        "full": "Flatt  Escardos",
+                        "native": "フラット・エスカルドス"
+                    },
+                    "image": {
+                        "large": "https://s4.anilist.co/file/anilistcdn/character/large/b87319-t3o6viRp1ci4.jpg",
+                        "medium": "https://s4.anilist.co/file/anilistcdn/character/medium/b87319-t3o6viRp1ci4.jpg"
+                    },
+                    "aniListId": 87319,
+                    "voiceActors": [
+                        {
+                            "aniListId": 106817,
+                            "language": "Japanese"
+                        },
+                        {
+                            "aniListId": 129892,
+                            "language": "English"
+                        }
+                    ]
+                },
+                {
+                    "role": "Supporting",
+                    "name": {
+                        "full": "Faldeus Dioland",
+                        "native": "ファルデウス・ディオランド"
+                    },
+                    "image": {
+                        "large": "https://s4.anilist.co/file/anilistcdn/character/large/87297-UMq5Y8TUq8Y1.jpg",
+                        "medium": "https://s4.anilist.co/file/anilistcdn/character/medium/87297-UMq5Y8TUq8Y1.jpg"
+                    },
+                    "aniListId": 87297,
+                    "voiceActors": [
+                        {
+                            "aniListId": 119319,
+                            "language": "Japanese"
+                        },
+                        {
+                            "aniListId": 103686,
+                            "language": "English"
+                        }
+                    ]
+                },
+                {
+                    "role": "Supporting",
+                    "name": {
+                        "full": "Alexandre Dumas",
+                        "native": "アレクサンドル・デュマ"
+                    },
+                    "image": {
+                        "large": "https://s4.anilist.co/file/anilistcdn/character/large/b218086-3Es9xUVAkduv.jpg",
+                        "medium": "https://s4.anilist.co/file/anilistcdn/character/medium/b218086-3Es9xUVAkduv.jpg"
+                    },
+                    "aniListId": 218086,
+                    "voiceActors": [
+                        {
+                            "language": "JAPANESE",
+                            "aniListId": 95178
+                        },
+                        {
+                            "language": "ENGLISH",
+                            "aniListId": 135506
+                        }
+                    ]
+                },
+                {
+                    "role": "Supporting",
+                    "name": {
+                        "full": "Waver Velvet",
+                        "native": "ウェイバー・ベルベット"
+                    },
+                    "image": {
+                        "large": "https://s4.anilist.co/file/anilistcdn/character/large/b16023-gfwOgU1743ff.png",
+                        "medium": "https://s4.anilist.co/file/anilistcdn/character/medium/b16023-gfwOgU1743ff.png"
+                    },
+                    "aniListId": 16023,
+                    "voiceActors": [
+                        {
+                            "aniListId": 95087,
+                            "language": "Japanese"
+                        },
+                        {
+                            "aniListId": 115853,
+                            "language": "English"
+                        }
+                    ]
+                },
+                {
+                    "role": "Supporting",
+                    "name": {
+                        "full": "Wolf",
+                        "native": "銀狼の合成獣"
+                    },
+                    "image": {
+                        "large": "https://s4.anilist.co/file/anilistcdn/character/large/b138619-2XZcyZ81DRui.png",
+                        "medium": "https://s4.anilist.co/file/anilistcdn/character/medium/b138619-2XZcyZ81DRui.png"
+                    },
+                    "aniListId": 138619,
+                    "voiceActors": []
+                },
+                {
+                    "role": "Supporting",
+                    "name": {
+                        "full": "Assassin",
+                        "native": "アサシン"
+                    },
+                    "image": {
+                        "large": "https://s4.anilist.co/file/anilistcdn/character/large/b76520-0qLVeJrHS77v.jpg",
+                        "medium": "https://s4.anilist.co/file/anilistcdn/character/medium/b76520-0qLVeJrHS77v.jpg"
+                    },
+                    "aniListId": 76520,
+                    "voiceActors": [
+                        {
+                            "aniListId": 118806,
+                            "language": "Japanese"
+                        },
+                        {
+                            "aniListId": 119618,
+                            "language": "English"
+                        }
+                    ]
+                },
+                {
+                    "role": "Supporting",
+                    "name": {
+                        "full": "Gilgamesh",
+                        "native": "ギルガメッシュ"
+                    },
+                    "image": {
+                        "large": "https://s4.anilist.co/file/anilistcdn/character/large/b2514-hnE6LEdqm7Su.png",
+                        "medium": "https://s4.anilist.co/file/anilistcdn/character/medium/b2514-hnE6LEdqm7Su.png"
+                    },
+                    "aniListId": 2514,
+                    "voiceActors": [
+                        {
+                            "aniListId": 95001,
+                            "language": "Japanese"
+                        },
+                        {
+                            "aniListId": 101457,
+                            "language": "English"
+                        }
+                    ]
+                },
+                {
+                    "role": "Supporting",
+                    "name": {
+                        "full": "Berserker",
+                        "native": "バーサーカー"
+                    },
+                    "image": {
+                        "large": "https://s4.anilist.co/file/anilistcdn/character/large/87321-pGFnMVgo41zF.jpg",
+                        "medium": "https://s4.anilist.co/file/anilistcdn/character/medium/87321-pGFnMVgo41zF.jpg"
+                    },
+                    "aniListId": 87321,
+                    "voiceActors": [
+                        {
+                            "aniListId": 95262,
+                            "language": "Japanese"
+                        },
+                        {
+                            "aniListId": 103009,
+                            "language": "English"
+                        }
+                    ]
+                },
+                {
+                    "role": "Supporting",
+                    "name": {
+                        "full": "Rohngall",
+                        "native": "ランガル"
+                    },
+                    "image": {
+                        "large": "https://s4.anilist.co/file/anilistcdn/character/large/87299-xVRW65pZV8JC.jpg",
+                        "medium": "https://s4.anilist.co/file/anilistcdn/character/medium/87299-xVRW65pZV8JC.jpg"
+                    },
+                    "aniListId": 87299,
+                    "voiceActors": [
+                        {
+                            "aniListId": 102492,
+                            "language": "Japanese"
+                        },
+                        {
+                            "aniListId": 129500,
+                            "language": "English"
+                        }
+                    ]
+                },
+                {
+                    "role": "Supporting",
+                    "name": {
+                        "full": "Gray",
+                        "native": "グレイ"
+                    },
+                    "image": {
+                        "large": "https://s4.anilist.co/file/anilistcdn/character/large/b120755-pPTdmFrsmG8z.jpg",
+                        "medium": "https://s4.anilist.co/file/anilistcdn/character/medium/b120755-pPTdmFrsmG8z.jpg"
+                    },
+                    "aniListId": 120755,
+                    "voiceActors": []
+                },
+                {
+                    "role": "Supporting",
+                    "name": {
+                        "full": "Delmio Cervantes",
+                        "native": null
+                    },
+                    "image": {
+                        "large": "https://s4.anilist.co/file/anilistcdn/character/large/b239472-ITYXQzdUZ0CV.png",
+                        "medium": "https://s4.anilist.co/file/anilistcdn/character/medium/b239472-ITYXQzdUZ0CV.png"
+                    },
+                    "aniListId": 239472,
+                    "voiceActors": [
+                        {
+                            "language": "JAPANESE",
+                            "aniListId": 96174
+                        }
+                    ]
+                },
+                {
+                    "role": "Supporting",
+                    "name": {
+                        "full": "Viola Wahlstrom",
+                        "native": "ヴィオラ・ヴァルストロム"
+                    },
+                    "image": {
+                        "large": "https://s4.anilist.co/file/anilistcdn/character/large/b220370-wTOUCrVf86EZ.png",
+                        "medium": "https://s4.anilist.co/file/anilistcdn/character/medium/b220370-wTOUCrVf86EZ.png"
+                    },
+                    "aniListId": 220370,
+                    "voiceActors": []
+                },
+                {
+                    "role": "Supporting",
+                    "name": {
+                        "full": "Shanti Mukherjee",
+                        "native": "シャンティ・ムカルジー"
+                    },
+                    "image": {
+                        "large": "https://s4.anilist.co/file/anilistcdn/character/large/b220371-ZFgQEeu23kRB.png",
+                        "medium": "https://s4.anilist.co/file/anilistcdn/character/medium/b220371-ZFgQEeu23kRB.png"
+                    },
+                    "aniListId": 220371,
+                    "voiceActors": []
+                },
+                {
+                    "role": "Supporting",
+                    "name": {
+                        "full": "Fillia",
+                        "native": "フィリア"
+                    },
+                    "image": {
+                        "large": "https://s4.anilist.co/file/anilistcdn/character/large/b221839-YmaWjSbdft8d.jpg",
+                        "medium": "https://s4.anilist.co/file/anilistcdn/character/medium/b221839-YmaWjSbdft8d.jpg"
+                    },
+                    "aniListId": 221839,
+                    "voiceActors": [
+                        {
+                            "language": "JAPANESE",
+                            "aniListId": 95089
+                        }
+                    ]
+                },
+                {
+                    "role": "Background",
+                    "name": {
+                        "full": "Artoria Pendragon",
+                        "native": "アルトリア・ペンドラゴン"
+                    },
+                    "image": {
+                        "large": "https://s4.anilist.co/file/anilistcdn/character/large/b497-Yg5pNmC8kxzs.png",
+                        "medium": "https://s4.anilist.co/file/anilistcdn/character/medium/b497-Yg5pNmC8kxzs.png"
+                    },
+                    "aniListId": 497,
+                    "voiceActors": []
+                },
+                {
+                    "role": "Background",
+                    "name": {
+                        "full": "Kirei Kotomine",
+                        "native": "言峰綺礼"
+                    },
+                    "image": {
+                        "large": "https://s4.anilist.co/file/anilistcdn/character/large/b506-qeg0TqitdCMS.png",
+                        "medium": "https://s4.anilist.co/file/anilistcdn/character/medium/b506-qeg0TqitdCMS.png"
+                    },
+                    "aniListId": 506,
+                    "voiceActors": []
+                },
+                {
+                    "role": "Background",
+                    "name": {
+                        "full": "Sella",
+                        "native": "セラ"
+                    },
+                    "image": {
+                        "large": "https://s4.anilist.co/file/anilistcdn/character/large/b44025-IxzAC5F26k9R.jpg",
+                        "medium": "https://s4.anilist.co/file/anilistcdn/character/medium/b44025-IxzAC5F26k9R.jpg"
+                    },
+                    "aniListId": 44025,
+                    "voiceActors": []
+                },
+                {
+                    "role": "Supporting",
+                    "name": {
+                        "full": "Maysia Kwo",
+                        "native": "メイシア・クオ"
+                    },
+                    "image": {
+                        "large": "https://s4.anilist.co/file/anilistcdn/character/large/b220368-Na37cP6RgxfG.png",
+                        "medium": "https://s4.anilist.co/file/anilistcdn/character/medium/b220368-Na37cP6RgxfG.png"
+                    },
+                    "aniListId": 220368,
+                    "voiceActors": []
+                },
+                {
+                    "role": "Supporting",
+                    "name": {
+                        "full": "Katya Kambanellis",
+                        "native": "カティア・カンバネリス"
+                    },
+                    "image": {
+                        "large": "https://s4.anilist.co/file/anilistcdn/character/large/b220369-P9rjyHY6iPfC.png",
+                        "medium": "https://s4.anilist.co/file/anilistcdn/character/medium/b220369-P9rjyHY6iPfC.png"
+                    },
+                    "aniListId": 220369,
+                    "voiceActors": []
+                },
+                {
+                    "role": "Supporting",
+                    "name": {
+                        "full": "Heracles",
+                        "native": "ヘラクレス"
+                    },
+                    "image": {
+                        "large": "https://s4.anilist.co/file/anilistcdn/character/large/b504-2k7LldrHYSAP.png",
+                        "medium": "https://s4.anilist.co/file/anilistcdn/character/medium/b504-2k7LldrHYSAP.png"
+                    },
+                    "aniListId": 504,
+                    "voiceActors": [
+                        {
+                            "aniListId": 96359,
+                            "language": "Japanese"
+                        }
+                    ]
+                },
+                {
+                    "role": "Supporting",
+                    "name": {
+                        "full": "Rider",
+                        "native": "ライダー"
+                    },
+                    "image": {
+                        "large": "https://s4.anilist.co/file/anilistcdn/character/large/87309.jpg",
+                        "medium": "https://s4.anilist.co/file/anilistcdn/character/medium/87309.jpg"
+                    },
+                    "aniListId": 87309,
+                    "voiceActors": []
+                },
+                {
+                    "role": "Supporting",
+                    "name": {
+                        "full": "Watcher",
+                        "native": "ウォッチャー"
+                    },
+                    "image": {
+                        "large": "https://s4.anilist.co/file/anilistcdn/character/large/b138622-wIF5zQxjJ6Wh.png",
+                        "medium": "https://s4.anilist.co/file/anilistcdn/character/medium/b138622-wIF5zQxjJ6Wh.png"
+                    },
+                    "aniListId": 138622,
+                    "voiceActors": []
+                }
+            ],
+            "availableEpisodesDetail": {
+                "sub": [
+                    "5",
+                    "4",
+                    "3",
+                    "2",
+                    "1"
+                ],
+                "dub": [
+                    "5",
+                    "4",
+                    "3",
+                    "2",
+                    "1"
+                ],
+                "raw": []
+            },
+            "prevideos": [
+                "NeDXVO0dLHc",
+                "NOLyhNeLi0U",
+                "yE9CkWGZ32c",
+                "C1HBflk_E1M",
+                "k1G8EvZg_BY"
+            ],
+            "nameOnlyString": "fate/strange_fake",
+            "relatedShows": [
+                {
+                    "relation": "prequel",
+                    "showId": "aCpiWMsNP5Kwz8AJa"
+                },
+                {
+                    "relation": "alternative setting",
+                    "showId": "9TvnjZyLjoC6nTeHK"
+                },
+                {
+                    "relation": "character",
+                    "showId": "hF6nqYC3igDvAcRoA"
+                },
+                {
+                    "relation": "other",
+                    "showId": "HHXzrTRGsctTJamEe"
+                }
+            ],
+            "relatedMangas": [
+                {
+                    "relation": "alternative version",
+                    "mangaId": "zA6momJwRu8u6gmx2"
+                }
+            ],
+            "musics": [
+                {
+                    "type": "Opening",
+                    "title": "PROVANT",
+                    "format": "Audio",
+                    "musicId": "S4dr35iifj5AS3ECb",
+                    "url": "audios/S4dr35iifj5AS3ECb/provant.mp3"
+                },
+                {
+                    "type": "Ending",
+                    "title": "Senzaiteki na Ai",
+                    "format": "Audio",
+                    "musicId": "QMvxxtAugcnzfCKGf",
+                    "url": "audios/QMvxxtAugcnzfCKGf/senzaiteki-na-ai-by-13-3g-fate-strange-fake-.mp3"
+                },
+                {
+                    "type": "Opening",
+                    "title": "\"Belong\" by SawanoHiroyuki[nZk]:Yosh (eps 1)",
+                    "format": "Audio"
+                },
+                {
+                    "type": "Opening",
+                    "title": "\"PROVANT\" by SawanoHiroyuki[nZk]:Jean-Ken Johnny & TAKUMA (eps 2-)",
+                    "format": "Audio"
+                },
+                {
+                    "type": "Ending",
+                    "title": "\"FAKEit\" by SawanoHiroyuki[nZk]:Laco (eps 1)",
+                    "format": "Audio"
+                },
+                {
+                    "type": "Ending",
+                    "title": "\"Senzaiteki na Ai (潜在的なアイ)\" by 13.3g (eps 2-)",
+                    "format": "Audio"
+                },
+                {
+                    "type": "Opening",
+                    "title": "\"PROVANT\" by SawanoHiroyuki[nZk]:Jean-Ken Johnny & TAKUMA",
+                    "format": "Audio",
+                    "musicId": "S4dr35iifj5AS3ECb"
+                },
+                {
+                    "type": "Ending",
+                    "title": "\"Senzaiteki na Ai (潜在的なアイ)\" by 13.3g",
+                    "format": "Audio"
+                }
+            ],
+            "isAdult": false,
+            "tags": [
+                "Battle Royale",
+                "Death Game",
+                "Magic",
+                "Urban Fantasy",
+                "Urban",
+                "Foreign",
+                "Ensemble Cast",
+                "Police",
+                "Swordplay",
+                "Nun",
+                "Religion",
+                "Cyborg",
+                "Assassins",
+                "Archery",
+                "Vampire",
+                "Conspiracy",
+                "Dissociative Identities",
+                "War",
+                "Mythology",
+                "Guns",
+                "Chimera",
+                "Gambling"
+            ],
+            "disqusIds": {},
+            "pageStatus": {
+                "_id": "64eb4b0a2c4632023abf7eae",
+                "notes": null,
+                "pageId": "anime-mKWAWdpvKxnCBZYXX",
+                "showId": "mKWAWdpvKxnCBZYXX",
+                "views": "39691",
+                "likesCount": "3",
+                "commentCount": "0",
+                "dislikesCount": "0",
+                "reviewCount": "0",
+                "userScoreCount": "22",
+                "userScoreTotalValue": 211.8,
+                "userScoreAverValue": 9.63,
+                "viewers": {
+                    "firstViewers": [
+                        {
+                            "viewCount": 1,
+                            "lastWatchedDate": "2023-09-22T00:51:40.041Z",
+                            "user": {
+                                "_id": "TAA3sNKAJWdFhLeLQ",
+                                "displayName": "your mother ",
+                                "picture": "https://lh4.googleusercontent.com/-AAKEr6iWhAM/AAAAAAAAAAI/AAAAAAAAAAA/AMZuucl_xOGxQTl52gkZeSnSrsFYk_RJ8A/s96-c/photo.jpg",
+                                "hideMe": false,
+                                "brief": ""
+                            }
+                        }
+                    ],
+                    "recViewers": [
+                        {
+                            "viewCount": 1,
+                            "lastWatchedDate": "2026-02-01T19:17:18.939Z",
+                            "user": null
+                        },
+                        {
+                            "viewCount": 2,
+                            "lastWatchedDate": "2026-02-01T19:20:25.983Z",
+                            "user": null
+                        },
+                        {
+                            "viewCount": 1,
+                            "lastWatchedDate": "2026-02-01T19:40:55.702Z",
+                            "user": null
+                        },
+                        {
+                            "viewCount": 3,
+                            "lastWatchedDate": "2026-02-01T19:46:49.173Z",
+                            "user": null
+                        },
+                        {
+                            "viewCount": 3,
+                            "lastWatchedDate": "2026-02-01T20:40:09.243Z",
+                            "user": null
+                        },
+                        {
+                            "viewCount": 1,
+                            "lastWatchedDate": "2026-02-01T20:03:58.609Z",
+                            "user": null
+                        },
+                        {
+                            "viewCount": 2,
+                            "lastWatchedDate": "2026-02-01T20:16:19.449Z",
+                            "user": null
+                        },
+                        {
+                            "viewCount": 2,
+                            "lastWatchedDate": "2026-02-01T20:39:28.980Z",
+                            "user": {
+                                "_id": "65d287a1d4a24134e867cc19",
+                                "displayName": "Pride 816",
+                                "picture": "https://lh3.googleusercontent.com/a/ACg8ocJPO9qt4EEbTVMnffWPFBCUew-KsXppRtoOomAXHrTPgA=s96-c",
+                                "hideMe": null,
+                                "brief": null
+                            }
+                        },
+                        {
+                            "viewCount": 1,
+                            "lastWatchedDate": "2026-02-01T20:46:07.710Z",
+                            "user": {
+                                "_id": "6497071b3da2a5b42b2cb792",
+                                "displayName": "Nkululeko Gama",
+                                "picture": "https://i.ibb.co/55fMWvD/IMG-20230922-WA0054.jpg",
+                                "hideMe": false,
+                                "brief": null
+                            }
+                        },
+                        {
+                            "viewCount": 1,
+                            "lastWatchedDate": "2026-02-01T20:50:20.014Z",
+                            "user": {
+                                "_id": "66e47effe36c41ea70377b47",
+                                "displayName": "pricewood ",
+                                "picture": "https://lh3.googleusercontent.com/a/ACg8ocLeZywYRgQI74Ux5q8K6BW2ij-qw89ssQvK-chymMWJDghixDG9IQ=s96-c",
+                                "hideMe": false,
+                                "brief": ""
+                            }
+                        },
+                        {
+                            "viewCount": 1,
+                            "lastWatchedDate": "2026-02-01T20:53:01.170Z",
+                            "user": {
+                                "_id": "66a0d76fe36c41ea70331be9",
+                                "displayName": "Kazurhix",
+                                "picture": "https://i.ibb.co/N9ZK2Rh/Kazurhix-young.jpg",
+                                "hideMe": false,
+                                "brief": null
+                            }
+                        },
+                        {
+                            "viewCount": 1,
+                            "lastWatchedDate": "2026-02-01T20:53:15.794Z",
+                            "user": {
+                                "_id": "62fe2fac1bec5ba278af1f17",
+                                "displayName": "Passerbeta",
+                                "picture": "https://lh3.googleusercontent.com/a-/AFdZucr7iMCFTaoWHV5DcZ5qYXXr09zSyORYeFZIMDqw=s96-c",
+                                "hideMe": null,
+                                "brief": null
+                            }
+                        }
+                    ]
+                }
+            }
+        }
+    }
+}

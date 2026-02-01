@@ -202,7 +202,7 @@ export class AllAnime extends BaseClass {
     const payload = {
       variables: {
         search: {
-          // query: query,   /// just omitted to test inifinite scrolling for pagination
+          query: query, /// just omitted to test inifinite scrolling for pagination
           allowAdult: false,
           allowUnknown: false,
         },
