@@ -1,0 +1,1250 @@
+{
+    "data": {
+        "shows": {
+            "pageInfo": {
+                "total": 24416
+            },
+            "edges": [
+                {
+                    "_id": "m4QgpqqSdemGESJz4",
+                    "name": "Yami Shibai 16",
+                    "englishName": "Theatre of Darkness: Yamishibai 16",
+                    "nativeName": "闇芝居 十六期",
+                    "slugTime": null,
+                    "thumbnail": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx203939-F8YG2X9LgfAX.png",
+                    "lastEpisodeInfo": {
+                        "sub": {
+                            "episodeString": "4"
+                        }
+                    },
+                    "lastEpisodeDate": {
+                        "sub": {
+                            "hour": 19,
+                            "minute": 49,
+                            "year": 2026,
+                            "month": 1,
+                            "date": 1
+                        },
+                        "dub": {},
+                        "raw": {}
+                    },
+                    "type": "TV",
+                    "season": {
+                        "quarter": "Winter",
+                        "year": 2026
+                    },
+                    "score": 5.98,
+                    "airedStart": {
+                        "year": 2026,
+                        "month": 0,
+                        "date": 11,
+                        "hour": 17,
+                        "minute": 20
+                    },
+                    "availableEpisodes": {
+                        "sub": 4,
+                        "dub": 0,
+                        "raw": 0
+                    },
+                    "episodeDuration": "240000",
+                    "episodeCount": null,
+                    "lastUpdateEnd": "2026-02-01T20:31:54.388Z"
+                },
+                {
+                    "_id": "JuD7pFz89Q2CxfMfk",
+                    "name": "Animation Kikou: Marco Polo no Bouken",
+                    "englishName": "Marco Polo's Adventures",
+                    "nativeName": "アニメーション紀行 マルコ・ポーロの冒険",
+                    "slugTime": null,
+                    "thumbnail": "https://cdn.myanimelist.net/images/anime/1222/148606.jpg",
+                    "lastEpisodeInfo": {
+                        "sub": {
+                            "episodeString": "42"
+                        }
+                    },
+                    "lastEpisodeDate": {
+                        "dub": {
+                            "year": 0,
+                            "month": 0,
+                            "date": 0,
+                            "hour": 0,
+                            "minute": 0
+                        },
+                        "raw": {
+                            "year": 0,
+                            "month": 0,
+                            "date": 0,
+                            "hour": 0,
+                            "minute": 0
+                        },
+                        "sub": {
+                            "hour": 17,
+                            "minute": 41,
+                            "year": 2026,
+                            "month": 1,
+                            "date": 1
+                        }
+                    },
+                    "type": "TV",
+                    "season": {
+                        "quarter": "Spring",
+                        "year": 1979
+                    },
+                    "score": 6.21,
+                    "airedStart": {
+                        "year": 1979,
+                        "month": 3,
+                        "date": 7,
+                        "hour": 10,
+                        "minute": 30
+                    },
+                    "availableEpisodes": {
+                        "sub": 42,
+                        "dub": 0,
+                        "raw": 0
+                    },
+                    "episodeDuration": "1200000",
+                    "episodeCount": "43",
+                    "lastUpdateEnd": "2026-01-27T18:48:48.901Z"
+                },
+                {
+                    "_id": "LfifMyHDQ4fqJP9GZ",
+                    "name": "Hikuidori: Ushuu Boro Tobi-gumi",
+                    "englishName": "Oedo Fire Slayer: The Legend of Phoenix",
+                    "nativeName": "火喰鳥 羽州ぼろ鳶組",
+                    "slugTime": null,
+                    "thumbnail": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx187062-JuXPEjrLQSeO.png",
+                    "lastEpisodeInfo": {
+                        "sub": {
+                            "episodeString": "4"
+                        }
+                    },
+                    "lastEpisodeDate": {
+                        "sub": {
+                            "hour": 15,
+                            "minute": 49,
+                            "year": 2026,
+                            "month": 1,
+                            "date": 1
+                        },
+                        "dub": {},
+                        "raw": {}
+                    },
+                    "type": "TV",
+                    "season": {
+                        "quarter": "Winter",
+                        "year": 2026
+                    },
+                    "score": 4.86,
+                    "airedStart": {
+                        "year": 2026,
+                        "month": 0,
+                        "date": 11,
+                        "hour": 14,
+                        "minute": 30
+                    },
+                    "availableEpisodes": {
+                        "sub": 4,
+                        "dub": 0,
+                        "raw": 0
+                    },
+                    "episodeDuration": "1380000",
+                    "episodeCount": null,
+                    "lastUpdateEnd": "2026-02-01T16:17:27.186Z"
+                },
+                {
+                    "_id": "rdrypCfnLhnEPfmoo",
+                    "name": "Ikoku Nikki",
+                    "englishName": "Journal with Witch",
+                    "nativeName": "違国日記",
+                    "slugTime": null,
+                    "thumbnail": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx177385-TBpvkGdF28R7.png",
+                    "lastEpisodeInfo": {
+                        "sub": {
+                            "episodeString": "5"
+                        }
+                    },
+                    "lastEpisodeDate": {
+                        "sub": {
+                            "hour": 15,
+                            "minute": 42,
+                            "year": 2026,
+                            "month": 1,
+                            "date": 1
+                        },
+                        "dub": {},
+                        "raw": {}
+                    },
+                    "type": "TV",
+                    "season": {
+                        "quarter": "Winter",
+                        "year": 2026
+                    },
+                    "score": 8.34,
+                    "airedStart": {
+                        "year": 2026,
+                        "month": 0,
+                        "date": 4,
+                        "hour": 14,
+                        "minute": 0
+                    },
+                    "availableEpisodes": {
+                        "sub": 5,
+                        "dub": 0,
+                        "raw": 0
+                    },
+                    "episodeDuration": "1380000",
+                    "episodeCount": "13",
+                    "lastUpdateEnd": "2026-02-01T16:17:55.512Z"
+                },
+                {
+                    "_id": "SotouH8PudXAr27E2",
+                    "name": "Jigokuraku Season 2",
+                    "englishName": "Hell's Paradise Season 2",
+                    "nativeName": "地獄楽第二期",
+                    "slugTime": null,
+                    "thumbnail": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx166613-uHB8q3D4qbon.jpg",
+                    "lastEpisodeInfo": {
+                        "sub": {
+                            "episodeString": "4"
+                        },
+                        "dub": {
+                            "episodeString": "2"
+                        }
+                    },
+                    "lastEpisodeDate": {
+                        "dub": {
+                            "hour": 15,
+                            "minute": 26,
+                            "year": 2026,
+                            "month": 1,
+                            "date": 1
+                        },
+                        "raw": {},
+                        "sub": {
+                            "hour": 15,
+                            "minute": 29,
+                            "year": 2026,
+                            "month": 1,
+                            "date": 1
+                        }
+                    },
+                    "type": "TV",
+                    "season": {
+                        "quarter": "Winter",
+                        "year": 2026
+                    },
+                    "score": 8.18,
+                    "airedStart": {
+                        "year": 2026,
+                        "month": 0,
+                        "date": 11,
+                        "hour": 14,
+                        "minute": 45
+                    },
+                    "availableEpisodes": {
+                        "sub": 4,
+                        "dub": 2,
+                        "raw": 0
+                    },
+                    "episodeDuration": "1440000",
+                    "episodeCount": "12",
+                    "lastUpdateEnd": "2026-02-01T15:48:14.531Z"
+                },
+                {
+                    "_id": "3yf3nbR5KLCPKzTdJ",
+                    "name": "Goumon Baito-kun no Nichijou",
+                    "englishName": "The Daily Life of a Part-time Torturer",
+                    "nativeName": "拷問バイトくんの日常",
+                    "slugTime": null,
+                    "thumbnail": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx197731-6E0qjPFaNjC6.jpg",
+                    "lastEpisodeInfo": {
+                        "sub": {
+                            "episodeString": "5"
+                        }
+                    },
+                    "lastEpisodeDate": {
+                        "sub": {
+                            "hour": 15,
+                            "minute": 12,
+                            "year": 2026,
+                            "month": 1,
+                            "date": 1
+                        },
+                        "dub": {},
+                        "raw": {}
+                    },
+                    "type": "TV",
+                    "season": {
+                        "quarter": "Winter",
+                        "year": 2026
+                    },
+                    "score": 5.65,
+                    "airedStart": {
+                        "year": 2026,
+                        "month": 0,
+                        "date": 4,
+                        "hour": 15,
+                        "minute": 30
+                    },
+                    "availableEpisodes": {
+                        "sub": 5,
+                        "dub": 0,
+                        "raw": 0
+                    },
+                    "episodeDuration": "1380000",
+                    "episodeCount": "12",
+                    "lastUpdateEnd": "2026-02-01T15:31:58.763Z"
+                },
+                {
+                    "_id": "TAyB25nFsQhJLJBZs",
+                    "name": "Kizoku Tensei: Megumareta Umare kara Saikyou no Chikara wo Eru",
+                    "englishName": "Noble Reincarnation: Born Blessed, So I'll Obtain Ultimate Power",
+                    "nativeName": "貴族転生 ～恵まれた生まれから最強の力を得る～",
+                    "slugTime": null,
+                    "thumbnail": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx185993-BecPUaWfZJgR.png",
+                    "lastEpisodeInfo": {
+                        "sub": {
+                            "episodeString": "5"
+                        }
+                    },
+                    "lastEpisodeDate": {
+                        "sub": {
+                            "hour": 15,
+                            "minute": 10,
+                            "year": 2026,
+                            "month": 1,
+                            "date": 1
+                        },
+                        "dub": {},
+                        "raw": {}
+                    },
+                    "type": "TV",
+                    "season": {
+                        "quarter": "Winter",
+                        "year": 2026
+                    },
+                    "score": 6.34,
+                    "airedStart": {
+                        "year": 2026,
+                        "month": 0,
+                        "date": 7,
+                        "hour": 15,
+                        "minute": 0
+                    },
+                    "availableEpisodes": {
+                        "sub": 5,
+                        "dub": 0,
+                        "raw": 0
+                    },
+                    "episodeDuration": "1380000",
+                    "episodeCount": null,
+                    "lastUpdateEnd": "2026-02-01T15:31:54.089Z"
+                },
+                {
+                    "_id": "bdgxxaCvaZaFrLW3Z",
+                    "name": "Akuyaku Reijou wa Ringoku no Outaishi ni Dekiai sareru",
+                    "englishName": "The Villainess Is Adored by the Prince of the Neighbor Kingdom",
+                    "nativeName": "悪役令嬢は隣国の王太子に溺愛される",
+                    "slugTime": null,
+                    "thumbnail": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx195518-XXcYHi6tXM6v.jpg",
+                    "lastEpisodeInfo": {
+                        "sub": {
+                            "episodeString": "4"
+                        },
+                        "dub": {
+                            "episodeString": "2"
+                        }
+                    },
+                    "lastEpisodeDate": {
+                        "sub": {
+                            "hour": 14,
+                            "minute": 43,
+                            "year": 2026,
+                            "month": 1,
+                            "date": 1
+                        },
+                        "dub": {
+                            "hour": 14,
+                            "minute": 45,
+                            "year": 2026,
+                            "month": 1,
+                            "date": 1
+                        },
+                        "raw": {}
+                    },
+                    "type": "TV",
+                    "season": {
+                        "quarter": "Winter",
+                        "year": 2026
+                    },
+                    "score": 6.38,
+                    "airedStart": {
+                        "year": 2026,
+                        "month": 0,
+                        "date": 11,
+                        "hour": 14,
+                        "minute": 0
+                    },
+                    "availableEpisodes": {
+                        "sub": 4,
+                        "dub": 2,
+                        "raw": 0
+                    },
+                    "episodeDuration": "1380000",
+                    "episodeCount": "12",
+                    "lastUpdateEnd": "2026-02-01T15:02:31.835Z"
+                },
+                {
+                    "_id": "HBSB59ZzAMYMkLn3k",
+                    "name": "Majutsushi Kunon wa Mieteiru",
+                    "englishName": "Kunon the Sorcerer Can See",
+                    "nativeName": "魔術師クノンは見えている",
+                    "slugTime": null,
+                    "thumbnail": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx186333-32qDHxLkndpg.png",
+                    "lastEpisodeInfo": {
+                        "sub": {
+                            "episodeString": "6"
+                        }
+                    },
+                    "lastEpisodeDate": {
+                        "sub": {
+                            "hour": 14,
+                            "minute": 12,
+                            "year": 2026,
+                            "month": 1,
+                            "date": 1
+                        },
+                        "dub": {},
+                        "raw": {}
+                    },
+                    "type": "TV",
+                    "season": {
+                        "quarter": "Winter",
+                        "year": 2026
+                    },
+                    "score": 6.64,
+                    "airedStart": {
+                        "year": 2026,
+                        "month": 0,
+                        "date": 4,
+                        "hour": 13,
+                        "minute": 0
+                    },
+                    "availableEpisodes": {
+                        "sub": 6,
+                        "dub": 0,
+                        "raw": 0
+                    },
+                    "episodeDuration": "1380000",
+                    "episodeCount": "13",
+                    "lastUpdateEnd": "2026-02-01T14:32:02.329Z"
+                },
+                {
+                    "_id": "yzjM7avonA9JJYw75",
+                    "name": "Hanazakari no Kimitachi e",
+                    "englishName": "Hana-Kimi",
+                    "nativeName": "花ざかりの君たちへ",
+                    "slugTime": null,
+                    "thumbnail": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx177580-ujQw6Ws3oVCi.jpg",
+                    "lastEpisodeInfo": {
+                        "dub": {
+                            "episodeString": "6"
+                        },
+                        "sub": {
+                            "episodeString": "6"
+                        }
+                    },
+                    "lastEpisodeDate": {
+                        "sub": {
+                            "hour": 14,
+                            "minute": 10,
+                            "year": 2026,
+                            "month": 1,
+                            "date": 1
+                        },
+                        "dub": {
+                            "hour": 14,
+                            "minute": 14,
+                            "year": 2026,
+                            "month": 1,
+                            "date": 1
+                        },
+                        "raw": {}
+                    },
+                    "type": "TV",
+                    "season": {
+                        "quarter": "Winter",
+                        "year": 2026
+                    },
+                    "score": 7.07,
+                    "airedStart": {
+                        "year": 2026,
+                        "month": 0,
+                        "date": 4,
+                        "hour": 12,
+                        "minute": 30
+                    },
+                    "availableEpisodes": {
+                        "sub": 6,
+                        "dub": 6,
+                        "raw": 0
+                    },
+                    "episodeDuration": "1440000",
+                    "episodeCount": "12",
+                    "lastUpdateEnd": "2026-02-01T14:32:19.831Z"
+                },
+                {
+                    "_id": "THMCYTSQWC82yaDAH",
+                    "name": "Doupo Cangqiong: Nian Fan",
+                    "englishName": "Battle Through The Heavens Season 5",
+                    "nativeName": "斗破苍穹年番",
+                    "slugTime": null,
+                    "thumbnail": "mcovers/a_tbs/dhw/THMCYTSQWC82yaDAH.webp",
+                    "lastEpisodeInfo": {
+                        "sub": {
+                            "episodeString": "184"
+                        }
+                    },
+                    "lastEpisodeDate": {
+                        "sub": {
+                            "hour": 11,
+                            "minute": 37,
+                            "year": 2026,
+                            "month": 1,
+                            "date": 1
+                        },
+                        "raw": {},
+                        "dub": {}
+                    },
+                    "type": "ONA",
+                    "season": {
+                        "quarter": "Summer",
+                        "year": 2022
+                    },
+                    "score": 8.43,
+                    "airedStart": {
+                        "year": 2022,
+                        "month": 6,
+                        "date": 31
+                    },
+                    "availableEpisodes": {
+                        "sub": 181,
+                        "dub": 0,
+                        "raw": 0
+                    },
+                    "episodeDuration": "1440000",
+                    "episodeCount": "209",
+                    "lastUpdateEnd": "2026-02-01T13:18:00.651Z"
+                },
+                {
+                    "_id": "YanRR43TZfmeNakLA",
+                    "name": "Koupen-chan",
+                    "englishName": null,
+                    "nativeName": "コウペンちゃん",
+                    "slugTime": null,
+                    "thumbnail": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx185646-2eGmsnaSHiLC.jpg",
+                    "lastEpisodeInfo": {
+                        "sub": {
+                            "episodeString": "44"
+                        }
+                    },
+                    "lastEpisodeDate": {
+                        "sub": {
+                            "hour": 11,
+                            "minute": 18,
+                            "year": 2026,
+                            "month": 1,
+                            "date": 1
+                        },
+                        "dub": {},
+                        "raw": {}
+                    },
+                    "type": "TV",
+                    "season": {
+                        "quarter": "Spring",
+                        "year": 2025
+                    },
+                    "score": 7.49,
+                    "airedStart": {
+                        "year": 2025,
+                        "month": 3,
+                        "date": 5,
+                        "hour": 23,
+                        "minute": 28
+                    },
+                    "availableEpisodes": {
+                        "sub": 44,
+                        "dub": 0,
+                        "raw": 0
+                    },
+                    "episodeDuration": "60000",
+                    "episodeCount": null,
+                    "lastUpdateEnd": "2026-01-29T03:17:45.793Z"
+                },
+                {
+                    "_id": "6CKQBmzupcojAEhDL",
+                    "name": "Tunshi Xingkong Season 4",
+                    "englishName": "Swallowed Star 4th Season",
+                    "nativeName": "吞噬星空 第四季",
+                    "slugTime": null,
+                    "thumbnail": "mcovers/a_tbs/dhw/6CKQBmzupcojAEhDL.webp",
+                    "lastEpisodeInfo": {
+                        "sub": {
+                            "episodeString": "123"
+                        }
+                    },
+                    "lastEpisodeDate": {
+                        "sub": {
+                            "hour": 10,
+                            "minute": 50,
+                            "year": 2026,
+                            "month": 1,
+                            "date": 1
+                        },
+                        "dub": {},
+                        "raw": {}
+                    },
+                    "type": "ONA",
+                    "season": {
+                        "quarter": "Fall",
+                        "year": 2023
+                    },
+                    "score": 8.37,
+                    "airedStart": {
+                        "year": 2023,
+                        "month": 9,
+                        "date": 3
+                    },
+                    "availableEpisodes": {
+                        "sub": 123,
+                        "dub": 0,
+                        "raw": 0
+                    },
+                    "episodeDuration": "1260000",
+                    "episodeCount": "123",
+                    "lastUpdateEnd": "2025-12-30T00:56:25.072Z"
+                },
+                {
+                    "_id": "jXt4txQHZ4AEkpWBv",
+                    "name": "Kaya-chan wa Kowakunai",
+                    "englishName": "Kaya-chan Isn't Scary",
+                    "nativeName": "カヤちゃんはコワくない",
+                    "slugTime": null,
+                    "thumbnail": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx183660-B6o9cMfSfScX.jpg",
+                    "lastEpisodeInfo": {
+                        "sub": {
+                            "episodeString": "4"
+                        },
+                        "dub": {
+                            "episodeString": "4"
+                        }
+                    },
+                    "lastEpisodeDate": {
+                        "sub": {
+                            "hour": 8,
+                            "minute": 48,
+                            "year": 2026,
+                            "month": 1,
+                            "date": 1
+                        },
+                        "raw": {},
+                        "dub": {
+                            "hour": 9,
+                            "minute": 11,
+                            "year": 2026,
+                            "month": 1,
+                            "date": 1
+                        }
+                    },
+                    "type": "TV",
+                    "season": {
+                        "quarter": "Winter",
+                        "year": 2026
+                    },
+                    "score": 7.22,
+                    "airedStart": {
+                        "year": 2026,
+                        "month": 0,
+                        "date": 11,
+                        "hour": 8,
+                        "minute": 30
+                    },
+                    "availableEpisodes": {
+                        "sub": 4,
+                        "dub": 4,
+                        "raw": 0
+                    },
+                    "episodeDuration": "1380000",
+                    "episodeCount": "12",
+                    "lastUpdateEnd": "2026-02-01T09:01:51.960Z"
+                },
+                {
+                    "_id": "8b4x3CtLbQmpKF5mw",
+                    "name": "Seihantai na Kimi to Boku",
+                    "englishName": "You and I Are Polar Opposites",
+                    "nativeName": "正反対な君と僕",
+                    "slugTime": null,
+                    "thumbnail": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx184951-s8Lg2muPBhdX.jpg",
+                    "lastEpisodeInfo": {
+                        "sub": {
+                            "episodeString": "4"
+                        },
+                        "dub": {
+                            "episodeString": "4"
+                        }
+                    },
+                    "lastEpisodeDate": {
+                        "sub": {
+                            "hour": 8,
+                            "minute": 46,
+                            "year": 2026,
+                            "month": 1,
+                            "date": 1
+                        },
+                        "dub": {
+                            "hour": 8,
+                            "minute": 44,
+                            "year": 2026,
+                            "month": 1,
+                            "date": 1
+                        },
+                        "raw": {}
+                    },
+                    "type": "TV",
+                    "season": {
+                        "quarter": "Winter",
+                        "year": 2026
+                    },
+                    "score": 8.12,
+                    "airedStart": {
+                        "year": 2026,
+                        "month": 0,
+                        "date": 11,
+                        "hour": 8,
+                        "minute": 0
+                    },
+                    "availableEpisodes": {
+                        "sub": 4,
+                        "dub": 4,
+                        "raw": 0
+                    },
+                    "episodeDuration": "1440000",
+                    "episodeCount": "12",
+                    "lastUpdateEnd": "2026-02-01T09:01:41.093Z"
+                },
+                {
+                    "_id": "qYeT5dZPZWqoqX6Wb",
+                    "name": "Uruwashi no Yoi no Tsuki",
+                    "englishName": "In the Clear Moonlit Dusk",
+                    "nativeName": "うるわしの宵の月",
+                    "slugTime": null,
+                    "thumbnail": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx192507-SCmImUlUnpAD.jpg",
+                    "lastEpisodeInfo": {
+                        "sub": {
+                            "episodeString": "4"
+                        },
+                        "dub": {
+                            "episodeString": "2"
+                        }
+                    },
+                    "lastEpisodeDate": {
+                        "sub": {
+                            "hour": 8,
+                            "minute": 10,
+                            "year": 2026,
+                            "month": 1,
+                            "date": 1
+                        },
+                        "dub": {
+                            "hour": 8,
+                            "minute": 11,
+                            "year": 2026,
+                            "month": 1,
+                            "date": 1
+                        },
+                        "raw": {}
+                    },
+                    "type": "TV",
+                    "season": {
+                        "quarter": "Winter",
+                        "year": 2026
+                    },
+                    "score": 7.53,
+                    "airedStart": {
+                        "year": 2026,
+                        "month": 0,
+                        "date": 11,
+                        "hour": 7,
+                        "minute": 30
+                    },
+                    "availableEpisodes": {
+                        "sub": 4,
+                        "dub": 2,
+                        "raw": 0
+                    },
+                    "episodeDuration": "1380000",
+                    "episodeCount": null,
+                    "lastUpdateEnd": "2026-02-01T09:01:56.608Z"
+                },
+                {
+                    "_id": "TjZLiqTRhiCejaAnb",
+                    "name": "Kimi to Idol Precure♪ Movie: Omatase! Kimi ni Todokeru Kirakki Live!",
+                    "englishName": "You and Idol Precure♪ Movie",
+                    "nativeName": "映画キミとアイドルプリキュア♪ お待たせ！キミに届けるキラッキライブ！",
+                    "slugTime": null,
+                    "thumbnail": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx183414-YQT1XNrqnwGX.jpg",
+                    "lastEpisodeInfo": {
+                        "sub": {
+                            "episodeString": "1"
+                        }
+                    },
+                    "lastEpisodeDate": {
+                        "dub": {},
+                        "raw": {},
+                        "sub": {
+                            "hour": 6,
+                            "minute": 4,
+                            "year": 2026,
+                            "month": 1,
+                            "date": 1
+                        }
+                    },
+                    "type": "Movie",
+                    "season": {
+                        "quarter": "Summer",
+                        "year": 2025
+                    },
+                    "score": 6.91,
+                    "airedStart": {
+                        "year": 2025,
+                        "month": 8,
+                        "date": 12
+                    },
+                    "availableEpisodes": {
+                        "sub": 1,
+                        "dub": 0,
+                        "raw": 0
+                    },
+                    "episodeDuration": "4260000",
+                    "episodeCount": "1",
+                    "lastUpdateEnd": "2026-02-01T03:48:31.437Z"
+                },
+                {
+                    "_id": "8GswoZ3vErnwtizim",
+                    "name": "Shenkong Bi An",
+                    "englishName": "The Other Side of Deep Space",
+                    "nativeName": "深空彼岸",
+                    "slugTime": null,
+                    "thumbnail": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx199436-n2n9CRIeNwtg.jpg",
+                    "lastEpisodeInfo": {
+                        "sub": {
+                            "episodeString": "5"
+                        }
+                    },
+                    "lastEpisodeDate": {
+                        "sub": {
+                            "hour": 3,
+                            "minute": 13,
+                            "year": 2026,
+                            "month": 1,
+                            "date": 1
+                        },
+                        "dub": {},
+                        "raw": {}
+                    },
+                    "type": "ONA",
+                    "season": {
+                        "quarter": "Winter",
+                        "year": 2026
+                    },
+                    "score": null,
+                    "airedStart": {
+                        "year": 2026,
+                        "month": 0,
+                        "date": 16
+                    },
+                    "availableEpisodes": {
+                        "sub": 5,
+                        "dub": 0,
+                        "raw": 0
+                    },
+                    "episodeDuration": "900000",
+                    "episodeCount": "26",
+                    "lastUpdateEnd": "2026-02-01T17:16:59.554Z"
+                },
+                {
+                    "_id": "y95xPFxCzS5W8HLkw",
+                    "name": "Digimon Beatbreak",
+                    "englishName": "Digimon Beatbreak",
+                    "nativeName": "DIGIMON BEATBREAK（デジモンビートブレイク）",
+                    "slugTime": null,
+                    "thumbnail": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx188388-aXx9fsnvezBf.jpg",
+                    "lastEpisodeInfo": {
+                        "sub": {
+                            "episodeString": "17"
+                        },
+                        "dub": {
+                            "episodeString": "10"
+                        }
+                    },
+                    "lastEpisodeDate": {
+                        "sub": {
+                            "hour": 3,
+                            "minute": 10,
+                            "year": 2026,
+                            "month": 1,
+                            "date": 1
+                        },
+                        "dub": {
+                            "hour": 4,
+                            "minute": 43,
+                            "year": 2026,
+                            "month": 1,
+                            "date": 1
+                        },
+                        "raw": {}
+                    },
+                    "type": "TV",
+                    "season": {
+                        "quarter": "Fall",
+                        "year": 2025
+                    },
+                    "score": 7.04,
+                    "airedStart": {
+                        "year": 2025,
+                        "month": 9,
+                        "date": 5,
+                        "hour": 0,
+                        "minute": 0
+                    },
+                    "availableEpisodes": {
+                        "sub": 17,
+                        "dub": 10,
+                        "raw": 0
+                    },
+                    "episodeDuration": "1380000",
+                    "episodeCount": null,
+                    "lastUpdateEnd": "2026-02-01T04:02:01.224Z"
+                },
+                {
+                    "_id": "s4ZHrdyvoXYrA8rkG",
+                    "name": "Xian Wang de Richang Shenghuo 5",
+                    "englishName": "The Daily Life of the Immortal King 5",
+                    "nativeName": "仙王的日常生活 第五季",
+                    "slugTime": null,
+                    "thumbnail": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/b185857-NIhDZe5olAzV.png",
+                    "lastEpisodeInfo": {
+                        "sub": {
+                            "episodeString": "9"
+                        },
+                        "dub": {
+                            "episodeString": "2"
+                        }
+                    },
+                    "lastEpisodeDate": {
+                        "sub": {
+                            "hour": 2,
+                            "minute": 12,
+                            "year": 2026,
+                            "month": 1,
+                            "date": 1
+                        },
+                        "dub": {
+                            "hour": 22,
+                            "minute": 42,
+                            "year": 2026,
+                            "month": 0,
+                            "date": 31
+                        },
+                        "raw": {}
+                    },
+                    "type": "ONA",
+                    "season": {
+                        "quarter": "Fall",
+                        "year": 2025
+                    },
+                    "score": 7.52,
+                    "airedStart": {
+                        "year": 2025,
+                        "month": 11,
+                        "date": 14
+                    },
+                    "availableEpisodes": {
+                        "sub": 9,
+                        "dub": 2,
+                        "raw": 0
+                    },
+                    "episodeDuration": "1080000",
+                    "episodeCount": "12",
+                    "lastUpdateEnd": "2026-02-01T03:32:39.204Z"
+                },
+                {
+                    "_id": "wwo8dTENwm3LrFJgn",
+                    "name": "SI-VIS: The Sound of Heroes",
+                    "englishName": "SI-VIS: The Sound of Heroes",
+                    "nativeName": "SI-VIS: The Sound of Heroes",
+                    "slugTime": null,
+                    "thumbnail": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx196553-9whoPCB5gyKB.jpg",
+                    "lastEpisodeInfo": {
+                        "sub": {
+                            "episodeString": "17"
+                        }
+                    },
+                    "lastEpisodeDate": {
+                        "sub": {
+                            "hour": 2,
+                            "minute": 10,
+                            "year": 2026,
+                            "month": 1,
+                            "date": 1
+                        },
+                        "dub": {},
+                        "raw": {}
+                    },
+                    "type": "TV",
+                    "season": {
+                        "quarter": "Fall",
+                        "year": 2025
+                    },
+                    "score": 5.97,
+                    "airedStart": {
+                        "year": 2025,
+                        "month": 9,
+                        "date": 5,
+                        "hour": 0,
+                        "minute": 30
+                    },
+                    "availableEpisodes": {
+                        "sub": 17,
+                        "dub": 0,
+                        "raw": 0
+                    },
+                    "episodeDuration": "1380000",
+                    "episodeCount": "24",
+                    "lastUpdateEnd": "2026-02-01T03:32:50.330Z"
+                },
+                {
+                    "_id": "Ne4CNRseuyYi2k6Ke",
+                    "name": "Meitantei Precure!",
+                    "englishName": "Star Detective Precure!",
+                    "nativeName": "名探偵プリキュア！",
+                    "slugTime": null,
+                    "thumbnail": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx202957-GsMaw8TNPyhZ.jpg",
+                    "lastEpisodeInfo": {
+                        "sub": {
+                            "episodeString": "1"
+                        }
+                    },
+                    "lastEpisodeDate": {
+                        "sub": {
+                            "hour": 1,
+                            "minute": 42,
+                            "year": 2026,
+                            "month": 1,
+                            "date": 1
+                        },
+                        "dub": {},
+                        "raw": {}
+                    },
+                    "type": "TV",
+                    "season": {
+                        "quarter": "Winter",
+                        "year": 2026
+                    },
+                    "score": null,
+                    "airedStart": {
+                        "year": 2026,
+                        "month": 0,
+                        "date": 31,
+                        "hour": 23,
+                        "minute": 30
+                    },
+                    "availableEpisodes": {
+                        "sub": 1,
+                        "dub": 0,
+                        "raw": 0
+                    },
+                    "episodeDuration": "0",
+                    "episodeCount": null,
+                    "lastUpdateEnd": "2026-02-01T03:47:36.425Z"
+                },
+                {
+                    "_id": "ByGxiCCdKejEbiDmP",
+                    "name": "Cheng He Titong Season 2",
+                    "englishName": "How Dare You!? Season 2",
+                    "nativeName": "成何体统 第2季",
+                    "slugTime": null,
+                    "thumbnail": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx185870-kiVol80A1TBi.jpg",
+                    "lastEpisodeInfo": {
+                        "sub": {
+                            "episodeString": "4"
+                        }
+                    },
+                    "lastEpisodeDate": {
+                        "dub": {},
+                        "raw": {},
+                        "sub": {
+                            "hour": 1,
+                            "minute": 15,
+                            "year": 2026,
+                            "month": 1,
+                            "date": 1
+                        }
+                    },
+                    "type": "ONA",
+                    "season": {
+                        "quarter": "Winter",
+                        "year": 2026
+                    },
+                    "score": null,
+                    "airedStart": {
+                        "year": 2026,
+                        "month": 0,
+                        "date": 25
+                    },
+                    "availableEpisodes": {
+                        "sub": 4,
+                        "dub": 0,
+                        "raw": 0
+                    },
+                    "episodeDuration": "1380000",
+                    "episodeCount": "24",
+                    "lastUpdateEnd": "2026-02-01T03:32:21.009Z"
+                },
+                {
+                    "_id": "FzpL6egqa9qnCK2GP",
+                    "name": "Jian Lai Season 2",
+                    "englishName": "The Swords 2",
+                    "nativeName": "剑来 第二季",
+                    "slugTime": null,
+                    "thumbnail": "mcovers/a_tbs/dhw/FzpL6egqa9qnCK2GP.jpg",
+                    "lastEpisodeInfo": {
+                        "sub": {
+                            "episodeString": "8"
+                        }
+                    },
+                    "lastEpisodeDate": {
+                        "sub": {
+                            "hour": 0,
+                            "minute": 6,
+                            "year": 2026,
+                            "month": 1,
+                            "date": 1
+                        },
+                        "dub": {},
+                        "raw": {}
+                    },
+                    "type": "ONA",
+                    "season": {
+                        "quarter": "Fall",
+                        "year": 2025
+                    },
+                    "score": 7.27,
+                    "airedStart": {
+                        "year": 2025,
+                        "month": 11,
+                        "date": 25
+                    },
+                    "availableEpisodes": {
+                        "sub": 7,
+                        "dub": 0,
+                        "raw": 0
+                    },
+                    "episodeDuration": "1800000",
+                    "episodeCount": "26",
+                    "lastUpdateEnd": "2026-02-01T00:17:37.347Z"
+                },
+                {
+                    "_id": "dBMYMLpfH8bZS47ou",
+                    "name": "Akuma-kun",
+                    "englishName": "Devil Boy",
+                    "nativeName": "悪魔くん",
+                    "slugTime": null,
+                    "thumbnail": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx8194-AIrsu7iVulsr.png",
+                    "lastEpisodeInfo": {
+                        "sub": {
+                            "episodeString": "27"
+                        },
+                        "dub": {},
+                        "raw": {}
+                    },
+                    "lastEpisodeDate": {
+                        "sub": {
+                            "hour": 20,
+                            "minute": 14,
+                            "year": 2026,
+                            "month": 0,
+                            "date": 31
+                        },
+                        "dub": {},
+                        "raw": {}
+                    },
+                    "type": "TV",
+                    "season": {
+                        "quarter": "Spring",
+                        "year": 1989
+                    },
+                    "score": 6.43,
+                    "airedStart": {
+                        "year": 1989,
+                        "month": 3,
+                        "date": 15,
+                        "hour": 10,
+                        "minute": 0
+                    },
+                    "availableEpisodes": {
+                        "sub": 27,
+                        "dub": 0,
+                        "raw": 0
+                    },
+                    "episodeDuration": "1500000",
+                    "episodeCount": "42",
+                    "lastUpdateEnd": "2025-12-02T03:04:09.904Z"
+                },
+                {
+                    "_id": "RpdmvvqPWnu9oHYtz",
+                    "name": "Ze Tian Ji (2026)",
+                    "englishName": "Way of Choices",
+                    "nativeName": "择天记 (2026)",
+                    "slugTime": null,
+                    "thumbnail": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx199410-x60vxUFQxu4x.jpg",
+                    "lastEpisodeInfo": {
+                        "sub": {
+                            "episodeString": "3"
+                        }
+                    },
+                    "lastEpisodeDate": {
+                        "sub": {
+                            "hour": 19,
+                            "minute": 53,
+                            "year": 2026,
+                            "month": 0,
+                            "date": 31
+                        },
+                        "dub": {},
+                        "raw": {}
+                    },
+                    "type": null,
+                    "season": {
+                        "quarter": "Winter",
+                        "year": 2026
+                    },
+                    "score": null,
+                    "airedStart": {
+                        "year": 2026,
+                        "month": 1
+                    },
+                    "availableEpisodes": {
+                        "sub": 3,
+                        "dub": 0,
+                        "raw": 0
+                    },
+                    "episodeDuration": "0",
+                    "episodeCount": "26",
+                    "lastUpdateEnd": "2026-02-01T00:03:41.565Z"
+                }
+            ]
+        }
+    }
+}

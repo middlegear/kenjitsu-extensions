@@ -42,6 +42,48 @@ export class AllAnime extends BaseClass {
    */
   private readonly pageSize: number = 30;
 
+  ///// busted but what i know is that the search input isnt present
+  private advancedSearch = `query(
+ 
+  $limit: Int
+  $page: Int
+  $translationType: VaildTranslationTypeEnumType
+  $countryOrigin: VaildCountryOriginEnumType
+) {
+  shows(
+  
+    limit: $limit
+    page: $page
+    translationType: $translationType
+    countryOrigin: $countryOrigin
+  ) {
+    edges {
+      _id
+      name
+      englishName
+      nativeName
+      thumbnail   # low-res; sometimes called poster or cover
+      slugTime
+      # --- Add these for better UI/cards (most are commonly requested) ---
+      type            # TV, Movie, OVA, etc.
+      status          # Ongoing, Completed, etc.
+      season          # Spring 2025, etc.
+      year            # release year
+      episodes {
+        sub   # count of subbed eps
+        dub   # count of dubbed eps
+      }
+      averageScore    # or meanScore / score
+      genres
+      description     # short synopsis (can be long — trim if needed)
+      # You can also add: banner, tags, studios (array), malId, aniListId, etc.
+    }
+    pageInfo {
+      hasNextPage
+      total    
+    }
+  }
+}`;
   /**
    * GraphQL query for searching anime shows.
    * @private
@@ -56,9 +98,15 @@ export class AllAnime extends BaseClass {
         nativeName
         thumbnail
         slugTime
+        season
+        score
+        genres
+        status
+        studios
       }
       pageInfo {
         hasNextPage
+        total
       }
     }
   }
@@ -154,7 +202,7 @@ export class AllAnime extends BaseClass {
     const payload = {
       variables: {
         search: {
-          query: query,
+          // query: query,   /// just omitted to test inifinite scrolling for pagination
           allowAdult: false,
           allowUnknown: false,
         },
@@ -174,6 +222,8 @@ export class AllAnime extends BaseClass {
       if (!response.data) {
         return { data: [], error: response.statusText };
       }
+      console.log(response.data.data);
+
       const anime: IAllAnime[] = response.data.data.shows.edges.map((item: any) => ({
         id: `${this.createSlug(item.name || item.englishName || item.nativeName)}-${item._id}`,
         romaji: item.name,
