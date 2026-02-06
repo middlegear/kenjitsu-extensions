@@ -1,8 +1,6 @@
-export interface IBaseAnime {
+export interface IBase {
   id: string | null;
   name: string | null;
-  //   romaji: string | null;
-  //   native?: string | null;
   posterImage: string | null;
 }
 
@@ -78,4 +76,9 @@ export interface IBasePaginated<T> extends IResponse<T> {
 
 export interface IHomeResSpecialPages {
   error?: string;
+}
+
+export interface IMangaSource {
+  url: string | null;
+  page: number | null;
 }

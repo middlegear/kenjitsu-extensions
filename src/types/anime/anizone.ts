@@ -1,6 +1,6 @@
-import type { IBaseAnime, IBaseEpisodes, IResponse } from '../base.js';
+import type { IBase, IBaseEpisodes, IResponse } from '../base.js';
 
-export interface IAnizone extends IBaseAnime {
+export interface IAnizone extends IBase {
   releaseDate: string | number | null;
   status: string | null;
   genres: string[] | null;
@@ -24,5 +24,5 @@ export interface IAnizoneInfoResponse<T> extends IResponse<T> {
   providerEpisodes: IAniZoneEpisodes[] | [];
 }
 export interface IAnizoneUpdates<T> extends IResponse<T> {
-  recentlyAdded: IBaseAnime[] | [];
+  recentlyAdded: IBase[] | [];
 }

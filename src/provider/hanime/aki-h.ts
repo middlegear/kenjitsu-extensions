@@ -10,7 +10,7 @@ import type {
   IAKiEpisodes,
   IAKiInfo,
   IAKiInfoResponse,
-} from '../../types/hnaime/aki-h.js';
+} from '../../types/hanime/aki-h.js';
 
 import type { IResponse, ISourceBaseResponse, IVideoSource } from '../../types/base.js';
 

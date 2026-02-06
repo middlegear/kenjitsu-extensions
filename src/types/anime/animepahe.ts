@@ -1,6 +1,6 @@
-import type { IBaseAnime, IBaseEpisodes, IBasePaginated, IResponse, IServerInfo } from '../base.js';
+import type { IBase, IBaseEpisodes, IBasePaginated, IResponse, IServerInfo } from '../base.js';
 
-export interface IPaheAnime extends IBaseAnime {
+export interface IPaheAnime extends IBase {
   score: number | null;
   type: string | null;
   releaseDate: number | null;
@@ -8,7 +8,7 @@ export interface IPaheAnime extends IBaseAnime {
   totalEpisodes: number | null;
 }
 
-export interface IPaheInfo extends IBaseAnime {
+export interface IPaheInfo extends IBase {
   anilistId: number | null;
   malId: number | null;
   altnames: string | null;

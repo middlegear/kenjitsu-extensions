@@ -8,7 +8,7 @@ import type {
   IAnizoneInfoResponse,
   IAnizoneUpdates,
 } from '../../types/anime/anizone.js';
-import type { IBaseAnime, IResponse, ISourceBaseResponse, IVideoSource } from '../../types/base.js';
+import type { IBase, IResponse, ISourceBaseResponse, IVideoSource } from '../../types/base.js';
 
 /**
  * Anizone class for interacting with the Anizone anime streaming platform.
@@ -221,7 +221,7 @@ export class Anizone extends BaseClass {
    * @returns  - An object containing arrays of recently added anime and latest episodes.
    */
   private parseUpdates($: cheerio.CheerioAPI): IAnizoneUpdates<IAniZoneEpisodes[] | []> {
-    const recentlyAdded: IBaseAnime[] = [];
+    const recentlyAdded: IBase[] = [];
 
     const latestAnimeBlock = $('div.mb-8.sm\\:mb-12');
 

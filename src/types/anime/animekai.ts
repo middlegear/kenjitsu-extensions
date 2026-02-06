@@ -1,6 +1,6 @@
-import type { IBaseAnime, IBaseEpisodes, IBasePaginated, IHomeResSpecialPages, IResponse } from '../base.js';
+import type { IBase, IBaseEpisodes, IBasePaginated, IHomeResSpecialPages, IResponse } from '../base.js';
 
-export interface IAKAnime extends IBaseAnime {
+export interface IAKAnime extends IBase {
   romaji: string | null;
   type: string | null;
   episodes: {
@@ -36,7 +36,7 @@ export type AKserver = {
   outro: { start: number | null; end: number | null };
   download: string;
 };
-export interface IAKInfo extends IBaseAnime {
+export interface IAKInfo extends IBase {
   anilistId: number | null;
   malId: number | null;
   altnames: string | null;

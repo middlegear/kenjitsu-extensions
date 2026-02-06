@@ -15,6 +15,7 @@ import type { IMetaFormat, Seasons } from './types/meta/meta-anime.js';
 import type { IAnimeCategory } from './types/base.js';
 import { AkiH } from './provider/hanime/aki-h.js';
 import { HentaiTv } from './provider/hanime/hentaitv.js';
+import { Comix } from './provider/manga/comix.js';
 
 export {
   Anilist,
@@ -38,9 +39,5 @@ export {
   type IAnimeCategory,
 };
 
-// const data = await new Animepahe().fetchSources(
-//   'pahe-4a9abc55-0a54-c544-3e14-736c79ddafe7-$session$-d5065ceff02b39e97b4b324e7d344606b19c23f97138e0329b2476cffe2a79e2',
-// );
-// console.log(data.data);
-// const data = await new Anilist().fetchAnimePaheProviderEpisodes(185857);
-// console.log(data);
+const data = await new Comix().fetchChapterPages('3r7wv-naruto$-id-$6640473-chapter-70');
+console.log(data);

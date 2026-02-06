@@ -1,6 +1,6 @@
-import type { IBaseAnime, IBasePaginated, IHomeResSpecialPages, IResponse, ISourceBaseResponse } from '../base.js';
+import type { IBase, IBasePaginated, IHomeResSpecialPages, IResponse, ISourceBaseResponse } from '../base.js';
 
-export interface IZBase extends IBaseAnime {
+export interface IZBase extends IBase {
   romaji: string | null;
 }
 export interface IZAnime extends IZBase {

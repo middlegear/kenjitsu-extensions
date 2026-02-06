@@ -1,6 +1,6 @@
-import type { IBaseAnime, IBaseEpisodes, IResponse } from '../base.js';
+import type { IBase, IBaseEpisodes, IResponse } from '../base.js';
 
-export interface AKiBase extends IBaseAnime {
+export interface AKiBase extends IBase {
   native: string | null;
 }
 export interface AKiAnime extends AKiBase {
