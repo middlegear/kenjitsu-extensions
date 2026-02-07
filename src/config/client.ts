@@ -117,9 +117,14 @@ export class FetchClient {
     };
 
     if (body !== undefined && body !== null) {
+      const isForm =
+        headers['Content-Type'] === 'application/x-www-form-urlencoded' ||
+        headers['content-type'] === 'application/x-www-form-urlencoded';
+
       if (body instanceof FormData) {
         gotOptions.form = body;
-      } else if (body instanceof URLSearchParams) {
+      } else if (isForm && typeof body === 'object') {
+        // 'got' wants a plain object here to serialize it as form-data
         gotOptions.form = body;
       } else if (typeof body === 'object') {
         gotOptions.json = body;
@@ -176,13 +181,3 @@ export class FetchClient {
     return this.request<T>({ ...config, url, method: 'POST', body: data });
   }
 }
-
-// const res = await gotScraping(mediaUrl, {
-//   hooks: {
-//     beforeRequest: [
-//       options => {
-//         userAgentKey = options.headers['user-agent'];
-//       },
-//     ],
-//   },
-// });

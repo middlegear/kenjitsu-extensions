@@ -1,17 +1,18 @@
 import type { IBase } from '../base.js';
 
 export interface IComixManga extends IBase {
-  anilistId: number | null;
-  malId: number | null;
+  anilistId?: number | null;
+  malId?: number | null;
   volumes?: number | null;
-  releaseDate: string | null;
-  altnames: string[] | [];
+  releaseDate: string | number | null;
+  altnames?: string[] | [];
 }
 
 export interface IComixInfo extends IComixManga {
   synopsis: string | null;
   status: string | null;
   genres: string[] | null;
+  official?: boolean;
 }
 
 export interface IMangaChapter {
