@@ -225,7 +225,6 @@ export class Comix extends BaseClass {
         throw new Error(response.statusText);
       }
 
-      this.parseMangaImages(cheerio.load(response.data));
       return {
         headers: { Referer: `${this.baseUrl}/` },
         data: this.parseMangaImages(cheerio.load(response.data)),

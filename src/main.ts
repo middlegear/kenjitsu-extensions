@@ -39,6 +39,3 @@ export {
   type Seasons,
   type IAnimeCategory,
 };
-
-const data = await new WeebCentral().fetchMangaChapters('01J76XY7E4JCPK14V53BVQWD9Y-Bleach');
-console.log(data);

@@ -1,6 +1,6 @@
 import { BaseClass } from '../../models/base.js';
 import * as cheerio from 'cheerio';
-import type { IBase, IResponse } from '../../types/base.js';
+import type { IBase, IMangaSource, IResponse } from '../../types/base.js';
 import type { IComixInfo } from '../../types/manga/comix.js';
 import type { IWMangaChapter } from '../../types/manga/weebcentral.js';
 
@@ -61,7 +61,20 @@ export class WeebCentral extends BaseClass {
       });
     });
 
-    return { data: chapters };
+    return { data: chapters.reverse() };
+  }
+
+  private parseMangaPages($: cheerio.CheerioAPI) {
+    const sources: IMangaSource[] = [];
+
+    $('img').each((_, element) => {
+      sources.push({
+        url: $(element).attr('src') || null,
+        page: $(element).attr('alt') ? parseInt($(element).attr('alt')?.match(/\d+/)?.[0] as string) : null,
+      });
+    });
+
+    return sources;
   }
   async search(query: string): Promise<IResponse<IBase[] | []>> {
     if (!query) {
@@ -109,7 +122,9 @@ export class WeebCentral extends BaseClass {
           Referer: `${this.baseUrl}/`,
         },
       });
-
+      if (!response.data) {
+        throw new Error(response.statusText);
+      }
       return this.parseMangaInfo(cheerio.load(response.data), id);
     } catch (error) {
       return {
@@ -132,12 +147,39 @@ export class WeebCentral extends BaseClass {
           Referer: `${this.baseUrl}/${id.replace('-', '/')}`,
         },
       });
-
+      if (!response.data) {
+        throw new Error(response.statusText);
+      }
       return this.parseMangaChapters(cheerio.load(response.data));
     } catch (error) {
       return {
         data: [],
         error: error instanceof Error ? error.message : 'Unknown Error',
+      };
+    }
+  }
+
+  async fetchMangaPages(id: string) {
+    if (!id) {
+      throw new Error('Missing required  param: chapterId');
+    }
+    try {
+      const response = await this.client.get(
+        `${this.baseUrl}/chapters/${id}/images?is_prev=False&current_page=1&reading_style=long_strip`,
+      );
+      if (!response.data) {
+        throw new Error(response.statusText);
+      }
+
+      return {
+        headers: { Referer: `${this.baseUrl}/` },
+        data: this.parseMangaPages(cheerio.load(response.data)),
+      };
+    } catch (error) {
+      return {
+        headers: { Referer: null },
+        data: [],
+        error: error instanceof Error ? error.message : 'Unknown error',
       };
     }
   }
