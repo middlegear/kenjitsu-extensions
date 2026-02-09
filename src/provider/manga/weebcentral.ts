@@ -3,6 +3,7 @@ import * as cheerio from 'cheerio';
 import type { IBase, IMangaSource, IResponse } from '../../types/base.js';
 import type { IMangaInfo } from '../../types/manga/comix.js';
 import type { IWMangaChapter } from '../../types/manga/weebcentral.js';
+import { Impit } from 'impit';
 
 export class WeebCentral extends BaseClass {
   private baseUrl: string;
@@ -10,6 +11,11 @@ export class WeebCentral extends BaseClass {
     super();
     this.baseUrl = baseUrl;
   }
+  private client2 = new Impit({
+    browser: 'chrome',
+    followRedirects: false,
+    http3: true, // We need the 'location' header for MP4
+  });
 
   private parseSearch($: cheerio.CheerioAPI) {
     const result: IBase[] = [];
@@ -77,30 +83,26 @@ export class WeebCentral extends BaseClass {
     return sources;
   }
   async search(query: string): Promise<IResponse<IBase[] | []>> {
-    if (!query) {
-      throw new Error('Missing required  param: query string');
-    }
+    if (!query) throw new Error('Missing required param: query string');
     try {
-      const response = await this.client.post(
-        `${this.baseUrl}/search/simple?location=main`,
-        { text: query },
-        {
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-            'HX-Request': 'true',
-            'HX-Trigger': 'quick-search-input',
-            'HX-Trigger-Name': 'text',
-            'HX-Target': 'quick-search-result',
-            'HX-Current-URL': `${this.baseUrl}/`,
-          },
+      const response = await this.client2.fetch(`${this.baseUrl}/search/simple?location=main`, {
+        method: 'POST',
+        body: new URLSearchParams({ text: query }).toString(),
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'HX-Request': 'true',
+          'HX-Trigger': 'quick-search-input',
+          'HX-Trigger-Name': 'text',
+          'HX-Target': 'quick-search-result',
+          'HX-Current-URL': `${this.baseUrl}/`,
         },
-      );
+      });
+      const cookieArray = response.headers.getSetCookie();
+      console.log(cookieArray);
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
-      if (!response.data) {
-        throw new Error(response.statusText);
-      }
-
-      return this.parseSearch(cheerio.load(response.data));
+      const html = await response.text();
+      return this.parseSearch(cheerio.load(html));
     } catch (error) {
       return {
         data: [],
@@ -108,7 +110,6 @@ export class WeebCentral extends BaseClass {
       };
     }
   }
-
   async fetchMangaInfo(id: string): Promise<IResponse<IMangaInfo | null>> {
     if (!id) {
       throw new Error('Missing required  param: id');
