@@ -116,6 +116,8 @@ export class WeebCentral extends BaseClass {
         },
       });
       const html = await response.text();
+      console.log(html);
+
       return this.parseSearch(cheerio.load(html));
     } catch (error) {
       return {
