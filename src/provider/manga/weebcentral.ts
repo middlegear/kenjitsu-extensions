@@ -105,54 +105,124 @@ export class WeebCentral extends BaseClass {
 
     return sources;
   }
-  async search(query: string): Promise<IResponse<IBase[]>> {
-    if (!query) {
-      return { data: [], error: 'Missing required param: query string' };
-    }
+  // async search(query: string): Promise<IResponse<IBase[]>> {
+  //   if (!query) {
+  //     return { data: [], error: 'Missing required param: query string' };
+  //   }
 
+  //   try {
+  //     const url = new URL(`${this.baseUrl}/search/data`);
+
+  //     url.searchParams.set('limit', '32');
+  //     url.searchParams.set('offset', '0');
+
+  //     // Normalize query like Kotatsu does
+  //     const normalized = query
+  //       .replace(/[^a-zA-Z0-9\s]/g, ' ')
+  //       .replace(/\s+/g, ' ')
+  //       .trim();
+
+  //     url.searchParams.set('text', normalized);
+  //     url.searchParams.set('sort', 'Best Match');
+  //     url.searchParams.set('order', 'Ascending');
+  //     url.searchParams.set('official', 'Any');
+  //     url.searchParams.set('anime', 'Any');
+  //     url.searchParams.set('adult', 'Any');
+  //     url.searchParams.set('display_mode', 'Full Display');
+
+  //     const response = await this.client2.fetch(url.toString(), {
+  //       method: 'GET',
+  //       headers: {
+  //         Accept: 'text/html',
+  //         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:147.0) Gecko/20100101 Firefox/147.0',
+  //       },
+  //     });
+
+  //     if (!response.ok) {
+  //       throw new Error(`HTTP ${response.status}`);
+  //     }
+
+  //     const html = await response.text();
+  //     console.log(html);
+
+  //     return this.parseSearch(cheerio.load(html));
+  //   } catch (error) {
+  //     return {
+  //       data: [],
+  //       error: error instanceof Error ? error.message : 'Unknown Error',
+  //     };
+  //   }
+  // }
+
+  private headers = {
+    'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0',
+    Accept: '*/*',
+    'Accept-Language': 'en-US,en;q=0.5',
+    'Sec-Fetch-Dest': 'empty',
+    'Sec-Fetch-Mode': 'cors',
+    'Sec-Fetch-Site': 'same-origin',
+    Connection: 'keep-alive',
+  };
+
+  search = async (query: string, page: number = 1): Promise<IResponse<IBase[] | []>> => {
     try {
-      const url = new URL(`${this.baseUrl}/search/data`);
+      const limit = 32;
+      const offset = (page - 1) * limit;
 
-      url.searchParams.set('limit', '32');
-      url.searchParams.set('offset', '0');
-
-      // Normalize query like Kotatsu does
-      const normalized = query
-        .replace(/[^a-zA-Z0-9\s]/g, ' ')
-        .replace(/\s+/g, ' ')
-        .trim();
-
-      url.searchParams.set('text', normalized);
-      url.searchParams.set('sort', 'Best Match');
-      url.searchParams.set('order', 'Ascending');
-      url.searchParams.set('official', 'Any');
-      url.searchParams.set('anime', 'Any');
-      url.searchParams.set('adult', 'Any');
-      url.searchParams.set('display_mode', 'Full Display');
-
-      const response = await this.client2.fetch(url.toString(), {
-        method: 'GET',
+      const { data } = await this.client.get(`${this.baseUrl}/search/data`, {
+        params: {
+          limit: limit.toString(),
+          offset: offset.toString(),
+          text: query,
+          sort: 'Best Match',
+          order: 'Descending',
+          official: 'Any',
+          anime: 'Any',
+          adult: 'Any',
+          display_mode: 'Full Display',
+        },
         headers: {
-          Accept: 'text/html',
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:147.0) Gecko/20100101 Firefox/147.0',
+          ...this.headers,
+          'HX-Request': 'true',
+          'HX-Current-URL': `${this.baseUrl}/search?text=${encodeURIComponent(
+            query,
+          )}&sort=Best+Match&order=Descending&official=Any&anime=Any&adult=Any&display_mode=Full+Display`,
         },
       });
 
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
-      }
+      const $ = cheerio.load(data);
 
-      const html = await response.text();
-      console.log(html);
+      const results: any = $('article.bg-base-300')
+        .map((i, el) => {
+          const linkElement = $(el).find('section a').first();
+          const href = linkElement.attr('href');
+          const id = href?.split('/series/')[1] || '';
 
-      return this.parseSearch(cheerio.load(html));
-    } catch (error) {
+          const title =
+            $(el).find('section.hidden.lg\\:block .tooltip a').text().trim() ||
+            $(el).find('section a .text-ellipsis').text().trim();
+
+          const image = $(el).find('picture source').first().attr('srcset') || $(el).find('picture img').attr('src');
+
+          return {
+            id: id,
+            title: title,
+            image: image,
+          };
+        })
+        .get();
+
+      const hasNextPage = results.length === limit;
+
       return {
-        data: [],
-        error: error instanceof Error ? error.message : 'Unknown Error',
+        // currentPage: page,
+        // hasNextPage: hasNextPage,
+        data: results,
       };
+    } catch (err) {
+      throw new Error((err as Error).message);
     }
-  }
+  };
 
   async fetchMangaInfo(id: string): Promise<IResponse<IMangaInfo | null>> {
     if (!id) {
