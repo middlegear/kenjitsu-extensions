@@ -12,7 +12,7 @@ export class WeebCentral extends BaseClass {
     this.baseUrl = baseUrl;
   }
   private client2 = new Impit({
-    browser: 'chrome',
+    browser: 'firefox',
     followRedirects: false,
     http3: true, // We need the 'location' header for MP4
   });
@@ -87,21 +87,34 @@ export class WeebCentral extends BaseClass {
     try {
       const response = await this.client2.fetch(`${this.baseUrl}/search/simple?location=main`, {
         method: 'POST',
-        // Fetch expects body as a string for x-www-form-urlencoded
         body: new URLSearchParams({ text: query }).toString(),
         headers: {
+          // Core
           'Content-Type': 'application/x-www-form-urlencoded',
+          Accept: '*/*',
+          'Accept-Language': 'en-US,en;q=0.9',
+          'Accept-Encoding': 'gzip, deflate, br',
+
+          // Browser identity
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:147.0) Gecko/20100101 Firefox/147.0',
+
+          // HTMX
           'HX-Request': 'true',
           'HX-Trigger': 'quick-search-input',
           'HX-Trigger-Name': 'text',
           'HX-Target': 'quick-search-result',
           'HX-Current-URL': `${this.baseUrl}/`,
+
+          // Fetch metadata (Cloudflare cares)
+          Origin: this.baseUrl,
           Referer: `${this.baseUrl}/`,
-          Accept: '*/*',
+          'Sec-Fetch-Dest': 'empty',
+          'Sec-Fetch-Mode': 'cors',
+          'Sec-Fetch-Site': 'same-origin',
+
+          Cookie: `cf_clearance=uyrmr_HZaIKY94zFrQpRRjMjaW4KKd44cIRmIFJv.m4-1770669724-1.2.1.1-XfkWoiZwP8puu5jbUOtxTl1w8UUlL34r8DSXkTWqB7SnjETI3.g8vkq8LGFybQ3RcOW0LaPm.DN1bVdSJXKXyhLUOg9pf1DXogr8yCr0En6R3qM66RATTYLxWR1RBCGl.p4XWpvlfMSsDzQXIc5xj.BmHh1Vkjll1GlTGraTlGuI9jicCuZc8QDou_T6rDJkuWTXtBBVLoZbmHuPjcFeMSGbvNt7g9u.6wOCNgdeGfU`,
         },
       });
-      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-
       const html = await response.text();
       return this.parseSearch(cheerio.load(html));
     } catch (error) {
