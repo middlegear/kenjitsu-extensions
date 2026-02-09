@@ -17,13 +17,36 @@ export class WeebCentral extends BaseClass {
     // http3: true, // We need the 'location' header for MP4
   });
 
-  private parseSearch($: cheerio.CheerioAPI) {
+  private parseSearch($: cheerio.CheerioAPI): IResponse<IBase[]> {
     const result: IBase[] = [];
-    $('div a').each((_, element) => {
+
+    $('article.bg-base-300').each((_, article) => {
+      const root = $(article);
+
+      const link = root.find('a[href*="/series/"]').first();
+      const href = link.attr('href');
+      if (!href) return;
+
+      // Normalize absolute & relative URLs
+      let seriesId: string | null = null;
+      try {
+        const url = href.startsWith('http') ? new URL(href) : new URL(href, this.baseUrl);
+
+        // /series/{ID}/{slug}
+        seriesId = url.pathname.split('/')[2] ?? null;
+      } catch {
+        return;
+      }
+
+      const title = root.find('div.text-ellipsis.truncate').first().text().trim() || null;
+
+      const posterImage =
+        root.find('picture img').first().attr('src') || root.find('picture source').first().attr('srcset') || null;
+
       result.push({
-        id: $(element).attr('href')?.split('/').slice(-2).join('-') || null,
-        name: $(element).find('div.text-ellipsis').text().trim() || null,
-        posterImage: $(element).find('img').attr('src') || $(element).find('source').attr('srcset') || null,
+        id: seriesId,
+        name: title,
+        posterImage,
       });
     });
 
@@ -82,39 +105,43 @@ export class WeebCentral extends BaseClass {
 
     return sources;
   }
-  async search(query: string): Promise<IResponse<IBase[] | []>> {
-    if (!query) throw new Error('Missing required param: query string');
+  async search(query: string): Promise<IResponse<IBase[]>> {
+    if (!query) {
+      return { data: [], error: 'Missing required param: query string' };
+    }
+
     try {
-      const response = await this.client2.fetch(`${this.baseUrl}/search/simple?location=main`, {
-        method: 'POST',
-        body: new URLSearchParams({ text: query }).toString(),
+      const url = new URL(`${this.baseUrl}/search/data`);
+
+      url.searchParams.set('limit', '32');
+      url.searchParams.set('offset', '0');
+
+      // Normalize query like Kotatsu does
+      const normalized = query
+        .replace(/[^a-zA-Z0-9\s]/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+
+      url.searchParams.set('text', normalized);
+      url.searchParams.set('sort', 'Best Match');
+      url.searchParams.set('order', 'Ascending');
+      url.searchParams.set('official', 'Any');
+      url.searchParams.set('anime', 'Any');
+      url.searchParams.set('adult', 'Any');
+      url.searchParams.set('display_mode', 'Full Display');
+
+      const response = await this.client2.fetch(url.toString(), {
+        method: 'GET',
         headers: {
-          // Core
-          'Content-Type': 'application/x-www-form-urlencoded',
-          Accept: '*/*',
-          'Accept-Language': 'en-US,en;q=0.9',
-          'Accept-Encoding': 'gzip, deflate, br',
-
-          // Browser identity
+          Accept: 'text/html',
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:147.0) Gecko/20100101 Firefox/147.0',
-
-          // HTMX
-          'HX-Request': 'true',
-          'HX-Trigger': 'quick-search-input',
-          'HX-Trigger-Name': 'text',
-          'HX-Target': 'quick-search-result',
-          'HX-Current-URL': `${this.baseUrl}/`,
-
-          // Fetch metadata (Cloudflare cares)
-          Origin: this.baseUrl,
-          Referer: `${this.baseUrl}/`,
-          'Sec-Fetch-Dest': 'empty',
-          'Sec-Fetch-Mode': 'cors',
-          'Sec-Fetch-Site': 'same-origin',
-
-          // Cookie: `cf_clearance=uyrmr_HZaIKY94zFrQpRRjMjaW4KKd44cIRmIFJv.m4-1770669724-1.2.1.1-XfkWoiZwP8puu5jbUOtxTl1w8UUlL34r8DSXkTWqB7SnjETI3.g8vkq8LGFybQ3RcOW0LaPm.DN1bVdSJXKXyhLUOg9pf1DXogr8yCr0En6R3qM66RATTYLxWR1RBCGl.p4XWpvlfMSsDzQXIc5xj.BmHh1Vkjll1GlTGraTlGuI9jicCuZc8QDou_T6rDJkuWTXtBBVLoZbmHuPjcFeMSGbvNt7g9u.6wOCNgdeGfU`,
         },
       });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+
       const html = await response.text();
       console.log(html);
 
@@ -126,6 +153,7 @@ export class WeebCentral extends BaseClass {
       };
     }
   }
+
   async fetchMangaInfo(id: string): Promise<IResponse<IMangaInfo | null>> {
     if (!id) {
       throw new Error('Missing required  param: id');
