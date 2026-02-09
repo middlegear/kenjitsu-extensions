@@ -11,6 +11,8 @@ import { Anizone } from './provider/anime/anizone.js';
 import { AllAnime } from './provider/anime/allanime.js';
 import { Comix } from './provider/manga/comix.js';
 import { WeebCentral } from './provider/manga/weebcentral.js';
+import { AkiH } from './provider/hanime/aki-h.js';
+import { HentaiTv } from './provider/hanime/hentaitv.js';
 import type { IMovieCountry, IMovieGenre } from './types/movies/movie.js';
 import type { HIGenre } from './types/anime/zoro.js';
 import type { IMetaFormat, Seasons } from './types/meta/meta-anime.js';
@@ -28,6 +30,8 @@ export {
   HiMovies,
   FlixHQ,
   AllAnime,
+  AkiH,
+  HentaiTv,
   Comix,
   WeebCentral,
   type IMovieCountry,
