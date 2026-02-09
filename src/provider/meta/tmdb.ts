@@ -656,27 +656,27 @@ export class TheMovieDatabase extends BaseMovieMeta {
     return this.fetchPaginatedMovieData('/movie/now_playing', { page: String(page) });
   }
 
-  /**
-   * Fetches movie streaming sources using TMDB ID through VidSrc integration.
-   *
-   * @param tmdbId - The unique TMDb ID for the movie (required)
-   * @returns Promise resolving to available streaming sources for the movie
-   */
-  async fetchMovieSources(tmdbId: number): Promise<IResponse<IVideoSource | null>> {
-    return await this.vidsrc.fetchMovie(tmdbId);
-  }
+  // /**
+  //  * Fetches movie streaming sources using TMDB ID through VidSrc integration.
+  //  *
+  //  * @param tmdbId - The unique TMDb ID for the movie (required)
+  //  * @returns Promise resolving to available streaming sources for the movie
+  //  */
+  // async fetchMovieSources(tmdbId: number): Promise<IResponse<IVideoSource | null>> {
+  //   return await this.vidsrc.fetchMovie(tmdbId);
+  // }
 
-  /**
-   * Fetches TV show streaming sources using TMDB ID through VidSrc integration.
-   *
-   * @param tmdbId - The unique TMDb ID for the TV show (required)
-   * @param season - The season number for which to fetch episodes (required)
-   * @param episodeNumber - The episode number for which to fetch streaming sources (required)
-   * @returns Promise resolving to available streaming sources for the specific episode
-   */
-  async fetchTvSources(tmdbId: number, season: number, episodeNumber: number): Promise<IResponse<IVideoSource | null>> {
-    return await this.vidsrc.fetchTvSources(tmdbId, season, episodeNumber);
-  }
+  // /**
+  //  * Fetches TV show streaming sources using TMDB ID through VidSrc integration.
+  //  *
+  //  * @param tmdbId - The unique TMDb ID for the TV show (required)
+  //  * @param season - The season number for which to fetch episodes (required)
+  //  * @param episodeNumber - The episode number for which to fetch streaming sources (required)
+  //  * @returns Promise resolving to available streaming sources for the specific episode
+  //  */
+  // async fetchTvSources(tmdbId: number, season: number, episodeNumber: number): Promise<IResponse<IVideoSource | null>> {
+  //   return await this.vidsrc.fetchTvSources(tmdbId, season, episodeNumber);
+  // }
 
   /**
    * Fetches TV show information along with a provider-specific show ID.

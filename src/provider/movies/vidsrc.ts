@@ -169,7 +169,7 @@ export class VidSrc extends BaseClass {
    * @private
    * @param serverId - The server hash ID.
    * @returns The RCP data or an error object if the request fails.
-   */
+   */ ///busted
   private async fetchRCP(serverId: string) {
     try {
       const rcpresponse = await this.client.get(`${this.cloudnestraUrl}/rcp/${serverId}`, {
@@ -224,6 +224,7 @@ export class VidSrc extends BaseClass {
       const serverId = this.findServerId(servers, server);
 
       const rcp = await this.fetchRCP(serverId);
+      console.log(rcp);
 
       return rcp;
     } catch (error) {
