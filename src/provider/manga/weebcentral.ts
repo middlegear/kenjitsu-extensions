@@ -87,11 +87,11 @@ export class WeebCentral extends BaseClass {
         {
           headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
-            // 'HX-Request': 'true',
-            // 'HX-Trigger': 'quick-search-input',
-            // 'HX-Trigger-Name': 'text',
-            // 'HX-Target': 'quick-search-result',
-            // 'HX-Current-URL': `${this.baseUrl}/`,
+            'HX-Request': 'true',
+            'HX-Trigger': 'quick-search-input',
+            'HX-Trigger-Name': 'text',
+            'HX-Target': 'quick-search-result',
+            'HX-Current-URL': `${this.baseUrl}/`,
           },
         },
       );
