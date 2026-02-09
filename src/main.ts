@@ -41,6 +41,3 @@ export {
   type Seasons,
   type IAnimeCategory,
 };
-
-const data = await new WeebCentral().search('bleach');
-console.log(data);
