@@ -30,7 +30,7 @@ export default abstract class BaseAnimeMeta {
   constructor(provider: 'jikan' | 'anilist') {
     let delay = null;
     if (provider === 'jikan') {
-      delay = 700;
+      delay = 1000;
     } else {
       delay = 200;
     }
