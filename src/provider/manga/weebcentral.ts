@@ -13,8 +13,8 @@ export class WeebCentral extends BaseClass {
   }
   private client2 = new Impit({
     browser: 'firefox',
-    followRedirects: false,
-    http3: true, // We need the 'location' header for MP4
+    // followRedirects: false,
+    // http3: true, // We need the 'location' header for MP4
   });
 
   private parseSearch($: cheerio.CheerioAPI) {
@@ -112,7 +112,7 @@ export class WeebCentral extends BaseClass {
           'Sec-Fetch-Mode': 'cors',
           'Sec-Fetch-Site': 'same-origin',
 
-          Cookie: `cf_clearance=uyrmr_HZaIKY94zFrQpRRjMjaW4KKd44cIRmIFJv.m4-1770669724-1.2.1.1-XfkWoiZwP8puu5jbUOtxTl1w8UUlL34r8DSXkTWqB7SnjETI3.g8vkq8LGFybQ3RcOW0LaPm.DN1bVdSJXKXyhLUOg9pf1DXogr8yCr0En6R3qM66RATTYLxWR1RBCGl.p4XWpvlfMSsDzQXIc5xj.BmHh1Vkjll1GlTGraTlGuI9jicCuZc8QDou_T6rDJkuWTXtBBVLoZbmHuPjcFeMSGbvNt7g9u.6wOCNgdeGfU`,
+          // Cookie: `cf_clearance=uyrmr_HZaIKY94zFrQpRRjMjaW4KKd44cIRmIFJv.m4-1770669724-1.2.1.1-XfkWoiZwP8puu5jbUOtxTl1w8UUlL34r8DSXkTWqB7SnjETI3.g8vkq8LGFybQ3RcOW0LaPm.DN1bVdSJXKXyhLUOg9pf1DXogr8yCr0En6R3qM66RATTYLxWR1RBCGl.p4XWpvlfMSsDzQXIc5xj.BmHh1Vkjll1GlTGraTlGuI9jicCuZc8QDou_T6rDJkuWTXtBBVLoZbmHuPjcFeMSGbvNt7g9u.6wOCNgdeGfU`,
         },
       });
       const html = await response.text();
