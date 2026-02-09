@@ -87,6 +87,7 @@ export class WeebCentral extends BaseClass {
     try {
       const response = await this.client2.fetch(`${this.baseUrl}/search/simple?location=main`, {
         method: 'POST',
+        // Fetch expects body as a string for x-www-form-urlencoded
         body: new URLSearchParams({ text: query }).toString(),
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
@@ -95,10 +96,10 @@ export class WeebCentral extends BaseClass {
           'HX-Trigger-Name': 'text',
           'HX-Target': 'quick-search-result',
           'HX-Current-URL': `${this.baseUrl}/`,
+          Referer: `${this.baseUrl}/`,
+          Accept: '*/*',
         },
       });
-      const cookieArray = response.headers.getSetCookie();
-      console.log(cookieArray);
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
       const html = await response.text();
