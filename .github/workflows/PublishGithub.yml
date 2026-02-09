@@ -1,12 +1,12 @@
 name: Publish to GitHub Packages
 
 on:
-  workflow_dispatch: # ✅ manual trigger only
+  workflow_dispatch: 
 
 jobs:
   publish:
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' # ✅ only runs when dispatched on main
+    if: github.ref == 'refs/heads/main'
     steps:
       - uses: actions/checkout@v4
 
