@@ -1,12 +1,10 @@
 import { BaseClass } from '../models/base.js';
 import type { IVideoSource } from '../types/base.js';
 
-/// Massive thanks to  50/50  and https://github.com/AzartX47
 export class MegaUp extends BaseClass {
   /// i love kai
-  // private readonly tokenUrl: string = 'https://ilovekai.simplepostrequest.workers.dev/?ilovefeet=';
-  // private readonly decodeUrlIframe: string = 'https://ilovekai.simplepostrequest.workers.dev/?ilovearmpits=';
 
+  /// Massive thanks  https://github.com/AzartX47
   private readonly tokenUrl: string = 'https://enc-dec.app/api/enc-kai?text=';
   private readonly decodeUrlIframe: string = 'https://enc-dec.app/api/dec-kai?text=';
   private readonly decodeM3u8: string = 'https://enc-dec.app/api/dec-mega';

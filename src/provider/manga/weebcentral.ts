@@ -1,7 +1,7 @@
 import { BaseClass } from '../../models/base.js';
 import * as cheerio from 'cheerio';
 import type { IBase, IMangaSource, IResponse } from '../../types/base.js';
-import type { IComixInfo } from '../../types/manga/comix.js';
+import type { IMangaInfo } from '../../types/manga/comix.js';
 import type { IWMangaChapter } from '../../types/manga/weebcentral.js';
 
 export class WeebCentral extends BaseClass {
@@ -25,7 +25,7 @@ export class WeebCentral extends BaseClass {
   }
 
   private parseMangaInfo($: cheerio.CheerioAPI, mangaId: string) {
-    const info: IComixInfo = {
+    const info: IMangaInfo = {
       id: mangaId,
       name: $('section > h1.font-bold').text().trim() || null,
       posterImage:
@@ -66,11 +66,11 @@ export class WeebCentral extends BaseClass {
 
   private parseMangaPages($: cheerio.CheerioAPI) {
     const sources: IMangaSource[] = [];
-
     $('img').each((_, element) => {
       sources.push({
         url: $(element).attr('src') || null,
         page: $(element).attr('alt') ? parseInt($(element).attr('alt')?.match(/\d+/)?.[0] as string) : null,
+        hi: null,
       });
     });
 
@@ -109,7 +109,7 @@ export class WeebCentral extends BaseClass {
     }
   }
 
-  async fetchMangaInfo(id: string): Promise<IResponse<IComixInfo | null>> {
+  async fetchMangaInfo(id: string): Promise<IResponse<IMangaInfo | null>> {
     if (!id) {
       throw new Error('Missing required  param: id');
     }

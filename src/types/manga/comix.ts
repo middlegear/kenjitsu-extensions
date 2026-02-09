@@ -1,6 +1,6 @@
 import type { IBase } from '../base.js';
 
-export interface IComixManga extends IBase {
+export interface IManga extends IBase {
   anilistId?: number | null;
   malId?: number | null;
   volumes?: number | null;
@@ -8,7 +8,7 @@ export interface IComixManga extends IBase {
   altnames?: string[] | [];
 }
 
-export interface IComixInfo extends IComixManga {
+export interface IMangaInfo extends IManga {
   synopsis: string | null;
   status: string | null;
   genres: string[] | null;

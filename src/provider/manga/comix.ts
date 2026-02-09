@@ -3,7 +3,7 @@
 import { BaseClass } from '../../models/base.js';
 import type { IAKPaginated } from '../../types/anime/animekai.js';
 import type { IMangaSource, IResponse, ISourceBaseResponse } from '../../types/base.js';
-import type { IComixInfo, IComixManga, IMangaChapter } from '../../types/manga/comix.js';
+import type { IMangaInfo, IManga, IMangaChapter } from '../../types/manga/comix.js';
 import * as cheerio from 'cheerio';
 
 export class Comix extends BaseClass {
@@ -12,12 +12,17 @@ export class Comix extends BaseClass {
     super();
     this.baseUrl = baseUrl;
   }
-
+  /**
+   * Parses detailed manga information.
+   * @private
+   * @param {cheerio.CheerioAPI} $ - The Cheerio API instance for parsing HTML.
+   * @returns  An object containing parsed manga info.
+   */
   private parseMangaInfo($: cheerio.CheerioAPI) {
     const anilistId = $('.referrer a[href*="anilist.co"]').attr('href')?.match(/\d+/)?.[0] || null;
     const malId = $('.referrer a[href*="myanimelist.net"]').attr('href')?.match(/\d+/)?.[0] || null;
     const rawStatus = $('div.detail-top').find('span.status').text().trim();
-    const info: IComixInfo = {
+    const info: IMangaInfo = {
       id: $('.sharethis-inline-share-buttons').attr('data-url')?.split('/').at(-1) || null,
       name: $('h1.title').text().trim() || null,
       altnames:
@@ -46,7 +51,12 @@ export class Comix extends BaseClass {
 
     return { data: info };
   }
-
+  /**
+   * Parses manga url images.
+   * @private
+   * @param {cheerio.CheerioAPI} $ - The Cheerio API instance for parsing HTML.
+   * @returns  An array containing manga image urls.
+   */
   private parseMangaImages($: cheerio.CheerioAPI): IMangaSource[] {
     const sources: IMangaSource[] = [];
 
@@ -88,7 +98,12 @@ export class Comix extends BaseClass {
     return sources;
   }
 
-  async search(query: string): Promise<IAKPaginated<IComixManga[] | []>> {
+  /**
+   * Searches for manga based on a query string.
+   * @param query - The search query string.
+   * @returns A promise resolving to paginated manga search results.
+   */
+  async search(query: string): Promise<IAKPaginated<IManga[] | []>> {
     if (!query) {
       throw new Error('Missing required  param: query string');
     }
@@ -101,7 +116,7 @@ export class Comix extends BaseClass {
         throw new Error(response.statusText);
       }
 
-      const data: IComixManga[] = response.data.result.items.map((item: any) => ({
+      const data: IManga[] = response.data.result.items.map((item: any) => ({
         id: `${item.hash_id}-${item.slug}` || null,
         name: item.title ?? null,
         posterImage: item.poster.large ?? item.poster.medium ?? item.poster.small ?? null,
@@ -131,7 +146,12 @@ export class Comix extends BaseClass {
     }
   }
 
-  async fetchMangaInfo(id: string): Promise<IResponse<IComixInfo | null>> {
+  /**
+   * Fetches manga info using an id.
+   * @param id - The manga id string.
+   * @returns A promise resolving to an object containing  manga info results.
+   */
+  async fetchMangaInfo(id: string): Promise<IResponse<IMangaInfo | null>> {
     if (!id) {
       throw new Error('Missing required  param: id');
     }
@@ -151,6 +171,12 @@ export class Comix extends BaseClass {
       };
     }
   }
+
+  /**
+   * Fetches manga chapters using an id.
+   * @param id - The manga id string.
+   * @returns A promise resolving to an array containing manga chapter.
+   */
   async fetchMangaChapters(id: string): Promise<IResponse<IMangaChapter[] | []>> {
     if (!id) {
       throw new Error('Missing required param: id');
@@ -213,6 +239,11 @@ export class Comix extends BaseClass {
     }
   }
 
+  /**
+   * Fetches manga pages using a chapterid.
+   * @param id - The chpter id string.
+   * @returns A promise resolving to an array containing mangapages.
+   */
   async fetchChapterPages(id: string): Promise<ISourceBaseResponse<IMangaSource[] | []>> {
     if (!id) {
       throw new Error('Missing required  param: chapterId');

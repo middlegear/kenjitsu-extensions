@@ -516,24 +516,20 @@ export class Animepahe extends BaseClass {
       if (servers.error) throw new Error(servers.error);
       console.log(servers.download);
 
-      const serverIds = this.findServerIds(servers.download as IServerInfo, servers.data as IServerInfo, category);
+      const serverIds = this.findServerIds(servers.data as IServerInfo, servers.data as IServerInfo, category);
 
-      // 1. Map server IDs to an array of extraction promises
       const extractionPromises = serverIds.map(async s => {
         const url = new URL(s.serverId, this.baseUrl);
-        // Instantiate Kwik once per server or reuse a singleton if preferred
 
-        const result = await new Kwik().extractMP4(url, s.serverName, this.baseUrl);
+        const result = await new Kwik().extract(url, s.serverName, this.baseUrl);
         return result;
       });
 
-      // 2. Execute all extractions in parallel
       const results = await Promise.allSettled(extractionPromises);
 
       const fulfilled: IVideoSource[] = [];
       const rejectedReasons: string[] = [];
 
-      // 3. Separate results into fulfilled and rejected
       for (const result of results) {
         if (result.status === 'fulfilled' && result.value) {
           fulfilled.push(result.value);
@@ -542,7 +538,6 @@ export class Animepahe extends BaseClass {
         }
       }
 
-      // 4. Handle total failure
       if (fulfilled.length === 0 && rejectedReasons.length > 0) {
         throw new Error(`All extractions failed: ${rejectedReasons.join('; ')}`);
       }
@@ -554,9 +549,9 @@ export class Animepahe extends BaseClass {
         download: highestDownloadId || null,
       };
       //// changed from serverid to downloadId
-      // const firstServerOrigin = serverIds.length > 0 ? `${new URL(serverIds[0].serverId).origin}/` : null;
+      const firstServerOrigin = serverIds.length > 0 ? `${new URL(serverIds[0].serverId).origin}/` : null;
 
-      const firstServerOrigin = serverIds.length > 0 ? `${new URL(serverIds[0].downloadId as string).origin}/` : null;
+      // const firstServerOrigin = serverIds.length > 0 ? `${new URL(serverIds[0].downloadId as string).origin}/` : null;
       return {
         headers: { Referer: firstServerOrigin },
         data: merged,

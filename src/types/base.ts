@@ -81,4 +81,5 @@ export interface IHomeResSpecialPages {
 export interface IMangaSource {
   url: string | null;
   page: number | null;
+  [key: string]: unknown;
 }
