@@ -116,7 +116,7 @@ export class AllManga extends BaseClass {
       if (!response.data) {
         return { data: [], error: response.statusText };
       }
-      console.log(response.data.data.mangas.edges);
+
       const manga = response.data.data.mangas.edges.map((item: any) => ({
         id: `${this.createSlug(item.name || item.englishName || item.nativeName)}-${item._id}`,
         romaji: item.name,
@@ -125,7 +125,10 @@ export class AllManga extends BaseClass {
         posterImage: `https://wp.youtube-anime.com/aln.youtube-anime.com/${item.thumbnail}`,
         // slugTime: item.slugTime,
       }));
-      return manga;
+
+      return {
+        data: manga,
+      };
     } catch (error) {
       return {
         data: [],
