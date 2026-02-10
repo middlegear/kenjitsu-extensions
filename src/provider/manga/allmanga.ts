@@ -217,7 +217,7 @@ export class AllManga extends BaseClass {
   }
 
   async fetchMangaPages(id: string): Promise<ISourceBaseResponse<IMangaSource[] | []>> {
-    const match = id.match(/([a-z0-9]+)-chapter-(\d+)/i);
+    const match = id.match(/([a-z0-9]+)-chapter-(\d+(?:\.\d+)?)/i);
     if (!match) throw new Error('Invalid id format');
 
     const mangaId = `${match[1]}`;
@@ -238,6 +238,7 @@ export class AllManga extends BaseClass {
       if (!response.data) {
         throw Error(response.statusText);
       }
+      // console.log(response.data);
 
       const normalizedData = response.data.data.chapterPages.edges.flatMap((edge: any) =>
         edge.pictureUrls.map((pic: any) => ({
