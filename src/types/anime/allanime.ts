@@ -7,7 +7,7 @@ export interface IAllAnimeInfo extends IBase {
   score: number;
   genres: string[];
   synopsis: string;
-  studios: string[];
+  studios?: string[];
   status: string;
 }
 export interface IAllAnime extends IBase {

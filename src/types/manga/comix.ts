@@ -17,10 +17,11 @@ export interface IMangaInfo extends IManga {
 
 export interface IMangaChapter {
   chapterId: string | null;
-  official: boolean;
-  volume: string | null;
+  title?: string | null;
+  official?: boolean;
+  volume?: string | null;
   language: string | null;
   releaseDate: string | null;
-  scanlationGroup: string | null;
+  scanlationGroup?: string | null;
   chapterNumber: string | null;
 }

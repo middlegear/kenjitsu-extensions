@@ -10,6 +10,7 @@ import { Kaido } from './provider/anime/kaido.js';
 import { Anizone } from './provider/anime/anizone.js';
 import { AllAnime } from './provider/anime/allanime.js';
 import { Comix } from './provider/manga/comix.js';
+import { AllManga } from './provider/manga/allmanga.js';
 import { AkiH } from './provider/hanime/aki-h.js';
 import { HentaiTv } from './provider/hanime/hentaitv.js';
 import type { IMovieCountry, IMovieGenre } from './types/movies/movie.js';
@@ -32,6 +33,7 @@ export {
   AkiH,
   HentaiTv,
   Comix,
+  AllManga,
   type IMovieCountry,
   type IMovieGenre,
   type HIGenre,

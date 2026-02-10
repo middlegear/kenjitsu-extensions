@@ -222,7 +222,6 @@ export class AllAnime extends BaseClass {
       if (!response.data) {
         return { data: [], error: response.statusText };
       }
-      console.log(response.data.data);
 
       const anime: IAllAnime[] = response.data.data.shows.edges.map((item: any) => ({
         id: `${this.createSlug(item.name || item.englishName || item.nativeName)}-${item._id}`,
