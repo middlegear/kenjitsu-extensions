@@ -600,14 +600,20 @@ export class Anilist extends BaseAnimeMeta {
   }
 
   /**
-   * Searches for anime based on the provided query string.
+   * Searches for media based on the provided query string.
    *
    * @param search - The search query string (required)
+   * @param mediaType - Type of media: 'ANIME'  or 'MANGA'
    * @param page - The page number for pagination (optional, defaults to 1)
    * @param perPage - The number of results per page (optional, defaults to 20)
    * @returns Promise that resolves to paginated search results containing anime data
    */
-  async search(search: string, page: number = 1, perPage: number = 20): Promise<IMetaAnimePaginated<IMetaAnime[] | []>> {
+  async search(
+    search: string,
+    mediaType: 'ANIME' | 'MANGA' = 'ANIME',
+    page: number = 1,
+    perPage: number = 20,
+  ): Promise<IMetaAnimePaginated<IMetaAnime[] | []>> {
     if (!search) {
       return {
         hasNextPage: false,
@@ -620,7 +626,7 @@ export class Anilist extends BaseAnimeMeta {
     }
 
     try {
-      const variables = { search, page, perPage, type: 'ANIME', isAdult: false };
+      const variables = { search, page, perPage, type: mediaType, isAdult: false };
       const response = await this.client.post(this.baseUrl, {
         query: searchQuery,
         variables,
@@ -687,12 +693,18 @@ export class Anilist extends BaseAnimeMeta {
         producers: item.studios.nodes.map((item2: any) => item2.name),
       }));
 
+      let items: IMetaAnime[] = res;
+
+      if (mediaType === 'MANGA') {
+        items = res.filter((item: { format: string }) => item.format === 'MANGA');
+      }
+
       return {
         hasNextPage: pagination.hasNextPage,
         currentPage: pagination.currentPage,
         lastPage: pagination.lastPage,
         perPage: pagination.perPage,
-        data: res as IMetaAnime[],
+        data: items,
       };
     } catch (error) {
       return {
@@ -707,9 +719,10 @@ export class Anilist extends BaseAnimeMeta {
   }
 
   /**
-   * Fetches detailed information about a specific anime using its Anilist ID.
+   * Fetches detailed information about a specific media using its Anilist ID.
    *
    * @param id - The unique Anilist anime ID (required)
+   * @param mediaType - Type of media: 'ANIME'  or 'MANGA'
    * @returns Promise that resolves to detailed anime information
    */
   async fetchInfo(id: number): Promise<IResponse<IMetaAnime | null>> {

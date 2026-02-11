@@ -403,34 +403,20 @@ export class Animepahe extends BaseClass {
   /**
    * Fetches episode data for a specific anime.
    * @param {string} animeId - The unique identifier for the anime (required).
-   * @returns  A promise that resolves to an object containing an array of episode information or an error message.
+   * @returns A promise that resolves to an object containing an array of episode information or an error message.
    */
-
   async fetchEpisodes(animeId: string): Promise<IResponse<IPaheEpisodes[] | []>> {
     if (!animeId) {
       throw new Error('Missing required params: animeid');
     }
+
     try {
       const releaseRes = await this.client.get(`${this.baseUrl}/api?m=release&id=${animeId}&sort=episode_asc&page=1`, {
         headers: this.headers(animeId),
       });
 
       const last_page = releaseRes.data?.last_page ?? 1;
-      const episodesList = releaseRes.data?.data ?? [];
-
-      let episodes = episodesList.map((item: any) => ({
-        episodeId: `pahe-${animeId}-$session$-${item.session}`,
-        episodeNumber: item.episode || null,
-        title: item.title || null,
-        thumbnail: item.snapshot || null,
-      }));
-
-      if (episodes.length === 0) {
-        return {
-          data: [],
-          error: 'No episodes found',
-        };
-      }
+      let episodes: any[] = releaseRes.data?.data ?? [];
 
       if (last_page > 1) {
         const pageRequests = [];
@@ -443,24 +429,56 @@ export class Animepahe extends BaseClass {
         }
 
         const responses = await Promise.all(pageRequests);
-
         for (const res of responses) {
-          episodes.push(
-            ...res.data.data.map((item: any) => ({
-              episodeId: `pahe-${animeId}-$session$-${item.session}`,
-              episodeNumber: item.episode || null,
-              title: item.title || null,
-              thumbnail: item.snapshot || null,
-              // duration: item.duration,
-              // url: `${this.baseUrl}/play/${id}/${item.session}`,
-            })),
-          );
+          episodes.push(...(res.data.data ?? []));
         }
       }
 
-      return { data: episodes as IPaheEpisodes[] };
+      if (episodes.length === 0) {
+        return {
+          data: [],
+          error: 'No episodes found',
+        };
+      }
+
+      let formattedEpisodes = episodes.map((item: any) => ({
+        episodeId: `pahe-${animeId}-$session$-${item.session}`,
+        originalEpisodeNumber: item.episode ?? null,
+        episodeNumber: item.episode ?? null,
+        title: item.title || null,
+        thumbnail: item.snapshot || null,
+        // duration: item.duration,
+        // url: `${this.baseUrl}/play/${animeId}/${item.session}`,
+      }));
+
+      formattedEpisodes.sort((a, b) => {
+        const numA = a.originalEpisodeNumber ?? Infinity;
+        const numB = b.originalEpisodeNumber ?? Infinity;
+        return numA - numB;
+      });
+
+      // Re-assign clean episode numbers starting from 1
+      formattedEpisodes = formattedEpisodes.map((ep, index) => ({
+        ...ep,
+        episodeNumber: index + 1,
+      }));
+
+      // Optional: if you want to exclude obvious specials (e.g. episode 0 or negative)
+      formattedEpisodes = formattedEpisodes.filter(ep => ep.originalEpisodeNumber == null || ep.originalEpisodeNumber > 0);
+      // Then re-number again if you filtered:
+      formattedEpisodes = formattedEpisodes.map((ep, index) => ({
+        ...ep,
+        episodeNumber: index + 1,
+      }));
+
+      return {
+        data: formattedEpisodes as IPaheEpisodes[],
+      };
     } catch (error) {
-      return { error: error instanceof Error ? error.message : 'Unknown Error', data: [] };
+      return {
+        error: error instanceof Error ? error.message : 'Unknown Error',
+        data: [],
+      };
     }
   }
 

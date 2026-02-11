@@ -41,8 +41,5 @@ export {
   type Seasons,
   type IAnimeCategory,
 };
-
-// const data = await new AllManga().fetchMangaPages(
-//   'sshun-de-chiryou-shiteita-noni-yakutatazu-to-tsuihou-sareta-tensai-chiyushi-yami-healer-toshite-tanoshiku-ikiru-6vpLRH9dMRGad3C5B-chapter-30.1',
-// );
+// const data = await new Animepahe().fetchEpisodes('44302c02-ac39-d56b-1bf4-a7e9628f9c8d');
 // console.log(data);
