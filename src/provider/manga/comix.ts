@@ -13,10 +13,11 @@ export class Comix extends BaseClass {
     this.baseUrl = baseUrl;
   }
   /**
-   * Parses detailed manga information.
+   * Parses detailed manga metadata from the manga title page HTML.
+   *
    * @private
-   * @param {cheerio.CheerioAPI} $ - The Cheerio API instance for parsing HTML.
-   * @returns  An object containing parsed manga info.
+   * @param $ - Cheerio instance loaded with the manga title page HTML
+   * @returns Object containing parsed manga information
    */
   private parseMangaInfo($: cheerio.CheerioAPI) {
     const anilistId = $('.referrer a[href*="anilist.co"]').attr('href')?.match(/\d+/)?.[0] || null;
@@ -51,11 +52,14 @@ export class Comix extends BaseClass {
 
     return { data: info };
   }
+
   /**
-   * Parses manga url images.
+   * Extracts image URLs and page numbers for a manga chapter from embedded script data.
+   *
    * @private
-   * @param {cheerio.CheerioAPI} $ - The Cheerio API instance for parsing HTML.
-   * @returns  An array containing manga image urls.
+   * @param $ - Cheerio instance loaded with the chapter page HTML
+   * @returns Array of manga page sources (image URLs + page numbers)
+   * @throws Error if no valid images could be extracted
    */
   private parseMangaImages($: cheerio.CheerioAPI): IMangaSource[] {
     const sources: IMangaSource[] = [];
@@ -99,9 +103,11 @@ export class Comix extends BaseClass {
   }
 
   /**
-   * Searches for manga based on a query string.
-   * @param query - The search query string.
-   * @returns A promise resolving to paginated manga search results.
+   * Searches for manga titles using a keyword/query string.
+   *
+   * @param query - Search term / keyword (required)
+   * @returns Paginated search results with basic manga metadata
+   * @throws Error if query is empty or missing
    */
   async search(query: string): Promise<IAKPaginated<IManga[] | []>> {
     if (!query) {
@@ -147,9 +153,11 @@ export class Comix extends BaseClass {
   }
 
   /**
-   * Fetches manga info using an id.
-   * @param id - The manga id string.
-   * @returns A promise resolving to an object containing  manga info results.
+   * Fetches detailed information about a manga title using its identifier.
+   *
+   * @param id - Manga identifier (usually in format hash-slug or similar) (required)
+   * @returns Detailed manga metadata or error
+   * @throws Error if id is missing
    */
   async fetchMangaInfo(id: string): Promise<IResponse<IMangaInfo | null>> {
     if (!id) {
@@ -173,9 +181,12 @@ export class Comix extends BaseClass {
   }
 
   /**
-   * Fetches manga chapters using an id.
-   * @param id - The manga id string.
-   * @returns A promise resolving to an array containing manga chapter.
+   * Retrieves all available chapters for a manga title.
+   * Paginates through the API until all chapters are collected.
+   *
+   * @param id - Manga identifier (required)
+   * @returns List of chapter metadata (chapter number, title, volume, scan group, etc.)
+   * @throws Error if id is missing
    */
   async fetchMangaChapters(id: string): Promise<IResponse<IMangaChapter[] | []>> {
     if (!id) {
@@ -240,9 +251,11 @@ export class Comix extends BaseClass {
   }
 
   /**
-   * Fetches manga pages using a chapterid.
-   * @param id - The chpter id string.
-   * @returns A promise resolving to an array containing mangapages.
+   * Fetches all readable pages (image sources) for a specific manga chapter.
+   *
+   * @param id - Chapter identifier string (required)
+   * @returns Object containing image sources array and recommended request headers (Referer)
+   * @throws Error if chapter id is missing
    */
   async fetchChapterPages(id: string): Promise<ISourceBaseResponse<IMangaSource[] | []>> {
     if (!id) {

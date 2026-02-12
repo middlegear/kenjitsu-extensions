@@ -92,7 +92,16 @@ export class AllManga extends BaseClass {
     }
 `;
 
+  /**
+   * Searches for manga titles using a keyword or phrase.
+   *
+   * @param query - Search term / keyword (required)
+   * @returns Basic manga list (id, titles, poster) or error
+   */
   async search(query: string): Promise<IResponse<IAllAnime[] | []>> {
+    if (!query) {
+      throw new Error('Missing required params: query string ');
+    }
     const payload = {
       variables: {
         search: {
@@ -138,14 +147,14 @@ export class AllManga extends BaseClass {
   }
 
   /**
-     * Fetches anime details for a specific anime by its ID.
-     * @param id - The ID of the anime show.
-     * @returns A promise resolving to a anime info or an error.
-    
-     */
+   * Fetches detailed metadata for a specific manga using its composite ID.
+   *
+   * @param id - Manga identifier (usually slug-_id format) (required)
+   * @returns Detailed manga information (titles, synopsis, genres, score, status, etc.) or error
+   */
   async fetchMangaInfo(id: string) {
-    if (id.length === 0) {
-      throw new Error('id cannot be empty.');
+    if (!id) {
+      throw new Error('Missing required params:Id ');
     }
     const buildPayload = (query: string, variables: object) => ({
       query,
@@ -179,9 +188,16 @@ export class AllManga extends BaseClass {
     }
   }
 
+  /**
+   * Retrieves all available chapters for a manga.
+   * Uses a wide chapter range (0–9999) to fetch everything in one request.
+   *
+   * @param id - Manga identifier (required)
+   * @returns List of chapters (chapter number, title/notes, upload date) sorted descending
+   */
   async fetchMangaChapters(id: string): Promise<IResponse<IMangaChapter[] | []>> {
-    if (id.length === 0) {
-      throw new Error('id cannot be empty.');
+    if (!id) {
+      throw new Error('Missing required params:Id ');
     }
     const buildPayload = (query: string, variables: object) => ({
       query,
@@ -201,13 +217,16 @@ export class AllManga extends BaseClass {
         return { error: response.statusText || 'No episodes available.', data: [] };
       }
 
-      const data = response.data.data.episodeInfos.map((item: any) => ({
-        chapterId: `${id}-chapter-${item.episodeIdNum}`,
-        chapterNumber: item.episodeIdNum,
-        title: item.notes,
-        releaseDate: item.uploadDates.sub,
-      }));
-      return { data: data.reverse() };
+      const chapters = response.data.data.episodeInfos
+        .map((item: any) => ({
+          chapterId: `${id}-chapter-${item.episodeIdNum}`,
+          chapterNumber: parseFloat(item.episodeIdNum),
+          title: item.notes,
+          releaseDate: item.uploadDates?.sub,
+        }))
+        .sort((a: { chapterNumber: number }, b: { chapterNumber: number }) => a.chapterNumber - b.chapterNumber);
+
+      return { data: chapters };
     } catch (error) {
       return {
         error: error instanceof Error ? error.message : 'Unknown Error',
@@ -216,7 +235,17 @@ export class AllManga extends BaseClass {
     }
   }
 
+  /**
+   * Fetches all readable pages (image sources) for a specific manga chapter.
+   *
+   * @param id - Chapter identifier in format {manga-slug-or-id}-chapter-{number} (required)
+   * @returns Object containing array of page sources (url + page number) and recommended Referer header
+   
+   */
   async fetchMangaPages(id: string): Promise<ISourceBaseResponse<IMangaSource[] | []>> {
+    if (!id) {
+      throw new Error('Missing required params: chapterId ');
+    }
     const match = id.match(/([a-z0-9]+)-chapter-(\d+(?:\.\d+)?)/i);
     if (!match) throw new Error('Invalid id format');
 

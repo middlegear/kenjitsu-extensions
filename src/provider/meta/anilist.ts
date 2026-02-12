@@ -43,11 +43,10 @@ export class Anilist extends BaseAnimeMeta {
   private readonly mappingUrl: string = 'https://kenjitsu-mapper.vercel.app';
 
   /**
-   * Maps Anilist anime data to HiAnime (Zoro) provider ID.
+   * Maps an Anilist anime ID to the corresponding HiAnime (Zoro / Kaido) provider ID.
    *
-   * @private
-   * @param anilistId - The Anilist ID of the anime
-   * @returns Promise resolving to provider mapping data
+   * @param anilistId - Anilist media ID (required)
+   * @returns Provider mapping result including Anilist metadata and provider-specific ID (if found)
    */
   async fetchZoroProviderId(anilistId: number): Promise<IMetaProviderIdResponse<IMetaAnime | null>> {
     if (!anilistId) {
@@ -60,7 +59,7 @@ export class Anilist extends BaseAnimeMeta {
 
     try {
       const [anilistSettled, zoroSettled] = await Promise.allSettled([
-        this.fetchInfo(anilistId),
+        this.fetchInfo(anilistId, 'ANIME'),
         this.client.get(`${this.mappingUrl}/api/mappings/anilist/${anilistId}?provider=hianime`),
       ]);
 
@@ -89,11 +88,10 @@ export class Anilist extends BaseAnimeMeta {
   }
 
   /**
-   * Maps Anilist anime data to Anizone provider ID.
+   * Maps an Anilist anime ID to the corresponding Anizone provider ID.
    *
-   * @private
-   * @param anilistId - The Anilist ID of the anime
-   * @returns Promise resolving to provider mapping data
+   * @param anilistId - Anilist media ID (required)
+   * @returns Provider mapping result including Anilist metadata and provider-specific ID (if found)
    */
   async fetchAnizoneProviderId(anilistId: number): Promise<IMetaProviderIdResponse<IMetaAnime | null>> {
     if (!anilistId) {
@@ -106,7 +104,7 @@ export class Anilist extends BaseAnimeMeta {
 
     try {
       const [anilist, anizone] = await Promise.allSettled([
-        this.fetchInfo(anilistId),
+        this.fetchInfo(anilistId, 'ANIME'),
         this.client.get(`${this.mappingUrl}/api/mappings/anilist/${anilistId}?provider=anizone`),
       ]);
 
@@ -133,12 +131,12 @@ export class Anilist extends BaseAnimeMeta {
       };
     }
   }
+
   /**
-   * Maps Anilist anime data to AllAnime provider ID.
+   * Maps an Anilist anime ID to the corresponding AllAnime provider ID.
    *
-   * @private
-   * @param anilistId - The Anilist ID of the anime
-   * @returns Promise resolving to provider mapping data
+   * @param anilistId - Anilist media ID (required)
+   * @returns Provider mapping result including Anilist metadata and provider-specific ID (if found)
    */
   async fetchAllAnimeProviderId(anilistId: number): Promise<IMetaProviderIdResponse<IMetaAnime | null>> {
     if (!anilistId) {
@@ -151,7 +149,7 @@ export class Anilist extends BaseAnimeMeta {
 
     try {
       const [anilist, allanime] = await Promise.allSettled([
-        this.fetchInfo(anilistId),
+        this.fetchInfo(anilistId, 'ANIME'),
         this.client.get(`${this.mappingUrl}/api/mappings/anilist/${anilistId}?provider=allanime`),
       ]);
 
@@ -180,11 +178,10 @@ export class Anilist extends BaseAnimeMeta {
   }
 
   /**
-   * Maps Anilist anime data to AnimePahe provider ID.
+   * Maps an Anilist anime ID to the corresponding AnimePahe provider ID.
    *
-   * @private
-   * @param anilistId - The Anilist ID of the anime
-   * @returns Promise resolving to provider mapping data
+   * @param anilistId - Anilist media ID (required)
+   * @returns Provider mapping result including Anilist metadata and provider-specific ID (if found)
    */
   async fetchAnimepaheProviderId(anilistId: number): Promise<IMetaProviderIdResponse<IMetaAnime | null>> {
     if (!anilistId) {
@@ -197,7 +194,7 @@ export class Anilist extends BaseAnimeMeta {
 
     try {
       const [anilist, animepahe] = await Promise.allSettled([
-        this.fetchInfo(anilistId),
+        this.fetchInfo(anilistId, 'ANIME'),
         this.client.get(`${this.mappingUrl}/api/mappings/anilist/${anilistId}?provider=animepahe`),
       ]);
 
@@ -225,11 +222,10 @@ export class Anilist extends BaseAnimeMeta {
     }
   }
   /**
-   * Maps Anilist anime data to AnimeKai provider ID.
+   * Maps an Anilist anime ID to the corresponding AnimeKai provider ID.
    *
-   * @private
-   * @param anilistId - The Anilist ID of the anime
-   * @returns Promise resolving to provider mapping data
+   * @param anilistId - Anilist media ID (required)
+   * @returns Provider mapping result including Anilist metadata and provider-specific ID (if found)
    */
   async fetchAnimeKaiProviderId(anilistId: number): Promise<IMetaProviderIdResponse<IMetaAnime | null>> {
     if (!anilistId) {
@@ -242,7 +238,7 @@ export class Anilist extends BaseAnimeMeta {
 
     try {
       const [anilist, animekai] = await Promise.allSettled([
-        this.fetchInfo(anilistId),
+        this.fetchInfo(anilistId, 'ANIME'),
         this.client.get(`${this.mappingUrl}/api/mappings/anilist/${anilistId}?provider=animekai`),
       ]);
 
@@ -271,11 +267,10 @@ export class Anilist extends BaseAnimeMeta {
   }
 
   /**
-   * Fetches episodes from AllAnime provider and enriches with Anizip data.
+   * Fetches episode list from AllAnime provider and enriches episodes with Anizip metadata (titles, thumbnails, etc.).
    *
-   * @private
-   * @param anilistId - The Anilist ID of the anime
-   * @returns Promise resolving to episode data enriched with additional metadata
+   * @param anilistId - Anilist media ID (required)
+   * @returns Enriched episode list from AllAnime + Anilist base data
    */
   async fetchAllAnimeProviderEpisodes(anilistId: number): Promise<IMetaProviderEpisodesResponse<IMetaAnime | null>> {
     if (!anilistId) {
@@ -331,12 +326,12 @@ export class Anilist extends BaseAnimeMeta {
       };
     }
   }
+
   /**
-   * Fetches episodes from AllAnime provider and enriches with Anizip data.
+   * Fetches episode list from Anizone provider and enriches episodes with Anizip metadata (titles, thumbnails, etc.).
    *
-   * @private
-   * @param anilistId - The Anilist ID of the anime
-   * @returns Promise resolving to episode data enriched with additional metadata
+   * @param anilistId - Anilist media ID (required)
+   * @returns Enriched episode list from Anizone + Anilist base data
    */
   async fetchAnizoneProviderEpisodes(anilistId: number): Promise<IMetaProviderEpisodesResponse<IMetaAnime | null>> {
     if (!anilistId) {
@@ -397,11 +392,10 @@ export class Anilist extends BaseAnimeMeta {
   }
 
   /**
-   * Fetches episodes from HiAnime (Zoro) provider and enriches with Anizip data.
+   * Fetches episode list from HiAnime (Zoro / Kaido) provider and enriches episodes with Anizip metadata.
    *
-   * @private
-   * @param anilistId - The Anilist ID of the anime
-   * @returns Promise resolving to episode data enriched with additional metadata
+   * @param anilistId - Anilist media ID (required)
+   * @returns Enriched episode list from HiAnime + Anilist base data
    */
   async fetchZoroProviderEpisodes(anilistId: number): Promise<IMetaProviderEpisodesResponse<IMetaAnime | null>> {
     if (!anilistId) {
@@ -459,12 +453,12 @@ export class Anilist extends BaseAnimeMeta {
       };
     }
   }
+
   /**
-   * Fetches episodes from Animekai provider and enriches with Anizip data.
+   * Fetches episode list from AnimeKai provider and enriches episodes with Anizip metadata.
    *
-   *
-   * @param anilistId - The Anilist ID of the anime
-   * @returns Promise resolving to episode data enriched with additional metadata
+   * @param anilistId - Anilist media ID (required)
+   * @returns Enriched episode list from AnimeKai + Anilist base data
    */
   async fetchAnimeKaiProviderEpisodes(anilistId: number): Promise<IMetaProviderEpisodesResponse<IMetaAnime | null>> {
     if (!anilistId) {
@@ -526,11 +520,10 @@ export class Anilist extends BaseAnimeMeta {
   }
 
   /**
-   * Fetches episodes from AnimePahe provider and enriches with Anizip data.
+   * Fetches episode list from AnimePahe provider and enriches episodes with Anizip metadata.
    *
-   *
-   * @param anilistId - The Anilist ID of the anime
-   * @returns Promise resolving to episode data enriched with additional metadata
+   * @param anilistId - Anilist media ID (required)
+   * @returns Enriched episode list from AnimePahe + Anilist base data
    */
   async fetchAnimePaheProviderEpisodes(anilistId: number): Promise<IMetaProviderEpisodesResponse<IMetaAnime | null>> {
     if (!anilistId) {
@@ -600,17 +593,18 @@ export class Anilist extends BaseAnimeMeta {
   }
 
   /**
-   * Searches for media based on the provided query string.
+   * Searches for anime or manga using a query string.
    *
-   * @param search - The search query string (required)
-   * @param mediaType - Type of media: 'ANIME'  or 'MANGA'
-   * @param page - The page number for pagination (optional, defaults to 1)
-   * @param perPage - The number of results per page (optional, defaults to 20)
-   * @returns Promise that resolves to paginated search results containing anime data
+   * @param search - Search term / keyword (required)
+   * @param mediaType - Type of media to search for
+   * @param mediaType - `'ANIME'` or `'MANGA'`
+   * @param [page=1] - Page number (1-based)
+   * @param [perPage=20] - Results per page
+   * @returns Paginated search results with media entries
    */
   async search(
     search: string,
-    mediaType: 'ANIME' | 'MANGA' = 'ANIME',
+    mediaType: 'ANIME' | 'MANGA',
     page: number = 1,
     perPage: number = 20,
   ): Promise<IMetaAnimePaginated<IMetaAnime[] | []>> {
@@ -719,13 +713,14 @@ export class Anilist extends BaseAnimeMeta {
   }
 
   /**
-   * Fetches detailed information about a specific media using its Anilist ID.
+   * Fetches detailed metadata for a single anime or manga entry by its Anilist ID.
    *
-   * @param id - The unique Anilist anime ID (required)
-   * @param mediaType - Type of media: 'ANIME'  or 'MANGA'
-   * @returns Promise that resolves to detailed anime information
+   * @param id - Anilist media ID (required)
+   * @param mediaType - Type of media
+   * @param mediaType - `'ANIME'` or `'MANGA'`
+   * @returns Detailed media information or error
    */
-  async fetchInfo(id: number): Promise<IResponse<IMetaAnime | null>> {
+  async fetchInfo(id: number, mediaType: 'ANIME' | 'MANGA'): Promise<IResponse<IMetaAnime | null>> {
     if (!id) {
       return {
         error: 'Missing required parameter : Anilistid!',
@@ -733,7 +728,7 @@ export class Anilist extends BaseAnimeMeta {
       };
     }
 
-    const variables = { id };
+    const variables = { id, type: mediaType };
 
     try {
       const response = await this.client.post(this.baseUrl, {
@@ -832,11 +827,12 @@ export class Anilist extends BaseAnimeMeta {
   async fetchTopUpcoming(
     page: number = 1,
     perPage: number = 20,
-    sort: 'SCORE_DESC' | 'POPULARITY_DESC' = 'POPULARITY_DESC',
+    sort: 'TRENDING_DESC' | 'SCORE_DESC' | 'POPULARITY_DESC' = 'POPULARITY_DESC',
     status: 'NOT_YET_RELEASED' | 'RELEASING' = 'NOT_YET_RELEASED',
+    format: IMetaFormat = 'TV',
   ): Promise<IMetaAnimePaginated<IMetaAnime[] | []>> {
     try {
-      const variables = { page, perPage, type: 'ANIME', status, isAdult: false, sort };
+      const variables = { page, perPage, type: 'ANIME', format, status, isAdult: false, sort };
       const response = await this.client.post(this.baseUrl, {
         query: topQuery,
         variables,
@@ -913,34 +909,39 @@ export class Anilist extends BaseAnimeMeta {
    *
    * @param page - The page number for pagination (optional, defaults to 1)
    * @param perPage - The number of results per page (optional, defaults to 20)
-   * @param sort - The sorting order for results (optional, defaults to POPULARITY_DESC)
+   * @param sort - The sorting order for results (optional, defaults to SCORE_DESC)
    * @returns Promise that resolves to paginated list of airing anime
    */
   async fetchTopAiring(
     page: number = 1,
     perPage: number = 20,
-    sort: 'SCORE_DESC' | 'POPULARITY_DESC' = 'POPULARITY_DESC',
-    status: 'NOT_YET_RELEASED' | 'RELEASING' = 'RELEASING',
+    sort: 'SCORE_DESC' = 'SCORE_DESC',
+    status: 'RELEASING' = 'RELEASING',
   ): Promise<IMetaAnimePaginated<IMetaAnime[] | []>> {
     return this.fetchTopUpcoming(page, perPage, sort, status);
   }
 
   /**
-   * Fetches a list of the most popular anime.
+   * Fetches a list of the most popular media
    *
-   * @param page - The page number for pagination (optional, defaults to 1)
-   * @param perPage - The number of results per page (optional, defaults to 20)
-   * @param format - The anime format to filter by (optional, defaults to TV)
-   * @returns Promise that resolves to paginated list of popular anime
+   * @param {('ANIME' | 'MANGA')} mediaType - The type of media to fetch
+   * @param {string} [format] - The format to filter by
+   *           - When `mediaType` is `'ANIME'`: `'TV' | 'MOVIE' | 'SPECIAL' | 'OVA' | 'ONA' | 'MUSIC'`
+   *           - When `mediaType` is `'MANGA'`: `'MANGA'`
+   * @param {number} [page=1] - Page number for pagination.
+   * @param {number} [perPage=20] - Number of items per page
+   * @returns {Promise<Object>} Promise that resolves to a paginated response containing popular media
+   *
    */
   async fetchMostPopular(
+    mediaType: 'ANIME' | 'MANGA',
+    format: IMetaFormat,
     page: number = 1,
     perPage: number = 20,
-    format: IMetaFormat = 'TV',
     sort: 'SCORE_DESC' | 'POPULARITY_DESC' = 'POPULARITY_DESC',
   ): Promise<IMetaAnimePaginated<IMetaAnime[] | []>> {
     try {
-      const variables = { page, perPage, type: 'ANIME', format, isAdult: false, sort };
+      const variables = { page, perPage, type: mediaType, format, isAdult: false, sort };
       const response = await this.client.post(this.baseUrl, {
         query: popularAnimeQuery,
         variables,
@@ -1026,32 +1027,38 @@ export class Anilist extends BaseAnimeMeta {
   }
 
   /**
-   * Fetches a list of the top-rated anime.
+   * Fetches a list of top rated media
    *
-   * @param page - The page number for pagination (optional, defaults to 1)
-   * @param perPage - The number of results per page (optional, defaults to 20)
-   * @param format - The anime format to filter by (optional, defaults to TV)
-
-   * @returns Promise that resolves to paginated list of top-rated anime
+   * @param {('ANIME' | 'MANGA')} mediaType - The type of media to fetch
+   * @param {string} [format] - The format to filter by
+   *           - When `mediaType` is `'ANIME'`: `'TV' | 'MOVIE' | 'SPECIAL' | 'OVA' | 'ONA' | 'MUSIC'`
+   *           - When `mediaType` is `'MANGA'`: `'MANGA'`
+   * @param {number} [page=1] - Page number for pagination.
+   * @param {number} [perPage=20] - Number of items per page
+   * @returns {Promise<Object>} Promise that resolves to a paginated response containing popular media
+   *
    */
-  async fetchTopRatedAnime(
+  async fetchTopRated(
+    mediaType: 'ANIME' | 'MANGA',
+    format: IMetaFormat,
     page: number = 1,
     perPage: number = 20,
-    format: IMetaFormat = 'TV',
     sort: 'SCORE_DESC' | 'POPULARITY_DESC' = 'SCORE_DESC',
   ): Promise<IMetaAnimePaginated<IMetaAnime[] | []>> {
-    return this.fetchMostPopular(page, perPage, format, sort);
+    return this.fetchMostPopular(mediaType, format, page, perPage, sort);
   }
 
   /**
-   * Fetches seasonal anime for a given year and season.
+   * Fetches a paginated list of anime released in a specific season and year.
    *
-   * @param season - The target season (e.g., WINTER, SPRING, SUMMER, FALL) (required)
-   * @param seasonYear - The target year (e.g., 2023, 2024) (required)
-   * @param page - The page number for pagination (optional, defaults to 1)
-   * @param perPage - The number of results per page (optional, defaults to 20)
-   * @param format - The anime format to filter by (optional, defaults to TV)
-   * @returns Promise that resolves to paginated list of seasonal anime
+   * @param season - Anime season to query
+   * @param season - `'WINTER' | 'SPRING' | 'SUMMER' | 'FALL'`
+   * @param seasonYear - The year of the season (e.g. 2023, 2024, 2025)
+   * @param [page=1] - Page number (1-based pagination)
+   * @param [perPage=20] - Number of results per page
+   * @param [format='TV'] - Format filter for the anime
+   * @param format - `'TV' | 'MOVIE' | 'OVA' | 'ONA' | 'SPECIAL' | 'MUSIC'`
+   * @returns Promise resolving to a paginated list of seasonal anime entries
    */
   async fetchSeasonalAnime(
     season: Seasons,
@@ -1168,16 +1175,30 @@ export class Anilist extends BaseAnimeMeta {
   }
 
   /**
-   * Fetches a list of currently trending anime.
+   * Fetches a paginated list of currently trending media (anime or manga),
+   * typically ordered by recent popularity, trending score, or user activity.
    *
-   * @param page - The page number for pagination (optional, defaults to 1)
-   * @param perPage - The number of results per page (optional, defaults to 20)
-   * @returns Promise that resolves to paginated list of trending anime
+   * @param mediaType - Type of media to fetch
+   * @param mediaType - `'ANIME'` or `'MANGA'`
+   * @param format - Format filter to apply
+   * @param format - For ANIME: `'TV' | 'MOVIE' | 'OVA' | 'ONA' | 'SPECIAL' | 'MUSIC'`
+   * @param format - For MANGA: `'MANGA' | 'NOVEL' | 'ONE_SHOT' | 'LIGHT_NOVEL'`
+   * @param [page=1] - Page number for pagination (1-based)
+   * @param [perPage=20] - Number of items per page
+   * @returns Promise resolving to paginated list of trending media entries
+   *
    */
-  async fetchTrending(page: number = 1, perPage: number = 20): Promise<IMetaAnimePaginated<IMetaAnime[] | []>> {
+  async fetchTrending(
+    mediaType: 'ANIME' | 'MANGA',
+    format: IMetaFormat,
+    page: number = 1,
+    perPage: number = 20,
+  ): Promise<IMetaAnimePaginated<IMetaAnime[] | []>> {
     const variables = {
       page,
       perPage,
+      type: mediaType,
+      format,
     };
 
     try {
@@ -1587,131 +1608,4 @@ export class Anilist extends BaseAnimeMeta {
       };
     }
   }
-
-  // /**
-  //  * Fetches anime information along with a provider-specific anime ID.
-  //  *
-  //  * @param anilistId - The unique Anilist anime ID (required)
-  //  * @param provider - The anime provider to fetch data from (optional, defaults to HiAnime)
-  //  * @returns Promise that resolves to provider-specific anime ID and core anime info
-  //  */
-  // async fetchProviderId(
-  //   anilistId: number,
-  //   provider: Provider = 'hianime',
-  // ): Promise<IMetaProviderIdResponse<IMetaAnime | null>> {
-  //   if (!anilistId) {
-  //     return {
-  //       error: 'Invalid or missing required parameter: anilistId!',
-  //       data: null,
-  //       provider: null,
-  //     };
-  //   }
-
-  //   try {
-  //     switch (provider) {
-  //       case 'hianime':
-  //         const zoro = await this.fetchZoroProviderId(anilistId);
-  //         if ('error' in zoro) {
-  //           throw new Error(zoro.error);
-  //         }
-  //         return { data: zoro.data, provider: zoro.provider };
-
-  //       case 'allanime':
-  //         const allanime = await this.fetchAllAnimeProviderId(anilistId);
-  //         if ('error ' in allanime) {
-  //           throw new Error(allanime.error);
-  //         }
-  //         return { data: allanime.data, provider: allanime.provider };
-
-  //       case 'animepahe':
-  //         const animepahe = await this.fetchAnimepaheProviderId(anilistId);
-  //         if ('error ' in animepahe) {
-  //           throw new Error(animepahe.error);
-  //         }
-  //         return { data: animepahe.data, provider: animepahe.provider };
-  //       case 'anizone':
-  //         const anizone = await this.fetchAnizoneProviderId(anilistId);
-  //         if ('error ' in anizone) {
-  //           throw new Error(anizone.error);
-  //         }
-  //         return { data: anizone.data, provider: anizone.provider };
-  //       case 'animekai':
-  //         const animekai = await this.fetchAnimeKaiProviderId(anilistId);
-  //         if ('error' in animekai) {
-  //           throw new Error(animekai.error);
-  //         }
-  //         return { data: animekai.data, provider: animekai.provider };
-  //     }
-  //   } catch (error) {
-  //     return {
-  //       error: error instanceof Error ? error.message : 'Unknown error occurred',
-  //       data: null,
-  //       provider: null,
-  //     };
-  //   }
-  // }
-
-  // /**
-  //  * Fetches anime information along with provider-specific episode details using the Anilist ID.
-  //  *
-  //  * @param anilistId - The unique Anilist ID of the anime (required)
-  //  * @param provider - The anime provider to fetch episodes from (optional, defaults to HiAnime)
-  //  * @returns Promise that resolves to anime info and its episodes from the specified provider
-  //  */
-  // async fetchAnimeProviderEpisodes(
-  //   anilistId: number,
-  //   provider: 'hianime' | 'allanime' | 'animepahe' | 'anizone' | 'animekai' = 'hianime',
-  // ): Promise<IMetaProviderEpisodesResponse<IMetaAnime | null>> {
-  //   if (!anilistId) {
-  //     return {
-  //       error: 'Invalid or missing required parameter: anilistId!',
-  //       data: null,
-  //       providerEpisodes: [],
-  //     };
-  //   }
-
-  //   try {
-  //     switch (provider) {
-  //       case 'hianime':
-  //         const zoro = await this.fetchZoroProviderEpisodes(anilistId);
-  //         if ('error' in zoro) {
-  //           throw new Error(zoro.error);
-  //         }
-  //         return { data: zoro.data, providerEpisodes: zoro.providerEpisodes };
-
-  //       case 'allanime':
-  //         const allanime = await this.fetchAllAnimeProviderEpisodes(anilistId);
-  //         if ('error ' in allanime) {
-  //           throw new Error(allanime.error);
-  //         }
-  //         return { data: allanime.data, providerEpisodes: allanime.providerEpisodes };
-
-  //       case 'animepahe':
-  //         const animepahe = await this.fetchPaheProviderEpisodes(anilistId);
-  //         if ('error ' in animepahe) {
-  //           throw new Error(animepahe.error);
-  //         }
-  //         return { data: animepahe.data, providerEpisodes: animepahe.providerEpisodes };
-
-  //       case 'anizone':
-  //         const anizone = await this.fetchAnizoneProviderEpisodes(anilistId);
-  //         if ('error ' in anizone) {
-  //           throw new Error(anizone.error);
-  //         }
-  //         return { data: anizone.data, providerEpisodes: anizone.providerEpisodes };
-  //       case 'animekai':
-  //         const animekai = await this.fetchAnimekaiProviderEpisodes(anilistId);
-  //         if ('error' in animekai) {
-  //           throw new Error(animekai.error);
-  //         }
-  //         return { data: animekai.data, providerEpisodes: animekai.providerEpisodes };
-  //     }
-  //   } catch (error) {
-  //     return {
-  //       error: error instanceof Error ? error.message : 'Unknown Err',
-  //       data: null,
-  //       providerEpisodes: [],
-  //     };
-  //   }
-  // }
 }

@@ -111,7 +111,7 @@ export type Seasons = (typeof Seasons)[number];
 export const JSort = ['airing', 'bypopularity', 'upcoming', 'favorite', 'rating'] as const;
 export type JSort = (typeof JSort)[number];
 
-export type IMetaFormat = 'TV' | 'MOVIE' | 'SPECIAL' | 'OVA' | 'ONA' | 'MUSIC';
+export type IMetaFormat = 'TV' | 'MOVIE' | 'SPECIAL' | 'OVA' | 'ONA' | 'MUSIC' | 'MANGA';
 
 export interface IMetaDataMap {
   native?: string;

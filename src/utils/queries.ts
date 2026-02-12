@@ -1,5 +1,5 @@
-export const fetchByIdQuery = `query ($id: Int , $asHtml:Boolean = true) { 
-  Media (id: $id, type: ANIME ) { 
+export const fetchByIdQuery = `query ($id: Int ,$type: MediaType, $asHtml:Boolean = true) { 
+  Media (id: $id, type:$type) { 
     id
     idMal
     title {
@@ -332,7 +332,7 @@ export const characterQuery = `query Media($mediaId: Int, $sort: [CharacterSort]
   }
 }`;
 
-export const mediaTrendQuery = `query Query($page: Int, $perPage: Int) {
+export const mediaTrendQuery = `query Query($page: Int, $perPage: Int, $type: MediaType, $format: MediaFormat) {
   Page(page: $page, perPage: $perPage) {
     pageInfo {
       total
@@ -341,7 +341,7 @@ export const mediaTrendQuery = `query Query($page: Int, $perPage: Int) {
       lastPage
       hasNextPage
     }
-    media(type: ANIME, sort: [TRENDING_DESC, POPULARITY_DESC], isAdult: false) {
+    media(type:$type,format: $format, sort: [TRENDING_DESC, POPULARITY_DESC], isAdult: false) {
       id
       idMal
       title {

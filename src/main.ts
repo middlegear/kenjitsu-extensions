@@ -41,5 +41,5 @@ export {
   type Seasons,
   type IAnimeCategory,
 };
-// const data = await new Animepahe().fetchEpisodes('44302c02-ac39-d56b-1bf4-a7e9628f9c8d');
-// console.log(data);
+// const data = await new AllManga().fetchMangaChapters('solo-leveling-SFrub9DDGMrmdZWyh');
+// console.log(JSON.stringify(data));
