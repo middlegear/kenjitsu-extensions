@@ -17,6 +17,7 @@ import type { IMovieCountry, IMovieGenre } from './types/movies/movie.js';
 import type { HIGenre } from './types/anime/zoro.js';
 import type { IMetaFormat, Seasons } from './types/meta/meta-anime.js';
 import type { IAnimeCategory } from './types/base.js';
+import { MangaKakalot } from './provider/manga/mangakakalot.js';
 
 export {
   Anilist,
@@ -34,6 +35,7 @@ export {
   HentaiTv,
   Comix,
   AllManga,
+  MangaKakalot,
   type IMovieCountry,
   type IMovieGenre,
   type HIGenre,
@@ -41,5 +43,5 @@ export {
   type Seasons,
   type IAnimeCategory,
 };
-// const data = await new AllManga().fetchMangaChapters('solo-leveling-SFrub9DDGMrmdZWyh');
-// console.log(JSON.stringify(data));
+// const data = await new MangaKakalot().search('bleach');
+// console.log(data);
