@@ -16,7 +16,12 @@ export class MangaKakalot extends BaseClass {
         },
       });
 
-      console.log(response.data);
-    } catch (error) {}
+      return response.data;
+    } catch (error) {
+      return {
+        error: error instanceof Error ? error.message : 'Unknown Error',
+        data: [],
+      };
+    }
   }
 }
