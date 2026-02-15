@@ -20,8 +20,8 @@ export interface IMangaChapter {
   title?: string | null;
   official?: boolean;
   volume?: string | null;
-  language: string | null;
+  language?: string | null;
   releaseDate: string | null;
   scanlationGroup?: string | null;
-  chapterNumber: string | null;
+  chapterNumber: string | null | number;
 }

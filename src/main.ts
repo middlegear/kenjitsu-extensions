@@ -43,5 +43,5 @@ export {
   type Seasons,
   type IAnimeCategory,
 };
-// const data = await new Mangahub().test3();
+// const data = await new Mangahub().fetchChapterPages('naruto_120$chapter-0');
 // console.log(JSON.stringify(data));

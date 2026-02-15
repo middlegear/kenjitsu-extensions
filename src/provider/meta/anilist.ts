@@ -278,6 +278,7 @@ export class Anilist extends BaseAnimeMeta {
         error: 'Invalid or missing required parameter: anilistId!',
         data: null,
         providerEpisodes: [],
+        provider: null,
       };
     }
 
@@ -292,10 +293,16 @@ export class Anilist extends BaseAnimeMeta {
           error: `Failed to fetch provider episodes: ${initialResponse.reason}`,
           data: null,
           providerEpisodes: [],
+          provider: null,
         };
       }
       if (anizip.status === 'rejected')
-        return { error: `Failed to fetch provider episodes: ${anizip.reason}`, data: null, providerEpisodes: [] };
+        return {
+          error: `Failed to fetch provider episodes: ${anizip.reason}`,
+          data: null,
+          providerEpisodes: [],
+          provider: null,
+        };
 
       const allAnimeId = initialResponse.status === 'fulfilled' ? initialResponse.value.provider?.id : null;
       const allanimeResult = await this.allanime.fetchEpisodes(allAnimeId as string);
@@ -313,16 +320,18 @@ export class Anilist extends BaseAnimeMeta {
         });
 
       const anilistData = initialResponse.status === 'fulfilled' ? initialResponse.value.data : null;
-
+      const providerInfo = initialResponse.status === 'fulfilled' ? initialResponse.value.provider : null;
       return {
         data: anilistData,
         providerEpisodes: enrichedEpisodes,
+        provider: providerInfo,
       };
     } catch (error) {
       return {
         data: null,
         error: error instanceof Error ? error.message : 'Unknown Error',
         providerEpisodes: [],
+        provider: null,
       };
     }
   }
@@ -339,6 +348,7 @@ export class Anilist extends BaseAnimeMeta {
         error: 'Invalid or missing required parameter: anilistId!',
         data: null,
         providerEpisodes: [],
+        provider: null,
       };
     }
 
@@ -353,6 +363,7 @@ export class Anilist extends BaseAnimeMeta {
           error: `Failed to fetch provider episodes: ${initialResponse.reason}`,
           data: null,
           providerEpisodes: [],
+          provider: null,
         };
       }
       if (anizip.status === 'rejected') {
@@ -360,6 +371,7 @@ export class Anilist extends BaseAnimeMeta {
           error: `Failed to fetch provider episodes: ${anizip.reason}`,
           data: null,
           providerEpisodes: [],
+          provider: null,
         };
       }
 
@@ -378,15 +390,18 @@ export class Anilist extends BaseAnimeMeta {
           return this.mergeEpisodeData(episode, aniZipEpisode, 'anizone');
         });
       const anilistData = initialResponse.status === 'fulfilled' ? initialResponse.value.data : null;
+      const providerInfo = initialResponse.status === 'fulfilled' ? initialResponse.value.provider : null;
       return {
         data: anilistData,
         providerEpisodes: enrichedEpisodes,
+        provider: providerInfo,
       };
     } catch (error) {
       return {
         data: null,
         error: error instanceof Error ? error.message : 'Unknown Error',
         providerEpisodes: [],
+        provider: null,
       };
     }
   }
@@ -403,6 +418,7 @@ export class Anilist extends BaseAnimeMeta {
         error: 'Invalid or missing required parameter: anilistId!',
         data: null,
         providerEpisodes: [],
+        provider: null,
       };
     }
 
@@ -417,6 +433,7 @@ export class Anilist extends BaseAnimeMeta {
           error: `Failed to fetch provider episodes: ${initialResponse.reason}`,
           data: null,
           providerEpisodes: [],
+          provider: null,
         };
       }
       if (anizip.status === 'rejected') {
@@ -424,6 +441,7 @@ export class Anilist extends BaseAnimeMeta {
           error: `Failed to fetch provider episodes: ${anizip.reason}`,
           data: null,
           providerEpisodes: [],
+          provider: null,
         };
       }
       const hianimeId = initialResponse.status === 'fulfilled' ? initialResponse.value.provider?.id : null;
@@ -440,16 +458,18 @@ export class Anilist extends BaseAnimeMeta {
         const aniZipEpisode = aniZipMap.get(episode.episodeNumber);
         return this.mergeEpisodeData(episode, aniZipEpisode, 'hianime & kaido');
       });
-
+      const providerInfo = initialResponse.status === 'fulfilled' ? initialResponse.value.provider : null;
       return {
         data: anilistData,
         providerEpisodes: enrichedEpisodes,
+        provider: providerInfo,
       };
     } catch (error) {
       return {
         error: error instanceof Error ? error.message : 'Unknown Error',
         data: null,
         providerEpisodes: [],
+        provider: null,
       };
     }
   }
@@ -466,6 +486,7 @@ export class Anilist extends BaseAnimeMeta {
         error: 'Invalid or missing required parameter: anilistId!',
         data: null,
         providerEpisodes: [],
+        provider: null,
       };
     }
 
@@ -480,6 +501,7 @@ export class Anilist extends BaseAnimeMeta {
           error: `Failed to fetch provider episodes: ${initialResponse.reason}`,
           data: null,
           providerEpisodes: [],
+          provider: null,
         };
       }
       if (anizip.status === 'rejected') {
@@ -487,6 +509,7 @@ export class Anilist extends BaseAnimeMeta {
           error: `Failed to fetch provider episodes: ${anizip.reason}`,
           data: null,
           providerEpisodes: [],
+          provider: null,
         };
       }
 
@@ -505,16 +528,18 @@ export class Anilist extends BaseAnimeMeta {
 
         return this.mergeEpisodeData(episode, aniZipEpisode, 'animekai');
       });
-
+      const providerInfo = initialResponse.status === 'fulfilled' ? initialResponse.value.provider : null;
       return {
         data: anilistData,
         providerEpisodes: enrichedEpisodes,
+        provider: providerInfo,
       };
     } catch (error) {
       return {
         error: error instanceof Error ? error.message : 'Unknown Error',
         data: null,
         providerEpisodes: [],
+        provider: null,
       };
     }
   }
@@ -531,6 +556,7 @@ export class Anilist extends BaseAnimeMeta {
         error: 'Invalid or missing required parameter: anilistId!',
         data: null,
         providerEpisodes: [],
+        provider: null,
       };
     }
 
@@ -545,6 +571,7 @@ export class Anilist extends BaseAnimeMeta {
           error: `Failed to fetch provider episodes: ${initialResponse.reason}`,
           data: null,
           providerEpisodes: [],
+          provider: null,
         };
       }
       if (anizip.status === 'rejected') {
@@ -552,6 +579,7 @@ export class Anilist extends BaseAnimeMeta {
           error: `Failed to fetch provider episodes: ${anizip.reason}`,
           data: null,
           providerEpisodes: [],
+          provider: null,
         };
       }
 
@@ -579,15 +607,18 @@ export class Anilist extends BaseAnimeMeta {
           return this.mergeEpisodeData(episode, aniZipEpisode, 'animepahe');
         });
       }
+      const providerInfo = initialResponse.status === 'fulfilled' ? initialResponse.value.provider : null;
       return {
         data: anilistData,
         providerEpisodes: enrichedEpisodes as IMetaProviderEpisodes[],
+        provider: providerInfo,
       };
     } catch (error) {
       return {
         error: error instanceof Error ? error.message : 'Unknown Error',
         data: null,
         providerEpisodes: [],
+        provider: null,
       };
     }
   }

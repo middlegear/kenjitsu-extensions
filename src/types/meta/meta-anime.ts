@@ -150,6 +150,7 @@ export interface IMetaProviderEpisodes {
 }
 export interface IMetaProviderEpisodesResponse<T> extends IResponse<T> {
   providerEpisodes: IMetaProviderEpisodes[] | [];
+  provider?: IProviderId | null;
 }
 export interface IProviderId {
   id: string | null;
@@ -158,6 +159,7 @@ export interface IProviderId {
   romaji: string | null;
   provider: string | null;
   score: number | null;
+  source?: string | null;
 }
 export interface IMetaProviderIdResponse<T> extends IResponse<T> {
   provider: IProviderId | null;
