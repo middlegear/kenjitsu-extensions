@@ -624,6 +624,96 @@ export class Anilist extends BaseAnimeMeta {
   }
 
   /**
+   * Maps an Anilist anime ID to the corresponding Comix  provider ID.
+   *
+   * @param anilistId - Anilist media ID (required)
+   * @returns Provider mapping result including Anilist metadata and provider-specific ID (if found)
+   */
+  async fetchComixProviderId(anilistId: number): Promise<IMetaProviderIdResponse<IMetaAnime | null>> {
+    if (!anilistId) {
+      return {
+        error: 'Invalid or missing required parameter: anilistId!',
+        data: null,
+        provider: null,
+      };
+    }
+
+    try {
+      const [anilist, comix] = await Promise.allSettled([
+        this.fetchInfo(anilistId, 'MANGA'),
+        this.client.get(`${this.mappingUrl}/api/mappings/manga/anilist/${anilistId}?provider=comix`),
+      ]);
+
+      const anilistData = anilist.status === 'fulfilled' ? anilist.value : null;
+      const comixResult = comix.status === 'fulfilled' ? comix.value.data : null;
+
+      if (!anilistData?.data) {
+        return {
+          error: 'Failed to fetch AniList metadata.',
+          data: null,
+          provider: null,
+        };
+      }
+
+      return {
+        data: anilistData.data,
+        provider: comixResult.provider,
+      };
+    } catch (error) {
+      return {
+        error: error instanceof Error ? error.message : 'Unknown error occurred',
+        data: null,
+        provider: null,
+      };
+    }
+  }
+
+  /**
+   * Maps an Anilist anime ID to the corresponding AllManga provider ID.
+   *
+   * @param anilistId - Anilist media ID (required)
+   * @returns Provider mapping result including Anilist metadata and provider-specific ID (if found)
+   */
+  async fetchAllMangaProviderId(anilistId: number): Promise<IMetaProviderIdResponse<IMetaAnime | null>> {
+    if (!anilistId) {
+      return {
+        error: 'Invalid or missing required parameter: anilistId!',
+        data: null,
+        provider: null,
+      };
+    }
+
+    try {
+      const [anilist, allmanga] = await Promise.allSettled([
+        this.fetchInfo(anilistId, 'MANGA'),
+        this.client.get(`${this.mappingUrl}/api/mappings/manga/anilist/${anilistId}?provider=allmanga`),
+      ]);
+
+      const anilistData = anilist.status === 'fulfilled' ? anilist.value : null;
+      const allmangaResult = allmanga.status === 'fulfilled' ? allmanga.value.data : null;
+
+      if (!anilistData?.data) {
+        return {
+          error: 'Failed to fetch AniList metadata.',
+          data: null,
+          provider: null,
+        };
+      }
+
+      return {
+        data: anilistData.data,
+        provider: allmangaResult.provider,
+      };
+    } catch (error) {
+      return {
+        error: error instanceof Error ? error.message : 'Unknown error occurred',
+        data: null,
+        provider: null,
+      };
+    }
+  }
+
+  /**
    * Searches for anime or manga using a query string.
    *
    * @param search - Search term / keyword (required)

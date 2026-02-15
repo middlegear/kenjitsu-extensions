@@ -25,3 +25,5 @@ https://rentry.co/sflix#yflix-clones
 
 
 
+1. Refactor the mapping url to anime and manga respectfully
+2. Dont kill the saikou tv
