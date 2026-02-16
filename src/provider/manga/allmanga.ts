@@ -1,6 +1,7 @@
 import { BaseClass } from '../../models/base.js';
 import type { IAllAnime, IAllAnimeInfo } from '../../types/anime/allanime.js';
 import type { IMangaSource, IResponse, ISourceBaseResponse } from '../../types/base.js';
+import type { IAllMangaInfoResponse } from '../../types/manga/allmanga.js';
 import type { IMangaChapter } from '../../types/manga/comix.js';
 
 ///priotity no 2
@@ -20,6 +21,7 @@ export class AllManga extends BaseClass {
         englishName
         nativeName
         thumbnail
+        lastChapterInfo
         score
         genres
         status
@@ -51,6 +53,7 @@ export class AllManga extends BaseClass {
             status
             altNames 
             score
+            availableChaptersDetail
         }
     }
 `;
@@ -125,6 +128,7 @@ export class AllManga extends BaseClass {
       if (!response.data) {
         return { data: [], error: response.statusText };
       }
+      // console.log(response.data.data.mangas.edges);
 
       const manga = response.data.data.mangas.edges.map((item: any) => ({
         id: `${this.createSlug(item.name || item.englishName || item.nativeName)}-${item._id}`,
@@ -132,6 +136,7 @@ export class AllManga extends BaseClass {
         name: item.englishName,
         native: item.nativeName,
         posterImage: `https://wp.youtube-anime.com/aln.youtube-anime.com/${item.thumbnail}`,
+        lastChapterInfo: item.lastChapterInfo,
         // slugTime: item.slugTime,
       }));
 
@@ -152,7 +157,7 @@ export class AllManga extends BaseClass {
    * @param id - Manga identifier (usually slug-_id format) (required)
    * @returns Detailed manga information (titles, synopsis, genres, score, status, etc.) or error
    */
-  async fetchMangaInfo(id: string) {
+  async fetchMangaInfo(id: string): Promise<IAllMangaInfoResponse<IAllAnimeInfo | null>> {
     if (!id) {
       throw new Error('Missing required params:Id ');
     }
@@ -162,6 +167,7 @@ export class AllManga extends BaseClass {
     });
 
     const mediaId = id.split('-').at(-1);
+
     try {
       const animeinfoPayload = buildPayload(this.detailsQuery, { id: mediaId });
       const response = await this.client.post(this.baseUrl, animeinfoPayload);
@@ -179,42 +185,51 @@ export class AllManga extends BaseClass {
         synopsis: response.data.data.manga.description,
         status: response.data.data.manga.status,
       };
-      return { data: data };
+
+      const chapters = response.data.data.manga.availableChaptersDetail.sub
+        .map((item: any) => ({
+          chapterId: `${id}-chapter-${item}`,
+          chapterNumber: parseFloat(item),
+        }))
+        .sort((a: { chapterNumber: number }, b: { chapterNumber: number }) => a.chapterNumber - b.chapterNumber);
+
+      return { data: data, providerChapters: chapters };
     } catch (error) {
       return {
         error: error instanceof Error ? error.message : 'Unknown Error',
         data: null,
+        providerChapters: [],
       };
     }
   }
 
   /**
+   * @deprecated
    * Retrieves all available chapters for a manga.
-   * Uses a wide chapter range (0–9999) to fetch everything in one request.
-   *
+   * @warn This method has issues with fetching reliable chapter infomation use fetchMangaInfo
    * @param id - Manga identifier (required)
    * @returns List of chapters (chapter number, title/notes, upload date) sorted descending
    */
   async fetchMangaChapters(id: string): Promise<IResponse<IMangaChapter[] | []>> {
     if (!id) {
-      throw new Error('Missing required params:Id ');
+      return { error: 'Missing required param: id', data: [] };
     }
-    const buildPayload = (query: string, variables: object) => ({
-      query,
-      variables,
-    });
 
     const mediaId = id.split('-').at(-1);
-    try {
-      const chaptersPayload = buildPayload(this.chaptersQuery, {
+    const chaptersPayload = {
+      query: this.chaptersQuery,
+      variables: {
         id: `manga@${mediaId}`,
         chapterNumStart: 0,
-        chapterNumEnd: 9999,
-      });
+        chapterNumEnd: 999,
+      },
+    };
+
+    try {
       const response = await this.client.post(this.baseUrl, chaptersPayload);
 
       if (!response.data) {
-        return { error: response.statusText || 'No episodes available.', data: [] };
+        return { error: response.statusText || 'No chapters available.', data: [] };
       }
 
       const chapters = response.data.data.episodeInfos
@@ -227,7 +242,7 @@ export class AllManga extends BaseClass {
         .sort((a: { chapterNumber: number }, b: { chapterNumber: number }) => a.chapterNumber - b.chapterNumber);
 
       return { data: chapters };
-    } catch (error) {
+    } catch (error: any) {
       return {
         error: error instanceof Error ? error.message : 'Unknown Error',
         data: [],

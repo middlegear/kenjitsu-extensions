@@ -21,6 +21,10 @@ import {
 import RapidCloud from '../../source-extractors/rapidcloud.js';
 
 /**
+ * @deprecated
+ *
+ *
+ *
  * A class for interacting with the HiAnime platform (hianime.to) to search for anime, fetch detailed information,
  * retrieve episode lists, get available streaming servers, and fetch curated anime lists.
  */
