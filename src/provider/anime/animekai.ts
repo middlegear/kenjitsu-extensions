@@ -2,6 +2,8 @@ import { BaseClass } from '../../models/base.js';
 import * as cheerio from 'cheerio';
 
 import { MegaUp } from '../../source-extractors/megaup.js';
+import { Impit } from 'impit';
+
 import {
   AKGenres,
   type AKserver,
@@ -603,29 +605,68 @@ class Animekai extends BaseClass {
         error: 'Missing required parameter: query',
       };
     }
+    const impit = new Impit({
+      http3: true,
+      browser: 'chrome142',
+    });
 
     try {
-      const response = await this.client.get(`${this.baseUrl}/browser`, {
-        params: {
-          keyword: encodeURIComponent(query.trim()),
-          page: String(page),
-        },
-      });
-      console.log(response);
+      // const response = await this.client.get(`${this.baseUrl}/browser`, {
+      //   // params: {
+      //   //   keyword: encodeURIComponent(query.trim()),
+      //   //   page: String(page),
+      //   // },
+      // });
+      const url = `${this.baseUrl}/browser?keyword=${encodeURIComponent(query)}&page=${page}`;
+      const response = await impit.fetch(url, { method: 'GET' });
 
-      if (!response.data) {
-        return {
-          hasNextPage: false,
-          currentPage: 0,
-          totalResults: 0,
-          lastPage: 0,
-          data: [],
-          error: response.statusText,
-        };
+      // --- DEBUGGING BLOCK ---
+      console.log('--- Status ---');
+      console.log(`Status: ${response.status} ${response.statusText}`);
+
+      console.log('--- All Headers ---');
+      response.headers.forEach((value, key) => {
+        console.log(`${key}: ${value}`);
+      });
+
+      // Specific Cookie Check
+      const cookies = response.headers.get('set-cookie');
+      console.log('--- Cookies Received ---');
+      console.log(cookies || 'No cookies issued');
+
+      // Cloudflare Detection
+      const isChallenged = response.headers.get('cf-mitigated') === 'challenge';
+      const isCloudflare = response.headers.get('server')?.includes('cloudflare');
+
+      if (isChallenged || response.status === 403) {
+        console.warn('⚠️ Cloudflare challenge detected!');
+      }
+      // -----------------------
+
+      if (!response.ok) {
+        throw new Error(`HTTP Error: ${response.status} - ${response.statusText}`);
       }
 
+      const html = await response.text();
+
+      // Check body for challenge strings if status is 200 but content is wrong
+      if (html.includes('challenges.cloudflare.com') || html.includes('cf-browser-verification')) {
+        console.error('❌ Received a 200 OK but the body is a Cloudflare Challenge page.');
+      }
+
+      // if (!response.data) {
+      //   return {
+      //     hasNextPage: false,
+      //     currentPage: 0,
+      //     totalResults: 0,
+      //     lastPage: 0,
+      //     data: [],
+      //     error: response.statusText,
+      //   };
+      // }
+
       const selector: cheerio.SelectorType = 'div.aitem-wrapper.regular  div.aitem';
-      return this.parsePaginated(cheerio.load(response.data), selector);
+      return this.parsePaginated(cheerio.load(html), selector);
     } catch (error) {
       return {
         hasNextPage: false,
