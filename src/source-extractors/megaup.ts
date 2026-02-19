@@ -53,7 +53,7 @@ export class MegaUp extends BaseClass {
         throw new Error(`Sources decode failed with error ${response.statusText}`);
       }
 
-      console.log(response.data.result.tracks);
+      // console.log(response.data.result.tracks);
 
       return response.data.result;
     } catch (error) {
@@ -67,6 +67,7 @@ export class MegaUp extends BaseClass {
     try {
       const response = await this.client.get(mediaUrl);
 
+      console.log(response);
       const userAgentKey = this.client.getUserAgent();
 
       if (!response.data) {

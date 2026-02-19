@@ -611,6 +611,7 @@ class Animekai extends BaseClass {
           page: String(page),
         },
       });
+      console.log(response);
 
       if (!response.data) {
         return {
@@ -1015,6 +1016,8 @@ class Animekai extends BaseClass {
 
       const response = await this.client.get(`${this.baseUrl}/ajax/links/list?token=${token}&_=${generatedToken}`);
 
+      console.log(response);
+
       if (!response.data) {
         throw new Error(response.statusText);
       }
@@ -1064,7 +1067,7 @@ class Animekai extends BaseClass {
     try {
       const serverInfo = await this.fetchServers(episodeId);
 
-      if ('error' in serverInfo) {
+      if (serverInfo.error) {
         throw new Error(serverInfo.error);
       }
 
@@ -1075,6 +1078,8 @@ class Animekai extends BaseClass {
       const response = await this.client.get(`${this.baseUrl}/ajax/links/view?id=${mediaId}&_=${token}`, {
         // headers: this.headers,
       });
+
+      console.log(response);
 
       if (!response.data) {
         throw new Error(`Server responded with error:${response.statusText}` || 'Unknown error in server');

@@ -43,5 +43,5 @@ export {
   type Seasons,
   type IAnimeCategory,
 };
-// const data = await new AllManga().fetchMangaPages('one-punch-man-58uhW4HYw66y3dm7K-chapter-30.700000000000003');
+// const data = await new Animekai().search('bleach');
 // console.log(data);
