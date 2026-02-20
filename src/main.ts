@@ -45,3 +45,5 @@ export {
 };
 // const data = await new Animekai().search('bleach');
 // console.log(data);
+// const data = await new Comix('https://comix.to', false).search('bleach');
+// console.log(data);

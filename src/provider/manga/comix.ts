@@ -1,16 +1,20 @@
 // https://comix.to/home
 
+import { FetchClient } from '../../config/client.js';
 import { BaseClass } from '../../models/base.js';
 import type { IAKPaginated } from '../../types/anime/animekai.js';
 import type { IMangaSource, IResponse, ISourceBaseResponse } from '../../types/base.js';
 import type { IMangaInfo, IManga, IMangaChapter } from '../../types/manga/comix.js';
 import * as cheerio from 'cheerio';
 
-export class Comix extends BaseClass {
+export class Comix {
   private baseUrl: string;
-  constructor(baseUrl: string = 'https://comix.to') {
-    super();
+  protected client: FetchClient;
+  protected httpVersion2: boolean;
+  constructor(baseUrl: string = 'https://comix.to', httpVersion2: boolean = true) {
+    this.client = new FetchClient({ http2: httpVersion2 });
     this.baseUrl = baseUrl;
+    this.httpVersion2 = httpVersion2;
   }
   /**
    * Parses detailed manga metadata from the manga title page HTML.
@@ -116,7 +120,21 @@ export class Comix extends BaseClass {
     try {
       const response = await this.client.get(
         `${this.baseUrl}/api/v2/manga?exclude_genres[]=87264&keyword=${query}&order[relevance]=desc&limit=20`,
+        {
+          headers: {
+            UserAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:147.0) Gecko/20100101 Firefox/147.0',
+            Accept: '*/*',
+            'Accept-Language': ' en-US,en;q=0.9',
+            'Accept-Encoding': 'gzip, deflate, br, zstd',
+            Referer: 'https://comix.to/home',
+            'Content-Type': 'application/json',
+            Cookie:
+              'cf_clearance=lxdzgvvHryxhIi89b2fnAnCKSM_wMiQ8XmUtE9y9f10-1771554301-1.2.1.1-YqubGhdS1l_ZQ3xZ7g72ma2R0XoJ1lpyvNu8vTl3r8LzwZMvm25KaWkMznjSfvtRTEpSo8QspJ8futnmmXaCFPMvJeWP_5z.VQQlN9YxLgNA7eTqbZLhb.GcflBNo7D.xH5EB5AHC7tu.0WXIHylmZDg3Q34W5xkFy1hlbrKUYx5.dI0aGF2w6Xk3Sww4vtXhobZvFa..9_I8ueandjjglW3fRsdKlQDflqtzDY6zH0',
+          },
+        },
       );
+
+      console.log(response.headers);
 
       if (!response.data) {
         throw new Error(response.statusText);
