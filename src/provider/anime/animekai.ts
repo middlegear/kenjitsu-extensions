@@ -611,62 +611,62 @@ class Animekai extends BaseClass {
     });
 
     try {
-      // const response = await this.client.get(`${this.baseUrl}/browser`, {
-      //   // params: {
-      //   //   keyword: encodeURIComponent(query.trim()),
-      //   //   page: String(page),
-      //   // },
-      // });
-      const url = `${this.baseUrl}/browser?keyword=${encodeURIComponent(query)}&page=${page}`;
-      const response = await impit.fetch(url, { method: 'GET' });
-
-      // --- DEBUGGING BLOCK ---
-      console.log('--- Status ---');
-      console.log(`Status: ${response.status} ${response.statusText}`);
-
-      console.log('--- All Headers ---');
-      response.headers.forEach((value, key) => {
-        console.log(`${key}: ${value}`);
+      const response = await this.client.get(`${this.baseUrl}/browser`, {
+        params: {
+          keyword: encodeURIComponent(query.trim()),
+          page: String(page),
+        },
       });
+      // const url = `${this.baseUrl}/browser?keyword=${encodeURIComponent(query)}&page=${page}`;
+      // const response = await impit.fetch(url, { method: 'GET' });
+
+      // // --- DEBUGGING BLOCK ---
+      // console.log('--- Status ---');
+      // console.log(`Status: ${response.status} ${response.statusText}`);
+
+      // console.log('--- All Headers ---');
+      // response.headers.forEach((value, key) => {
+      //   console.log(`${key}: ${value}`);
+      // });
 
       // Specific Cookie Check
-      const cookies = response.headers.get('set-cookie');
-      console.log('--- Cookies Received ---');
-      console.log(cookies || 'No cookies issued');
+      // const cookies = response.headers.get('set-cookie');
+      // console.log('--- Cookies Received ---');
+      // console.log(cookies || 'No cookies issued');
 
-      // Cloudflare Detection
-      const isChallenged = response.headers.get('cf-mitigated') === 'challenge';
-      const isCloudflare = response.headers.get('server')?.includes('cloudflare');
+      // // Cloudflare Detection
+      // const isChallenged = response.headers.get('cf-mitigated') === 'challenge';
+      // const isCloudflare = response.headers.get('server')?.includes('cloudflare');
 
-      if (isChallenged || response.status === 403) {
-        console.warn('⚠️ Cloudflare challenge detected!');
-      }
+      // if (isChallenged || response.status === 403) {
+      //   console.warn('⚠️ Cloudflare challenge detected!');
+      // }
       // -----------------------
 
-      if (!response.ok) {
-        throw new Error(`HTTP Error: ${response.status} - ${response.statusText}`);
-      }
-
-      const html = await response.text();
-
-      // Check body for challenge strings if status is 200 but content is wrong
-      if (html.includes('challenges.cloudflare.com') || html.includes('cf-browser-verification')) {
-        console.error('❌ Received a 200 OK but the body is a Cloudflare Challenge page.');
-      }
-
-      // if (!response.data) {
-      //   return {
-      //     hasNextPage: false,
-      //     currentPage: 0,
-      //     totalResults: 0,
-      //     lastPage: 0,
-      //     data: [],
-      //     error: response.statusText,
-      //   };
+      // if (!response.ok) {
+      //   throw new Error(`HTTP Error: ${response.status} - ${response.statusText}`);
       // }
 
+      // const html = await response.text();
+
+      // // Check body for challenge strings if status is 200 but content is wrong
+      // if (html.includes('challenges.cloudflare.com') || html.includes('cf-browser-verification')) {
+      //   console.error('❌ Received a 200 OK but the body is a Cloudflare Challenge page.');
+      // }
+
+      if (!response.data) {
+        return {
+          hasNextPage: false,
+          currentPage: 0,
+          totalResults: 0,
+          lastPage: 0,
+          data: [],
+          error: response.statusText,
+        };
+      }
+
       const selector: cheerio.SelectorType = 'div.aitem-wrapper.regular  div.aitem';
-      return this.parsePaginated(cheerio.load(html), selector);
+      return this.parsePaginated(cheerio.load(response.data), selector);
     } catch (error) {
       return {
         hasNextPage: false,

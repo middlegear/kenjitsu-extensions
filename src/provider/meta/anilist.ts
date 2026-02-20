@@ -40,7 +40,7 @@ export class Anilist extends BaseAnimeMeta {
     super('anilist');
   }
   private readonly baseUrl: string = 'https://graphql.anilist.co';
-  private readonly mappingUrl: string = 'https://kenjitsu-mapper.vercel.app';
+  private readonly mappingUrl: string = 'https://kenjistsu-mapper-977878799624.europe-west1.run.app';
 
   /**
    * Maps an Anilist anime ID to the corresponding HiAnime (Zoro / Kaido) provider ID.
