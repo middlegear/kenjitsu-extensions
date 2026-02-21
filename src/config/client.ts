@@ -31,7 +31,7 @@ export interface RequestConfig {
   params?: Record<string, string>;
   retries?: number;
   timeout?: number;
-  http2?: boolean;
+
   delayBetweenRequests?: number;
 }
 
@@ -50,11 +50,10 @@ export class FetchClient {
   private readonly defaultOptions: {
     timeout: number;
     retries: number;
-    http2: boolean;
     delayBetweenRequests: number;
   };
   private lastRequestTime = 0;
-  private http2: boolean;
+
   private lastUserAgent: string | null = null;
   private readonly requestInterceptors: RequestInterceptor[] = [];
   private readonly responseInterceptors: ResponseInterceptor[] = [];
@@ -64,10 +63,7 @@ export class FetchClient {
       timeout: options.timeout || 5000,
       retries: options.retries || 2,
       delayBetweenRequests: options.delayBetweenRequests || 300,
-      http2: options.http2 !== undefined ? options.http2 : true,
     };
-
-    this.http2 = this.defaultOptions.http2;
   }
 
   public useRequestInterceptor(interceptor: RequestInterceptor): void {
@@ -111,7 +107,7 @@ export class FetchClient {
     const gotOptions: any = {
       method,
       headers,
-      http2: finalConfig.http2,
+
       timeout: { request: finalConfig.timeout },
       throwHttpErrors: false,
       hooks: {

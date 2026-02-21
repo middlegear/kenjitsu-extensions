@@ -77,9 +77,3 @@ export interface IBasePaginated<T> extends IResponse<T> {
 export interface IHomeResSpecialPages {
   error?: string;
 }
-
-export interface IMangaSource {
-  url: string | null;
-  page: number | null;
-  [key: string]: unknown;
-}

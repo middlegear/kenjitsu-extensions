@@ -1,9 +1,9 @@
 import { FetchClient } from '../config/client.js';
-import { AllAnime } from '../provider/anime/allanime.js';
+
 import { Anizone } from '../provider/anime/anizone.js';
 import { HiAnime } from '../provider/anime/hianime.js';
 import { Animepahe } from '../provider/anime/animepahe.js';
-import { Animekai } from '../provider/anime/animekai.js';
+
 import type { IMetaDataMap, Provider } from '../types/meta/meta-anime.js';
 import { compareTwoStrings, nativeSimilarity } from '../utils/string-similarity.js';
 
@@ -21,8 +21,7 @@ type AnimeSearchResults = {
 
 export default abstract class BaseAnimeMeta {
   protected client: FetchClient;
-  protected allanime: AllAnime;
-  protected animekai: Animekai;
+
   protected anizone: Anizone;
   protected hianime: HiAnime;
   protected animepahe: Animepahe;
@@ -35,8 +34,7 @@ export default abstract class BaseAnimeMeta {
       delay = 200;
     }
     this.client = new FetchClient({ delayBetweenRequests: delay });
-    this.animekai = new Animekai();
-    this.allanime = new AllAnime();
+
     this.hianime = new HiAnime();
     this.animepahe = new Animepahe();
     this.anizone = new Anizone();

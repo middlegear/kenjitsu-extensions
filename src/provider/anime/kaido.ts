@@ -21,7 +21,7 @@ import {
 import RapidCloud from '../../source-extractors/rapidcloud.js';
 
 /**
- * @deprecated
+ *
  *
  *
  *

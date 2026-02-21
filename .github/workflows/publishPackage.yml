@@ -1,7 +1,7 @@
 name: Publish Release
 
 on:
-  workflow_dispatch: # ✅ manual trigger only
+  workflow_dispatch:
 
 jobs:
   run-tests:
@@ -24,23 +24,8 @@ jobs:
       - name: Install dependencies
         run: pnpm install --no-frozen-lockfile
 
-      - name: Test Anilist
-        run: pnpm test-anilist
-
-      - name: Test Jikan
-        run: pnpm test-jikan
-
-      - name: Test Hianime
-        run: pnpm test-hianime
-
-      # - name: Test Animekai
-      #   run: pnpm test-animekai
-
-      - name: Test FlixHQ
-        run: pnpm test-flixhq
-
-      - name: Test TMDB
-        run: pnpm test-tmdb  
+      - name: Run Tests
+        run: pnpm test
 
       - name: Lint
         run: pnpm lint

@@ -9,15 +9,6 @@
   "scripts": {
     "build": "tsup",
     "dev": "pnpm build && node dist/main.js",
-    "test-jikan": "vitest jikan.test.ts   --config vitest.config.ts",
-    "test-anilist": "vitest anilist.test.ts  --config vitest.config.ts",
-    "test-hianime": "vitest hianime.test.ts  --config vitest.config.ts",
-    "test-kaido": "vitest kaido.test.ts  --config vitest.config.ts",
-    "test-anizone": "vitest anizone.test.ts   --config vitest.config.ts",
-    "test-flixhq": "vitest flixhq.test.ts --config vitest.config.ts",
-    "test-tmdb": "vitest tmdb.test.ts --config vitest.config.ts",
-    "test-himovies": "vitest himovies.test.ts --config vitest.config.ts",
-    "test-animepahe": "vitest animepahe.test.ts --config vitest.config.ts",
     "test": "vitest  --config vitest.config.ts",
     "lint": "tsc",
     "ci": "tsc && pnpm test && pnpm run build",
@@ -53,8 +44,7 @@
   },
   "dependencies": {
     "cheerio": "^1.2.0",
-    "got-scraping": "^4.1.2",
-    "impit": "^0.9.2"
+    "got-scraping": "^4.2.0"
   },
   "packageManager": "pnpm@10.28.0+sha512.05df71d1421f21399e053fde567cea34d446fa02c76571441bfc1c7956e98e363088982d940465fd34480d4d90a0668bc12362f8aa88000a64e83d0b0e47be48"
 }

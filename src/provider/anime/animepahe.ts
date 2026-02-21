@@ -168,9 +168,7 @@ export class Animepahe extends BaseClass {
       });
     });
 
-    // Slice to first 3 download dub servers
     download.dub = download.dub.slice(0, 3);
-    console.log('checkin', download.dub);
 
     return { servers, download };
   }
@@ -525,29 +523,21 @@ export class Animepahe extends BaseClass {
   /**
    * Fetches streaming sources for a given anime episode from a specified server and category.
    * @param {string} episodeId - The unique identifier for the episode (required).
-   * @param {boolean} preferHls - The type of links to return defaults to true for hls.(false for mp4)
    * @param {ISubOrDub} version - The audio category (Subtitled or Dubbed) (optional, defaults to SubOrDub.SUB).
    * @returns A promise that resolves to an object containing streaming sources, headers,  or an error message.
    */
-  async fetchSources(
-    episodeId: string,
-    version: ISubOrDub = 'sub',
-    preferHls: boolean = true,
-  ): Promise<ISourceBaseResponse<IVideoSource | null>> {
+  async fetchSources(episodeId: string, version: ISubOrDub = 'sub'): Promise<ISourceBaseResponse<IVideoSource | null>> {
     try {
       const servers = await this.fetchServers(episodeId);
       if (servers.error) throw new Error(servers.error);
 
-      const serverSource = preferHls ? servers.data : servers.download;
-      const serverIds = this.findServerIds(serverSource as IServerInfo, servers.data as IServerInfo, version);
+      const serverIds = this.findServerIds(servers.data as IServerInfo, servers.download as IServerInfo, version);
 
       const kwikExtractor = new Kwik();
       const extractionPromises = serverIds.map(async s => {
         const url = new URL(s.serverId, this.baseUrl);
 
-        return preferHls
-          ? kwikExtractor.extract(url, s.serverName, this.baseUrl)
-          : kwikExtractor.extractMP4(url, s.serverName, this.baseUrl);
+        return kwikExtractor.extract(url, s.serverName, this.baseUrl);
       });
 
       const results = await Promise.allSettled(extractionPromises);
@@ -567,17 +557,14 @@ export class Animepahe extends BaseClass {
         throw new Error(`All extractions failed: ${rejectedReasons.join('; ')}`);
       }
 
-      const highestDownloadId = serverIds.find(s => s.downloadId)?.downloadId || null;
-
       const merged = {
         sources: fulfilled.flatMap(item => item.sources || []),
-        download: highestDownloadId,
       };
 
       // 4. Resolve Referer logic
       let firstServerOrigin: string | null = null;
       if (serverIds.length > 0) {
-        const refererUrl = preferHls ? serverIds[0].serverId : (serverIds[0].downloadId as string);
+        const refererUrl = serverIds[0].downloadId as string;
         firstServerOrigin = `${new URL(refererUrl).origin}/`;
       }
 

@@ -5,7 +5,7 @@ import { Anilist } from '../src/provider/meta/anilist.js';
 const anilist = new Anilist();
 
 test('returns an array of anime related to search query', async () => {
-  const data = await anilist.search('bleach', 1, 20);
+  const data = await anilist.search('bleach', 'ANIME', 1, 20);
   expect(Array.isArray(data.data)).toBe(true);
   expect(data.data.length).toBeGreaterThan(0);
 });
@@ -17,7 +17,7 @@ test('returns an array containing airing anime', async () => {
 });
 
 test('returns an object containing anime info', async () => {
-  const data = await anilist.fetchInfo(21);
+  const data = await anilist.fetchInfo(21, 'ANIME');
   expect(data.data).not.toBeNull();
 });
 
@@ -28,7 +28,7 @@ test('returns an array of related anime', async () => {
 });
 
 test('returns an array of trending anime', async () => {
-  const data = await anilist.fetchTrending();
+  const data = await anilist.fetchTrending('ANIME', 'TV');
   expect(Array.isArray(data.data)).toBe(true);
   expect(data.data.length).toBeGreaterThan(0);
 });
@@ -39,25 +39,19 @@ test('returns an object that contains both providerId and animeinfo for hianime'
   expect(data.data).not.toBeNull();
 });
 
-test('returns an object that contains both providerId and animeinfo for allanime', async () => {
-  const data = await anilist.fetchAllAnimeProviderId(169755);
-  expect(data.provider).not.toBeNull();
-  expect(data.data).not.toBeNull();
-});
-
 test('retuns an object containing anime cast and characters ', async () => {
   const data = await anilist.fetchCharacters(116674);
   expect(data.data).not.toBeNull();
 });
 
 test('returns an array of most popular anime', async () => {
-  const data = await anilist.fetchMostPopular(1, 25, 'ONA');
+  const data = await anilist.fetchMostPopular('ANIME', 'ONA');
   expect(Array.isArray(data.data)).toBe(true);
   expect(data.data.length).toBeGreaterThan(0);
 });
 
 test('returns an array of top rated anime', async () => {
-  const data = await anilist.fetchTopRatedAnime(1, 3, 'MUSIC');
+  const data = await anilist.fetchTopRated('ANIME', 'TV', 1, 3);
   expect(Array.isArray(data.data)).toBe(true);
   expect(data.data.length).toBeGreaterThan(0);
 });
@@ -76,13 +70,6 @@ test('returns an array of upcoming anime', async () => {
 
 test('returns an object has anime info and provider episodes array for hianime', async () => {
   const data = await anilist.fetchZoroProviderEpisodes(159322);
-  expect(Array.isArray(data.providerEpisodes)).toBe(true);
-  expect(data.providerEpisodes.length).toBeGreaterThan(0);
-  expect(data.data).not.toBeNull();
-});
-
-test('returns an object has anime info and provider episodes array for allanime', async () => {
-  const data = await anilist.fetchAllAnimeProviderEpisodes(159322);
   expect(Array.isArray(data.providerEpisodes)).toBe(true);
   expect(data.providerEpisodes.length).toBeGreaterThan(0);
   expect(data.data).not.toBeNull();

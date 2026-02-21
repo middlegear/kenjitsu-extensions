@@ -1,4 +1,0 @@
-    
-    https://primevid.click/api/v1/video?id=ptvcq&w=1536&h=960&r=primesrc.me 
-    generated in this block  from this js https://primevid.click/assets/index-Bj1SPZ5n.js
-    const A = await fetch(r(739) + a + "&w=" + x + r(535) + p + r(655) + D); sometime i doubt if it tracking window size
