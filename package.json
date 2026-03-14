@@ -1,6 +1,6 @@
 {
   "name": "kenjitsu-extensions",
-  "version": "0.0.0-development",
+  "version": "1.2.0",
   "description": "A lightweight Node.js scraper that extracts video sources from streaming sites",
   "main": "dist/main.js",
   "types": "dist/main.d.ts",
