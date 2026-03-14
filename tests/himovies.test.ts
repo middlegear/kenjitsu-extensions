@@ -98,7 +98,7 @@ test('returns an object containing streaming sources for movie', async () => {
 });
 
 test('returns an object containing streaming sources for tv', async () => {
-  const data = await himovies.fetchSources('tv-the-boys-33895-episode-1096681', 'megacloud');
+  const data = await himovies.fetchSources('tv-the-boys-33895-episode-1451515', 'megacloud');
   expect(data.data).not.toBeNull();
   expect(Array.isArray(data.data?.sources)).toBe(true);
   expect(data.data?.sources.length).toBeGreaterThan(0);
