@@ -62,7 +62,7 @@ export class FetchClient {
     this.defaultOptions = {
       timeout: options.timeout || 5000,
       retries: options.retries || 2,
-      delayBetweenRequests: options.delayBetweenRequests || 400,
+      delayBetweenRequests: options.delayBetweenRequests || 200,
     };
   }
 
