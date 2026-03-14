@@ -6,6 +6,7 @@ import { Animepahe } from '../provider/anime/animepahe.js';
 
 import type { IMetaDataMap, Provider } from '../types/meta/meta-anime.js';
 import { compareTwoStrings, nativeSimilarity } from '../utils/string-similarity.js';
+import { Kaido } from '../main.js';
 
 type AnimeSearchResults = {
   id: string | null;
@@ -25,6 +26,7 @@ export default abstract class BaseAnimeMeta {
   protected anizone: Anizone;
   protected hianime: HiAnime;
   protected animepahe: Animepahe;
+  protected kaido: Kaido;
 
   constructor(provider: 'jikan' | 'anilist') {
     let delay = null;
@@ -38,6 +40,7 @@ export default abstract class BaseAnimeMeta {
     this.hianime = new HiAnime();
     this.animepahe = new Animepahe();
     this.anizone = new Anizone();
+    this.kaido = new Kaido();
   }
   /**
    * Extract year from ISO date string (YYYY-MM-DD format)

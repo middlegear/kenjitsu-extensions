@@ -223,17 +223,16 @@ export class Anizone extends BaseClass {
   private parseUpdates($: cheerio.CheerioAPI): IAnizoneUpdates<IAniZoneEpisodes[] | []> {
     const recentlyAdded: IBase[] = [];
 
-    const latestAnimeBlock = $('div.mb-8.sm\\:mb-12');
+    const latestAnimeBlock = 'div.swiper-wrapper.flex div.space-y-3.pb-6.swiper-slide';
 
-    latestAnimeBlock.find('ul > li').each((_, el) => {
+    $(latestAnimeBlock).each((_, el) => {
       const id = $(el).find('a').first().attr('href')?.split('/').at(-1) || null;
       const title = $(el).find('a[title]').attr('title') || $(el).find('img').attr('alt');
 
       recentlyAdded.push({
         id: title ? `${this.createSlug(title)}-${id}` : null,
         name: title || null,
-        // romaji: $(el).find('a[title]').attr('title') || $(el).find('img').attr('alt') || null,
-        posterImage: $(el).find('img').attr('src') || null,
+        posterImage: $(el).find('a > img').attr('src') || null,
       });
     });
 

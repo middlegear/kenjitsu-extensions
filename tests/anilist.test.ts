@@ -33,8 +33,8 @@ test('returns an array of trending anime', async () => {
   expect(data.data.length).toBeGreaterThan(0);
 });
 
-test('returns an object that contains both providerId and animeinfo for hianime', async () => {
-  const data = await anilist.fetchZoroProviderId(169755);
+test('returns an object that contains both providerId and animeinfo for zoro', async () => {
+  const data = await anilist.fetchKaidoProviderId(169755);
   expect(data.provider).not.toBeNull();
   expect(data.data).not.toBeNull();
 });
@@ -68,8 +68,8 @@ test('returns an array of upcoming anime', async () => {
   expect(data.data.length).toBeGreaterThan(0);
 });
 
-test('returns an object has anime info and provider episodes array for hianime', async () => {
-  const data = await anilist.fetchZoroProviderEpisodes(159322);
+test('returns an object has anime info and provider episodes array for zoro', async () => {
+  const data = await anilist.fetchKaidoProviderEpisodes(159322);
   expect(Array.isArray(data.providerEpisodes)).toBe(true);
   expect(data.providerEpisodes.length).toBeGreaterThan(0);
   expect(data.data).not.toBeNull();

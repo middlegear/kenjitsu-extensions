@@ -25,3 +25,6 @@ export {
   type Seasons,
   type IAnimeCategory,
 };
+
+// const data = await new HiMovies().search('bad-boys');
+// console.log(data);

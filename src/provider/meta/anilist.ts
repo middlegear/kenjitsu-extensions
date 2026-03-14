@@ -12,12 +12,11 @@ import type {
   IMetaProviderEpisodes,
   IMetaProviderEpisodesResponse,
   IMetaProviderIdResponse,
-  IMetaData,
-  Provider,
 } from '../../types/meta/meta-anime.js';
 import {
   airingSchedule,
   characterQuery,
+  fetchAiringByDate,
   fetchByIdQuery,
   mediaAiringSchedule,
   mediaTrendQuery,
@@ -86,7 +85,50 @@ export class Anilist extends BaseAnimeMeta {
       };
     }
   }
+  /**
+   * Maps an Anilist anime ID to the corresponding Kaido (Zoro / Kaido) provider ID.
+   *
+   * @param anilistId - Anilist media ID (required)
+   * @returns Provider mapping result including Anilist metadata and provider-specific ID (if found)
+   */
+  async fetchKaidoProviderId(anilistId: number): Promise<IMetaProviderIdResponse<IMetaAnime | null>> {
+    if (!anilistId) {
+      return {
+        error: 'Invalid or missing required parameter: anilistId!',
+        data: null,
+        provider: null,
+      };
+    }
 
+    try {
+      const [anilistSettled, zoroSettled] = await Promise.allSettled([
+        this.fetchInfo(anilistId, 'ANIME'),
+        this.client.get(`${this.mappingUrl}/api/mappings/anilist/${anilistId}?provider=kaido`),
+      ]);
+
+      const anilistData = anilistSettled.status === 'fulfilled' ? anilistSettled.value : null;
+      const zoroResults = zoroSettled.status === 'fulfilled' ? zoroSettled.value.data : null;
+
+      if (!anilistData?.data) {
+        return {
+          error: 'Failed to fetch AniList metadata.',
+          data: null,
+          provider: null,
+        };
+      }
+
+      return {
+        data: anilistData.data,
+        provider: zoroResults.provider,
+      };
+    } catch (error) {
+      return {
+        error: error instanceof Error ? error.message : 'Unknown error occurred',
+        data: null,
+        provider: null,
+      };
+    }
+  }
   /**
    * Maps an Anilist anime ID to the corresponding Anizone provider ID.
    *
@@ -314,6 +356,73 @@ export class Anilist extends BaseAnimeMeta {
       };
     }
   }
+  /**
+   * Fetches episode list from (Zoro / Kaido) provider and enriches episodes with Anizip metadata.
+   *
+   * @param anilistId - Anilist media ID (required)
+   * @returns Enriched episode list from HiAnime + Anilist base data
+   */
+  async fetchKaidoProviderEpisodes(anilistId: number): Promise<IMetaProviderEpisodesResponse<IMetaAnime | null>> {
+    if (!anilistId) {
+      return {
+        error: 'Invalid or missing required parameter: anilistId!',
+        data: null,
+        providerEpisodes: [],
+        provider: null,
+      };
+    }
+
+    try {
+      const [initialResponse, anizip] = await Promise.allSettled([
+        this.fetchZoroProviderId(anilistId),
+        this.client.get(`${this.mappingUrl}/api/tvdb/anilist/${anilistId}`),
+      ]);
+
+      if (initialResponse.status === 'rejected') {
+        return {
+          error: `Failed to fetch provider episodes: ${initialResponse.reason}`,
+          data: null,
+          providerEpisodes: [],
+          provider: null,
+        };
+      }
+      if (anizip.status === 'rejected') {
+        return {
+          error: `Failed to fetch provider episodes: ${anizip.reason}`,
+          data: null,
+          providerEpisodes: [],
+          provider: null,
+        };
+      }
+      const hianimeId = initialResponse.status === 'fulfilled' ? initialResponse.value.provider?.id : null;
+      const anilistData = initialResponse.status === 'fulfilled' ? initialResponse.value.data : null;
+
+      const hianimeResult = await this.kaido.fetchEpisodes(hianimeId as string);
+
+      const anizipEpisodes = anizip.status === 'fulfilled' ? anizip.value.data.episodes : [];
+      const aniZipMap = new Map(
+        (anizipEpisodes || []).map((item: { episodeAnizipNumber: any }) => [item.episodeAnizipNumber, item]),
+      );
+
+      const enrichedEpisodes = hianimeResult.data.map((episode: any) => {
+        const aniZipEpisode = aniZipMap.get(episode.episodeNumber);
+        return this.mergeEpisodeData(episode, aniZipEpisode, 'hianime & kaido');
+      });
+      const providerInfo = initialResponse.status === 'fulfilled' ? initialResponse.value.provider : null;
+      return {
+        data: anilistData,
+        providerEpisodes: enrichedEpisodes,
+        provider: providerInfo,
+      };
+    } catch (error) {
+      return {
+        error: error instanceof Error ? error.message : 'Unknown Error',
+        data: null,
+        providerEpisodes: [],
+        provider: null,
+      };
+    }
+  }
 
   /**
    * Fetches episode list from AnimePahe provider and enriches episodes with Anizip metadata.
@@ -389,96 +498,6 @@ export class Anilist extends BaseAnimeMeta {
         error: error instanceof Error ? error.message : 'Unknown Error',
         data: null,
         providerEpisodes: [],
-        provider: null,
-      };
-    }
-  }
-
-  /**
-   * Maps an Anilist anime ID to the corresponding Comix  provider ID.
-   *
-   * @param anilistId - Anilist media ID (required)
-   * @returns Provider mapping result including Anilist metadata and provider-specific ID (if found)
-   */
-  async fetchComixProviderId(anilistId: number): Promise<IMetaProviderIdResponse<IMetaAnime | null>> {
-    if (!anilistId) {
-      return {
-        error: 'Invalid or missing required parameter: anilistId!',
-        data: null,
-        provider: null,
-      };
-    }
-
-    try {
-      const [anilist, comix] = await Promise.allSettled([
-        this.fetchInfo(anilistId, 'MANGA'),
-        this.client.get(`${this.mappingUrl}/api/mappings/manga/anilist/${anilistId}?provider=comix`),
-      ]);
-
-      const anilistData = anilist.status === 'fulfilled' ? anilist.value : null;
-      const comixResult = comix.status === 'fulfilled' ? comix.value.data : null;
-
-      if (!anilistData?.data) {
-        return {
-          error: 'Failed to fetch AniList metadata.',
-          data: null,
-          provider: null,
-        };
-      }
-
-      return {
-        data: anilistData.data,
-        provider: comixResult.provider,
-      };
-    } catch (error) {
-      return {
-        error: error instanceof Error ? error.message : 'Unknown error occurred',
-        data: null,
-        provider: null,
-      };
-    }
-  }
-
-  /**
-   * Maps an Anilist anime ID to the corresponding AllManga provider ID.
-   *
-   * @param anilistId - Anilist media ID (required)
-   * @returns Provider mapping result including Anilist metadata and provider-specific ID (if found)
-   */
-  async fetchAllMangaProviderId(anilistId: number): Promise<IMetaProviderIdResponse<IMetaAnime | null>> {
-    if (!anilistId) {
-      return {
-        error: 'Invalid or missing required parameter: anilistId!',
-        data: null,
-        provider: null,
-      };
-    }
-
-    try {
-      const [anilist, allmanga] = await Promise.allSettled([
-        this.fetchInfo(anilistId, 'MANGA'),
-        this.client.get(`${this.mappingUrl}/api/mappings/manga/anilist/${anilistId}?provider=allmanga`),
-      ]);
-
-      const anilistData = anilist.status === 'fulfilled' ? anilist.value : null;
-      const allmangaResult = allmanga.status === 'fulfilled' ? allmanga.value.data : null;
-
-      if (!anilistData?.data) {
-        return {
-          error: 'Failed to fetch AniList metadata.',
-          data: null,
-          provider: null,
-        };
-      }
-
-      return {
-        data: anilistData.data,
-        provider: allmangaResult.provider,
-      };
-    } catch (error) {
-      return {
-        error: error instanceof Error ? error.message : 'Unknown error occurred',
-        data: null,
         provider: null,
       };
     }
@@ -1397,104 +1416,113 @@ export class Anilist extends BaseAnimeMeta {
   }
 
   /**
-   * Fetches a paginated list of airing schedules for anime with a minimum score.
-   *
-   * @param {number} page - The page number to fetch (deafault=1).
-   * @param {number} [score=60] - The minimum average or mean score for filtering anime (default: 60).If you have bad taste you can lower this
-   * **/
-  async fetchAiringSchedule(page: number = 1, score: number = 60): Promise<IBasePaginated<AiringSchedule[] | []>> {
+   * Converts two date strings into a variables object for AniList
+   * @param {string} startDate - Format "YYYY-MM-DD"
+   */
+  private getAniListVariables(startDate: String) {
+    const start = new Date(`${startDate}T00:00:00Z`);
+    const end = new Date(`${startDate}T23:59:59Z`);
+
+    return {
+      start: Math.floor(start.getTime() / 1000),
+      end: Math.floor(end.getTime() / 1000),
+    };
+  }
+  /**
+   * Fetches a paginated list of all anime airing on a specific date.
+   * @param {string} date - The date to check for airing episodes (Format: ISO 8601 standard (YYYY-MM-DD)).
+   * @param {number} [page=1] - The page number to fetch for pagination.
+   * @param {number} [perPage=20] - The number of results to return per page.
+   * @returns  A promise resolving to a paginated  object containing an array ofairing schedules and page metadata.
+   */
+  async fetchAiringSchedule(
+    date: string,
+    page: number = 1,
+    perPage: number = 20,
+  ): Promise<IMetaAnimePaginated<AiringSchedule[] | []>> {
     try {
+      const start = this.getAniListVariables(date).start;
+      const end = this.getAniListVariables(date).end;
       const variables = {
-        page: page,
-        perPage: 50,
-        notYetAired: true,
+        airingAtLesser: end,
+        airingAtGreater: start,
+        page,
+        perPage,
       };
       const response = await this.client.post(this.baseUrl, {
-        query: airingSchedule,
+        query: fetchAiringByDate,
         variables,
       });
 
-      if (!response.data) {
-        return {
-          hasNextPage: false,
-          currentPage: 0,
-          data: [],
-          error: response.statusText || 'Server returned an empty response',
-        };
-      }
-
-      const res = response.data.data.Page.airingSchedules
-        .filter(
-          (item: any) =>
-            item.media.format === 'TV' &&
-            item.media.type === 'ANIME' &&
-            (item.media.averageScore >= score || item.media.meanScore >= score),
-        )
-        .map((item: any) => ({
-          malId: item.media.idMal,
-          anilistId: item.media.id,
-          bannerImage:
-            item.media.bannerImage ??
-            item.media.coverImage.extraLarge ??
-            item.media.coverImage.large ??
-            item.media.coverImage.medium,
-          image: item.media.coverImage.extraLarge ?? item.media.coverImage.large ?? item.media.coverImage.medium,
-          color: item.media.coverImage.color,
-          title: {
-            romaji: item.media.title.romaji ?? item.media.title.userPreferred,
-            english: item.media.title.english,
-            native: item.media.title.native,
-          },
-          format: item.media.format,
-          status: item.media.status,
-          popularity: item.media.popularity,
-          score: item.media.meanScore ?? item.media.averageScore,
-          genres: item.media.genres,
-          episodes: item.media.episodes,
-          duration: item.media.duration,
-          synopsis: item.media.description,
-          season: item.media.season,
-          releaseDate:
-            item.media.startDate && item.media.startDate.year
-              ? new Date(
-                  item.media.startDate.year,
-                  item.media.startDate.month - 1,
-                  item.media.startDate.day,
-                ).toLocaleDateString('en-US', {
+      const res = response.data.data.Page.airingSchedules.map((item: any) => ({
+        malId: item.media.idMal,
+        anilistId: item.media.id,
+        bannerImage:
+          item.media.bannerImage ??
+          item.media.coverImage.extraLarge ??
+          item.media.coverImage.large ??
+          item.media.coverImage.medium,
+        image: item.media.coverImage.extraLarge ?? item.media.coverImage.large ?? item.media.coverImage.medium,
+        color: item.media.coverImage.color,
+        title: {
+          romaji: item.media.title.romaji ?? item.media.title.userPreferred,
+          english: item.media.title.english,
+          native: item.media.title.native,
+        },
+        format: item.media.format,
+        status: item.media.status,
+        popularity: item.media.popularity,
+        score: item.media.meanScore ?? item.media.averageScore,
+        genres: item.media.genres,
+        episodes: item.media.episodes,
+        duration: item.media.duration,
+        synopsis: item.media.description,
+        season: item.media.season,
+        releaseDate:
+          item.media.startDate && item.media.startDate.year
+            ? new Date(
+                item.media.startDate.year,
+                item.media.startDate.month - 1,
+                item.media.startDate.day,
+              ).toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+              })
+            : 'Unknown',
+        endDate:
+          item.media.endDate && item.media.endDate.year
+            ? new Date(item.media.endDate.year, item.media.endDate.month - 1, item.media.endDate.day).toLocaleDateString(
+                'en-US',
+                {
                   year: 'numeric',
                   month: 'long',
                   day: 'numeric',
-                })
-              : 'Unknown',
-          endDate:
-            item.media.endDate && item.media.endDate.year
-              ? new Date(item.media.endDate.year, item.media.endDate.month - 1, item.media.endDate.day).toLocaleDateString(
-                  'en-US',
-                  {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
-                  },
-                )
-              : 'Unknown',
-          nextAiringEpisode: item.media.nextAiringEpisode
-            ? {
-                episode: item.media.nextAiringEpisode.episode,
-                id: item.media.nextAiringEpisode.id,
-                airingAt: item.media.nextAiringEpisode.airingAt,
-                timeUntilAiring: item.media.nextAiringEpisode.timeUntilAiring,
-              }
-            : null,
-        }));
+                },
+              )
+            : 'Unknown',
+        nextAiringEpisode: item.media.nextAiringEpisode
+          ? {
+              episode: item.media.nextAiringEpisode.episode,
+              id: item.media.nextAiringEpisode.id,
+              airingAt: item.media.nextAiringEpisode.airingAt,
+              timeUntilAiring: item.media.nextAiringEpisode.timeUntilAiring,
+            }
+          : null,
+      }));
       return {
         hasNextPage: response.data.data.Page.pageInfo.hasNextPage,
         currentPage: response.data.data.Page.pageInfo.currentPage,
+        lastPage: response.data.data.Page.pageInfo.lastPage,
+        perPage: response.data.data.Page.pageInfo.perPage,
         data: res,
       };
     } catch (error) {
       return {
         hasNextPage: false,
         currentPage: 0,
+        lastPage: 0,
+        perPage: 0,
         data: [],
         error: error instanceof Error ? error.message : 'Unknown err',
       };

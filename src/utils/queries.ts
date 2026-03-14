@@ -520,3 +520,60 @@ export const airingSchedule = `query Page($page: Int, $perPage: Int, $notYetAire
     }
   }
 }`;
+
+export const fetchAiringByDate = `query Page($page: Int, $perPage: Int, $airingAtLesser: Int, $airingAtGreater: Int) {
+  Page(page: $page, perPage: $perPage) {
+    airingSchedules(airingAt_lesser: $airingAtLesser, airingAt_greater: $airingAtGreater) {
+      media {
+        bannerImage
+        id
+        idMal
+         title {
+            romaji
+            english
+            native
+            userPreferred
+          }
+        averageScore
+        coverImage {
+          color
+          extraLarge
+          large
+          medium
+        }
+        description
+        duration
+        type
+        status
+        season
+        startDate {
+          day
+          month
+          year
+        }
+        endDate {
+          day
+          month
+          year
+        }
+        popularity
+        format
+        genres
+        nextAiringEpisode {
+          episode
+          id
+          airingAt
+        }
+        episodes
+        meanScore
+        countryOfOrigin
+      }
+    }
+    pageInfo {
+      currentPage
+      hasNextPage
+      lastPage
+      perPage
+    }
+  }
+}`;
