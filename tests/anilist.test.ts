@@ -63,7 +63,7 @@ test('returns an array containing seasonal anime', async () => {
 });
 
 test('returns an array of upcoming anime', async () => {
-  const data = await anilist.fetchTopUpcoming(1, 20);
+  const data = await anilist.fetchTopUpcoming(1, 10);
   expect(Array.isArray(data.data)).toBe(true);
   expect(data.data.length).toBeGreaterThan(0);
 });
