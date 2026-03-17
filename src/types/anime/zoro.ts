@@ -65,7 +65,7 @@ export interface IZEpisodes {
   hasDub: boolean;
 }
 export type HiAnimeServers = 'hd-1' | 'hd-2'; // removed hd-3
-
+export type AniwatchServers = 'vidsrc' | 'megacloud'; // removed | 't-cloud'
 export interface IZPaginated<T> extends IBasePaginated<T> {
   lastPage: number;
 }

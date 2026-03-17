@@ -1,4 +1,3 @@
-import { HiAnime } from './provider/anime/hianime.js';
 import { Anilist } from './provider/meta/anilist.js';
 import { FlixHQ } from './provider/movies/flixhq.js';
 import { Animepahe } from './provider/anime/animepahe.js';
@@ -9,10 +8,11 @@ import type { IMovieCountry, IMovieGenre } from './types/movies/movie.js';
 import type { HIGenre } from './types/anime/zoro.js';
 import type { IMetaFormat, Seasons } from './types/meta/meta-anime.js';
 import type { IAnimeCategory } from './types/base.js';
+import { Aniwatch } from './provider/anime/aniwatch.js';
 
 export {
   Anilist,
-  HiAnime,
+  Aniwatch,
   Kaido,
   Animepahe,
   Anizone,
