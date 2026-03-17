@@ -6,7 +6,7 @@ import { Animepahe } from '../provider/anime/animepahe.js';
 
 import type { IMetaDataMap, Provider } from '../types/meta/meta-anime.js';
 import { compareTwoStrings, nativeSimilarity } from '../utils/string-similarity.js';
-import { Kaido } from '../main.js';
+import { Aniwatch, Kaido } from '../main.js';
 
 type AnimeSearchResults = {
   id: string | null;
@@ -24,7 +24,7 @@ export default abstract class BaseAnimeMeta {
   protected client: FetchClient;
 
   protected anizone: Anizone;
-  protected hianime: HiAnime;
+  protected hianime: Aniwatch;
   protected animepahe: Animepahe;
   protected kaido: Kaido;
 
@@ -37,7 +37,7 @@ export default abstract class BaseAnimeMeta {
     }
     this.client = new FetchClient({ delayBetweenRequests: delay });
 
-    this.hianime = new HiAnime();
+    this.hianime = new Aniwatch();
     this.animepahe = new Animepahe();
     this.anizone = new Anizone();
     this.kaido = new Kaido();
