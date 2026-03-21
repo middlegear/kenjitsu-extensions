@@ -49,11 +49,7 @@ export class Anilist extends BaseAnimeMeta {
    */
   async fetchZoroProviderId(anilistId: number): Promise<IMetaProviderIdResponse<IMetaAnime | null>> {
     if (!anilistId) {
-      return {
-        error: 'Invalid or missing required parameter: anilistId!',
-        data: null,
-        provider: null,
-      };
+      return { error: 'Invalid or missing required parameter: anilistId!', data: null, provider: null };
     }
 
     try {
@@ -62,20 +58,20 @@ export class Anilist extends BaseAnimeMeta {
         this.client.get(`${this.mappingUrl}/api/mappings/anilist/${anilistId}?provider=hianime`),
       ]);
 
-      const anilistData = anilistSettled.status === 'fulfilled' ? anilistSettled.value : null;
-      const zoroResults = zoroSettled.status === 'fulfilled' ? zoroSettled.value.data : null;
+      if (anilistSettled.status === 'rejected') {
+        throw new Error(anilistSettled.reason);
+      }
+      const anilistData = anilistSettled.value.data;
 
-      if (!anilistData?.data) {
-        return {
-          error: 'Failed to fetch AniList metadata.',
-          data: null,
-          provider: null,
-        };
+      if (zoroSettled.status === 'rejected') {
+        throw new Error(zoroSettled.reason);
       }
 
+      const zoroResults = zoroSettled.value.data;
+
       return {
-        data: anilistData.data,
-        provider: zoroResults.provider,
+        data: anilistData,
+        provider: zoroResults?.provider,
       };
     } catch (error) {
       return {
@@ -101,22 +97,21 @@ export class Anilist extends BaseAnimeMeta {
     }
 
     try {
-      const [anilistSettled, zoroSettled] = await Promise.allSettled([
+      const [anilistSettled, kaidoSettled] = await Promise.allSettled([
         this.fetchInfo(anilistId, 'ANIME'),
         this.client.get(`${this.mappingUrl}/api/mappings/anilist/${anilistId}?provider=kaido`),
       ]);
 
-      const anilistData = anilistSettled.status === 'fulfilled' ? anilistSettled.value : null;
-      const zoroResults = zoroSettled.status === 'fulfilled' ? zoroSettled.value.data : null;
+      if (anilistSettled.status === 'rejected') {
+        throw new Error(anilistSettled.reason);
+      }
+      const anilistData = anilistSettled.value;
 
-      if (!anilistData?.data) {
-        return {
-          error: 'Failed to fetch AniList metadata.',
-          data: null,
-          provider: null,
-        };
+      if (kaidoSettled.status === 'rejected') {
+        throw new Error(kaidoSettled.reason);
       }
 
+      const zoroResults = kaidoSettled.value.data;
       return {
         data: anilistData.data,
         provider: zoroResults.provider,
@@ -129,6 +124,7 @@ export class Anilist extends BaseAnimeMeta {
       };
     }
   }
+
   /**
    * Maps an Anilist anime ID to the corresponding Anizone provider ID.
    *
@@ -150,20 +146,66 @@ export class Anilist extends BaseAnimeMeta {
         this.client.get(`${this.mappingUrl}/api/mappings/anilist/${anilistId}?provider=anizone`),
       ]);
 
-      const anilistData = anilist.status === 'fulfilled' ? anilist.value : null;
-      const anizoneResult = anizone.status === 'fulfilled' ? anizone.value.data : null;
-
-      if (!anilistData?.data) {
-        return {
-          error: 'Failed to fetch AniList metadata.',
-          data: null,
-          provider: null,
-        };
+      if (anilist.status == 'rejected') {
+        throw new Error(anilist.reason);
       }
+
+      const anilistData = anilist.value;
+      if (anizone.status === 'rejected') {
+        throw new Error(anizone.reason);
+      }
+
+      const anizoneResult = anizone.value.data;
 
       return {
         data: anilistData.data,
         provider: anizoneResult.provider,
+      };
+    } catch (error) {
+      return {
+        error: error instanceof Error ? error.message : 'Unknown error occurred',
+        data: null,
+        provider: null,
+      };
+    }
+  }
+
+  /**
+   * Maps an Anilist anime ID to the corresponding AllAnime provider ID.
+   *
+   * @param anilistId - Anilist media ID (required)
+   * @returns Provider mapping result including Anilist metadata and provider-specific ID (if found)
+   */
+  async fetchAllAnimeProviderId(anilistId: number): Promise<IMetaProviderIdResponse<IMetaAnime | null>> {
+    if (!anilistId) {
+      return {
+        error: 'Invalid or missing required parameter: anilistId!',
+        data: null,
+        provider: null,
+      };
+    }
+
+    try {
+      const [anilist, allanime] = await Promise.allSettled([
+        this.fetchInfo(anilistId, 'ANIME'),
+        this.client.get(`${this.mappingUrl}/api/mappings/anilist/${anilistId}?provider=allanime`),
+      ]);
+
+      if (anilist.status === 'rejected') {
+        throw new Error(anilist.reason);
+      }
+
+      const anilistData = anilist.value;
+
+      if (allanime.status === 'rejected') {
+        throw new Error(allanime.reason);
+      }
+
+      const allAnimeResult = allanime.value.data;
+
+      return {
+        data: anilistData.data,
+        provider: allAnimeResult.provider,
       };
     } catch (error) {
       return {
@@ -195,16 +237,16 @@ export class Anilist extends BaseAnimeMeta {
         this.client.get(`${this.mappingUrl}/api/mappings/anilist/${anilistId}?provider=animepahe`),
       ]);
 
-      const anilistData = anilist.status === 'fulfilled' ? anilist.value : null;
-      const animepaheResult = animepahe.status === 'fulfilled' ? animepahe.value.data : null;
-
-      if (!anilistData?.data) {
-        return {
-          error: 'Failed to fetch AniList metadata.',
-          data: null,
-          provider: null,
-        };
+      if (anilist.status === 'rejected') {
+        throw new Error(anilist.reason);
       }
+
+      const anilistData = anilist.value;
+      if (animepahe.status == 'rejected') {
+        throw new Error(animepahe.reason);
+      }
+
+      const animepaheResult = animepahe.value.data;
 
       return {
         data: anilistData.data,
@@ -242,26 +284,17 @@ export class Anilist extends BaseAnimeMeta {
       ]);
 
       if (initialResponse.status === 'rejected') {
-        return {
-          error: `Failed to fetch provider episodes: ${initialResponse.reason}`,
-          data: null,
-          providerEpisodes: [],
-          provider: null,
-        };
-      }
-      if (anizip.status === 'rejected') {
-        return {
-          error: `Failed to fetch provider episodes: ${anizip.reason}`,
-          data: null,
-          providerEpisodes: [],
-          provider: null,
-        };
+        throw new Error(initialResponse.reason);
       }
 
-      const anizoneAnimeId = initialResponse.status === 'fulfilled' ? initialResponse.value.provider?.id : null;
+      if (anizip.status === 'rejected') {
+        throw new Error(anizip.reason);
+      }
+
+      const anizoneAnimeId = initialResponse.value.provider?.id;
       const anizoneResult = await this.anizone.fetchAnimeInfo(anizoneAnimeId as string);
 
-      const anizipEpisodes = anizip.status === 'fulfilled' ? anizip.value.data.episodes : [];
+      const anizipEpisodes = anizip.value.data.episodes;
       const aniZipMap = new Map(
         (anizipEpisodes || []).map((item: { episodeAnizipNumber: any }) => [item.episodeAnizipNumber, item]),
       );
@@ -272,8 +305,8 @@ export class Anilist extends BaseAnimeMeta {
           const aniZipEpisode = aniZipMap.get(episode.episodeNumber) ?? null;
           return this.mergeEpisodeData(episode, aniZipEpisode, 'anizone');
         });
-      const anilistData = initialResponse.status === 'fulfilled' ? initialResponse.value.data : null;
-      const providerInfo = initialResponse.status === 'fulfilled' ? initialResponse.value.provider : null;
+      const anilistData = initialResponse.value.data;
+      const providerInfo = initialResponse.value.provider;
       return {
         data: anilistData,
         providerEpisodes: enrichedEpisodes,
@@ -312,23 +345,14 @@ export class Anilist extends BaseAnimeMeta {
       ]);
 
       if (initialResponse.status === 'rejected') {
-        return {
-          error: `Failed to fetch provider episodes: ${initialResponse.reason}`,
-          data: null,
-          providerEpisodes: [],
-          provider: null,
-        };
+        throw new Error(initialResponse.reason);
       }
+
       if (anizip.status === 'rejected') {
-        return {
-          error: `Failed to fetch provider episodes: ${anizip.reason}`,
-          data: null,
-          providerEpisodes: [],
-          provider: null,
-        };
+        throw new Error(anizip.reason);
       }
-      const hianimeId = initialResponse.status === 'fulfilled' ? initialResponse.value.provider?.id : null;
-      const anilistData = initialResponse.status === 'fulfilled' ? initialResponse.value.data : null;
+      const hianimeId = initialResponse.value.provider?.id;
+      const anilistData = initialResponse.value.data;
 
       const hianimeResult = await this.hianime.fetchEpisodes(hianimeId as string);
 
@@ -341,7 +365,7 @@ export class Anilist extends BaseAnimeMeta {
         const aniZipEpisode = aniZipMap.get(episode.episodeNumber);
         return this.mergeEpisodeData(episode, aniZipEpisode, 'hianime & kaido');
       });
-      const providerInfo = initialResponse.status === 'fulfilled' ? initialResponse.value.provider : null;
+      const providerInfo = initialResponse.value.provider;
       return {
         data: anilistData,
         providerEpisodes: enrichedEpisodes,
@@ -356,6 +380,7 @@ export class Anilist extends BaseAnimeMeta {
       };
     }
   }
+
   /**
    * Fetches episode list from (Zoro / Kaido) provider and enriches episodes with Anizip metadata.
    *
@@ -379,23 +404,14 @@ export class Anilist extends BaseAnimeMeta {
       ]);
 
       if (initialResponse.status === 'rejected') {
-        return {
-          error: `Failed to fetch provider episodes: ${initialResponse.reason}`,
-          data: null,
-          providerEpisodes: [],
-          provider: null,
-        };
+        throw new Error(initialResponse.reason);
       }
+
       if (anizip.status === 'rejected') {
-        return {
-          error: `Failed to fetch provider episodes: ${anizip.reason}`,
-          data: null,
-          providerEpisodes: [],
-          provider: null,
-        };
+        throw new Error(anizip.reason);
       }
-      const hianimeId = initialResponse.status === 'fulfilled' ? initialResponse.value.provider?.id : null;
-      const anilistData = initialResponse.status === 'fulfilled' ? initialResponse.value.data : null;
+      const hianimeId = initialResponse.value.provider?.id;
+      const anilistData = initialResponse.value.data;
 
       const hianimeResult = await this.kaido.fetchEpisodes(hianimeId as string);
 
@@ -408,7 +424,7 @@ export class Anilist extends BaseAnimeMeta {
         const aniZipEpisode = aniZipMap.get(episode.episodeNumber);
         return this.mergeEpisodeData(episode, aniZipEpisode, 'hianime & kaido');
       });
-      const providerInfo = initialResponse.status === 'fulfilled' ? initialResponse.value.provider : null;
+      const providerInfo = initialResponse.value.provider;
       return {
         data: anilistData,
         providerEpisodes: enrichedEpisodes,
@@ -447,25 +463,16 @@ export class Anilist extends BaseAnimeMeta {
       ]);
 
       if (initialResponse.status === 'rejected') {
-        return {
-          error: `Failed to fetch provider episodes: ${initialResponse.reason}`,
-          data: null,
-          providerEpisodes: [],
-          provider: null,
-        };
-      }
-      if (anizip.status === 'rejected') {
-        return {
-          error: `Failed to fetch provider episodes: ${anizip.reason}`,
-          data: null,
-          providerEpisodes: [],
-          provider: null,
-        };
+        throw new Error(initialResponse.reason);
       }
 
-      const anilistData = initialResponse.status === 'fulfilled' ? initialResponse.value.data : null;
-      const paheId = initialResponse.status === 'fulfilled' ? initialResponse.value.provider?.id : null;
-      const anizipEpisodes = anizip.status === 'fulfilled' ? anizip.value.data.episodes : [];
+      if (anizip.status === 'rejected') {
+        throw new Error(anizip.reason);
+      }
+
+      const anilistData = initialResponse.value.data;
+      const paheId = initialResponse.value.provider?.id;
+      const anizipEpisodes = anizip.value.data.episodes;
 
       const animepahe = await this.animepahe.fetchEpisodes(paheId as string);
 
@@ -487,7 +494,7 @@ export class Anilist extends BaseAnimeMeta {
           return this.mergeEpisodeData(episode, aniZipEpisode, 'animepahe');
         });
       }
-      const providerInfo = initialResponse.status === 'fulfilled' ? initialResponse.value.provider : null;
+      const providerInfo = initialResponse.value.provider;
       return {
         data: anilistData,
         providerEpisodes: enrichedEpisodes as IMetaProviderEpisodes[],
@@ -502,7 +509,6 @@ export class Anilist extends BaseAnimeMeta {
       };
     }
   }
-
   /**
    * Searches for anime or manga using a query string.
    *
