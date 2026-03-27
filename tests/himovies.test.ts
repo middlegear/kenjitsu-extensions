@@ -91,7 +91,7 @@ test('return an array containing object of available servers for a specific tv',
 });
 
 test('returns an object containing streaming sources for movie', async () => {
-  const data = await himovies.fetchSources('movie-bad-boys-18997', 'akcloud');
+  const data = await himovies.fetchSources('movie-mike-nick-nick-alice-1489', 'akcloud');
   expect(data.data).not.toBeNull();
   expect(Array.isArray(data.data?.sources)).toBe(true);
   expect(data.data?.sources.length).toBeGreaterThan(0);
