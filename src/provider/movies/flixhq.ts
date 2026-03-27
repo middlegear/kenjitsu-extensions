@@ -1,4 +1,4 @@
-import { BaseClass } from '../../models/base.js';
+import { BaseClass, type ClientConfig } from '../../models/base.js';
 import * as cheerio from 'cheerio';
 import {
   HIMovieCountryCode,
@@ -29,10 +29,11 @@ import type { IResponse, ISourceBaseResponse, IVideoSource } from '../../types/b
 
 export class FlixHQ extends BaseClass {
   private readonly baseUrl: string;
-
-  constructor(baseUrl: string = 'https://flixhq.to') {
-    super(20000);
+  private readonly VidCloud: VidCloud;
+  constructor(options: ClientConfig = {}, baseUrl: string = 'https://flixhq.to') {
+    super(options);
     this.baseUrl = baseUrl;
+    this.VidCloud = new VidCloud(options);
   }
 
   /**
@@ -1027,12 +1028,12 @@ export class FlixHQ extends BaseClass {
         case 'upcloud':
           return {
             headers: { Referer: `${serverUrl.origin}/` },
-            data: await new VidCloud().extract(serverUrl, `${this.baseUrl}/`),
+            data: await this.VidCloud.extract(serverUrl, `${this.baseUrl}/`),
           };
         default:
           return {
             headers: { Referer: `${serverUrl.origin}/` },
-            data: await new VidCloud().extract(serverUrl, `${this.baseUrl}/`),
+            data: await this.VidCloud.extract(serverUrl, `${this.baseUrl}/`),
           };
       }
     }

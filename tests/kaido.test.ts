@@ -10,7 +10,7 @@ test('returns an array based on search query', async () => {
 });
 
 test('returns an array based on search suggestions query', async () => {
-  const data = await zoro.searchSuggestions('jujutsu kaisen');
+  const data = await zoro.searchSuggestions('juju');
   expect(Array.isArray(data.data)).toBe(true);
   expect(data.data.length).toBeGreaterThan(0);
 });

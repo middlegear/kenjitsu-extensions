@@ -1,10 +1,10 @@
-import { BaseClass } from '../models/base.js';
+import { BaseClass, type ClientConfig } from '../models/base.js';
 import type { IVideoSource } from '../types/base.js';
 import { unpack } from '../utils/unpacker.js';
 
 class Kwik extends BaseClass {
-  constructor() {
-    super();
+  constructor(options: ClientConfig = {}) {
+    super(options);
   }
 
   async extract(videoUrl: URL, quality: string, referer: string): Promise<IVideoSource> {

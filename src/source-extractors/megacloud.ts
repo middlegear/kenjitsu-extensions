@@ -1,10 +1,12 @@
 import { getClientKey } from '../utils/getClientKey.js';
 import { FetchClient } from '../config/client.js';
 import type { IVideoSource } from '../types/base.js';
+import { BaseClass, type ClientConfig } from '../models/base.js';
 
-const client = new FetchClient();
-
-class MegaCloud {
+class MegaCloud extends BaseClass {
+  constructor(options: ClientConfig = {}) {
+    super(options);
+  }
   private readonly DEFAULT_CHARSET = Array.from({ length: 95 }, (_, i) => String.fromCharCode(i + 32));
 
   private deriveKey(secret: string, nonce: string): string {
@@ -185,7 +187,7 @@ class MegaCloud {
     const sourcesBaseUrl = `${videoUrl.origin}${basePathname}/getSources`;
 
     try {
-      const { data: initialResponse } = await client.get(sourcesBaseUrl, {
+      const { data: initialResponse } = await this.client.get(sourcesBaseUrl, {
         params: {
           id: sourceId,
           _k: clientKey,

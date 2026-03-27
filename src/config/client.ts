@@ -23,6 +23,14 @@ export class RequestError extends Error {
 
 export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'HEAD';
 
+export interface HeaderOptions {
+  browsers?: Array<{ name: string; minVersion?: number; maxVersion?: number }>;
+  devices?: string[];
+  locales?: string[];
+  operatingSystems?: string[];
+  httpVersion?: string;
+}
+
 export interface RequestConfig {
   url: string;
   method?: HttpMethod;
@@ -31,8 +39,11 @@ export interface RequestConfig {
   params?: Record<string, string>;
   retries?: number;
   timeout?: number;
-
+  http2?: boolean;
   delayBetweenRequests?: number;
+  headerGeneratorOptions?: HeaderOptions;
+  proxyUrl?: string;
+  token?: string;
 }
 
 export interface FetchResponse<T = any> {
@@ -50,20 +61,33 @@ export class FetchClient {
   private readonly defaultOptions: {
     timeout: number;
     retries: number;
+    http2: boolean;
     delayBetweenRequests: number;
+    headerGeneratorOptions: HeaderOptions;
+    proxyUrl?: string;
   };
   private lastRequestTime = 0;
-
+  private http2: boolean;
   private lastUserAgent: string | null = null;
   private readonly requestInterceptors: RequestInterceptor[] = [];
   private readonly responseInterceptors: ResponseInterceptor[] = [];
 
   constructor(options: Partial<RequestConfig> = {}) {
     this.defaultOptions = {
-      timeout: options.timeout || 5000,
+      timeout: options.timeout || 10000,
       retries: options.retries || 2,
-      delayBetweenRequests: options.delayBetweenRequests || 200,
+      delayBetweenRequests: options.delayBetweenRequests || 300,
+      http2: options.http2 !== undefined ? options.http2 : false,
+      proxyUrl: options.proxyUrl,
+      headerGeneratorOptions: options.headerGeneratorOptions || {
+        browsers: [{ name: 'chrome', minVersion: 130, maxVersion: 140 }],
+        devices: ['desktop'],
+        locales: ['en-US'],
+        operatingSystems: ['windows'],
+      },
     };
+
+    this.http2 = this.defaultOptions.http2;
   }
 
   public useRequestInterceptor(interceptor: RequestInterceptor): void {
@@ -78,20 +102,15 @@ export class FetchClient {
     return this.lastUserAgent;
   }
 
-  private async delayIfNeeded(): Promise<void> {
-    const now = Date.now();
-    const elapsed = now - this.lastRequestTime;
-    const baseDelay = this.defaultOptions.delayBetweenRequests;
-    const jitter = Math.floor(Math.random() * 250);
-    const waitTime = baseDelay + jitter - elapsed;
-    if (waitTime > 0) {
-      await new Promise(res => setTimeout(res, waitTime));
-    }
-    this.lastRequestTime = Date.now();
-  }
-
   public async request<T = any>(config: RequestConfig): Promise<FetchResponse<T>> {
-    let finalConfig: RequestConfig = { ...this.defaultOptions, ...config };
+    let finalConfig: RequestConfig = {
+      ...this.defaultOptions,
+      ...config,
+      headerGeneratorOptions: {
+        ...this.defaultOptions.headerGeneratorOptions,
+        ...config.headerGeneratorOptions,
+      },
+    };
 
     await this.delayIfNeeded();
 
@@ -99,21 +118,27 @@ export class FetchClient {
       finalConfig = await interceptor(finalConfig);
     }
 
-    const { url, method = 'GET', headers = {}, body, params } = finalConfig;
+    const { url, method = 'GET', headers = {}, body, params, proxyUrl } = finalConfig;
     const retries = finalConfig.retries ?? this.defaultOptions.retries;
 
     const finalUrl = params ? `${url}?${new URLSearchParams(params).toString()}` : url;
+    const httpVersionSelect = finalConfig.http2 === true ? '2' : '1';
 
     const gotOptions: any = {
       method,
       headers,
-
+      proxyUrl,
+      sessionToken: { id: token },
+      headerGeneratorOptions: {
+        ...finalConfig.headerGeneratorOptions,
+        httpVersion: httpVersionSelect as any,
+      },
       timeout: { request: finalConfig.timeout },
       throwHttpErrors: false,
       hooks: {
         beforeRequest: [
           (options: { headers: { [x: string]: null } }) => {
-            this.lastUserAgent = options.headers['user-agent'] || null;
+            this.lastUserAgent = (options.headers['user-agent'] as any) || null;
           },
         ],
       },
@@ -125,9 +150,8 @@ export class FetchClient {
         headers['content-type'] === 'application/x-www-form-urlencoded';
 
       if (body instanceof FormData) {
-        gotOptions.form = body;
+        gotOptions.form = body as any;
       } else if (isForm && typeof body === 'object') {
-        // 'got' wants a plain object here to serialize it as form-data
         gotOptions.form = body;
       } else if (typeof body === 'object') {
         gotOptions.json = body;
@@ -141,10 +165,10 @@ export class FetchClient {
 
       let data: T;
       const contentType = response.headers['content-type'];
-      if (contentType?.includes('application/json')) {
+      if (contentType?.includes('application/json') && typeof response.body === 'string') {
         data = JSON.parse(response.body) as T;
       } else {
-        data = response.body as T;
+        data = response.body as unknown as T;
       }
 
       let responseObj: FetchResponse<T> = {
@@ -172,7 +196,7 @@ export class FetchClient {
 
       if (error instanceof RequestError) throw error;
 
-      throw new NetworkError(`Request failed: ${(error as Error).message}`, error as Error);
+      throw new NetworkError(`${error as Error}`, error as Error);
     }
   }
 
@@ -182,5 +206,17 @@ export class FetchClient {
 
   public async post<T = any>(url: string, data?: any, config: Partial<RequestConfig> = {}) {
     return this.request<T>({ ...config, url, method: 'POST', body: data });
+  }
+
+  private async delayIfNeeded(): Promise<void> {
+    const now = Date.now();
+    const elapsed = now - this.lastRequestTime;
+    const baseDelay = this.defaultOptions.delayBetweenRequests;
+    const jitter = Math.floor(Math.random() * 250);
+    const waitTime = baseDelay + jitter - elapsed;
+    if (waitTime > 0) {
+      await new Promise(res => setTimeout(res, waitTime));
+    }
+    this.lastRequestTime = Date.now();
   }
 }

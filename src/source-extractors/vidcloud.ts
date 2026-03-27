@@ -1,15 +1,13 @@
 import { getClientKey } from '../utils/getClientKey.js';
 import { FetchClient } from '../config/client.js';
 import type { IVideoSource } from '../types/base.js';
+import { BaseClass, type ClientConfig } from '../models/base.js';
 
-const client = new FetchClient();
-class VidCloud {
-  private DefaultCharacterSet: string[] = Array.from({ length: 95 }, (_, i) => String.fromCharCode(32 + i));
-  private readonly characterSet: string[];
-
-  constructor(characterSet: string[] = this.DefaultCharacterSet) {
-    this.characterSet = [...characterSet];
+class VidCloud extends BaseClass {
+  constructor(options: ClientConfig = {}) {
+    super(options);
   }
+  private DefaultCharacterSet: string[] = Array.from({ length: 95 }, (_, i) => String.fromCharCode(32 + i));
 
   private LinearCongruentialPrng(seed: number): () => number {
     let currentSeed = seed >>> 0;
@@ -80,9 +78,9 @@ class VidCloud {
     for (let i = 1; i <= iterations; i++) {
       const passphrase = keyphrase + i;
 
-      const shuffled = this.FisherYatesShuffle(this.characterSet, passphrase);
+      const shuffled = this.FisherYatesShuffle(this.DefaultCharacterSet, passphrase);
       const mapping = new Map<string, string>();
-      this.characterSet.forEach((char, idx) => {
+      this.DefaultCharacterSet.forEach((char, idx) => {
         mapping.set(shuffled[idx], char);
       });
       result = result
@@ -97,12 +95,14 @@ class VidCloud {
       result = result
         .split('')
         .map(char => {
-          const charIndex = this.characterSet.indexOf(char);
+          const charIndex = this.DefaultCharacterSet.indexOf(char);
           if (charIndex === -1) {
             return char;
           }
-          const offset = prng() % this.characterSet.length;
-          return this.characterSet[(charIndex - offset + this.characterSet.length) % this.characterSet.length];
+          const offset = prng() % this.DefaultCharacterSet.length;
+          return this.DefaultCharacterSet[
+            (charIndex - offset + this.DefaultCharacterSet.length) % this.DefaultCharacterSet.length
+          ];
         })
         .join('');
     }
@@ -184,7 +184,7 @@ class VidCloud {
     const basePathname = fullPathname.substring(0, lastSlashIndex);
     const sourcesBaseUrl = `${videoUrl.origin}${basePathname}/getSources`;
     try {
-      const { data: initialResponse } = await client.get(sourcesBaseUrl, {
+      const { data: initialResponse } = await this.client.get(sourcesBaseUrl, {
         params: {
           id: sourceId,
           _k: clientKey,

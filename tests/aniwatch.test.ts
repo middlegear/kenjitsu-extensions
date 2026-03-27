@@ -1,7 +1,8 @@
 import { test, expect } from 'vitest';
 import { HiAnime } from '../src/provider/anime/hianime.js';
+import { Aniwatch } from '../src/provider/anime/aniwatch.js';
 
-const zoro = new HiAnime();
+const zoro = new Aniwatch();
 
 test('returns an array based on search query', async () => {
   const data = await zoro.search('bleach', 1);
@@ -130,7 +131,7 @@ test('return an object containing serverInfo', async () => {
 });
 
 test('returns an object containing streaming sources', async () => {
-  const data = await zoro.fetchSources('solo-leveling-18718-episode-119497', 'hd-2', 'sub');
+  const data = await zoro.fetchSources('solo-leveling-18718-episode-119497', 'megacloud', 'sub');
   expect(data.data).not.toBeNull();
   expect(Array.isArray(data.data?.sources)).toBe(true);
   expect(data.data?.sources.length).toBeGreaterThan(0);

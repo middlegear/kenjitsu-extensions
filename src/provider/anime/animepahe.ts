@@ -1,4 +1,4 @@
-import { BaseClass } from '../../models/base.js';
+import { BaseClass, type ClientConfig } from '../../models/base.js';
 
 import * as cheerio from 'cheerio';
 import Kwik from '../../source-extractors/kwik.js';
@@ -18,9 +18,11 @@ import type { IResponse, IServerInfo, ISourceBaseResponse, ISubOrDub, IVideoSour
  */
 export class Animepahe extends BaseClass {
   private readonly baseUrl: string;
-  constructor(baseUrl: string = 'https://animepahe.si') {
-    super();
+  private readonly kwik: Kwik;
+  constructor(options: ClientConfig = {}, baseUrl: string = 'https://animepahe.si') {
+    super(options);
     this.baseUrl = baseUrl;
+    this.kwik = new Kwik(options);
   }
 
   private headers(id: string | false) {
@@ -533,11 +535,10 @@ export class Animepahe extends BaseClass {
 
       const serverIds = this.findServerIds(servers.data as IServerInfo, servers.download as IServerInfo, version);
 
-      const kwikExtractor = new Kwik();
       const extractionPromises = serverIds.map(async s => {
         const url = new URL(s.serverId, this.baseUrl);
 
-        return kwikExtractor.extract(url, s.serverName, this.baseUrl);
+        return this.kwik.extract(url, s.serverName, this.baseUrl);
       });
 
       const results = await Promise.allSettled(extractionPromises);

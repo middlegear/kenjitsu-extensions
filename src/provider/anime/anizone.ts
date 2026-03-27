@@ -1,5 +1,5 @@
 import * as cheerio from 'cheerio';
-import { BaseClass } from '../../models/base.js';
+import { BaseClass, type ClientConfig } from '../../models/base.js';
 
 import type {
   IAnizone,
@@ -19,8 +19,8 @@ import type { IBase, IResponse, ISourceBaseResponse, IVideoSource } from '../../
 export class Anizone extends BaseClass {
   private readonly baseUrl: string;
 
-  constructor(baseUrl: string = 'https://anizone.to') {
-    super();
+  constructor(options: ClientConfig = {}, baseUrl: string = 'https://anizone.to') {
+    super(options);
     this.baseUrl = baseUrl;
   }
 

@@ -16,7 +16,7 @@ import {
   type IZPaginated,
 } from '../../types/movies/movie.js';
 import VideoStream from '../../source-extractors/videostream.js';
-import { BaseClass } from '../../models/base.js';
+import { BaseClass, type ClientConfig } from '../../models/base.js';
 import type { ISourceBaseResponse, IVideoSource, IResponse } from '../../types/base.js';
 
 /**
@@ -27,9 +27,11 @@ import type { ISourceBaseResponse, IVideoSource, IResponse } from '../../types/b
  */
 export class HiMovies extends BaseClass {
   private readonly baseUrl: string;
-  constructor(baseUrl: string = 'https://himovies.sx') {
-    super();
+  private readonly VideoStream: VideoStream;
+  constructor(options: ClientConfig, baseUrl: string = 'https://himovies.sx') {
+    super(options);
     this.baseUrl = baseUrl;
+    this.VideoStream = new VideoStream(options);
   }
   /**
    * Parses movie/TV show items from a Cheerio selection for standard item lists.
@@ -973,12 +975,12 @@ export class HiMovies extends BaseClass {
         case 'upcloud':
           return {
             headers: { Referer: `${serverUrl.origin}/` },
-            data: await new VideoStream().extract(serverUrl, `${this.baseUrl}/`),
+            data: await this.VideoStream.extract(serverUrl, `${this.baseUrl}/`),
           };
         default:
           return {
             headers: { Referer: `${serverUrl.origin}/` },
-            data: await new VideoStream().extract(serverUrl, `${this.baseUrl}/`),
+            data: await this.VideoStream.extract(serverUrl, `${this.baseUrl}/`),
           };
       }
     }

@@ -1,10 +1,10 @@
-/// used by kaido.to
-import { FetchClient } from '../config/client.js';
+import { BaseClass, type ClientConfig } from '../models/base.js';
 import type { IVideoSource } from '../types/base.js';
 
-const client = new FetchClient();
-
-class RapidCloud {
+class RapidCloud extends BaseClass {
+  constructor(options: ClientConfig = {}) {
+    super(options);
+  }
   private async fetchKey(): Promise<string> {
     const url = 'https://raw.githubusercontent.com/yogesh-hacker/MegacloudKeys/refs/heads/main/keys.json';
     try {
@@ -56,7 +56,7 @@ class RapidCloud {
     const sourcesBaseUrl = `${videoUrl.origin}${basePathname}/getSources`;
     // https://rapid-cloud.co/embed-2/v2/e-1/getSources?id=6KfhxUdoBB7N
     try {
-      const { data: initialResponse } = await client.get(sourcesBaseUrl, {
+      const { data: initialResponse } = await this.client.get(sourcesBaseUrl, {
         params: {
           id: sourceId,
         },

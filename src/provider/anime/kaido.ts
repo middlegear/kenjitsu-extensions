@@ -1,5 +1,5 @@
 import * as cheerio from 'cheerio';
-import { BaseClass } from '../../models/base.js';
+import { BaseClass, type ClientConfig } from '../../models/base.js';
 import type { IAnimeCategory, IResponse, IServerInfo, ISubOrDub, IVideoSource } from '../../types/base.js';
 import {
   HIGenres,
@@ -30,9 +30,10 @@ import RapidCloud from '../../source-extractors/rapidcloud.js';
  */
 export class Kaido extends BaseClass {
   private readonly baseUrl: string;
-
-  constructor(baseUrl: string = 'https://kaido.to') {
-    super();
+  private readonly RapidCloud: RapidCloud;
+  constructor(options: ClientConfig = {}, baseUrl: string = 'https://kaido.to') {
+    super(options);
+    this.RapidCloud = new RapidCloud(options);
     this.baseUrl = baseUrl;
   }
 
@@ -1610,7 +1611,7 @@ export class Kaido extends BaseClass {
       const serverUrl = new URL(episodeId);
       return {
         headers: { Referer: `${serverUrl.origin}/` },
-        data: await new RapidCloud().extract(serverUrl, `${this.baseUrl}/`),
+        data: await this.RapidCloud.extract(serverUrl, `${this.baseUrl}/`),
         syncData: { anilistId: null, malId: null, name: null },
       };
     }

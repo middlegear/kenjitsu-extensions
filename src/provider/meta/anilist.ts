@@ -14,7 +14,6 @@ import type {
   IMetaProviderIdResponse,
 } from '../../types/meta/meta-anime.js';
 import {
-  airingSchedule,
   characterQuery,
   fetchAiringByDate,
   fetchByIdQuery,
