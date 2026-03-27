@@ -1,5 +1,4 @@
 import { test, expect } from 'vitest';
-import { HiAnime } from '../src/provider/anime/hianime.js';
 import { Aniwatch } from '../src/provider/anime/aniwatch.js';
 
 const zoro = new Aniwatch();
@@ -11,7 +10,7 @@ test('returns an array based on search query', async () => {
 });
 
 test('returns an array based on search suggestions query', async () => {
-  const data = await zoro.searchSuggestions('jujutsu');
+  const data = await zoro.searchSuggestions('friere');
   expect(Array.isArray(data.data)).toBe(true);
   expect(data.data.length).toBeGreaterThan(0);
 });
