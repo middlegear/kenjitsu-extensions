@@ -65,6 +65,7 @@ export class FetchClient {
     delayBetweenRequests: number;
     headerGeneratorOptions: HeaderOptions;
     proxyUrl?: string;
+    token?: string;
   };
   private lastRequestTime = 0;
   private http2: boolean;
@@ -79,6 +80,7 @@ export class FetchClient {
       delayBetweenRequests: options.delayBetweenRequests || 300,
       http2: options.http2 !== undefined ? options.http2 : false,
       proxyUrl: options.proxyUrl,
+      token: options.token,
       headerGeneratorOptions: options.headerGeneratorOptions || {
         browsers: [{ name: 'chrome', minVersion: 130, maxVersion: 140 }],
         devices: ['desktop'],
@@ -118,7 +120,7 @@ export class FetchClient {
       finalConfig = await interceptor(finalConfig);
     }
 
-    const { url, method = 'GET', headers = {}, body, params, proxyUrl } = finalConfig;
+    const { url, method = 'GET', headers = {}, body, params, proxyUrl, token } = finalConfig;
     const retries = finalConfig.retries ?? this.defaultOptions.retries;
 
     const finalUrl = params ? `${url}?${new URLSearchParams(params).toString()}` : url;
@@ -128,7 +130,7 @@ export class FetchClient {
       method,
       headers,
       proxyUrl,
-      sessionToken: { id: token },
+      sessionToken: token ? { id: token } : undefined,
       headerGeneratorOptions: {
         ...finalConfig.headerGeneratorOptions,
         httpVersion: httpVersionSelect as any,
@@ -137,17 +139,16 @@ export class FetchClient {
       throwHttpErrors: false,
       hooks: {
         beforeRequest: [
-          (options: { headers: { [x: string]: null } }) => {
-            this.lastUserAgent = (options.headers['user-agent'] as any) || null;
+          (options: any) => {
+            this.lastUserAgent = options.headers['user-agent'] || null;
           },
         ],
       },
     };
 
     if (body !== undefined && body !== null) {
-      const isForm =
-        headers['Content-Type'] === 'application/x-www-form-urlencoded' ||
-        headers['content-type'] === 'application/x-www-form-urlencoded';
+      const contentType = (headers['Content-Type'] || headers['content-type'] || '').toLowerCase();
+      const isForm = contentType === 'application/x-www-form-urlencoded';
 
       if (body instanceof FormData) {
         gotOptions.form = body as any;

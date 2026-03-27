@@ -9,8 +9,11 @@ export interface ClientConfig {
   proxyUrl?: string;
 
   /**
-   * Custom header generator options.
+   * Session token
+   * * @default undefined
    */
+  token?: string;
+
   headerGeneratorOptions?: {
     browsers?: Array<{ name: string; minVersion?: number; maxVersion?: number }>;
     devices?: string[];
@@ -59,6 +62,7 @@ export abstract class BaseClass {
   constructor(options: ClientConfig = {}) {
     const config: ClientConfig = {
       proxyUrl: options.proxyUrl,
+      token: options.token,
       headerGeneratorOptions: options.headerGeneratorOptions ?? {
         browsers: [{ name: 'chrome', minVersion: 130, maxVersion: 140 }],
         devices: ['desktop'],
@@ -75,6 +79,7 @@ export abstract class BaseClass {
       timeout: config.timeout,
       http2: config.http2,
       proxyUrl: config.proxyUrl,
+      token: config.token,
       delayBetweenRequests: config.delayBetweenRequests,
       retries: config.retries,
       headerGeneratorOptions: config.headerGeneratorOptions,

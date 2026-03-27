@@ -1045,27 +1045,27 @@ class Animekai extends BaseClass {
             .replace(/server\s+(\d+)/g, 'server-$1') || null,
       });
     });
-    // $(softSubSelector).each((_, element) => {
-    //   servers.raw.push({
-    //     serverId: Number($(element).attr('data-sid')) || null,
-    //     mediaId: $(element).attr('data-lid') || null,
-    //     // eid: $(element).attr('data-eid') || null,
-    //     serverName:
-    //       $(element)
-    //         .text()
-    //         .trim()
-    //         .toLowerCase()
-    //         .replace(/server\s+(\d+)/g, 'server-$1') || null,
-    //   });
-    // });
-    const filterServer2 = (serverArray: ISubServers[]): ISubServers[] => {
-      return serverArray.filter(server => {
-        return server.serverName && !server.serverName.includes('server-2');
+    $(softSubSelector).each((_, element) => {
+      servers.raw.push({
+        serverId: Number($(element).attr('data-sid')) || null,
+        mediaId: $(element).attr('data-lid') || null,
+        // eid: $(element).attr('data-eid') || null,
+        serverName:
+          $(element)
+            .text()
+            .trim()
+            .toLowerCase()
+            .replace(/server\s+(\d+)/g, 'server-$1') || null,
       });
-    };
-    servers.sub = filterServer2(servers.sub);
-    servers.dub = filterServer2(servers.dub);
-    servers.raw = filterServer2(servers.raw);
+    });
+    // const filterServer2 = (serverArray: ISubServers[]): ISubServers[] => {
+    //   return serverArray.filter(server => {
+    //     return server.serverName && !server.serverName.includes('server-2');
+    //   });
+    // };
+    // servers.sub = filterServer2(servers.sub);
+    // servers.dub = filterServer2(servers.dub);
+    // servers.raw = filterServer2(servers.raw);
     return { data: servers };
   }
 
