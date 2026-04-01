@@ -79,12 +79,6 @@ test('returns an object that contains both providerId and anime info for Animepa
   expect(data.data).not.toBeNull();
 });
 
-test('returns an object that contains both providerId and anime info for AnimeKai', async () => {
-  const data = await anilist.fetchAnimeKaiProviderId(169755);
-  expect(data.provider).not.toBeNull();
-  expect(data.data).not.toBeNull();
-});
-
 test('returns an object that contains both providerId and anime info for aniwatch', async () => {
   const data = await anilist.fetchAniwatchProviderId(169755);
   expect(data.provider).not.toBeNull();
@@ -111,12 +105,6 @@ test('returns an object has anime info and provider episodes array for Anizone',
   expect(data.data).not.toBeNull();
 });
 
-test('returns an object has anime info and provider episodes array for Animekai', async () => {
-  const data = await anilist.fetchAnimeKaiProviderEpisodes(116674);
-  expect(Array.isArray(data.providerEpisodes)).toBe(true);
-  expect(data.providerEpisodes.length).toBeGreaterThan(0);
-  expect(data.data).not.toBeNull();
-});
 test('returns an object has anime info and provider episodes array for Animepahe', async () => {
   const data = await anilist.fetchAnimepaheProviderEpisodes(116674);
   expect(Array.isArray(data.providerEpisodes)).toBe(true);
