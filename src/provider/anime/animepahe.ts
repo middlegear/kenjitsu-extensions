@@ -19,7 +19,7 @@ import type { IResponse, IServerInfo, ISourceBaseResponse, ISubOrDub, IVideoSour
 export class Animepahe extends BaseClass {
   private readonly baseUrl: string;
   private readonly kwik: Kwik;
-  constructor(baseUrl: string = 'https://animepahe.si', options: ClientConfig = {}) {
+  constructor(baseUrl: string = 'https://animepahe.com', options: ClientConfig = {}) {
     super(options);
     this.baseUrl = baseUrl;
     this.kwik = new Kwik(options);
