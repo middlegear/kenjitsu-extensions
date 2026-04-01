@@ -4,11 +4,9 @@ import { Anizone } from '../provider/anime/anizone.js';
 
 import { Animepahe } from '../provider/anime/animepahe.js';
 
-import type { IMetaDataMap, Provider } from '../types/meta/meta-anime.js';
-import { compareTwoStrings, nativeSimilarity } from '../utils/string-similarity.js';
 import { Aniwatch } from '../provider/anime/aniwatch.js';
 import { Kaido } from '../provider/anime/kaido.js';
-import { Animekai } from '../provider/anime/animekai.js';
+
 import { AniZip } from '../provider/meta/anizip.js';
 
 type AnimeSearchResults = {
@@ -30,7 +28,6 @@ export default abstract class BaseAnimeMeta {
   protected aniwatch: Aniwatch;
   protected animepahe: Animepahe;
   protected kaido: Kaido;
-  protected animekai: Animekai;
   protected anizip: AniZip;
 
   constructor(provider: 'jikan' | 'anilist') {
@@ -46,7 +43,7 @@ export default abstract class BaseAnimeMeta {
     this.animepahe = new Animepahe();
     this.anizone = new Anizone();
     this.kaido = new Kaido();
-    this.animekai = new Animekai();
+
     this.anizip = new AniZip();
   }
   /**

@@ -31,7 +31,7 @@ import RapidCloud from '../../source-extractors/rapidcloud.js';
 export class Kaido extends BaseClass {
   private readonly baseUrl: string;
   private readonly RapidCloud: RapidCloud;
-  constructor(options: ClientConfig = {}, baseUrl: string = 'https://kaido.to') {
+  constructor(baseUrl: string = 'https://kaido.to', options: ClientConfig = {}) {
     super(options);
     this.RapidCloud = new RapidCloud(options);
     this.baseUrl = baseUrl;

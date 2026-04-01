@@ -30,7 +30,7 @@ import type { IResponse, ISourceBaseResponse, IVideoSource } from '../../types/b
 export class FlixHQ extends BaseClass {
   private readonly baseUrl: string;
   private readonly VidCloud: VidCloud;
-  constructor(options: ClientConfig = {}, baseUrl: string = 'https://flixhq.to') {
+  constructor(baseUrl: string = 'https://flixhq.to', options: ClientConfig = {}) {
     super(options);
     this.baseUrl = baseUrl;
     this.VidCloud = new VidCloud(options);

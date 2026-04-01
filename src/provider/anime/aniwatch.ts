@@ -30,7 +30,7 @@ import {
 export class Aniwatch extends BaseClass {
   private readonly baseUrl: string;
   private readonly MegaCloud: MegaCloud;
-  constructor(options: ClientConfig = {}, baseUrl: string = 'https://aniwatchtv.to') {
+  constructor(baseUrl: string = 'https://aniwatchtv.to', options: ClientConfig = {}) {
     super(options);
     this.baseUrl = baseUrl;
     this.MegaCloud = new MegaCloud(options);

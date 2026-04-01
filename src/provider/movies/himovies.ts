@@ -28,7 +28,7 @@ import type { ISourceBaseResponse, IVideoSource, IResponse } from '../../types/b
 export class HiMovies extends BaseClass {
   private readonly baseUrl: string;
   private readonly VideoStream: VideoStream;
-  constructor(options: ClientConfig = {}, baseUrl: string = 'https://himovies.sx') {
+  constructor(baseUrl: string = 'https://himovies.sx', options: ClientConfig = {}) {
     super(options);
     this.baseUrl = baseUrl;
     this.VideoStream = new VideoStream(options);

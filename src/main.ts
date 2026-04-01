@@ -9,13 +9,11 @@ import type { HIGenre } from './types/anime/zoro.js';
 import type { IMetaFormat, Seasons } from './types/meta/meta-anime.js';
 import type { IAnimeCategory } from './types/base.js';
 import { Aniwatch } from './provider/anime/aniwatch.js';
-import { Animekai } from './provider/anime/animekai.js';
 
 export {
   Anilist,
   Aniwatch,
   Kaido,
-  Animekai,
   Animepahe,
   Anizone,
   HiMovies,

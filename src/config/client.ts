@@ -41,7 +41,7 @@ export interface RequestConfig {
   timeout?: number;
   http2?: boolean;
   delayBetweenRequests?: number;
-  headerGeneratorOptions?: HeaderOptions;
+
   proxyUrl?: string;
   token?: string;
 }
@@ -63,9 +63,8 @@ export class FetchClient {
     retries: number;
     http2: boolean;
     delayBetweenRequests: number;
-    headerGeneratorOptions: HeaderOptions;
+
     proxyUrl?: string;
-    token?: string;
   };
   private lastRequestTime = 0;
   private http2: boolean;
@@ -80,13 +79,6 @@ export class FetchClient {
       delayBetweenRequests: options.delayBetweenRequests || 300,
       http2: options.http2 !== undefined ? options.http2 : false,
       proxyUrl: options.proxyUrl,
-      token: options.token,
-      headerGeneratorOptions: options.headerGeneratorOptions || {
-        browsers: [{ name: 'chrome', minVersion: 130, maxVersion: 140 }],
-        devices: ['desktop'],
-        locales: ['en-US'],
-        operatingSystems: ['windows'],
-      },
     };
 
     this.http2 = this.defaultOptions.http2;
@@ -108,10 +100,6 @@ export class FetchClient {
     let finalConfig: RequestConfig = {
       ...this.defaultOptions,
       ...config,
-      headerGeneratorOptions: {
-        ...this.defaultOptions.headerGeneratorOptions,
-        ...config.headerGeneratorOptions,
-      },
     };
 
     await this.delayIfNeeded();
@@ -130,11 +118,7 @@ export class FetchClient {
       method,
       headers,
       proxyUrl,
-      sessionToken: token ? { id: token } : undefined,
-      headerGeneratorOptions: {
-        ...finalConfig.headerGeneratorOptions,
-        httpVersion: httpVersionSelect as any,
-      },
+
       timeout: { request: finalConfig.timeout },
       throwHttpErrors: false,
       hooks: {

@@ -9,19 +9,6 @@ export interface ClientConfig {
   proxyUrl?: string;
 
   /**
-   * Session token
-   * * @default undefined
-   */
-  token?: string;
-
-  headerGeneratorOptions?: {
-    browsers?: Array<{ name: string; minVersion?: number; maxVersion?: number }>;
-    devices?: string[];
-    locales?: string[];
-    operatingSystems?: string[];
-  };
-
-  /**
    * Whether to use HTTP/2 protocol
    * @default true
    */
@@ -62,13 +49,7 @@ export abstract class BaseClass {
   constructor(options: ClientConfig = {}) {
     const config: ClientConfig = {
       proxyUrl: options.proxyUrl,
-      token: options.token,
-      headerGeneratorOptions: options.headerGeneratorOptions ?? {
-        browsers: [{ name: 'chrome', minVersion: 130, maxVersion: 140 }],
-        devices: ['desktop'],
-        locales: ['en-US'],
-        operatingSystems: ['windows'],
-      },
+
       http2: options.http2 ?? true,
       timeout: options.timeout ?? 15000,
       delayBetweenRequests: options.delayBetweenRequests ?? 400,
@@ -79,10 +60,9 @@ export abstract class BaseClass {
       timeout: config.timeout,
       http2: config.http2,
       proxyUrl: config.proxyUrl,
-      token: config.token,
+
       delayBetweenRequests: config.delayBetweenRequests,
       retries: config.retries,
-      headerGeneratorOptions: config.headerGeneratorOptions,
     });
   }
 

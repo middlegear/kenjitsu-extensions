@@ -19,7 +19,7 @@ import type { IBase, IResponse, ISourceBaseResponse, IVideoSource } from '../../
 export class Anizone extends BaseClass {
   private readonly baseUrl: string;
 
-  constructor(options: ClientConfig = {}, baseUrl: string = 'https://anizone.to') {
+  constructor(baseUrl: string = 'https://anizone.to', options: ClientConfig = {}) {
     super(options);
     this.baseUrl = baseUrl;
   }
