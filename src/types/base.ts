@@ -1,7 +1,7 @@
 export interface IBase {
   id: string | null;
   name: string | null;
-  posterImage: string | null;
+  posterImage?: string | null;
 }
 
 export interface IBaseEpisodes {

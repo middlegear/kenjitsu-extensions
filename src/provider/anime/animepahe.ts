@@ -10,7 +10,7 @@ import type {
   IPahePaginated,
   IPaheServersResponse,
 } from '../../types/anime/animepahe.js';
-import type { IResponse, IServerInfo, ISourceBaseResponse, ISubOrDub, IVideoSource } from '../../types/base.js';
+import type { IBase, IResponse, IServerInfo, ISourceBaseResponse, ISubOrDub, IVideoSource } from '../../types/base.js';
 
 /**
  * A class for interacting with the Animepahe platform  to search for anime, fetch detailed information,
@@ -41,6 +41,14 @@ export class Animepahe extends BaseClass {
    * @returns {IPaheInfo} An object containing parsed anime information.
    */
   private parseAnimeInfo($: cheerio.CheerioAPI, animeId: string): IPaheInfo {
+    const externalLinks: { name: string | null; url: string | null }[] = [];
+
+    $('.external-links a').each((index, element) => {
+      const name = $(element).text().trim() || null;
+      const url = $(element).attr('href') || null;
+
+      externalLinks.push({ name, url });
+    });
     const animeinfo: IPaheInfo = {
       anilistId: Number($('head').find('meta[name="anilist"]').attr('content')) || null,
       malId: Number($('head').find('meta[name="myanimelist"]').attr('content')) || null,
@@ -64,12 +72,6 @@ export class Animepahe extends BaseClass {
         null,
       studios: $('div.col-sm-4.anime-info').find('p:contains("Studio:")').text().split(':').at(1)?.trim() || null,
       synopsis: $('div.anime-synopsis').text().trim() || null,
-      score: null,
-      producers: null,
-      episodes: {
-        sub: Number($('div.col-sm-4.anime-info').find('p:contains("Episodes:")').text().trim().split(':').at(1)) || null,
-        dub: null,
-      },
       totalEpisodes:
         Number($('div.col-sm-4.anime-info').find('p:contains("Episodes:")').text().trim().split(':').at(1)) || null,
       duration: $('div.col-sm-4.anime-info').find('p:contains("Duration:")').text().trim().split(':').at(1) || null,
@@ -77,6 +79,7 @@ export class Animepahe extends BaseClass {
         $('div.anime-genre ul li')
           .map((i, el) => $(el).find('a').attr('title'))
           .get() || null,
+      externalLinks: externalLinks,
     };
 
     return animeinfo;

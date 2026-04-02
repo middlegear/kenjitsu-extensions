@@ -14,20 +14,15 @@ export interface IPaheInfo extends IBase {
   altnames: string | null;
   japanese: string | null;
   status: string | null;
-  score: string | null;
   genres: string[] | null;
   studios: string | null;
-  producers: string | null;
   romaji: string | null;
-  episodes: {
-    sub: number | null;
-    dub: number | null;
-  };
   totalEpisodes: number | null;
   duration: string | null;
   type: string | null;
   synopsis: string | null;
   releaseDate: string | null;
+  externalLinks: { name: string | null; url: string | null }[];
 }
 
 export interface IPaheEpisodes extends IBaseEpisodes {
