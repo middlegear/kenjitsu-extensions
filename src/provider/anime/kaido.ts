@@ -227,7 +227,6 @@ export class Kaido extends BaseClass {
         name: $(element).find('a.film-poster-ahref').attr('title') || null,
         romaji: $(element).find('div.film-detail  a.dynamic-name').attr('data-jname') || null,
         type: $(element).find('div.fd-infor span.fdi-item:first').text().trim() || null,
-        // duration: $(element).find('div.fd-infor span.fdi-duration').text().trim() || null,
         posterImage: $(element).find('div.film-poster  img.film-poster-img').attr('data-src') || null,
         episodes: {
           sub: Number($(element).find('div.tick > div.tick-sub:has(.fa-closed-captioning)').text().trim()) || null,
