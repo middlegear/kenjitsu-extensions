@@ -12,6 +12,7 @@ import type {
   IMetaProviderEpisodes,
   IMetaProviderEpisodesResponse,
   IMetaProviderIdResponse,
+  IMetaData,
 } from '../../types/meta/meta-anime.js';
 import {
   characterQuery,
@@ -38,7 +39,6 @@ export class Anilist extends BaseAnimeMeta {
     super('anilist');
   }
   private readonly baseUrl: string = 'https://graphql.anilist.co';
-  private readonly mappingUrl: string = 'https://api.kenjitsu.workers.dev';
 
   /**
    * Maps an Anilist anime ID to the corresponding Aniwatch provider ID.
@@ -51,34 +51,56 @@ export class Anilist extends BaseAnimeMeta {
       return { error: 'Invalid or missing required parameter: anilistId!', data: null, provider: null };
     }
 
+    let anilistData: IMetaData | null = null;
+
     try {
-      const [anilist, aniwatch] = await Promise.allSettled([
-        this.fetchInfo(anilistId, 'ANIME'),
-        this.client.get(`${this.mappingUrl}/api/anime/anilist/${anilistId}?provider=aniwatch`),
-      ]);
+      const anilist = await this.fetchInfo(anilistId, 'ANIME');
 
-      if (anilist.status === 'rejected') {
-        return {
-          data: null,
-          provider: null,
-          error: anilist.reason,
-        };
-      }
-      const anilistData = anilist.value.data;
-
-      if (aniwatch.status === 'rejected') {
-        return {
-          data: null,
-          provider: null,
-          error: aniwatch.reason,
-        };
+      if (anilist.data?.status?.toLowerCase() === 'not_yet_released') {
+        throw new Error('Anime not yet released');
       }
 
-      const aniwatchResults = aniwatch.value.data;
+      if (anilist.data) {
+        const releaseYear = this.extractYear(anilist.data.releaseDate);
+        anilistData = {
+          english: anilist.data.title.english,
+          romaji: anilist.data.title.romaji,
+          native: anilist.data.title.native,
+          type: anilist.data.format,
+          episodes: anilist.data.episodes,
+          season: anilist.data.season,
+          year: releaseYear as number,
+        };
+      }
+      let response;
+      let currentTitle;
+
+      if (anilistData?.romaji) {
+        currentTitle = anilistData.romaji;
+
+        response = await this.aniwatch.search(this.createTitleSlugV2(currentTitle));
+      }
+
+      if (!response?.data?.length && anilistData?.english) {
+        currentTitle = anilistData.english;
+
+        response = await this.aniwatch.search(this.createTitleSlugV2(currentTitle));
+      }
+
+      if (!response?.data?.length && anilistData?.native) {
+        currentTitle = anilistData.native;
+        response = await this.aniwatch.search(this.createTitleSlugV2(currentTitle));
+      }
+
+      if (!response?.data?.length) {
+        throw new Error('No results');
+      }
+
+      const candidates = this.mapAnimeProviderId(anilistData, response.data, 'hianime');
 
       return {
-        data: anilistData,
-        provider: aniwatchResults.provider,
+        data: anilist.data,
+        provider: candidates,
       };
     } catch (error) {
       return {
@@ -96,40 +118,59 @@ export class Anilist extends BaseAnimeMeta {
    */
   async fetchKaidoProviderId(anilistId: number): Promise<IMetaProviderIdResponse<IMetaAnime | null>> {
     if (!anilistId) {
-      return {
-        error: 'Invalid or missing required parameter: anilistId!',
-        data: null,
-        provider: null,
-      };
+      return { error: 'Invalid or missing required parameter: anilistId!', data: null, provider: null };
     }
 
+    let anilistData: IMetaData | null = null;
+
     try {
-      const [anilist, kaidoSettled] = await Promise.allSettled([
-        this.fetchInfo(anilistId, 'ANIME'),
-        this.client.get(`${this.mappingUrl}/api/anime/anilist/${anilistId}?provider=kaido`),
-      ]);
+      const anilist = await this.fetchInfo(anilistId, 'ANIME');
 
-      if (anilist.status === 'rejected') {
-        return {
-          data: null,
-          provider: null,
-          error: anilist.reason,
-        };
-      }
-      const anilistData = anilist.value;
-
-      if (kaidoSettled.status === 'rejected') {
-        return {
-          data: null,
-          provider: null,
-          error: kaidoSettled.reason,
-        };
+      if (anilist.data?.status?.toLowerCase() === 'not_yet_released') {
+        throw new Error('Anime not yet released');
       }
 
-      const kaidoResults = kaidoSettled.value.data;
+      if (anilist.data) {
+        const releaseYear = this.extractYear(anilist.data.releaseDate);
+        anilistData = {
+          english: anilist.data.title.english,
+          romaji: anilist.data.title.romaji,
+          native: anilist.data.title.native,
+          type: anilist.data.format,
+          episodes: anilist.data.episodes,
+          season: anilist.data.season,
+          year: releaseYear as number,
+        };
+      }
+      let response;
+      let currentTitle;
+
+      if (anilistData?.romaji) {
+        currentTitle = anilistData.romaji;
+
+        response = await this.kaido.search(this.createTitleSlugV2(currentTitle));
+      }
+
+      if (!response?.data?.length && anilistData?.english) {
+        currentTitle = anilistData.english;
+
+        response = await this.kaido.search(this.createTitleSlugV2(currentTitle));
+      }
+
+      if (!response?.data?.length && anilistData?.native) {
+        currentTitle = anilistData.native;
+        response = await this.kaido.search(this.createTitleSlugV2(currentTitle));
+      }
+
+      if (!response?.data?.length) {
+        throw new Error('No results');
+      }
+
+      const candidates = this.mapAnimeProviderId(anilistData, response.data, 'hianime');
+
       return {
-        data: anilistData.data,
-        provider: kaidoResults.provider,
+        data: anilist.data,
+        provider: candidates,
       };
     } catch (error) {
       return {
@@ -155,35 +196,73 @@ export class Anilist extends BaseAnimeMeta {
       };
     }
 
+    let anilistData: IMetaData | null = null;
+
     try {
-      const [anilist, anizone] = await Promise.allSettled([
-        this.fetchInfo(anilistId, 'ANIME'),
-        this.client.get(`${this.mappingUrl}/api/anime/anilist/${anilistId}?provider=anizone`),
-      ]);
+      const anilist = await this.fetchInfo(anilistId, 'ANIME');
 
-      if (anilist.status === 'rejected') {
-        return {
-          data: null,
-          provider: null,
-          error: anilist.reason,
-        };
+      if (anilist.data?.status?.toLowerCase() === 'not_yet_released') {
+        throw new Error('Anime not yet released');
       }
 
-      const anilistData = anilist.value;
-
-      if (anizone.status === 'rejected') {
-        return {
-          data: null,
-          provider: null,
-          error: anizone.reason,
+      if (anilist.data) {
+        const releaseYear = this.extractYear(anilist.data.releaseDate);
+        anilistData = {
+          english: anilist.data.title.english,
+          romaji: anilist.data.title.romaji,
+          native: anilist.data.title.native,
+          type: anilist.data.format,
+          episodes: anilist.data.episodes,
+          season: anilist.data.season,
+          year: releaseYear as number,
         };
       }
+      const response = await this.anizip.anilistAnizip(anilistId);
+      let results;
 
-      const anizoneResult = anizone.value.data;
+      let currentTitle = response.titles?.romanized || anilistData?.romaji;
+      if (currentTitle) {
+        results = await this.anizone.search(currentTitle);
+      }
 
+      if (!results?.data?.length && response.titles?.japanese) {
+        currentTitle = response.titles.japanese;
+
+        results = await this.anizone.search(currentTitle);
+      }
+
+      if (!results?.data?.length && anilistData?.romaji) {
+        currentTitle = anilistData.romaji;
+
+        results = await this.anizone.search(currentTitle);
+      }
+
+      if (!results?.data?.length && response.titles?.simplifiedChinese) {
+        currentTitle = response.titles.simplifiedChinese;
+
+        results = await this.anizone.search(currentTitle);
+      }
+
+      if (!results?.data?.length && response.titles?.traditionalChinese) {
+        currentTitle = response.titles.traditionalChinese;
+
+        results = await this.anizone.search(currentTitle);
+      }
+
+      if (!results?.data?.length && response.titles?.english) {
+        currentTitle = response.titles.english;
+
+        results = await this.anizone.search(currentTitle);
+      }
+
+      if (!results?.data?.length) {
+        throw new Error('No search results found on Anizone after trying all title variants');
+      }
+
+      const candidates = this.mapAnimeProviderId(anilistData, results.data, 'anizone');
       return {
-        data: anilistData.data,
-        provider: anizoneResult.provider,
+        data: anilist.data,
+        provider: candidates,
       };
     } catch (error) {
       return {
@@ -208,34 +287,46 @@ export class Anilist extends BaseAnimeMeta {
         provider: null,
       };
     }
+    let anilistData: IMetaData | null = null;
 
     try {
-      const [anilist, animepahe] = await Promise.allSettled([
-        this.fetchInfo(anilistId, 'ANIME'),
-        this.client.get(`${this.mappingUrl}/api/anime/anilist/${anilistId}?provider=animepahe`),
-      ]);
+      const anilist = await this.fetchInfo(anilistId, 'ANIME');
 
-      if (anilist.status === 'rejected') {
-        return {
-          data: null,
-          provider: null,
-          error: anilist.reason,
-        };
+      if (anilist.data?.status?.toLowerCase() === 'not_yet_released') {
+        throw new Error('Anime not yet released');
       }
 
-      const anilistData = anilist.value;
-      if (animepahe.status == 'rejected') {
-        return {
-          data: null,
-          provider: null,
-          error: animepahe.reason,
+      if (anilist.data) {
+        const releaseYear = this.extractYear(anilist.data.releaseDate);
+        anilistData = {
+          english: anilist.data.title.english,
+          romaji: anilist.data.title.romaji,
+          native: anilist.data.title.native,
+          type: anilist.data.format,
+          episodes: anilist.data.episodes,
+          season: anilist.data.season,
+          year: releaseYear as number,
         };
       }
-      const animepaheResult = animepahe.value.data;
+      let searchQuery = anilistData?.english;
+      let PaheSearchResult;
+
+      if (searchQuery) {
+        PaheSearchResult = await this.animepahe.search(searchQuery);
+      }
+
+      if (!PaheSearchResult?.data.length && anilistData?.romaji) {
+        searchQuery = anilistData.romaji;
+
+        PaheSearchResult = await this.animepahe.search(searchQuery);
+      }
+      if (!PaheSearchResult?.data.length) throw new Error('No valid title found for searching Animepahe');
+
+      const candidates = this.mapAnimeProviderId(anilistData, PaheSearchResult.data, 'animepahe');
 
       return {
-        data: anilistData.data,
-        provider: animepaheResult.provider,
+        data: anilist.data,
+        provider: candidates,
       };
     } catch (error) {
       return {
@@ -450,59 +541,6 @@ export class Anilist extends BaseAnimeMeta {
         error: error instanceof Error ? error.message : 'Unknown Error',
         data: null,
         providerEpisodes: [],
-        provider: null,
-      };
-    }
-  }
-  /**
-   * Maps an Anilist anime ID to the corresponding AnimeKai provider ID.
-   *
-   * @param anilistId - Anilist media ID (required)
-   * @returns Provider mapping result including Anilist metadata and provider-specific ID (if found)
-   */
-  async fetchAnimeKaiProviderId(anilistId: number): Promise<IMetaProviderIdResponse<IMetaAnime | null>> {
-    if (!anilistId) {
-      return {
-        error: 'Invalid or missing required parameter: anilistId!',
-        data: null,
-        provider: null,
-      };
-    }
-
-    try {
-      const [anilist, animekai] = await Promise.allSettled([
-        this.fetchInfo(anilistId, 'ANIME'),
-        this.client.get(`${this.mappingUrl}/api/anime/anilist/${anilistId}?provider=animekai`),
-      ]);
-
-      if (anilist.status === 'rejected') {
-        return {
-          data: null,
-          provider: null,
-          error: anilist.reason,
-        };
-      }
-
-      const anilistData = anilist.value;
-
-      if (animekai.status === 'rejected') {
-        return {
-          data: null,
-          provider: null,
-          error: animekai.reason,
-        };
-      }
-
-      const animekaiResult = animekai.value.data;
-
-      return {
-        data: anilistData.data,
-        provider: animekaiResult.provider,
-      };
-    } catch (error) {
-      return {
-        error: error instanceof Error ? error.message : 'Unknown error occurred',
-        data: null,
         provider: null,
       };
     }
