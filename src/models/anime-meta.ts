@@ -254,7 +254,7 @@ export default abstract class BaseAnimeMeta {
     const episodeId = providerEp?.episodeId || null;
     const title = aniZipEp?.title?.english || aniZipEp?.title?.romanizedJapanese || providerEp?.title || null;
     const overview = aniZipEp?.overview || null;
-    const thumbnail = providerEp?.teaser || providerEp?.thumbnail || aniZipEp?.image || null;
+    const thumbnail = aniZipEp?.image || providerEp?.teaser || providerEp?.thumbnail || null;
     const airDate = providerEp?.airDate || aniZipEp?.airDate || null;
     const hasDub = providerEp?.hasDub ?? null;
     const hasSub = providerEp?.hasSub ?? null;

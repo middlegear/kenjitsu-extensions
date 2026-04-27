@@ -121,6 +121,7 @@ export class FetchClient {
 
       timeout: { request: finalConfig.timeout },
       throwHttpErrors: false,
+      followRedirect: false,
       hooks: {
         beforeRequest: [
           (options: any) => {

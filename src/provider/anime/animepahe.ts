@@ -19,7 +19,7 @@ import type { IBase, IResponse, IServerInfo, ISourceBaseResponse, ISubOrDub, IVi
 export class Animepahe extends BaseClass {
   private readonly baseUrl: string;
   private readonly kwik: Kwik;
-  constructor(baseUrl: string = 'https://animepahe.com', options: ClientConfig = {}) {
+  constructor(baseUrl: string = 'https://animepahe.pw', options: ClientConfig = {}) {
     super(options);
     this.baseUrl = baseUrl;
     this.kwik = new Kwik(options);
@@ -40,8 +40,19 @@ export class Animepahe extends BaseClass {
    * @param {string} animeId - The unique identifier for the anime.
    * @returns {IPaheInfo} An object containing parsed anime information.
    */
-  private parseAnimeInfo($: cheerio.CheerioAPI, animeId: string): IPaheInfo {
+  private parseAnimeInfo($: cheerio.CheerioAPI): IPaheInfo {
     const externalLinks: { name: string | null; url: string | null }[] = [];
+    let extractedId: string | null = null;
+
+    $('script').each((_, el) => {
+      const scriptContent = $(el).html();
+      if (scriptContent && scriptContent.includes('let id')) {
+        const match = scriptContent.match(/let\s+id\s*=\s*"([^"]+)"/);
+        if (match) {
+          extractedId = match[1];
+        }
+      }
+    });
 
     $('.external-links a').each((index, element) => {
       const name = $(element).text().trim() || null;
@@ -51,8 +62,8 @@ export class Animepahe extends BaseClass {
     });
     const animeinfo: IPaheInfo = {
       anilistId: Number($('head').find('meta[name="anilist"]').attr('content')) || null,
-      malId: Number($('head').find('meta[name="myanimelist"]').attr('content')) || null,
-      id: `${animeId}`,
+      malId: Number($('head').find('meta[name="mal"]').attr('content')) || null,
+      id: $('head').find('meta[name="id"]').attr('content') || null,
       name: ($('header.anime-header').find('a.fa.fa-link.text-white').attr('title') || '')
         .replace(/^Bookmark\s+/i, '')
         .trim(),
@@ -89,7 +100,7 @@ export class Animepahe extends BaseClass {
    * Parses HTML content to extract streaming server information for an episode.
    * @private
    * @param {cheerio.CheerioAPI} $ - The Cheerio API instance for parsing HTML.
-   * @returns {{servers: HIServerInfo; download: HIServerInfo}} An object containing streaming servers and download servers.
+   * @returns  An object containing streaming servers and download servers.
    */
   private parseServers($: cheerio.CheerioAPI) {
     const subSelector: cheerio.SelectorType = 'div#resolutionMenu button[data-audio="jpn"]';
@@ -110,7 +121,23 @@ export class Animepahe extends BaseClass {
     servers.episodeNumber = episode;
     download.episodeNumber = episode;
 
-    // Check which selector actually has elements
+    const extractQuality = (serverName: string): number => {
+      const qualityMatch = serverName.match(/(\d+)p/);
+      return qualityMatch ? parseInt(qualityMatch[1], 10) : 0;
+    };
+
+    const getHighestQuality = (serverArray: IServerInfo['sub']): IServerInfo['sub'] => {
+      if (serverArray.length === 0) return [];
+
+      const highest = serverArray.reduce((max, current) => {
+        const currentQuality = extractQuality(current.serverName || '');
+        const maxQuality = extractQuality(max.serverName || '');
+        return currentQuality > maxQuality ? current : max;
+      });
+
+      return [highest];
+    };
+
     let selectorToUse =
       subSelector && $(subSelector).length > 0 ? subSelector : chiSelector && $(chiSelector).length > 0 ? chiSelector : null;
 
@@ -123,8 +150,7 @@ export class Animepahe extends BaseClass {
         });
       });
 
-      // Slice to first 3 sub servers
-      servers.sub = servers.sub.slice(0, 3);
+      servers.sub = getHighestQuality(servers.sub);
     }
 
     $(dubSelector).each((_, element) => {
@@ -135,45 +161,29 @@ export class Animepahe extends BaseClass {
       });
     });
 
-    // Slice to first 3 dub servers
-    servers.dub = servers.dub.slice(0, 3);
+    servers.dub = getHighestQuality(servers.dub);
 
-    /// download servers
-    const chiDownloadSelector: cheerio.SelectorType = '#pickDownload a.dropdown-item:has(span:contains("chi"))';
-    const dubDownloadSelector: cheerio.SelectorType = '#pickDownload a.dropdown-item:has(span:contains("eng"))';
-    const subDownloadSelector: cheerio.SelectorType = '#pickDownload a.dropdown-item:has(span:contains("BD"))';
-    const altSubDownloadSelector: cheerio.SelectorType = '#pickDownload a.dropdown-item';
+    const downloadItems = $('#pickDownload a.dropdown-item');
 
-    let downloadSubSelector;
-    downloadSubSelector =
-      subDownloadSelector && $(subDownloadSelector).length > 0
-        ? subDownloadSelector
-        : chiDownloadSelector && $(chiDownloadSelector).length > 0
-          ? chiDownloadSelector
-          : altSubDownloadSelector;
+    downloadItems.each((_, element) => {
+      const $element = $(element);
+      const hasEngBadge = $element.find('span.badge:contains("eng")').length > 0;
 
-    if (downloadSubSelector) {
-      $(downloadSubSelector).each((_, element) => {
-        download.sub.push({
-          serverId: $(element).attr('href') || null,
-          serverName: $(element).text().trim() || null,
-          mediaId: $(element).attr('href')?.split('/').at(-1) || null,
-        });
-      });
+      const serverInfo = {
+        serverId: $element.attr('href') || null,
+        serverName: $element.text().trim() || null,
+        mediaId: $element.attr('href')?.split('/').at(-1) || null,
+      };
 
-      // Slice to first 3 download sub servers
-      download.sub = download.sub.slice(0, 3);
-    }
-
-    $(dubDownloadSelector).each((_, element) => {
-      download.dub.push({
-        serverId: $(element).attr('href') || null,
-        serverName: $(element).text().trim() || null,
-        mediaId: $(element).attr('href')?.split('/').at(-1) || null,
-      });
+      if (hasEngBadge) {
+        download.dub.push(serverInfo);
+      } else {
+        download.sub.push(serverInfo);
+      }
     });
 
-    download.dub = download.dub.slice(0, 3);
+    download.sub = getHighestQuality(download.sub);
+    download.dub = getHighestQuality(download.dub);
 
     return { servers, download };
   }
@@ -191,7 +201,7 @@ export class Animepahe extends BaseClass {
     servers: IServerInfo,
     download: IServerInfo,
     category: ISubOrDub,
-  ): { serverId: string; serverName: string; downloadId: string | null }[] {
+  ): { serverId: string; serverName: string; referer: string }[] {
     const availableVersions: string[] = [];
     if (servers.sub?.length > 0) availableVersions.push('sub');
     if (servers.dub?.length > 0) availableVersions.push('dub');
@@ -205,22 +215,13 @@ export class Animepahe extends BaseClass {
       throw new Error(`Version '${category}' has no servers.${suggestionMessage}`);
     }
 
-    const parseQuality = (name?: string | null): number => {
-      const match = name?.match(/(\d{3,4})p/i);
-      return match ? parseInt(match[1], 10) : 0;
-    };
-
-    const highestDownload = download[category]
-      ?.slice()
-      .sort((a, b) => parseQuality(b.serverName) - parseQuality(a.serverName))[0];
+    const refererUrl = download[category]?.[0]?.serverId || '';
 
     return servers[category].map(s => {
-      const qualityMatch = s.serverName?.match(/(\d{3,4}p)/i);
       return {
         serverId: s.serverId! as string,
-        // serverName: qualityMatch ? qualityMatch[1] : 'unknown',
         serverName: s.serverName as string,
-        downloadId: highestDownload?.serverId as string,
+        referer: refererUrl as string,
       };
     });
   }
@@ -251,7 +252,7 @@ export class Animepahe extends BaseClass {
         };
       }
       const data: IPaheAnime[] = response.data.data.map((item: any) => ({
-        id: item.session,
+        id: item.id,
         name: item.title,
         type: item.type,
         releaseDate: item.year,
@@ -335,71 +336,85 @@ export class Animepahe extends BaseClass {
    * @param {string} animeId - The unique identifier for the anime (required).
    * @returns  A promise that resolves to an object containing anime details, or an error message.
    */
-  async fetchAnimeInfo(animeId: string): Promise<IPaheAnimeInfoResponse<IPaheInfo | null>> {
-    if (!animeId) {
-      throw new Error('animeId cannot be empty');
-    }
+  async fetchAnimeInfo(animeId: string | number): Promise<IPaheAnimeInfoResponse<IPaheInfo | null>> {
+    if (!animeId) throw new Error('animeId cannot be empty');
+
     try {
-      const response = await this.client.get(`${this.baseUrl}/anime/${animeId}`, { headers: this.headers(false) });
-
-      if (!response.data) {
-        return { error: response.statusText, data: null, providerEpisodes: [] };
-      }
-
-      const releaseRes = await this.client.get(`${this.baseUrl}/api?m=release&id=${animeId}&sort=episode_asc&page=1`, {
-        headers: this.headers(animeId),
+      const response = await this.client.get(`${this.baseUrl}/a/${animeId}`, {
+        headers: this.headers(false),
       });
 
-      const last_page = releaseRes.data?.last_page ?? 1;
-      const episodesList = releaseRes.data?.data ?? [];
+      if (!response.data) {
+        return { error: `Failed to build info url:${response.statusText}`, data: null, providerEpisodes: [] };
+      }
+      const html = response.data;
 
-      let episodes = episodesList.map((item: any) => ({
-        episodeId: `pahe-${animeId}-$session$-${item.session}`,
-        episodeNumber: item.episode || null,
-        title: item.title || null,
-        thumbnail: item.snapshot || null,
-      }));
+      const metaMatch = html.match(/url=['"]?([^'">]+)['"]?/i);
+      const redirectUrl = metaMatch?.[1];
 
-      if (episodes.length === 0) {
+      const animesession = redirectUrl.split('/').at(-1);
+
+      const [infoResponse, releaseRes] = await Promise.all([
+        this.client.get(redirectUrl, {
+          headers: this.headers(false),
+        }),
+
+        this.client.get(`${this.baseUrl}/api?m=release&id=${animesession}&sort=episode_asc&page=1`, {
+          headers: this.headers(animesession),
+        }),
+      ]);
+
+      if (!infoResponse.data) {
+        return { error: infoResponse.statusText, data: null, providerEpisodes: [] };
+      }
+
+      const lastPage = releaseRes.data?.last_page ?? 1;
+      let episodesList = releaseRes.data?.data ?? [];
+
+      // 1. Fetch remaining pages if they exist
+      if (lastPage > 1) {
+        const pageRequests = [];
+        for (let page = 2; page <= lastPage; page++) {
+          pageRequests.push(
+            this.client.get(`${this.baseUrl}/api?m=release&id=${animesession}&sort=episode_asc&page=${animesession}`, {
+              headers: this.headers(animesession),
+            }),
+          );
+        }
+        const responses = await Promise.all(pageRequests);
+        responses.forEach(res => {
+          if (res.data?.data) episodesList.push(...res.data.data);
+        });
+      }
+
+      if (episodesList.length === 0) {
         return {
-          data: this.parseAnimeInfo(cheerio.load(response.data), animeId),
+          data: this.parseAnimeInfo(cheerio.load(infoResponse.data)),
           providerEpisodes: [],
           error: 'No episodes found',
         };
       }
 
-      if (last_page > 1) {
-        const pageRequests = [];
-        for (let page = 2; page <= last_page; page++) {
-          pageRequests.push(
-            this.client.get(`${this.baseUrl}/api?m=release&id=${animeId}&sort=episode_asc&page=${page}`, {
-              headers: this.headers(animeId),
-            }),
-          );
-        }
-
-        const responses = await Promise.all(pageRequests);
-
-        for (const res of responses) {
-          episodes.push(
-            ...res.data.data.map((item: any) => ({
-              episodeId: `pahe-${animeId}-$session$-${item.session}`,
-              episodeNumber: item.episode || null,
-              title: item.title || null,
-              thumbnail: item.snapshot || null,
-              // duration: item.duration,
-              // url: `${this.baseUrl}/play/${id}/${item.session}`,
-            })),
-          );
-        }
-      }
+      const providerEpisodes = episodesList
+        .filter((item: any) => (item.episode ?? 0) > 0)
+        .sort((a: any, b: any) => (a.episode ?? 0) - (b.episode ?? 0))
+        .map((item: any, index: number) => ({
+          episodeId: `pahe-${animesession}-$session$-${item.session}`,
+          episodeNumber: index + 1,
+          title: item.title || null,
+          thumbnail: item.snapshot || null,
+        }));
 
       return {
-        data: this.parseAnimeInfo(cheerio.load(response.data), animeId),
-        providerEpisodes: episodes,
+        data: this.parseAnimeInfo(cheerio.load(infoResponse.data)),
+        providerEpisodes,
       };
     } catch (error) {
-      return { error: error instanceof Error ? error.message : 'Unknown Error', data: null, providerEpisodes: [] };
+      return {
+        error: error instanceof Error ? error.message : 'Unknown Error',
+        data: null,
+        providerEpisodes: [],
+      };
     }
   }
 
@@ -408,14 +423,28 @@ export class Animepahe extends BaseClass {
    * @param {string} animeId - The unique identifier for the anime (required).
    * @returns A promise that resolves to an object containing an array of episode information or an error message.
    */
-  async fetchEpisodes(animeId: string): Promise<IResponse<IPaheEpisodes[] | []>> {
+  async fetchEpisodes(animeId: number | string): Promise<IResponse<IPaheEpisodes[] | []>> {
     if (!animeId) {
       throw new Error('Missing required params: animeid');
     }
 
     try {
-      const releaseRes = await this.client.get(`${this.baseUrl}/api?m=release&id=${animeId}&sort=episode_asc&page=1`, {
-        headers: this.headers(animeId),
+      const response = await this.client.get(`${this.baseUrl}/a/${animeId}`, {
+        headers: this.headers(false),
+      });
+
+      if (!response.data) {
+        return { error: `Failed to build info url:${response.statusText}`, data: [] };
+      }
+      const html = response.data;
+
+      const metaMatch = html.match(/url=['"]?([^'">]+)['"]?/i);
+      const redirectUrl = metaMatch?.[1];
+
+      const animesession = redirectUrl.split('/').at(-1);
+
+      const releaseRes = await this.client.get(`${this.baseUrl}/api?m=release&id=${animesession}&sort=episode_asc&page=1`, {
+        headers: this.headers(animesession),
       });
 
       const last_page = releaseRes.data?.last_page ?? 1;
@@ -425,8 +454,8 @@ export class Animepahe extends BaseClass {
         const pageRequests = [];
         for (let page = 2; page <= last_page; page++) {
           pageRequests.push(
-            this.client.get(`${this.baseUrl}/api?m=release&id=${animeId}&sort=episode_asc&page=${page}`, {
-              headers: this.headers(animeId),
+            this.client.get(`${this.baseUrl}/api?m=release&id=${animesession}&sort=episode_asc&page=${page}`, {
+              headers: this.headers(animesession),
             }),
           );
         }
@@ -445,13 +474,18 @@ export class Animepahe extends BaseClass {
       }
 
       let formattedEpisodes = episodes.map((item: any) => ({
-        episodeId: `pahe-${animeId}-$session$-${item.session}`,
+        episodeId: `pahe-${animesession}-$session$-${item.session}`,
         originalEpisodeNumber: item.episode ?? null,
         episodeNumber: item.episode ?? null,
         title: item.title || null,
         thumbnail: item.snapshot || null,
-        // duration: item.duration,
-        // url: `${this.baseUrl}/play/${animeId}/${item.session}`,
+        hasSub:
+          item.audio.toLowerCase().includes('chi') ||
+          item.audio.toLowerCase().includes('kor') ||
+          item.audio.toLowerCase().includes('jpn') ||
+          true, // cant determine but most are subbed
+
+        hasDub: item.audio.toLowerCase().includes('eng'),
       }));
 
       formattedEpisodes.sort((a, b) => {
@@ -460,15 +494,13 @@ export class Animepahe extends BaseClass {
         return numA - numB;
       });
 
-      // Re-assign clean episode numbers starting from 1
       formattedEpisodes = formattedEpisodes.map((ep, index) => ({
         ...ep,
         episodeNumber: index + 1,
       }));
 
-      // Optional: if you want to exclude obvious specials (e.g. episode 0 or negative)
       formattedEpisodes = formattedEpisodes.filter(ep => ep.originalEpisodeNumber == null || ep.originalEpisodeNumber > 0);
-      // Then re-number again if you filtered:
+
       formattedEpisodes = formattedEpisodes.map((ep, index) => ({
         ...ep,
         episodeNumber: index + 1,
@@ -568,7 +600,7 @@ export class Animepahe extends BaseClass {
       // 4. Resolve Referer logic
       let firstServerOrigin: string | null = null;
       if (serverIds.length > 0) {
-        const refererUrl = serverIds[0].downloadId as string;
+        const refererUrl = serverIds[0].referer as string;
         firstServerOrigin = `${new URL(refererUrl).origin}/`;
       }
 

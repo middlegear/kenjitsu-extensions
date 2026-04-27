@@ -25,3 +25,6 @@ export {
   type Seasons,
   type IAnimeCategory,
 };
+// const data = await new Anilist().fetchAnimepaheProviderEpisodes(269);
+// const data = await new Animepahe().fetchEpisodes('1395');
+// console.log(data);
