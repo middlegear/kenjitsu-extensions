@@ -403,6 +403,13 @@ export class Animepahe extends BaseClass {
           episodeNumber: index + 1,
           title: item.title || null,
           thumbnail: item.snapshot || null,
+          hasSub:
+            item.audio.toLowerCase().includes('chi') ||
+            item.audio.toLowerCase().includes('kor') ||
+            item.audio.toLowerCase().includes('jpn') ||
+            true, // cant determine but most are subbed
+
+          hasDub: item.audio.toLowerCase().includes('eng'),
         }));
 
       return {
