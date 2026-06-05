@@ -11,6 +11,7 @@ export const fetchByIdQuery = `query ($id: Int ,$type: MediaType, $asHtml:Boolea
     type
     format
     status
+    isAdult
     countryOfOrigin
     seasonYear
     synonyms
@@ -341,7 +342,7 @@ export const mediaTrendQuery = `query Query($page: Int, $perPage: Int, $type: Me
       lastPage
       hasNextPage
     }
-    media(type:$type,format: $format, sort: [TRENDING_DESC, POPULARITY_DESC], isAdult: false) {
+    media(type:$type,format: $format, sort:TRENDING_DESC, isAdult: false) {
       id
       idMal
       title {
@@ -520,7 +521,6 @@ export const airingSchedule = `query Page($page: Int, $perPage: Int, $notYetAire
     }
   }
 }`;
-
 export const fetchAiringByDate = `query Page($page: Int, $perPage: Int, $airingAtLesser: Int, $airingAtGreater: Int) {
   Page(page: $page, perPage: $perPage) {
     airingSchedules(airingAt_lesser: $airingAtLesser, airingAt_greater: $airingAtGreater) {
@@ -574,6 +574,115 @@ export const fetchAiringByDate = `query Page($page: Int, $perPage: Int, $airingA
       hasNextPage
       lastPage
       perPage
+    }
+  }
+}`;
+
+export const searchQueryWithSort = `query Query($page: Int, $perPage: Int, $search: String, $type: MediaType, $isAdult: Boolean) {
+  Page(page: $page, perPage: $perPage) {
+    pageInfo {
+      total
+      perPage
+      currentPage
+      lastPage
+      hasNextPage
+    }
+    media(search: $search, type: $type, isAdult: $isAdult, sort: SEARCH_MATCH) {
+      id
+      idMal
+      episodes
+      duration
+      season
+      title {
+        romaji
+        english
+        native
+        userPreferred
+      }
+      type
+      format
+      genres
+      status
+      description
+      startDate {
+        year
+        month
+        day
+      }
+      endDate {
+        year
+        month
+        day
+      }
+      trailer {
+        id
+        site
+        thumbnail
+      }
+      bannerImage
+      coverImage {
+        extraLarge
+        large
+        medium
+        color
+      } 
+      averageScore
+      meanScore
+      studios {
+        nodes {
+          name
+        }
+      }
+    }
+  }
+}`;
+
+export const singleResultQuery = `query Query($search: String, $type: MediaType, $isAdult: Boolean) {
+  Media(search: $search, type: $type, isAdult: $isAdult, sort: SEARCH_MATCH) {
+    id
+    idMal
+    episodes
+    duration
+    season
+    title {
+      romaji
+      english
+      native
+      userPreferred
+    }
+    type
+    format
+    genres
+    status
+    description
+    startDate {
+      year
+      month
+      day
+    }
+    endDate {
+      year
+      month
+      day
+    }
+    trailer {
+      id
+      site
+      thumbnail
+    }
+    bannerImage
+    coverImage {
+      extraLarge
+      large
+      medium
+      color
+    } 
+    averageScore
+    meanScore
+    studios {
+      nodes {
+        name
+      }
     }
   }
 }`;

@@ -1,6 +1,5 @@
 import { test, expect } from 'vitest';
 import { Animepahe } from '../src/provider/anime/animepahe.js';
-import { IPaheEpisodes } from '../src/types/anime/animepahe.js';
 
 const animepahe = new Animepahe();
 

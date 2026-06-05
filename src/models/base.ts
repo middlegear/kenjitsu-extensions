@@ -1,76 +1,26 @@
-import { FetchClient } from '../config/client.js';
+import { Client, type ClientOptions } from '../config/client.js';
 
-export interface ClientConfig {
-  /**
-   * Proxy URL to route all requests through.
-   *
-   * @default undefined
-   */
-  proxyUrl?: string;
+export interface ClientConfig extends ClientOptions {}
 
-  /**
-   * Whether to use HTTP/2 protocol
-   * @default true
-   */
-  http2?: boolean;
-
-  /**
-   * Request timeout in milliseconds
-   * @default 15000 (15 seconds)
-   */
-  timeout?: number;
-
-  /**
-   * Delay between consecutive requests in milliseconds (helps avoid rate limits)
-   * @default 400
-   */
-  delayBetweenRequests?: number;
-
-  /**
-   * Number of automatic retries on network/timeout errors
-   * @default 2
-   */
-  retries?: number;
-}
-
-/**
- * Base class for all scraping modules.
- * Provides a standardized FetchClient with support for proxies, custom headers,
- * timeouts, and retries to improve scraping reliability.
- */
 export abstract class BaseClass {
-  protected readonly client: FetchClient;
+  protected readonly client: Client;
 
-  /**
-   * Creates a new BaseClass instance
-   *
-   * @param options - Configuration options for the underlying HTTP client
-   */
   constructor(options: ClientConfig = {}) {
-    const config: ClientConfig = {
-      proxyUrl: options.proxyUrl,
-
-      http2: options.http2 ?? true,
-      timeout: options.timeout ?? 15000,
-      delayBetweenRequests: options.delayBetweenRequests ?? 400,
-      retries: options.retries ?? 2,
+    const config: ClientOptions = {
+      browser: 'chrome142',
+      timeout: 15000,
+      ignoreTlsErrors: true,
+      ...options,
     };
 
-    this.client = new FetchClient({
-      timeout: config.timeout,
-      http2: config.http2,
-      proxyUrl: config.proxyUrl,
-
-      delayBetweenRequests: config.delayBetweenRequests,
-      retries: config.retries,
-    });
+    this.client = new Client(config);
   }
 
-  /**
-   * Creates a URL-friendly slug from a string
-   * @param text - The text to convert to slug
-   * @returns A clean URL slug
-   */
+  protected formatHttpError(statusCode: number, statusText?: string): string {
+    const resolvedText = statusText?.trim() || this.STATUS_TEXT_MAP[statusCode] || 'Unknown Error';
+    return `Request failed with status: ${statusCode} & message: ${resolvedText}`;
+  }
+
   protected createSlug(text: string): string {
     return text
       .toLowerCase()
@@ -80,11 +30,6 @@ export abstract class BaseClass {
       .replace(/^-+|-+$/g, '');
   }
 
-  /**
-   * Normalizes a key for mapping lookups (removes spaces and special characters)
-   * @param input - The input string to normalize
-   * @returns Normalized lowercase string
-   */
   protected normalizeKey(input: string): string {
     return input
       .toLowerCase()
@@ -93,18 +38,94 @@ export abstract class BaseClass {
       .replace(/[^a-z0-9]/g, '');
   }
 
-  /**
-   * Gets a mapped value from a mapping object with validation
-   * @param input - The input value to map
-   * @param mapping - The mapping record (key → value)
-   * @returns The mapped value
-   * @throws Error if input is not valid
-   */
   protected getMappedValue<T extends string, U extends string>(input: T, mapping: Record<string, U>): U {
     const normalized = this.normalizeKey(input);
-    if (!(normalized in mapping)) {
-      throw new Error(`Invalid: ${input}. Must be one of: ${Object.keys(mapping).join(', ')}`);
-    }
-    return mapping[normalized];
+    const mappingKeys = Object.keys(mapping);
+    const foundKey = mappingKeys.find(key => this.normalizeKey(key) === normalized);
+    if (!foundKey) throw new Error(`Invalid: ${input}. Must be one of: ${mappingKeys.join(', ')}`);
+    return mapping[foundKey];
   }
+
+  protected readonly STATUS_TEXT_MAP: Record<number, string> = {
+    100: 'Continue',
+    101: 'Switching Protocols',
+    102: 'Processing',
+    103: 'Early Hints',
+
+    200: 'OK',
+    201: 'Created',
+    202: 'Accepted',
+    203: 'Non-Authoritative Information',
+    204: 'No Content',
+    205: 'Reset Content',
+    206: 'Partial Content',
+    207: 'Multi-Status',
+    208: 'Already Reported',
+    226: 'IM Used',
+
+    300: 'Multiple Choices',
+    301: 'Moved Permanently',
+    302: 'Found',
+    303: 'See Other',
+    304: 'Not Modified',
+    305: 'Use Proxy',
+    306: 'unused',
+    307: 'Temporary Redirect',
+    308: 'Permanent Redirect',
+
+    400: 'Bad Request',
+    401: 'Unauthorized',
+    402: 'Payment Required',
+    403: 'Forbidden',
+    404: 'Not Found',
+    405: 'Method Not Allowed',
+    406: 'Not Acceptable',
+    407: 'Proxy Authentication Required',
+    408: 'Request Timeout',
+    409: 'Conflict',
+    410: 'Gone',
+    411: 'Length Required',
+    412: 'Precondition Failed',
+    413: 'Payload Too Large',
+    414: 'URI Too Long',
+    415: 'Unsupported Media Type',
+    416: 'Range Not Satisfiable',
+    417: 'Expectation Failed',
+    418: "I'm a teapot",
+    421: 'Misdirected Request',
+    422: 'Unprocessable Entity',
+    423: 'Locked',
+    424: 'Failed Dependency',
+    425: 'Too Early',
+    426: 'Upgrade Required',
+    428: 'Precondition Required',
+    429: 'Too Many Requests',
+    431: 'Request Header Fields Too Large',
+    444: 'No Response',
+    451: 'Unavailable For Legal Reasons',
+    499: 'Client Closed Request',
+
+    500: 'Internal Server Error',
+    501: 'Not Implemented',
+    502: 'Bad Gateway',
+    503: 'Service Unavailable',
+    504: 'Gateway Timeout',
+    505: 'HTTP Version Not Supported',
+    506: 'Variant Also Negotiates',
+    507: 'Insufficient Storage',
+    508: 'Loop Detected',
+    509: 'Bandwidth Limit Exceeded',
+    510: 'Not Extended',
+    511: 'Network Authentication Required',
+
+    520: 'Web Server Returned an Unknown Error',
+    521: 'Web Server Is Down',
+    522: 'Connection Timed Out',
+    523: 'Origin Is Unreachable',
+    524: 'A Timeout Occurred',
+    525: 'SSL Handshake Failed',
+    526: 'Invalid SSL Certificate',
+    527: 'Railgun Error',
+    530: 'Site Is Frozen',
+  };
 }

@@ -1,35 +1,36 @@
 export interface IBase {
-  id: string | null;
+  id: string | number | null;
   name: string | null;
   posterImage?: string | null;
+  [x: string]: any;
 }
 
 export interface IBaseEpisodes {
   episodeId: string | null;
   episodeNumber: number | null;
+  title?: string | null;
+  [x: string]: any;
 }
 
-export interface ISubServers {
+export interface IBaseMediaInfo extends IBase {
+  type: string | null;
+  releaseDate: string | number | null;
+  synopsis: string | null;
+  score?: number | null;
+  studios?: string | string[] | null;
+  [x: string]: any;
+}
+
+export interface IServers {
   serverId: number | string | null;
   serverName: string | null;
-  mediaId: number | string | null;
-  eid?: string | null;
+  [x: string]: any;
 }
-export type IDubServers = ISubServers;
-export type IRawServers = ISubServers;
-
-export interface IServerInfo {
-  sub: ISubServers[];
-  dub: IDubServers[];
-  raw: IRawServers[];
-  episodeNumber: number | null;
-}
-
-export type ISubOrDub = 'sub' | 'dub' | 'raw';
 
 export interface IResponse<T> {
   data: T;
   error?: string;
+  status?: number;
 }
 
 export interface ISubtitles {
@@ -74,6 +75,8 @@ export interface IBasePaginated<T> extends IResponse<T> {
   currentPage: number;
 }
 
-export interface IHomeResSpecialPages {
-  error?: string;
+export interface IMangaSource {
+  url: string | null;
+  page: number | null;
+  [key: string]: unknown;
 }

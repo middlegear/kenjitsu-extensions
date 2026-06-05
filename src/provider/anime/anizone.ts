@@ -2,13 +2,14 @@ import * as cheerio from 'cheerio';
 import { BaseClass, type ClientConfig } from '../../models/base.js';
 
 import type {
-  IAnizone,
-  IAniZoneEpisodes,
-  IAnizoneInfo,
-  IAnizoneInfoResponse,
-  IAnizoneUpdates,
-} from '../../types/anime/anizone.js';
-import type { IBase, IResponse, ISourceBaseResponse, IVideoSource } from '../../types/base.js';
+  IBase,
+  IBaseEpisodes,
+  IBaseMediaInfo,
+  IResponse,
+  ISourceBaseResponse,
+  IVideoSource,
+} from '../../types/base.js';
+import type { IBaseAnimeResponse } from '../../types/anime.js';
 
 /**
  * Anizone class for interacting with the Anizone anime streaming platform.
@@ -25,15 +26,152 @@ export class Anizone extends BaseClass {
   }
 
   /**
+   * Searches for anime on the Anizone platform using a query string.
+   * @param {string} query - The search query for finding anime.
+   * @returns - A promise resolving to an object containing search results or an error message.
+   */
+  async search(query: string): Promise<IResponse<IBase[] | []>> {
+    if (!query) {
+      return {
+        data: [],
+        error: this.formatHttpError(400),
+        status: 400,
+      };
+    }
+
+    try {
+      const url = new URL(`${this.baseUrl}/anime`);
+      url.searchParams.append('search', this.formatQuery(query));
+
+      const response = await this.client.fetch(url.toString(), {
+        method: 'GET',
+      });
+      if (!response.ok) {
+        return { error: response.statusText, status: response.status, data: [] };
+      }
+      const result = await response.text();
+      return this.parseSearchResults(cheerio.load(result));
+    } catch (error) {
+      return { error: error instanceof Error ? error.message : 'Unknown err', data: [], status: 500 };
+    }
+  }
+
+  /**
+   * Fetches recent updates from the Anizone homepage, including recently added anime and latest episodes.
+   * @returns - A promise resolving to an object containing arrays of recently added anime, latest episodes, or an error message.
+   */
+
+  async fetchUpdates(): Promise<IBaseAnimeResponse<IBaseEpisodes[] | []>> {
+    try {
+      const response = await this.client.fetch(`${this.baseUrl}/`, { method: 'GET' });
+
+      if (!response.ok) {
+        return { error: response.statusText, status: response.status, data: [], recentlyAdded: [] };
+      }
+      const result = await response.text();
+      return this.parseUpdates(cheerio.load(result));
+    } catch (error) {
+      return {
+        error: error instanceof Error ? error.message : 'Unknown err',
+        data: [],
+        recentlyAdded: [],
+        status: 500,
+      };
+    }
+  }
+
+  /**
+   * Fetches detailed information and episode list for a specific anime.
+   * @param {string} animeId - The unique identifier for the anime.
+   * @returns - A promise resolving to an object containing anime details and episodes or an error message.
+   */
+  async fetchAnimeInfo(animeId: string): Promise<IBaseAnimeResponse<IBaseMediaInfo | null>> {
+    if (!animeId) {
+      return {
+        data: null,
+        error: this.formatHttpError(400),
+        status: 400,
+        providerEpisodes: [],
+      };
+    }
+
+    try {
+      const id = animeId.split('-').at(-1);
+      const response = await this.client.fetch(`${this.baseUrl}/anime/${id}`, { method: 'GET' });
+      if (!response.ok) {
+        return {
+          data: null,
+          providerEpisodes: [],
+          error: response.statusText,
+          status: response.status,
+        };
+      }
+      const result = await response.text();
+      return this.parseAnimeinfo(cheerio.load(result));
+    } catch (error) {
+      return {
+        error: error instanceof Error ? error.message : 'Unknown error',
+        data: null,
+        providerEpisodes: [],
+        status: 500,
+      };
+    }
+  }
+
+  /**
+   * Fetches video sources and related metadata for a specific episode.
+   * @param {string} episodeId - The unique identifier for the episode.
+   * @returns {Promise<ISourceBaseResponse<IVideoSource | null>>} - A promise resolving to an object containing video sources, headers, or an error message.
+   */
+  async fetchSources(episodeId: string): Promise<ISourceBaseResponse<IVideoSource | null>> {
+    if (!episodeId) {
+      return { error: 'Missing required params: episodeId', headers: { Referer: null }, data: null, status: 400 };
+    }
+    try {
+      const match = episodeId.match(/([a-z0-9]+)-episode-(\d+)/i);
+      if (!match) {
+        return {
+          error: 'Invalid episodeId format',
+          status: 400,
+          headers: { Referer: null },
+          data: null,
+        };
+      }
+
+      const id = `${match[1]}/${match[2]}`;
+
+      const response = await this.client.fetch(`${this.baseUrl}/anime/${id}`, { method: 'GET' });
+
+      if (!response.ok) {
+        return {
+          error: response.statusText || 'Unknown error',
+          status: response.status,
+          headers: { Referer: null },
+          data: null,
+        };
+      }
+      const result = await response.text();
+      const { extractedData } = this.parseSources(cheerio.load(result));
+
+      return {
+        headers: { Referer: `${this.baseUrl}/` },
+        data: extractedData,
+      };
+    } catch (error) {
+      return { error: error instanceof Error ? error.message : 'Unknown error', headers: { Referer: null }, data: null };
+    }
+  }
+
+  /**
    * Parses search results from the Anizone website to extract anime information.
    * @private
    * @param {cheerio.CheerioAPI} $ - Cheerio instance for parsing HTML.
-   * @returns {IResponse<IAnizone[] | []>} - An object containing an array of parsed anime data or an empty array.
+   * @returns - An object containing an array of parsed anime data or an empty array.
    */
-  private parseSearchResults($: cheerio.CheerioAPI): IResponse<IAnizone[] | []> {
+  private parseSearchResults($: cheerio.CheerioAPI) {
     const selector: cheerio.SelectorType =
       'div.grid.grid-cols-1.gap-4 > div.relative.overflow-hidden.h-26.rounded-lg.px-4.py-3.bg-slate-900.drop-shadow-lg';
-    const anime: IAnizone[] = [];
+    const anime: IBase[] = [];
     $(selector).each((_, element) => {
       const title =
         $(element).find('div.h-6.inline.truncate > a').text().trim() ||
@@ -69,10 +207,11 @@ export class Anizone extends BaseClass {
         })(),
       });
     });
-    if (!Array.isArray(anime) || anime.length === 0) {
+    if (Array.isArray(anime) && anime.length === 0) {
       return {
         data: [],
         error: 'No results found for that query ',
+        status: 404,
       };
     }
     return { data: anime };
@@ -82,15 +221,15 @@ export class Anizone extends BaseClass {
    * Parses anime information and episode data from the Anizone anime page.
    * @private
    * @param {cheerio.CheerioAPI} $ - Cheerio instance for parsing HTML.
-   * @returns {IAnizoneInfoResponse<IAnizoneInfo | null>} - An object containing parsed anime info and episode data, or null if not found.
+   * @returns - An object containing parsed anime info and episode data, or null if not found.
    */
-  private parseAnimeinfo($: cheerio.CheerioAPI): IAnizoneInfoResponse<IAnizoneInfo | null> {
+  private parseAnimeinfo($: cheerio.CheerioAPI) {
     const synopsisHtml = $('.text-sm.md\\:text-base.xl\\:text-lg > div').html();
     const infoSpans = $('.text-slate-100.text-xs.lg\\:text-base.flex.flex-wrap > span');
     const title = $('div.mx-auto img').attr('alt') || $('h1').text().trim();
     const id = $('div.flex.mt-8 a').attr('href')?.split('/')[4];
 
-    const animeInfo: IAnizoneInfo = {
+    const animeInfo: IBaseMediaInfo = {
       id: `${this.createSlug(title)}-${id}` || null,
       name: title || null,
       // romaji: $('div.mx-auto img').attr('alt') || null,
@@ -118,7 +257,7 @@ export class Anizone extends BaseClass {
           .get()
           .filter(g => g.toLowerCase() !== 'manga') || null,
     };
-    const episodes: IAniZoneEpisodes[] = [];
+    const episodes: IBaseEpisodes[] = [];
 
     $('ul.grid > li').each((_, el) => {
       const $el = $(el);
@@ -150,7 +289,22 @@ export class Anizone extends BaseClass {
             .trim() || null,
       });
     });
-
+    if (animeInfo === null) {
+      return {
+        data: null,
+        error: 'Anime info is null',
+        status: 404,
+        providerEpisodes: [],
+      };
+    }
+    if (Array.isArray(episodes) && episodes.length === 0) {
+      return {
+        data: null,
+        error: 'Provider episodes is empty',
+        status: 404,
+        providerEpisodes: [],
+      };
+    }
     return { data: animeInfo, providerEpisodes: episodes };
   }
 
@@ -220,7 +374,7 @@ export class Anizone extends BaseClass {
    * @param {cheerio.CheerioAPI} $ - Cheerio instance for parsing HTML.
    * @returns  - An object containing arrays of recently added anime and latest episodes.
    */
-  private parseUpdates($: cheerio.CheerioAPI): IAnizoneUpdates<IAniZoneEpisodes[] | []> {
+  private parseUpdates($: cheerio.CheerioAPI) {
     const recentlyAdded: IBase[] = [];
 
     const latestAnimeBlock = 'div.swiper-wrapper.flex div.space-y-3.pb-6.swiper-slide';
@@ -236,7 +390,7 @@ export class Anizone extends BaseClass {
       });
     });
 
-    const latestEpisodes: IAniZoneEpisodes[] = [];
+    const latestEpisodes: IBaseEpisodes[] = [];
     const latestBlockEpisodes = $('div.md\\:w-2\\/3.lg\\:w-3\\/4 ul');
     latestBlockEpisodes.find('li').each((_, el) => {
       const $el = $(el);
@@ -256,7 +410,22 @@ export class Anizone extends BaseClass {
         airDate: $el.find('.flex.flex-row.text-xs span').eq(0).text().trim() || null,
       });
     });
-
+    if (Array.isArray(latestEpisodes) && latestEpisodes.length === 0) {
+      return {
+        data: [],
+        error: 'Latest  episodes is empty',
+        status: 404,
+        recentlyAdded: [],
+      };
+    }
+    if (Array.isArray(recentlyAdded) && recentlyAdded.length === 0) {
+      return {
+        data: [],
+        error: 'Recently added is empty',
+        status: 404,
+        recentlyAdded: [],
+      };
+    }
     return { data: latestEpisodes, recentlyAdded };
   }
 
@@ -274,106 +443,4 @@ export class Anizone extends BaseClass {
 
     return decoded;
   };
-
-  /**
-   * Searches for anime on the Anizone platform using a query string.
-   * @param {string} query - The search query for finding anime.
-   * @returns - A promise resolving to an object containing search results or an error message.
-   */
-  async search(query: string): Promise<IResponse<IAnizone[] | []>> {
-    if (!query) {
-      return { error: 'Missing required params: a query string', data: [] };
-    }
-
-    try {
-      const response = await this.client.get(`${this.baseUrl}/anime`, {
-        params: {
-          search: this.formatQuery(query),
-        },
-      });
-      if (!response.data) {
-        return { error: response.statusText, data: [] };
-      }
-      return this.parseSearchResults(cheerio.load(response.data));
-    } catch (error) {
-      return { error: error instanceof Error ? error.message : 'Unknown err', data: [] };
-    }
-  }
-
-  /**
-   * Fetches recent updates from the Anizone homepage, including recently added anime and latest episodes.
-   * @returns - A promise resolving to an object containing arrays of recently added anime, latest episodes, or an error message.
-   */
-
-  async fetchUpdates(): Promise<IAnizoneUpdates<IAniZoneEpisodes[] | []>> {
-    try {
-      const response = await this.client.get(`${this.baseUrl}/`);
-
-      if (!response.data) {
-        return { error: response.statusText, data: [], recentlyAdded: [] };
-      }
-
-      return this.parseUpdates(cheerio.load(response.data));
-    } catch (error) {
-      return {
-        error: error instanceof Error ? error.message : 'Unknown err',
-        data: [],
-        recentlyAdded: [],
-      };
-    }
-  }
-
-  /**
-   * Fetches detailed information and episode list for a specific anime.
-   * @param {string} animeId - The unique identifier for the anime.
-   * @returns - A promise resolving to an object containing anime details and episodes or an error message.
-   */
-  async fetchAnimeInfo(animeId: string): Promise<IAnizoneInfoResponse<IAnizoneInfo | null>> {
-    if (!animeId) {
-      return { error: 'Missing required params animeId', data: null, providerEpisodes: [] };
-    }
-
-    try {
-      const id = animeId.split('-').at(-1);
-      const response = await this.client.get(`${this.baseUrl}/anime/${id}`);
-      if (!response.data) {
-        return { error: response.statusText, data: null, providerEpisodes: [] };
-      }
-
-      return this.parseAnimeinfo(cheerio.load(response.data));
-    } catch (error) {
-      return { error: error instanceof Error ? error.message : 'Unknown error', data: null, providerEpisodes: [] };
-    }
-  }
-
-  /**
-   * Fetches video sources and related metadata for a specific episode.
-   * @param {string} episodeId - The unique identifier for the episode.
-   * @returns {Promise<ISourceBaseResponse<IVideoSource | null>>} - A promise resolving to an object containing video sources, headers, or an error message.
-   */
-  async fetchSources(episodeId: string): Promise<ISourceBaseResponse<IVideoSource | null>> {
-    if (!episodeId) {
-      return { error: 'Missing required params: episodeId', headers: { Referer: null }, data: null };
-    }
-    try {
-      const match = episodeId.match(/([a-z0-9]+)-episode-(\d+)/i);
-      if (!match) throw new Error('Invalid episodeId format');
-
-      const id = `${match[1]}/${match[2]}`;
-
-      const response = await this.client.get(`${this.baseUrl}/anime/${id}`);
-
-      if (!response.data) {
-        return { error: response.statusText || 'Unknown error', headers: { Referer: null }, data: null };
-      }
-      const { extractedData } = this.parseSources(cheerio.load(response.data));
-
-      return {
-        headers: { Referer: `${this.baseUrl}/` },
-        data: extractedData,
-      };
-    } catch (error) {
-      return { error: error instanceof Error ? error.message : 'Unknown error', headers: { Referer: null }, data: null };
-    }
-  }
 }

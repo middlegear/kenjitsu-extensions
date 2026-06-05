@@ -5,37 +5,30 @@ export interface IMetaMovie {
   name: string;
   originalName: string;
   posterImage: {
-    small: string;
-    medium: string;
-    large: string;
-    original: string;
+    small: string | null;
+    medium: string | null;
+    large: string | null;
+    original: string | null;
   };
   coverImage: {
-    small: string;
-    medium: string;
-    large: string;
-    original: string;
+    small: string | null;
+    medium: string | null;
+    large: string | null;
+    original: string | null;
   };
   country?: string;
   type?: string;
+  status?: string;
   language: string;
   runtime?: number;
   releaseDate: string;
   summary: string;
   genres: string;
   rating: string;
-  externalIds: IMetaExternalId;
 }
-interface IMetaExternalId {
-  imdbId: string | null;
-  tvdbId?: number | null;
-  tvrageId?: number | null;
-  facebookId: string | null;
-  instagramId: string | null;
-  twitterId: string | null;
-  wikidataId: string | null;
+export interface IMovieInfo extends IMetaMovie {
+  artWorks: IMetaMovieArtworks;
 }
-
 export interface IMetaMovieInfo extends IMetaMovie {
   lastAired: string;
   seasons: number;
@@ -49,6 +42,8 @@ export interface IMetaMovieInfo extends IMetaMovie {
     rating: number;
     airDate: string;
   } | null;
+  status: string;
+  episodes: number;
   nextEpisode: {
     episodeId: number;
     title: string;
@@ -66,6 +61,7 @@ export interface IMetaMovieSeasons {
   id: string;
   name: string;
   rating: string;
+  totalEpisodes: number;
   summary: string;
   seasonNumber: string;
   posterImage: {
@@ -76,7 +72,23 @@ export interface IMetaMovieSeasons {
   };
 }
 
+interface IArtWorks {
+  height: number;
+  width: number;
+  small: string;
+  medium: string;
+  large: string;
+  original: string;
+}
+
+export interface IMetaMovieArtworks {
+  coverImages: IArtWorks[] | [];
+  logos: IArtWorks[] | [];
+  posterImages: IArtWorks[] | [];
+}
+
 export interface IMetaMovieEpisodes {
+  absoluteEpisodeNumber: number | null;
   airDate: string | null;
   episodeNumber: number | null;
   episodeType?: string | null;
@@ -95,27 +107,13 @@ export interface IMetaMovieEpisodes {
   };
 }
 
-export interface IMovieProviderResults {
-  id: string | null;
-  name: string | null;
-  // TV-specific
-  seasons?: number | null;
-  totalEpisodes?: number | null;
-  // Movie-specific
-  releaseDate?: number | null;
-  duration?: number | string | null;
-  provider?: string | null;
-  score?: number;
-}
-
 export interface IMetaMoviePaginated<T> extends IBasePaginated<T> {
   lastPage: number;
   totalResults: number;
 }
-
-export interface IMetaInfoResponse<T> extends IResponse<T> {
-  seasons: IMetaMovieSeasons[] | [];
+export interface IMetaMovieInfoResponse<T> extends IResponse<T> {
+  images: IMetaMovieArtworks | null;
 }
-export interface IMetaMovieIdResponse<T> extends IResponse<T> {
-  provider: IMovieProviderResults | null;
+export interface IMetaTvInfo<T> extends IMetaMovieInfoResponse<T> {
+  seasons: IMetaMovieSeasons[] | [];
 }
