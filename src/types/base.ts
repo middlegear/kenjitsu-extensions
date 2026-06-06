@@ -74,9 +74,3 @@ export interface IBasePaginated<T> extends IResponse<T> {
   hasNextPage: boolean;
   currentPage: number;
 }
-
-export interface IMangaSource {
-  url: string | null;
-  page: number | null;
-  [key: string]: unknown;
-}

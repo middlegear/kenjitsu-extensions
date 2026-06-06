@@ -1,7 +1,7 @@
 import type { ClientOptions } from '../../config/client.js';
 import { BaseClass } from '../../models/base.js';
 import * as cheerio from 'cheerio';
-import type { IAnimeCategory, IResponse, ISourceBaseResponse, IVideoSource } from '../../types/base.js';
+import type { IAnimeCategory, IBase, IResponse, ISourceBaseResponse, IVideoSource } from '../../types/base.js';
 
 import { MegaPlay } from '../../source-extractors/megaplay.js';
 import { VidWish } from '../../source-extractors/vidwish.js';
@@ -16,6 +16,7 @@ import {
   type IBaseAnimeInfo,
   type IBaseAnimePaginated,
   type ISubOrDub,
+  type ScheduleDay,
 } from '../../types/anime.js';
 
 /**
@@ -88,6 +89,42 @@ export class Anikoto extends BaseClass {
   };
 
   /**
+   * Parses top  anime items.
+   * @param $ Cheerio instance
+   * @param selector CSS selector for the items
+   */
+  private parseTopAnimeSegement($: cheerio.CheerioAPI, tabName: string) {
+    const selector: cheerio.SelectorType = `#top-anime .tab-content[data-name="${tabName}"] .scaff.items .item`;
+    const results: IBaseAnime[] = [];
+
+    $(selector).each((_, element) => {
+      results.push({
+        id: $(element).attr('href')?.split('/').at(-1) || null,
+        name: $(element).find('.name').text().trim() || null,
+        romaji: $(element).find('.name').attr('data-jp')?.trim() || null,
+        rank:
+          Number(
+            $(element)
+              .attr('class')
+              ?.split(' ')
+              .find(c => c.startsWith('rank'))
+              ?.replace('rank', ''),
+          ) || 0,
+
+        posterImage: $(element).find('.poster img').attr('src') ?? '',
+        type: $(element).find('.meta .dot:not(.ep-wrap)').first().text().trim() || null,
+        episodes: {
+          sub: Number($(element).find('.ep-status.sub > span').first().text().trim()) || null,
+          dub: Number($(element).find('.ep-status.dub > span').first().text().trim()) || null,
+        },
+        totalEpisodes: Number($(element).find('.ep-status.sub > span').first().text().trim()) || null,
+      });
+    });
+
+    return results;
+  }
+
+  /**
    * Parses the home page content including spotlight, recent updates, upcoming, etc.
    * @param $ Cheerio instance with loaded home page HTML
    */
@@ -136,9 +173,65 @@ export class Anikoto extends BaseClass {
         recentlyReleased: recentlyReleased,
         recentlyCompleted: recentlyCompleted,
       },
+      topAnime: {
+        day: this.parseTopAnimeSegement($, 'day'),
+        week: this.parseTopAnimeSegement($, 'week'),
+        month: this.parseTopAnimeSegement($, 'month'),
+      },
     };
   }
+  /**
+   * Parses the schedule from ajax html
+   * @param $ Cheerio instance with loaded home page HTML
+   */
+  private parseSchedule($: cheerio.CheerioAPI) {
+    const days: ScheduleDay[] = [];
 
+    const dayHeaders: { day: string; date: string; timestamp: number | null }[] = [];
+
+    $('#schedule .days .day').each((_, element) => {
+      const $day = $(element);
+      const dayName = $day.find('.inner .wday').text().trim() || $day.find('.wday').text().trim();
+      const date = $day.find('.inner .date').text().trim() || $day.find('.date').text().trim();
+      const timestamp = Number($day.find('.inner').attr('data-time')) || null;
+      if (!dayName && !date) return;
+      dayHeaders.push({
+        day: dayName,
+        date,
+        timestamp,
+      });
+    });
+
+    const animes: IBase[] = [];
+
+    $('#schedule .body .items .item').each((_, el) => {
+      const $el = $(el);
+      const href = $el.attr('href') ?? '';
+      const slug = href
+        .replace(/^https?:\/\/[^/]+/, '')
+        .replace(/^\/watch\//, '')
+        .replace(/\/ep-\d+$/, '')
+        .replace(/\/$/, '');
+
+      animes.push({
+        id: slug,
+        name: $el.find('.title, .d-title').text().trim(),
+        episode: $el.find('.ep span').text().trim() || null,
+        time: $el.find('.time').text().trim() || null,
+      });
+    });
+
+    const perDay = Math.ceil(animes.length / dayHeaders.length);
+
+    dayHeaders.forEach((d, i) => {
+      days.push({
+        ...d,
+        anime: animes.slice(i * perDay, (i + 1) * perDay),
+      });
+    });
+
+    return { data: days };
+  }
   /**
    * Parses detailed anime information from the watch/info page.
    * @param $ Cheerio instance
@@ -501,6 +594,11 @@ export class Anikoto extends BaseClass {
             recentlyReleased: [],
             recentlyCompleted: [],
           },
+          topAnime: {
+            day: [],
+            week: [],
+            month: [],
+          },
         };
       }
       const result = await response.text();
@@ -517,6 +615,52 @@ export class Anikoto extends BaseClass {
           recentlyReleased: [],
           recentlyCompleted: [],
         },
+        topAnime: {
+          day: [],
+          week: [],
+          month: [],
+        },
+      };
+    }
+  }
+
+  /**
+   * Fetches the anime schedule .
+   *
+   * @param timezone - User timezone offset in hours (numeric value, e.g. 3, -5, 0)
+   *
+   * @returns A parsed schedule structure or an error object if the request fails
+   *
+   * @example
+   * fetchSchedule(3); // UTC+3
+   * fetchSchedule(-5); // UTC-5
+   */
+  async fetchSchedule(timezone: number): Promise<IResponse<ScheduleDay[] | []>> {
+    try {
+      const response = await this.client.fetch(`${this.baseUrl}/ajax/schedule?tz=${timezone}`, {
+        method: 'GET',
+        headers: {
+          Accept: 'application/json, text/javascript, */*; q=0.01',
+          Referer: `${this.baseUrl}/home}`,
+          'X-Requested-With': 'XMLHttpRequest',
+        },
+      });
+
+      if (!response.ok) {
+        return {
+          data: [],
+          error: response.statusText,
+          status: response.status,
+        };
+      }
+
+      const result = await response.json();
+      return this.parseSchedule(cheerio.load(result.result));
+    } catch (error) {
+      return {
+        data: [],
+        error: error instanceof Error ? error.message : 'Unknown err',
+        status: 500,
       };
     }
   }

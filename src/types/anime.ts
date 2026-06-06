@@ -55,10 +55,6 @@ export type IBaseAnimeResponse<T> = IResponse<T> & {
 export interface IBaseAnimeServerResponse<T> extends IResponse<T> {
   [x: string]: any;
 }
-export type AllAnimeServers =
-  // | 'okru' remove okru
-  'mp4upload' | 'internal-s-mp4' | 'internal-default-hls' | 'internal-yt-mp4'; // | 'filemoon';
-export type AniWavesServers = 'vidplay' | 'byms' | 'dghg';
 export type AnikotoServers = 'vidstream-2' | 'vidcloud-1';
 
 export const IGenres = {
@@ -106,3 +102,10 @@ export const IGenres = {
 } as const;
 
 export type IGenre = keyof typeof IGenres;
+
+export interface ScheduleDay {
+  day: string;
+  date: string;
+  timestamp: number | null;
+  anime: IBase[];
+}
