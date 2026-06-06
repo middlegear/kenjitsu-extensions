@@ -730,8 +730,9 @@ export class Anikoto extends BaseClass {
    * @param  page - Page number for pagination (default: 1)
    * @returns  Promise resolving to an object  with alphabetically sorted anime and pagination details
    */
-  async fetchAtoZList(sort?: any, page = 1): Promise<IBaseAnimePaginated<IBaseAnime[] | []>> {
+  async fetchAtoZList(sort?: any, page: number = 1): Promise<IBaseAnimePaginated<IBaseAnime[] | []>> {
     const sortValue = (sort ?? '').toString().trim();
+
     const sortCategory = !sortValue
       ? undefined
       : !Number.isNaN(Number(sortValue))
@@ -739,9 +740,8 @@ export class Anikoto extends BaseClass {
         : sortValue.length === 1
           ? sortValue.toUpperCase()
           : 'other';
-
-    const url = sortCategory ? `az-list/${sortCategory}` : `az-list`;
-    const finalUrl = page > 1 ? `${url}?page=$${page}` : url;
+    const baseUrl = sortCategory ? `az-list/${sortCategory}` : `az-list`;
+    const finalUrl = page > 1 ? `${baseUrl}?page=${page}` : baseUrl;
     return await this.fetchPaginatedSections(finalUrl);
   }
   /**

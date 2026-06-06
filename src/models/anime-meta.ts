@@ -2,10 +2,11 @@ import { Anizone } from '../provider/anime/anizone.js';
 import { Animepahe } from '../provider/anime/animepahe.js';
 import { BaseClass, type ClientConfig } from './base.js';
 import type { IMetaMovieEpisodes } from '../types/meta/meta-movie.js';
+import { Anikoto } from '../provider/anime/anikoto.js';
 
 abstract class BaseAnimeMeta extends BaseClass {
   protected anizone: Anizone;
-
+  protected anikoto: Anikoto;
   protected animepahe: Animepahe;
 
   constructor(
@@ -18,6 +19,7 @@ abstract class BaseAnimeMeta extends BaseClass {
 
     this.animepahe = new Animepahe();
     this.anizone = new Anizone();
+    this.anikoto = new Anikoto();
   }
 
   protected createTitleSlug(text: string): string {

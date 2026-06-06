@@ -184,6 +184,150 @@ export class Anilist extends BaseAnimeMeta {
   }
 
   /**
+   * Maps an Anilist anime ID to the corresponding Anikoto provider ID.
+   *
+   * @param anilistId - Anilist media ID (required)
+   * @returns Provider mapping result including Anilist metadata and provider-specific ID (if found)
+   */
+  async fetchAnikotoProviderId(anilistId: number): Promise<IMetaProviderIdResponse<IMetaAnime | null>> {
+    if (!anilistId) {
+      return {
+        error: 'Invalid or missing required parameter: anilistId!',
+        data: null,
+        provider: null,
+        status: 400,
+      };
+    }
+    try {
+      const [anilist, anikoto] = await Promise.allSettled([
+        this.fetchInfo(anilistId, 'ANIME'),
+        this.client.fetch(`${this.workerUrl}/api/anime/anilist/${anilistId}?provider=anikoto`, {
+          method: 'GET',
+        }),
+      ]);
+
+      if (anilist.status === 'rejected') {
+        return {
+          data: null,
+          provider: null,
+          error: anilist.reason,
+          status: 500,
+        };
+      }
+
+      const anilistData = anilist.value;
+      if (anikoto.status == 'rejected') {
+        return {
+          data: null,
+          provider: null,
+          error: anikoto.reason,
+          status: 500,
+        };
+      }
+      if (!anikoto.value.ok) {
+        return { data: null, provider: null, status: anikoto.value.status, error: anikoto.value.statusText };
+      }
+      const anikotoResult = await anikoto.value.json();
+
+      return {
+        data: anilistData.data,
+        provider: anikotoResult.provider,
+      };
+    } catch (error) {
+      return {
+        error: error instanceof Error ? error.message : 'Unknown error occurred',
+        data: null,
+        provider: null,
+        status: 500,
+      };
+    }
+  }
+  /**
+   * Fetches episode list from Anikoto provider and enriches episodes with Anizip metadata (titles, thumbnails, etc.).
+   *
+   * @param anilistId - Anilist media ID (required)
+   * @returns Enriched episode list from Anizone + Anilist base data
+   */
+  async fetchAnikotoProviderEpisodes(anilistId: number): Promise<IMetaProviderEpisodesResponse<IMetaAnime | null>> {
+    if (!anilistId) {
+      return {
+        error: 'Invalid or missing required parameter: anilistId!',
+        data: null,
+        providerEpisodes: [],
+        provider: null,
+        status: 400,
+      };
+    }
+
+    try {
+      const [initialResponse, anizip, tmdb] = await Promise.allSettled([
+        this.fetchAnikotoProviderId(anilistId),
+        this.anilistAnizip(anilistId),
+        this.client.fetch(`${this.workerUrl}/api/meta/anilist/${anilistId}?platform=tmdb`, { method: 'GET' }),
+      ]);
+
+      if (initialResponse.status === 'rejected') {
+        return {
+          data: null,
+          providerEpisodes: [],
+          provider: null,
+          error: initialResponse.reason,
+          status: 500,
+        };
+      }
+
+      if (anizip.status === 'rejected') {
+        return {
+          data: null,
+          providerEpisodes: [],
+          provider: null,
+          error: anizip.reason,
+          status: 500,
+        };
+      }
+
+      const anikotoAnimeId = initialResponse.value.provider?.id;
+      const anikotoResult = await this.anizone.fetchAnimeInfo(anikotoAnimeId as string);
+
+      const tmdbData = tmdb.status === 'fulfilled' ? await tmdb.value.json() : null;
+      const tmdbEpisodesList = Array.isArray(tmdbData?.episodes) ? (tmdbData.episodes as IMetaMovieEpisodes[]) : [];
+
+      const tmdbMap = new Map(
+        tmdbEpisodesList.map((item: any) => [item.absoluteEpisodeNumber || item.absoluteEpisode, item]),
+      );
+      const anizipEpisodes = anizip.value.episodes;
+      const aniZipMap = new Map(
+        (anizipEpisodes || []).map((item: { episodeAnizipNumber: any }) => [item.episodeAnizipNumber, item]),
+      );
+
+      const enrichedEpisodes = anikotoResult.providerEpisodes
+        .filter((ep: any) => typeof ep.episodeNumber === 'number' && !isNaN(ep.episodeNumber) && ep.episodeNumber > 0)
+        .map((episode: any) => {
+          const epNum = episode.episodeNumber;
+          const tmdbEp = tmdbMap.get(epNum);
+          const aniZipEp = aniZipMap.get(epNum);
+          return this.mergeEpisodeData(episode, aniZipEp, tmdbEp, 'anizone');
+        });
+
+      const anilistData = initialResponse.value.data;
+      const providerInfo = initialResponse.value.provider;
+
+      return {
+        data: anilistData,
+        providerEpisodes: enrichedEpisodes,
+        provider: providerInfo,
+      };
+    } catch (error) {
+      return {
+        data: null,
+        error: error instanceof Error ? error.message : 'Unknown Error',
+        providerEpisodes: [],
+        provider: null,
+        status: 500,
+      };
+    }
+  }
+  /**
    * Fetches episode list from Anizone provider and enriches episodes with Anizip metadata (titles, thumbnails, etc.).
    *
    * @param anilistId - Anilist media ID (required)
