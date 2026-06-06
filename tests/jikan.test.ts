@@ -3,7 +3,7 @@ import { Jikan } from '../src/provider/meta/jikan.js';
 
 const jikan = new Jikan({
   rateLimit: {
-    intervalMs: 1200,
+    intervalMs: 2000,
     requestsPerInterval: 1,
   },
 });
