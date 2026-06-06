@@ -287,7 +287,7 @@ export class Anilist extends BaseAnimeMeta {
       }
 
       const anikotoAnimeId = initialResponse.value.provider?.id;
-      const anikotoResult = await this.anizone.fetchAnimeInfo(anikotoAnimeId as string);
+      const anikotoResult = await this.anikoto.fetchAnimeInfo(anikotoAnimeId as string);
 
       const tmdbData = tmdb.status === 'fulfilled' ? await tmdb.value.json() : null;
       const tmdbEpisodesList = Array.isArray(tmdbData?.episodes) ? (tmdbData.episodes as IMetaMovieEpisodes[]) : [];

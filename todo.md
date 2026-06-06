@@ -1,4 +1,4 @@
-1. ProviderId mappings for anikoto
-2.  include abstract classes that each provider must implement
- Update tests
-Test for cf proxies
+
+1.  include abstract classes that each provider must implement
+
+99999. Test for cf proxies
