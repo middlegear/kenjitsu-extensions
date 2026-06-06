@@ -345,6 +345,42 @@ export class Anikoto extends BaseClass {
   }
 
   /**
+   * Parses search suggestion results from a Cheerio instance.
+   * Extracts anime suggestion details from the provided HTML.
+   * @param $ CheerioAPI instance
+   * @returns An array containing an array of search suggestions
+   */
+  private parseSearchSuggessations($: cheerio.CheerioAPI) {
+    const results: IBaseAnime[] = [];
+
+    $('.scaff.items a.item').each((_, element) => {
+      $(element);
+      const href = $(element).attr('href') || null;
+      const dots = $(element).find('.meta .dot');
+      const scoreText = dots
+        .eq(1)
+        .text()
+        .replace(/[^0-9.]/g, '')
+        .trim();
+
+      results.push({
+        id: href?.split('/watch/').pop() || null,
+        name: $(element).find('.name.d-title').text().trim() || null,
+        romaji: $(element).find('.name.d-title').attr('data-jp') || null,
+        posterImage: $(element).find('.poster img').attr('src') || null,
+        rating: dots.eq(0).text().trim() || null,
+        score: scoreText ? Number(scoreText) : null,
+        type: dots.eq(2).text().trim() || null,
+        year: Number(dots.eq(3).text().trim()) || null,
+      });
+    });
+    if (Array.isArray(results) && results.length === 0) {
+      return { data: [], error: this.formatHttpError(400), status: 404 };
+    }
+    return { data: results };
+  }
+
+  /**
    * Finds the best matching server ID based on preferences.
    *
    * Preference order:
@@ -494,6 +530,46 @@ export class Anikoto extends BaseClass {
   async search(query: string, page: number = 1): Promise<IResponse<IBaseAnime[] | []>> {
     const finalUrl = page > 1 ? `filter?keyword=${query}?page=${page}` : `filter?keyword=${query}`;
     return await this.fetchPaginatedSections(finalUrl.trim());
+  }
+  /**
+   * Fetches search suggestions for a given query string .
+   * @param  query - The search query string (required).
+    @returns A promise that resolves to an object containing an array of anime titles or an error message.
+   */
+  async searchSuggestions(query: string): Promise<IResponse<IBaseAnime[] | []>> {
+    if (!query) {
+      return {
+        data: [],
+        error: this.formatHttpError(400),
+        status: 500,
+      };
+    }
+    try {
+      const response = await this.client.fetch(`${this.baseUrl}/ajax/anime/search?keyword=${query}`, {
+        headers: {
+          Accept: 'application/json, text/javascript, */*; q=0.01',
+          Referer: `${this.baseUrl}/home}`,
+          'X-Requested-With': 'XMLHttpRequest',
+        },
+      });
+      if (!response.ok) {
+        return {
+          data: [],
+          error: response.statusText,
+          status: response.status,
+        };
+      }
+
+      const result = await response.json();
+
+      return this.parseSearchSuggessations(cheerio.load(result.result.html));
+    } catch (error) {
+      return {
+        data: [],
+        error: error instanceof Error ? error.message : 'Unknown err',
+        status: 500,
+      };
+    }
   }
 
   /**
