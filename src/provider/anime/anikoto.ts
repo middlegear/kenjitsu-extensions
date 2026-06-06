@@ -37,39 +37,6 @@ export class Anikoto extends BaseClass {
   }
 
   /**
-   * Parses search results from the HTML page.
-   * @param $ Cheerio instance with loaded HTML
-   * @returns Array of anime search results or error object
-   */
-  private parseSearchResults($: cheerio.CheerioAPI) {
-    const selector: cheerio.SelectorType = 'div#list-items  > div.item';
-    const anime: IBaseAnime[] = [];
-    $(selector).each((_, element) => {
-      const numericId = $(element).find('div.ani.poster.tip ').attr('data-tip');
-      const seriesId = $(element).find('div.ani.poster.tip > a').attr('href')?.split('/').at(-2);
-      anime.push({
-        id: `${seriesId}` || null,
-        name: $(element).find('div.b1 > a.name.d-title').text().trim() || null,
-        romaji: $(element).find('div.b1 > a.name.d-title').attr('data-jp') || null,
-        posterImage: $(element).find('div.ani.poster.tip img').attr('src') || null,
-        type: $(element).find('div.meta div.right').text().trim() || null,
-        episodes: {
-          sub: Number($(element).find('div.left .ep-status.sub > span').first().text().trim()) || null,
-          dub: Number($(element).find('div.left .ep-status.dub > span').first().text().trim()) || null,
-        },
-        totalEpisodes:
-          Number($(element).find('div.left .ep-status.total > span').first().text().trim()) ||
-          Number($(element).find('div.left .ep-status.sub > span').first().text().trim()) ||
-          null,
-      });
-    });
-    if (Array.isArray(anime) && anime.length === 0) {
-      return { data: [], error: 'No results found', status: 404 };
-    }
-    return { data: anime };
-  }
-
-  /**
    * Parses anime items from home page sections.
    * @param $ Cheerio instance
    * @param selector CSS selector for the anime items
@@ -78,8 +45,10 @@ export class Anikoto extends BaseClass {
     const items: IBaseAnime[] = [];
     $(selector).each((_, element) => {
       const ep = $(element).find('.ep-status');
+      const href = $(element).find('div.info > a').attr('href');
+      const id = href?.includes('ep') ? href.split('/').at(-2) : href?.split('/').at(-1);
       items.push({
-        id: $(element).find('div.info > a').attr('href')?.split('/').at(-1) || null,
+        id: id || null,
         name: $(element).find('div.info > a').text().trim() || null,
         romaji: $(element).find('div.info > a').attr('data-jp') || null,
         posterImage: $(element).find('img').attr('src') || null,
@@ -279,10 +248,10 @@ export class Anikoto extends BaseClass {
     const selector: cheerio.SelectorType = 'div#list-items  > div.item';
     const anime: IBaseAnime[] = [];
     $(selector).each((_, element) => {
-      const numericId = $(element).find('div.ani.poster.tip ').attr('data-tip');
-      const seriesId = $(element).find('div.ani.poster.tip > a').attr('href')?.split('/').at(-2);
+      const href = $(element).find('div.ani.poster.tip > a').attr('href');
+      const id = href?.includes('ep') ? href.split('/').at(-2) : href?.split('/').at(-1);
       anime.push({
-        id: `${seriesId}` || null,
+        id: id || null,
         name: $(element).find('div.b1 > a.name.d-title').text().trim() || null,
         romaji: $(element).find('div.b1 > a.name.d-title').attr('data-jp') || null,
         posterImage: $(element).find('div.ani.poster.tip img').attr('src') || null,
@@ -316,7 +285,7 @@ export class Anikoto extends BaseClass {
    * @param $ Cheerio instance
    */
   private parseEpisodes($: cheerio.CheerioAPI) {
-    const selector: cheerio.SelectorType = 'div.body > div.episodes.name > ul.ep-range > li';
+    const selector: cheerio.SelectorType = 'div.body    ul.ep-range  li';
     const episodes: IBaseAnimeEpisodes[] = [];
     $(selector).each((_, element) => {
       const sub = Number($(element).find('a').attr('data-sub')) === 1;
@@ -462,6 +431,7 @@ export class Anikoto extends BaseClass {
         };
       }
       const result = await response.text();
+
       return this.parsePaginatedSections(cheerio.load(result));
     } catch (error) {
       return {
@@ -521,25 +491,9 @@ export class Anikoto extends BaseClass {
    * @param query Search keyword
    * @returns Search results with anime list
    */
-  async search(query: string): Promise<IResponse<IBaseAnime[] | []>> {
-    try {
-      const response = await this.client.fetch(`${this.baseUrl}/filter?keyword=${query}`, { method: 'GET' });
-      if (!response.ok) {
-        return {
-          data: [],
-          error: response.statusText,
-          status: response.status,
-        };
-      }
-      const result = await response.text();
-      return this.parseSearchResults(cheerio.load(result));
-    } catch (error) {
-      return {
-        data: [],
-        error: error instanceof Error ? error.message : 'Unknown Error',
-        status: 500,
-      };
-    }
+  async search(query: string, page: number = 1): Promise<IResponse<IBaseAnime[] | []>> {
+    const finalUrl = page > 1 ? `filter?keyword=${query}?page=${page}` : `filter?keyword=${query}`;
+    return await this.fetchPaginatedSections(finalUrl.trim());
   }
 
   /**
@@ -548,7 +502,7 @@ export class Anikoto extends BaseClass {
    * @param id Anime ID (series slug)
    * @returns Anime details + provider episodes
    */
-  async fetchInfo(id: string): Promise<IAnimeInfoResponse<IBaseAnimeInfo | null>> {
+  async fetchAnimeInfo(id: string): Promise<IAnimeInfoResponse<IBaseAnimeInfo | null>> {
     if (!id) {
       return {
         data: null,
@@ -587,6 +541,7 @@ export class Anikoto extends BaseClass {
           status: episodeResponse.status,
         };
       }
+
       const episodeResult = await episodeResponse.json();
       const episodes = this.parseEpisodes(cheerio.load(episodeResult.result));
       return {
@@ -616,7 +571,7 @@ export class Anikoto extends BaseClass {
    * Fetches a paginated list of recently updated anime.
    * @param page Page number (default: 1)
    */
-  async fetchRecentlyUpdated(page: number): Promise<IBaseAnimePaginated<IBaseAnime[] | []>> {
+  async fetchRecentlyUpdated(page: number = 1): Promise<IBaseAnimePaginated<IBaseAnime[] | []>> {
     const finalUrl = page > 1 ? `latest-updated?page=${page}` : `latest-updated`;
     return await this.fetchPaginatedSections(finalUrl.trim());
   }
@@ -635,7 +590,7 @@ export class Anikoto extends BaseClass {
    * @param page Page number (default: 1)
    */
   async fetchUpcoming(page: number = 1): Promise<IBaseAnimePaginated<IBaseAnime[] | []>> {
-    const finalUrl = page > 1 ? `not-yet-aired?page=${page}` : `not-yet-aired`;
+    const finalUrl = page > 1 ? `status/not-yet-aired?page=${page}` : `status/not-yet-aired`;
     return await this.fetchPaginatedSections(finalUrl.trim());
   }
 
@@ -644,7 +599,7 @@ export class Anikoto extends BaseClass {
    * @param page Page number (default: 1)
    */
   async fetchReleasing(page: number = 1): Promise<IBaseAnimePaginated<IBaseAnime[] | []>> {
-    const finalUrl = page > 1 ? `currently-airing?page=${page}` : `currently-airing`;
+    const finalUrl = page > 1 ? `status/currently-airing?page=${page}` : `status/currently-airing`;
     return await this.fetchPaginatedSections(finalUrl.trim());
   }
 
@@ -653,7 +608,7 @@ export class Anikoto extends BaseClass {
    * @param page Page number (default: 1)
    */
   async fetchRecentlyCompleted(page: number = 1): Promise<IBaseAnimePaginated<IBaseAnime[] | []>> {
-    const finalUrl = page > 1 ? `finished-airing?page=${page}` : `finished-airing`;
+    const finalUrl = page > 1 ? `status/finished-airing?page=${page}` : `status/finished-airing`;
     return await this.fetchPaginatedSections(finalUrl.trim());
   }
 
@@ -662,23 +617,23 @@ export class Anikoto extends BaseClass {
    * @param format Anime category
    * @param page Page number (default: 1)
    */
-  async fetchCategory(format: IAnimeCategory, page: number = 1): Promise<IBaseAnimePaginated<IBaseAnime[] | []>> {
-    let baseUrl: string;
+  async fetchAnimeCategory(format: IAnimeCategory, page: number = 1): Promise<IBaseAnimePaginated<IBaseAnime[] | []>> {
+    let category: string;
     switch (format) {
       case 'MOVIE':
-        baseUrl = 'movie';
+        category = 'movie';
         break;
       case 'TV':
-        baseUrl = 'tv';
+        category = 'tv';
         break;
       case 'ONA':
-        baseUrl = 'ona';
+        category = 'ona';
         break;
       case 'OVA':
-        baseUrl = 'ova';
+        category = 'ova';
         break;
       case 'SPECIALS':
-        baseUrl = 'special';
+        category = 'special';
         break;
       default:
         return {
@@ -690,7 +645,7 @@ export class Anikoto extends BaseClass {
           status: 400,
         };
     }
-    const finalUrl = page > 1 ? `${baseUrl}?page=${page}` : baseUrl;
+    const finalUrl = page > 1 ? `type/${category}?page=${page}` : `type/${category}`;
     return this.fetchPaginatedSections(finalUrl.trim());
   }
   /**
