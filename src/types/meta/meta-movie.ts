@@ -117,3 +117,52 @@ export interface IMetaMovieInfoResponse<T> extends IResponse<T> {
 export interface IMetaTvInfo<T> extends IMetaMovieInfoResponse<T> {
   seasons: IMetaMovieSeasons[] | [];
 }
+export interface IAnimeListItem {
+  tmdbId: number;
+  name: string;
+  originalName: string;
+  posterImage: {
+    small: string | null;
+    medium: string | null;
+    large: string | null;
+    original: string | null;
+  };
+  coverImage: {
+    small: string | null;
+    medium: string | null;
+    large: string | null;
+    original: string | null;
+  };
+  rating: number | null;
+  genres: string;
+  episodes: number | string | null;
+  status: string;
+  country?: string;
+  language: string;
+  totalSeasons: number | null;
+  summary: string;
+  releaseDate: string;
+  lastAired: string;
+  latestEpisode: {
+    episodeId: string;
+    title: string;
+    episodeNumber: number;
+    episodeType: string;
+    season: number;
+    summary: string;
+    rating: number;
+    airDate: string;
+  } | null;
+  nextEpisode: {
+    episodeId: number;
+    title: string;
+    episodeType: string;
+    episodeNumber: number;
+    season: number;
+    summary: string;
+    rating: number;
+    airDate: string;
+  } | null;
+  seasons: IMetaMovieSeasons[];
+  artWorks: IMetaMovieArtworks;
+}
