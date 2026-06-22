@@ -52,7 +52,6 @@ export class VidWish extends BaseClass {
       const initialResult = await initialResponse.text();
 
       const id = this.parseMediaId(cheerio.load(initialResult));
-      console.log(id);
 
       const response = await this.client.fetch(`${this.baseUrl}/getSources?id=${id}&id=${id}`, {
         method: 'GET',
@@ -71,7 +70,6 @@ export class VidWish extends BaseClass {
       }
 
       const result = await response.json();
-      console.log(result);
 
       extractedData.sources.push({
         url: result.sources.file,

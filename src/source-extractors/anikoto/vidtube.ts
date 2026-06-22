@@ -54,13 +54,8 @@ export class VidTube extends BaseClass {
       const initialResult = await initialResponse.text();
 
       const version = videoUrl.href.split('/').at(-1);
-      // console.log(version);
 
       const id = this.parseMediaId(cheerio.load(initialResult));
-      // console.log(id);
-      // ?id=1940309&id=1940309&type=sub&type=sub
-
-      console.log(intialUrl);
 
       const response = await this.client.fetch(
         `${this.baseUrl}/stream/getSourcesNew?id=${id}&id=${id}&type=${version}&type=${version}`,

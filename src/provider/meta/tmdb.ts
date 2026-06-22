@@ -765,7 +765,6 @@ export class TheMovieDatabase extends BaseClass {
     try {
       const endpoint = '/discover/tv';
       const { start, end } = this.getWeeklyDates();
-      console.log(start, end);
       const params = {
         api_key: this.apiKey,
         with_genres: '16,10759',

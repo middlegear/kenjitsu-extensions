@@ -51,10 +51,7 @@ export class MegaPlay extends BaseClass {
       }
       const initialResult = await initialResponse.text();
 
-      // console.log(initialResult);
-
       const id = this.parseMediaId(cheerio.load(initialResult));
-      console.log(id);
 
       const response = await this.client.fetch(`${this.baseUrl}/getSources?id=${id}&id=${id}`, {
         method: 'GET',
@@ -74,7 +71,6 @@ export class MegaPlay extends BaseClass {
       }
 
       const result = await response.json();
-      //   console.log(result);
 
       extractedData.sources.push({
         url: result.sources.file,
@@ -134,10 +130,7 @@ export class MegaPlay extends BaseClass {
       }
       const initialResult = await initialResponse.text();
 
-      // console.log(initialResult);
-
       const id = this.parseMediaId(cheerio.load(initialResult));
-      console.log(id);
 
       const response = await this.client.fetch(`${this.baseUrl}/getSourcesNew?id=${id}&id=${id}`, {
         method: 'GET',
@@ -157,7 +150,6 @@ export class MegaPlay extends BaseClass {
       }
 
       const result = await response.json();
-      //   console.log(result);
 
       extractedData.sources.push({
         url: result.sources.file,
