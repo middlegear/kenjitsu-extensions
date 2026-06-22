@@ -1,11 +1,10 @@
-import { BaseClass, type ClientConfig } from '../models/base.js';
-
 import * as cheerio from 'cheerio';
-import type { IResponse, IVideoSource } from '../types/base.js';
+import type { IResponse, IVideoSource } from '../../types/base.js';
+import { BaseClass, type ClientConfig } from '../../models/base.js';
 
-export class MegaPlay extends BaseClass {
-  private baseUrl: string = 'https://megaplay.buzz/stream';
-  constructor(options: ClientConfig) {
+export class VidWish extends BaseClass {
+  private baseUrl: string = 'https://vidwish.live/stream';
+  constructor(options: ClientConfig = { http3: true }) {
     super(options);
   }
 
@@ -33,11 +32,12 @@ export class MegaPlay extends BaseClass {
       sources: [],
     };
     try {
-      const initialResponse = await this.client.fetch(`${videoUrl.href}`, {
+      const intialUrl = `${videoUrl.href}?autostart=true`; // intresting you will get 522 if you dont add that query param
+
+      const initialResponse = await this.client.fetch(`${intialUrl}`, {
         method: 'GET',
         headers: {
           Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-          'X-Requested-With': 'XMLHttpRequest',
           'Accept-Encoding': 'gzip, deflate, br, zstd',
           Referer: `${referer}/`,
         },
@@ -51,18 +51,15 @@ export class MegaPlay extends BaseClass {
       }
       const initialResult = await initialResponse.text();
 
-      // console.log(initialResult);
-
       const id = this.parseMediaId(cheerio.load(initialResult));
       console.log(id);
 
       const response = await this.client.fetch(`${this.baseUrl}/getSources?id=${id}&id=${id}`, {
         method: 'GET',
         headers: {
-          Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-          'Accept-Encoding': 'gzip, deflate, br, zstd',
+          Accept: 'application/json, text/javascript, */*; q=0.01',
           'X-Requested-With': 'XMLHttpRequest',
-          Referer: videoUrl.href,
+          Referer: intialUrl, //yep  here too
         },
       });
       if (!response.ok) {
@@ -74,6 +71,7 @@ export class MegaPlay extends BaseClass {
       }
 
       const result = await response.json();
+      console.log(result);
 
       extractedData.sources.push({
         url: result.sources.file,

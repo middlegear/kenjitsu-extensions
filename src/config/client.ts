@@ -8,16 +8,18 @@ export interface ClientOptions extends ImpitOptions {
     intervalMs?: number;
     concurrency?: number;
   };
+  cfProxyUrl?: string;
 }
 
 export class Client {
   private readonly impit: Impit;
   private queue?: PQueue;
+  private readonly cfProxyUrl?: string;
 
   constructor(options: ClientOptions = {}) {
-    const { rateLimit, ...impitConfig } = options;
-
+    const { rateLimit, cfProxyUrl, ...impitConfig } = options;
     this.impit = new Impit(impitConfig);
+    this.cfProxyUrl = cfProxyUrl;
 
     if (rateLimit) {
       this.queue = new PQueue({
@@ -29,10 +31,18 @@ export class Client {
     }
   }
 
+  private resolveUrl(url: string | URL): string {
+    const target = url.toString();
+    if (!this.cfProxyUrl) return target;
+    return `${this.cfProxyUrl}/proxy?url=${encodeURIComponent(target)}`;
+  }
+
   public async fetch(url: string | URL, options: RequestInit): Promise<ImpitResponse> {
+    const resolvedUrl = this.resolveUrl(url);
+
     if (this.queue) {
-      return this.queue.add(() => this.impit.fetch(url, options));
+      return this.queue.add(() => this.impit.fetch(resolvedUrl, options));
     }
-    return this.impit.fetch(url, options);
+    return this.impit.fetch(resolvedUrl, options);
   }
 }

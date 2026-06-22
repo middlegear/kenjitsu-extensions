@@ -3,8 +3,6 @@ import { BaseClass } from '../../models/base.js';
 import * as cheerio from 'cheerio';
 import type { IAnimeCategory, IBase, IResponse, ISourceBaseResponse, IVideoSource } from '../../types/base.js';
 
-import { MegaPlay } from '../../source-extractors/megaplay.js';
-import { VidWish } from '../../source-extractors/vidwish.js';
 import {
   IGenres,
   type AnikotoServers,
@@ -18,6 +16,10 @@ import {
   type ISubOrDub,
   type ScheduleDay,
 } from '../../types/anime.js';
+import { MegaPlay } from '../../source-extractors/anikoto/megaplay.js';
+import { VidWish } from '../../source-extractors/anikoto/vidwish.js';
+import { VidTube } from '../../source-extractors/anikoto/vidtube.js';
+import { AnimeParser } from '../../models/animeparser.js';
 
 /**
  * Anikoto (anikototv.to) anime scraper.
@@ -25,16 +27,532 @@ import {
  * Provides methods to search for anime, fetch detailed information, retrieve episode lists,
  * get available streaming servers, and access curated anime lists (most popular, recently updated, etc.).
  */
-export class Anikoto extends BaseClass {
-  private readonly baseUrl: string;
+export class Anikoto extends AnimeParser {
   private MegaPlay: MegaPlay;
   private VidWish: VidWish;
+  private VidPlay: VidTube;
 
   constructor(baseUrl = 'https://anikototv.to', options: ClientOptions = {}) {
-    super();
+    super(baseUrl, options);
     this.baseUrl = baseUrl;
     this.MegaPlay = new MegaPlay(options);
     this.VidWish = new VidWish(options);
+    this.VidPlay = new VidTube(options);
+  }
+
+  /**
+   * Fetches the home page data including spotlight, recent updates, upcoming anime, and categorized sections.
+   */
+  async fetchHome(): Promise<IBaseAnimeHomeResponse<IBaseAnime[] | []>> {
+    try {
+      const response = await this.client.fetch(`${this.baseUrl}/home`, {
+        method: 'GET',
+      });
+      if (!response.ok) {
+        return {
+          data: [],
+          error: response.statusText,
+          status: response.status,
+          recentlyUpdated: [],
+          upcoming: [],
+          sections: {
+            recentlyAdded: [],
+            recentlyReleased: [],
+            recentlyCompleted: [],
+          },
+          topAnime: {
+            day: [],
+            week: [],
+            month: [],
+          },
+        };
+      }
+      const result = await response.text();
+      return this.parseHome(cheerio.load(result));
+    } catch (error) {
+      return {
+        data: [],
+        error: error instanceof Error ? error.message : 'Unknown Error',
+        status: 500,
+        recentlyUpdated: [],
+        upcoming: [],
+        sections: {
+          recentlyAdded: [],
+          recentlyReleased: [],
+          recentlyCompleted: [],
+        },
+        topAnime: {
+          day: [],
+          week: [],
+          month: [],
+        },
+      };
+    }
+  }
+
+  /**
+   * Fetches the anime schedule .
+   *
+   * @param timezone - User timezone offset in hours (numeric value, e.g. 3, -5, 0)
+   *
+   * @returns A parsed schedule structure or an error object if the request fails
+   *
+   * @example
+   * fetchSchedule(3); // UTC+3
+   * fetchSchedule(-5); // UTC-5
+   */
+  async fetchSchedule(timezone: number): Promise<IResponse<ScheduleDay[] | []>> {
+    try {
+      const response = await this.client.fetch(`${this.baseUrl}/ajax/schedule?tz=${timezone}`, {
+        method: 'GET',
+        headers: {
+          Accept: 'application/json, text/javascript, */*; q=0.01',
+          Referer: `${this.baseUrl}/home}`,
+          'X-Requested-With': 'XMLHttpRequest',
+        },
+      });
+
+      if (!response.ok) {
+        return {
+          data: [],
+          error: response.statusText,
+          status: response.status,
+        };
+      }
+
+      const result = await response.json();
+      return this.parseSchedule(cheerio.load(result.result));
+    } catch (error) {
+      return {
+        data: [],
+        error: error instanceof Error ? error.message : 'Unknown err',
+        status: 500,
+      };
+    }
+  }
+
+  /**
+   * Searches for anime by keyword.
+   *
+   * @param query Search keyword
+   * @param page
+   * @returns Search results with anime list
+   */
+  async search(query: string, page: number = 1): Promise<IBaseAnimePaginated<IBaseAnime[] | []>> {
+    const finalUrl = page > 1 ? `filter?keyword=${query}?page=${page}` : `filter?keyword=${query}`;
+    return await this.fetchPaginatedSections(finalUrl.trim());
+  }
+
+  /**
+   * Fetches search suggestions for a given query string .
+   * @param  query - The search query string (required).
+    @returns A promise that resolves to an object containing an array of anime titles or an error message.
+   */
+  async searchSuggestions(query: string): Promise<IResponse<IBaseAnime[] | []>> {
+    if (!query) {
+      return {
+        data: [],
+        error: this.formatHttpError(400),
+        status: 400,
+      };
+    }
+    try {
+      const response = await this.client.fetch(`${this.baseUrl}/ajax/anime/search?keyword=${query}`, {
+        headers: {
+          Accept: 'application/json, text/javascript, */*; q=0.01',
+          Referer: `${this.baseUrl}/home}`,
+          'X-Requested-With': 'XMLHttpRequest',
+        },
+      });
+      if (!response.ok) {
+        return {
+          data: [],
+          error: response.statusText,
+          status: response.status,
+        };
+      }
+
+      const result = await response.json();
+
+      return this.parseSearchSuggessations(cheerio.load(result.result.html));
+    } catch (error) {
+      return {
+        data: [],
+        error: error instanceof Error ? error.message : 'Unknown err',
+        status: 500,
+      };
+    }
+  }
+
+  /**
+   * Fetches detailed information about a specific anime, including metadata and episode list.
+   *
+   * @param id Anime ID (series slug)
+   * @returns Anime details + provider episodes
+   */
+  async fetchAnimeInfo(id: string): Promise<IAnimeInfoResponse<IBaseAnimeInfo | null>> {
+    if (!id) {
+      return {
+        data: null,
+        providerEpisodes: [],
+        error: 'Missing required params :id',
+        status: 400,
+      };
+    }
+    try {
+      const response = await this.client.fetch(`${this.baseUrl}/watch/${id}`, {
+        method: 'GET',
+      });
+      if (!response.ok) {
+        return {
+          data: null,
+          providerEpisodes: [],
+          error: response.statusText,
+          status: response.status,
+        };
+      }
+      const result = await response.text();
+      const info = this.parseAnimeinfo(cheerio.load(result));
+      const episodeResponse = await this.client.fetch(`${this.baseUrl}/ajax/episode/list/${info.seriesId}?vrf=`, {
+        method: 'GET',
+        headers: {
+          Accept: 'application/json, text/javascript, */*; q=0.01',
+          Referer: `${this.baseUrl}/${id}`,
+          'X-Requested-With': 'XMLHttpRequest',
+        },
+      });
+      if (!episodeResponse.ok) {
+        return {
+          data: null,
+          providerEpisodes: [],
+          error: episodeResponse.statusText,
+          status: episodeResponse.status,
+        };
+      }
+
+      const episodeResult = await episodeResponse.json();
+      const episodes = this.parseEpisodes(cheerio.load(episodeResult.result));
+      return {
+        data: info,
+        providerEpisodes: episodes.data,
+      };
+    } catch (error) {
+      return {
+        data: null,
+        providerEpisodes: [],
+        error: error instanceof Error ? error.message : 'Unknown err',
+        status: 500,
+      };
+    }
+  }
+
+  /**
+   * Fetches detailed information about a specific anime, including metadata and episode list.
+   *
+   * @param id Anime ID (series slug)
+   * @returns  provider episodes
+   */
+  async fetchProviderEpisodes(id: string): Promise<IResponse<IBaseAnimeEpisodes[] | []>> {
+    if (!id) {
+      return {
+        data: [],
+        error: 'Missing required params :id',
+        status: 400,
+      };
+    }
+    try {
+      const response = await this.client.fetch(`${this.baseUrl}/watch/${id}`, {
+        method: 'GET',
+      });
+      if (!response.ok) {
+        return {
+          data: [],
+          error: response.statusText,
+          status: response.status,
+        };
+      }
+      const result = await response.text();
+      const info = this.parseAnimeinfo(cheerio.load(result));
+      const episodeResponse = await this.client.fetch(`${this.baseUrl}/ajax/episode/list/${info.seriesId}?vrf=`, {
+        method: 'GET',
+        headers: {
+          Accept: 'application/json, text/javascript, */*; q=0.01',
+          Referer: `${this.baseUrl}/${id}`,
+          'X-Requested-With': 'XMLHttpRequest',
+        },
+      });
+      if (!episodeResponse.ok) {
+        return {
+          data: [],
+          error: episodeResponse.statusText,
+          status: episodeResponse.status,
+        };
+      }
+
+      const episodeResult = await episodeResponse.json();
+      const episodes = this.parseEpisodes(cheerio.load(episodeResult.result));
+      return {
+        data: episodes.data,
+      };
+    } catch (error) {
+      return {
+        data: [],
+        error: error instanceof Error ? error.message : 'Unknown err',
+        status: 500,
+      };
+    }
+  }
+
+  /**
+   * Fetches a paginated list of most popular anime.
+   * @param page Page number (default: 1)
+   */
+  async fetchMostPopular(page: number = 1): Promise<IBaseAnimePaginated<IBaseAnime[] | []>> {
+    const finalUrl = page > 1 ? `most-viewed?page=${page}` : `most-viewed`;
+    return await this.fetchPaginatedSections(finalUrl.trim());
+  }
+
+  /**
+   * Fetches a paginated list of recently updated anime.
+   * @param page Page number (default: 1)
+   */
+  async fetchRecentlyUpdated(page: number = 1): Promise<IBaseAnimePaginated<IBaseAnime[] | []>> {
+    const finalUrl = page > 1 ? `latest-updated?page=${page}` : `latest-updated`;
+    return await this.fetchPaginatedSections(finalUrl.trim());
+  }
+
+  /**
+   * Fetches a paginated list of recently added anime.
+   * @param page Page number (default: 1)
+   */
+  async fetchRecentlyAdded(page: number = 1): Promise<IBaseAnimePaginated<IBaseAnime[] | []>> {
+    const finalUrl = page > 1 ? `new-release?page=${page}` : `new-release`;
+    return await this.fetchPaginatedSections(finalUrl.trim());
+  }
+
+  /**
+   * Fetches a paginated list of upcoming (not yet aired) anime.
+   * @param page Page number (default: 1)
+   */
+  async fetchUpcoming(page: number = 1): Promise<IBaseAnimePaginated<IBaseAnime[] | []>> {
+    const finalUrl = page > 1 ? `status/not-yet-aired?page=${page}` : `status/not-yet-aired`;
+    return await this.fetchPaginatedSections(finalUrl.trim());
+  }
+
+  /**
+   * Fetches a paginated list of currently releasing anime.
+   * @param page Page number (default: 1)
+   */
+  async fetchReleasing(page: number = 1): Promise<IBaseAnimePaginated<IBaseAnime[] | []>> {
+    const finalUrl = page > 1 ? `status/currently-airing?page=${page}` : `status/currently-airing`;
+    return await this.fetchPaginatedSections(finalUrl.trim());
+  }
+
+  /**
+   * Fetches a paginated list of recently completed anime.
+   * @param page Page number (default: 1)
+   */
+  async fetchRecentlyCompleted(page: number = 1): Promise<IBaseAnimePaginated<IBaseAnime[] | []>> {
+    const finalUrl = page > 1 ? `status/finished-airing?page=${page}` : `status/finished-airing`;
+    return await this.fetchPaginatedSections(finalUrl.trim());
+  }
+
+  /**
+   * Fetches a paginated list of anime by category (TV, Movie, ONA, etc.).
+   * @param format Anime category
+   * @param page Page number (default: 1)
+   */
+  async fetchAnimeCategory(format: IAnimeCategory, page: number = 1): Promise<IBaseAnimePaginated<IBaseAnime[] | []>> {
+    let category: string;
+    switch (format) {
+      case 'MOVIE':
+        category = 'movie';
+        break;
+      case 'TV':
+        category = 'tv';
+        break;
+      case 'ONA':
+        category = 'ona';
+        break;
+      case 'OVA':
+        category = 'ova';
+        break;
+      case 'SPECIALS':
+        category = 'special';
+        break;
+      default:
+        return {
+          hasNextPage: false,
+          currentPage: 0,
+          lastPage: 0,
+          data: [],
+          error: this.formatHttpError(400),
+          status: 400,
+        };
+    }
+    const finalUrl = page > 1 ? `type/${category}?page=${page}` : `type/${category}`;
+    return this.fetchPaginatedSections(finalUrl.trim());
+  }
+
+  /**
+   * Fetches a list of anime titles sorted alphabetically, optionally filtered by a starting character.
+   * @param  sort Optional letter (A-Z) or "0-9" to filter anime
+   * @param  page - Page number for pagination (default: 1)
+   * @returns  Promise resolving to an object  with alphabetically sorted anime and pagination details
+   */
+  async fetchAtoZList(sort?: any, page: number = 1): Promise<IBaseAnimePaginated<IBaseAnime[] | []>> {
+    const sortValue = (sort ?? '').toString().trim();
+
+    const sortCategory = !sortValue
+      ? undefined
+      : !Number.isNaN(Number(sortValue))
+        ? '0-9'
+        : sortValue.length === 1
+          ? sortValue.toUpperCase()
+          : 'other';
+    const baseUrl = sortCategory ? `az-list/${sortCategory}` : `az-list`;
+    const finalUrl = page > 1 ? `${baseUrl}?page=${page}` : baseUrl;
+    return await this.fetchPaginatedSections(finalUrl);
+  }
+
+  /**
+   * Fetches a list of anime by genre.
+   * @param  genre -The genre to filter anime by
+   * @param  page - Page number for pagination (default: 1)
+   * @returns  Promise resolving to an object with genre-specific anime and pagination details
+   */
+  async fetchGenre(genre: string, page: number = 1) {
+    const Igenre = this.getMappedValue(genre, IGenres);
+    const finalUrl = page > 1 ? `genre/${Igenre}?page=${page}` : `genre/${Igenre}`;
+    return await this.fetchPaginatedSections(finalUrl);
+  }
+
+  /**
+   * Fetches available streaming servers for a specific episode.
+   *
+   * @param episodeId Episode identifier
+   * @returns Server information grouped by sub/dub/raw
+   */
+  async fetchServers(episodeId: string): Promise<IResponse<IAnimeServerInfo | null>> {
+    if (!episodeId) {
+      return {
+        data: null,
+        error: 'Missing required params: valid episodeId!',
+        status: 400,
+      };
+    }
+    try {
+      const response = await this.client.fetch(`${this.baseUrl}/ajax/server/list?servers=${episodeId}`, {
+        method: 'GET',
+        headers: {
+          Accept: 'application/json, text/javascript, */*; q=0.01',
+          'X-Requested-With': 'XMLHttpRequest',
+        },
+      });
+      if (!response.ok) {
+        return {
+          data: null,
+          error: response.statusText,
+          status: response.status,
+        };
+      }
+      const result = await response.json();
+      const servers = this.parseServers(cheerio.load(result.result));
+      return {
+        data: servers,
+      };
+    } catch (error) {
+      return {
+        data: null,
+        error: error instanceof Error ? error.message : 'Unknown err',
+        status: 500,
+      };
+    }
+  }
+
+  /**
+   * Fetches streaming sources for a given episode.
+   *
+   * @param episodeId Episode identifier (or direct server URL if starts with http)
+   * @param version Audio version - `'sub'` or `'dub'` (default: `'sub'`)
+   * @param server Preferred server name (default: `'vidstream-2'`)
+   * @returns Streaming source data with headers
+   */
+  async fetchSources(
+    episodeId: string,
+    version: ISubOrDub = 'sub',
+    server: AnikotoServers = 'vidstream-2',
+  ): Promise<ISourceBaseResponse<IVideoSource | null>> {
+    if (!episodeId) {
+      return {
+        headers: { Referer: null },
+        data: null,
+        error: 'Missing required params: valid episodeId!',
+        status: 400,
+      };
+    }
+    //// remeber to clean this up and refactor it as one extractor
+    if (episodeId.startsWith('http')) {
+      const serverUrl = new URL(episodeId);
+      switch (server) {
+        case 'vidstream-2':
+          return {
+            headers: { Referer: `${serverUrl.origin}/` },
+            data: (await this.MegaPlay.extract(serverUrl, `${this.baseUrl}/`)).data,
+          };
+        case 'hd-1':
+          return {
+            headers: { Referer: `${serverUrl.origin}/` },
+            data: (await this.MegaPlay.extractNew(serverUrl, `${this.baseUrl}/`)).data,
+          };
+        case 'vidcloud-1': // busted stuff returns 522
+          return {
+            headers: { Referer: `${serverUrl.origin}/` },
+            data: (await this.VidWish.extract(serverUrl, `${this.baseUrl}/`)).data,
+          };
+
+        case 'vidplay-1':
+          return {
+            headers: { Referer: `${serverUrl.origin}/` },
+            data: (await this.VidPlay.extract(serverUrl, `${this.baseUrl}/`)).data,
+          };
+        default:
+          return {
+            headers: { Referer: null },
+            data: null,
+            error: 'Unsupported, might add more options soon',
+            status: 400,
+          };
+      }
+    }
+    try {
+      const serverInfo = await this.fetchServers(episodeId);
+      if (serverInfo.error || serverInfo.data === null) {
+        return {
+          error: serverInfo.error,
+          headers: { Referer: null },
+          data: null,
+          status: serverInfo.status,
+        };
+      }
+      const serverId = this.findServerId(serverInfo.data, version, server);
+      const response = await this.client.fetch(`${this.baseUrl}/ajax/server?get=${serverId}`, {
+        method: 'GET',
+        headers: {
+          Accept: 'application/json, text/javascript, */*; q=0.01',
+          'X-Requested-With': 'XMLHttpRequest',
+        },
+      });
+      const result = await response.json();
+      return await this.fetchSources(result.result.url, version, server);
+    } catch (error) {
+      return {
+        headers: { Referer: null },
+        data: null,
+        error: error instanceof Error ? error.message : 'Unknown Error',
+        status: 500,
+      };
+    }
   }
 
   /**
@@ -180,6 +698,7 @@ export class Anikoto extends BaseClass {
       },
     };
   }
+
   /**
    * Parses the schedule from ajax html
    * @param $ Cheerio instance with loaded home page HTML
@@ -232,6 +751,7 @@ export class Anikoto extends BaseClass {
 
     return { data: days };
   }
+
   /**
    * Parses detailed anime information from the watch/info page.
    * @param $ Cheerio instance
@@ -409,28 +929,38 @@ export class Anikoto extends BaseClass {
       raw: [],
       episodeNumber: 0,
     };
+
     const episodeText = $('div.tip b').first().text().trim();
     const match = episodeText.match(/(\d+)/);
     if (match) {
       servers.episodeNumber = parseInt(match[1], 10);
     }
+
     $('div.servers div.type').each((_, element) => {
       const $type = $(element);
       const type = $type.attr('data-type');
+
       $type.find('ul li').each((_, li) => {
         const $li = $(li);
+        const serverName = $li.text().trim().toLowerCase() || null;
+
+        if (serverName === 'hd-1' || serverName === 'vidplay-1') {
+          return;
+        }
+
         const server = {
           serverId: $li.attr('data-sv-id') ?? null,
-          serverName: $li.text().trim().toLowerCase() || null,
+          serverName: serverName,
           mediaId: $li.attr('data-cmid') ?? null,
           eid: $li.attr('data-link-id') ?? null,
         };
+
         if (type === 'sub') {
           servers.sub.push(server);
         } else if (type === 'dub') {
           servers.dub.push(server);
         } else {
-          servers.raw.push(server);
+          servers.sub.push(server);
         }
       });
     });
@@ -568,448 +1098,6 @@ export class Anikoto extends BaseClass {
         currentPage: 0,
         lastPage: 0,
         data: [],
-        error: error instanceof Error ? error.message : 'Unknown Error',
-        status: 500,
-      };
-    }
-  }
-
-  /**
-   * Fetches the home page data including spotlight, recent updates, upcoming anime, and categorized sections.
-   */
-  async fetchHome(): Promise<IBaseAnimeHomeResponse<IBaseAnime[] | []>> {
-    try {
-      const response = await this.client.fetch(`${this.baseUrl}/home`, {
-        method: 'GET',
-      });
-      if (!response.ok) {
-        return {
-          data: [],
-          error: response.statusText,
-          status: response.status,
-          recentlyUpdated: [],
-          upcoming: [],
-          sections: {
-            recentlyAdded: [],
-            recentlyReleased: [],
-            recentlyCompleted: [],
-          },
-          topAnime: {
-            day: [],
-            week: [],
-            month: [],
-          },
-        };
-      }
-      const result = await response.text();
-      return this.parseHome(cheerio.load(result));
-    } catch (error) {
-      return {
-        data: [],
-        error: error instanceof Error ? error.message : 'Unknown Error',
-        status: 500,
-        recentlyUpdated: [],
-        upcoming: [],
-        sections: {
-          recentlyAdded: [],
-          recentlyReleased: [],
-          recentlyCompleted: [],
-        },
-        topAnime: {
-          day: [],
-          week: [],
-          month: [],
-        },
-      };
-    }
-  }
-
-  /**
-   * Fetches the anime schedule .
-   *
-   * @param timezone - User timezone offset in hours (numeric value, e.g. 3, -5, 0)
-   *
-   * @returns A parsed schedule structure or an error object if the request fails
-   *
-   * @example
-   * fetchSchedule(3); // UTC+3
-   * fetchSchedule(-5); // UTC-5
-   */
-  async fetchSchedule(timezone: number): Promise<IResponse<ScheduleDay[] | []>> {
-    try {
-      const response = await this.client.fetch(`${this.baseUrl}/ajax/schedule?tz=${timezone}`, {
-        method: 'GET',
-        headers: {
-          Accept: 'application/json, text/javascript, */*; q=0.01',
-          Referer: `${this.baseUrl}/home}`,
-          'X-Requested-With': 'XMLHttpRequest',
-        },
-      });
-
-      if (!response.ok) {
-        return {
-          data: [],
-          error: response.statusText,
-          status: response.status,
-        };
-      }
-
-      const result = await response.json();
-      return this.parseSchedule(cheerio.load(result.result));
-    } catch (error) {
-      return {
-        data: [],
-        error: error instanceof Error ? error.message : 'Unknown err',
-        status: 500,
-      };
-    }
-  }
-
-  /**
-   * Searches for anime by keyword.
-   *
-   * @param query Search keyword
-   * @returns Search results with anime list
-   */
-  async search(query: string, page: number = 1): Promise<IResponse<IBaseAnime[] | []>> {
-    const finalUrl = page > 1 ? `filter?keyword=${query}?page=${page}` : `filter?keyword=${query}`;
-    return await this.fetchPaginatedSections(finalUrl.trim());
-  }
-  /**
-   * Fetches search suggestions for a given query string .
-   * @param  query - The search query string (required).
-    @returns A promise that resolves to an object containing an array of anime titles or an error message.
-   */
-  async searchSuggestions(query: string): Promise<IResponse<IBaseAnime[] | []>> {
-    if (!query) {
-      return {
-        data: [],
-        error: this.formatHttpError(400),
-        status: 500,
-      };
-    }
-    try {
-      const response = await this.client.fetch(`${this.baseUrl}/ajax/anime/search?keyword=${query}`, {
-        headers: {
-          Accept: 'application/json, text/javascript, */*; q=0.01',
-          Referer: `${this.baseUrl}/home}`,
-          'X-Requested-With': 'XMLHttpRequest',
-        },
-      });
-      if (!response.ok) {
-        return {
-          data: [],
-          error: response.statusText,
-          status: response.status,
-        };
-      }
-
-      const result = await response.json();
-
-      return this.parseSearchSuggessations(cheerio.load(result.result.html));
-    } catch (error) {
-      return {
-        data: [],
-        error: error instanceof Error ? error.message : 'Unknown err',
-        status: 500,
-      };
-    }
-  }
-
-  /**
-   * Fetches detailed information about a specific anime, including metadata and episode list.
-   *
-   * @param id Anime ID (series slug)
-   * @returns Anime details + provider episodes
-   */
-  async fetchAnimeInfo(id: string): Promise<IAnimeInfoResponse<IBaseAnimeInfo | null>> {
-    if (!id) {
-      return {
-        data: null,
-        providerEpisodes: [],
-        error: 'Missing required params :id',
-        status: 400,
-      };
-    }
-    try {
-      const response = await this.client.fetch(`${this.baseUrl}/watch/${id}`, {
-        method: 'GET',
-      });
-      if (!response.ok) {
-        return {
-          data: null,
-          providerEpisodes: [],
-          error: response.statusText,
-          status: response.status,
-        };
-      }
-      const result = await response.text();
-      const info = this.parseAnimeinfo(cheerio.load(result));
-      const episodeResponse = await this.client.fetch(`${this.baseUrl}/ajax/episode/list/${info.seriesId}?vrf=`, {
-        method: 'GET',
-        headers: {
-          Accept: 'application/json, text/javascript, */*; q=0.01',
-          Referer: `${this.baseUrl}/${id}`,
-          'X-Requested-With': 'XMLHttpRequest',
-        },
-      });
-      if (!episodeResponse.ok) {
-        return {
-          data: null,
-          providerEpisodes: [],
-          error: episodeResponse.statusText,
-          status: episodeResponse.status,
-        };
-      }
-
-      const episodeResult = await episodeResponse.json();
-      const episodes = this.parseEpisodes(cheerio.load(episodeResult.result));
-      return {
-        data: info,
-        providerEpisodes: episodes.data,
-      };
-    } catch (error) {
-      return {
-        data: null,
-        providerEpisodes: [],
-        error: error instanceof Error ? error.message : 'Unknown err',
-        status: 500,
-      };
-    }
-  }
-
-  /**
-   * Fetches a paginated list of most popular anime.
-   * @param page Page number (default: 1)
-   */
-  async fetchMostPopular(page: number = 1): Promise<IBaseAnimePaginated<IBaseAnime[] | []>> {
-    const finalUrl = page > 1 ? `most-viewed?page=${page}` : `most-viewed`;
-    return await this.fetchPaginatedSections(finalUrl.trim());
-  }
-
-  /**
-   * Fetches a paginated list of recently updated anime.
-   * @param page Page number (default: 1)
-   */
-  async fetchRecentlyUpdated(page: number = 1): Promise<IBaseAnimePaginated<IBaseAnime[] | []>> {
-    const finalUrl = page > 1 ? `latest-updated?page=${page}` : `latest-updated`;
-    return await this.fetchPaginatedSections(finalUrl.trim());
-  }
-
-  /**
-   * Fetches a paginated list of recently added anime.
-   * @param page Page number (default: 1)
-   */
-  async fetchRecentlyAdded(page: number = 1): Promise<IBaseAnimePaginated<IBaseAnime[] | []>> {
-    const finalUrl = page > 1 ? `new-release?page=${page}` : `new-release`;
-    return await this.fetchPaginatedSections(finalUrl.trim());
-  }
-
-  /**
-   * Fetches a paginated list of upcoming (not yet aired) anime.
-   * @param page Page number (default: 1)
-   */
-  async fetchUpcoming(page: number = 1): Promise<IBaseAnimePaginated<IBaseAnime[] | []>> {
-    const finalUrl = page > 1 ? `status/not-yet-aired?page=${page}` : `status/not-yet-aired`;
-    return await this.fetchPaginatedSections(finalUrl.trim());
-  }
-
-  /**
-   * Fetches a paginated list of currently releasing anime.
-   * @param page Page number (default: 1)
-   */
-  async fetchReleasing(page: number = 1): Promise<IBaseAnimePaginated<IBaseAnime[] | []>> {
-    const finalUrl = page > 1 ? `status/currently-airing?page=${page}` : `status/currently-airing`;
-    return await this.fetchPaginatedSections(finalUrl.trim());
-  }
-
-  /**
-   * Fetches a paginated list of recently completed anime.
-   * @param page Page number (default: 1)
-   */
-  async fetchRecentlyCompleted(page: number = 1): Promise<IBaseAnimePaginated<IBaseAnime[] | []>> {
-    const finalUrl = page > 1 ? `status/finished-airing?page=${page}` : `status/finished-airing`;
-    return await this.fetchPaginatedSections(finalUrl.trim());
-  }
-
-  /**
-   * Fetches a paginated list of anime by category (TV, Movie, ONA, etc.).
-   * @param format Anime category
-   * @param page Page number (default: 1)
-   */
-  async fetchAnimeCategory(format: IAnimeCategory, page: number = 1): Promise<IBaseAnimePaginated<IBaseAnime[] | []>> {
-    let category: string;
-    switch (format) {
-      case 'MOVIE':
-        category = 'movie';
-        break;
-      case 'TV':
-        category = 'tv';
-        break;
-      case 'ONA':
-        category = 'ona';
-        break;
-      case 'OVA':
-        category = 'ova';
-        break;
-      case 'SPECIALS':
-        category = 'special';
-        break;
-      default:
-        return {
-          hasNextPage: false,
-          currentPage: 0,
-          lastPage: 0,
-          data: [],
-          error: this.formatHttpError(400),
-          status: 400,
-        };
-    }
-    const finalUrl = page > 1 ? `type/${category}?page=${page}` : `type/${category}`;
-    return this.fetchPaginatedSections(finalUrl.trim());
-  }
-  /**
-   * Fetches a list of anime titles sorted alphabetically, optionally filtered by a starting character.
-   * @param  sort Optional letter (A-Z) or "0-9" to filter anime
-   * @param  page - Page number for pagination (default: 1)
-   * @returns  Promise resolving to an object  with alphabetically sorted anime and pagination details
-   */
-  async fetchAtoZList(sort?: any, page: number = 1): Promise<IBaseAnimePaginated<IBaseAnime[] | []>> {
-    const sortValue = (sort ?? '').toString().trim();
-
-    const sortCategory = !sortValue
-      ? undefined
-      : !Number.isNaN(Number(sortValue))
-        ? '0-9'
-        : sortValue.length === 1
-          ? sortValue.toUpperCase()
-          : 'other';
-    const baseUrl = sortCategory ? `az-list/${sortCategory}` : `az-list`;
-    const finalUrl = page > 1 ? `${baseUrl}?page=${page}` : baseUrl;
-    return await this.fetchPaginatedSections(finalUrl);
-  }
-  /**
-   * Fetches a list of anime by genre.
-   * @param  genre -The genre to filter anime by
-   * @param  page - Page number for pagination (default: 1)
-   * @returns  Promise resolving to an object with genre-specific anime and pagination details
-   */
-  async fetchGenre(genre: string, page: number = 1) {
-    const Igenre = this.getMappedValue(genre, IGenres);
-    const finalUrl = page > 1 ? `genre/${Igenre}?page=${page}` : `genre/${Igenre}`;
-    return await this.fetchPaginatedSections(finalUrl);
-  }
-
-  /**
-   * Fetches available streaming servers for a specific episode.
-   *
-   * @param episodeId Episode identifier
-   * @returns Server information grouped by sub/dub/raw
-   */
-  async fetchServers(episodeId: string): Promise<IResponse<IAnimeServerInfo | null>> {
-    if (!episodeId) {
-      return {
-        data: null,
-        error: 'Missing required params: valid episodeId!',
-        status: 400,
-      };
-    }
-    try {
-      const response = await this.client.fetch(`${this.baseUrl}/ajax/server/list?servers=${episodeId}`, {
-        method: 'GET',
-        headers: {
-          Accept: 'application/json, text/javascript, */*; q=0.01',
-          'X-Requested-With': 'XMLHttpRequest',
-        },
-      });
-      if (!response.ok) {
-        return {
-          data: null,
-          error: response.statusText,
-          status: response.status,
-        };
-      }
-      const result = await response.json();
-      const servers = this.parseServers(cheerio.load(result.result));
-      return {
-        data: servers,
-      };
-    } catch (error) {
-      return {
-        data: null,
-        error: error instanceof Error ? error.message : 'Unknown err',
-        status: 500,
-      };
-    }
-  }
-
-  /**
-   * Fetches streaming sources for a given episode.
-   *
-   * @param episodeId Episode identifier (or direct server URL if starts with http)
-   * @param version Audio version - `'sub'` or `'dub'` (default: `'sub'`)
-   * @param server Preferred server name (default: `'vidstream-2'`)
-   * @returns Streaming source data with headers
-   */
-  async fetchSources(
-    episodeId: string,
-    version: ISubOrDub = 'sub',
-    server: AnikotoServers = 'vidstream-2',
-  ): Promise<ISourceBaseResponse<IVideoSource | null>> {
-    if (!episodeId) {
-      return {
-        headers: { Referer: null },
-        data: null,
-        error: 'Missing required params: valid episodeId!',
-        status: 400,
-      };
-    }
-    if (episodeId.startsWith('http')) {
-      const serverUrl = new URL(episodeId);
-      switch (server) {
-        case 'vidstream-2':
-          return {
-            headers: { Referer: `${serverUrl.origin}/` },
-            data: (await this.MegaPlay.extract(serverUrl, `${this.baseUrl}/`)).data,
-          };
-        case 'vidcloud-1': // busted stuff returns 522
-          return {
-            headers: { Referer: `${serverUrl.origin}/` },
-            data: (await this.VidWish.extract(serverUrl, `${this.baseUrl}/`)).data,
-          };
-        default:
-          return {
-            headers: { Referer: null },
-            data: null,
-            error: 'Unsupported, might add more options soon',
-            status: 400,
-          };
-      }
-    }
-    try {
-      const serverInfo = await this.fetchServers(episodeId);
-      if (serverInfo.error || serverInfo.data === null) {
-        return {
-          error: serverInfo.error,
-          headers: { Referer: null },
-          data: null,
-          status: serverInfo.status,
-        };
-      }
-      const serverId = this.findServerId(serverInfo.data, version, server);
-      const response = await this.client.fetch(`${this.baseUrl}/ajax/server?get=${serverId}`, {
-        method: 'GET',
-        headers: {
-          Accept: 'application/json, text/javascript, */*; q=0.01',
-          'X-Requested-With': 'XMLHttpRequest',
-        },
-      });
-      const result = await response.json();
-      return await this.fetchSources(result.result.url, version, server);
-    } catch (error) {
-      return {
-        headers: { Referer: null },
-        data: null,
         error: error instanceof Error ? error.message : 'Unknown Error',
         status: 500,
       };

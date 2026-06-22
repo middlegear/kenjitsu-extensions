@@ -13,24 +13,24 @@ import type {
   IBaseAnimeServerResponse,
   ISubOrDub,
 } from '../../types/anime.js';
+import { AnimeParser } from '../../models/animeparser.js';
 
 /**
  * A class for interacting with the Animepahe platform  to search for anime, fetch detailed information,
  * retrieve episode lists, get available streaming servers, and sources.
  */
 
-export class Animepahe extends BaseClass {
-  private readonly baseUrl: string;
+export class Animepahe extends AnimeParser {
   private readonly KwiK: KwiK;
 
   constructor(
     baseUrl: string = 'https://animepahe.pw',
     options: ClientConfig = {
+      browser: 'firefox144',
       followRedirects: false,
     },
   ) {
-    super(options);
-
+    super(baseUrl, options);
     this.baseUrl = baseUrl;
     this.KwiK = new KwiK(options);
   }

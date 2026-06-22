@@ -9,19 +9,17 @@ import type {
   ISourceBaseResponse,
   IVideoSource,
 } from '../../types/base.js';
-import type { IBaseAnimeResponse } from '../../types/anime.js';
+import type { IAnimeInfoResponse, IBaseAnimeResponse } from '../../types/anime.js';
+import { AnimeParser } from '../../models/animeparser.js';
 
 /**
  * Anizone class for interacting with the Anizone anime streaming platform.
  * Extends BaseClass to provide functionality for searching anime, fetching anime details,
  * retrieving video sources for episodes, and fetching recent updates.
- * @extends BaseClass
  */
-export class Anizone extends BaseClass {
-  private readonly baseUrl: string;
-
+export class Anizone extends AnimeParser {
   constructor(baseUrl: string = 'https://anizone.to', options: ClientConfig = {}) {
-    super(options);
+    super(baseUrl, options);
     this.baseUrl = baseUrl;
   }
 
@@ -85,7 +83,7 @@ export class Anizone extends BaseClass {
    * @param {string} animeId - The unique identifier for the anime.
    * @returns - A promise resolving to an object containing anime details and episodes or an error message.
    */
-  async fetchAnimeInfo(animeId: string): Promise<IBaseAnimeResponse<IBaseMediaInfo | null>> {
+  async fetchAnimeInfo(animeId: string): Promise<IAnimeInfoResponse<IBaseMediaInfo | null>> {
     if (!animeId) {
       return {
         data: null,
