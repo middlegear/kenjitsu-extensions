@@ -944,10 +944,6 @@ export class Anikoto extends AnimeParser {
         const $li = $(li);
         const serverName = $li.text().trim().toLowerCase() || null;
 
-        if (serverName === 'hd-1' || serverName === 'vidplay-1') {
-          return;
-        }
-
         const server = {
           serverId: $li.attr('data-sv-id') ?? null,
           serverName: serverName,
