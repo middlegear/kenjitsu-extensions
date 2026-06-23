@@ -9,7 +9,7 @@ import type {
   ISourceBaseResponse,
   IVideoSource,
 } from '../../types/base.js';
-import type { IAnimeInfoResponse, IBaseAnimeResponse } from '../../types/anime.js';
+import type { IAnimeInfoResponse, IBaseAnimeInfo, IBaseAnimeResponse } from '../../types/anime.js';
 import { AnimeParser } from '../../models/animeparser.js';
 
 /**
@@ -169,52 +169,87 @@ export class Anizone extends AnimeParser {
   private parseSearchResults($: cheerio.CheerioAPI) {
     const selector: cheerio.SelectorType =
       'div.grid.grid-cols-1.gap-4 > div.relative.overflow-hidden.h-26.rounded-lg.px-4.py-3.bg-slate-900.drop-shadow-lg';
+
     const anime: IBase[] = [];
+
     $(selector).each((_, element) => {
-      const title =
-        $(element).find('div.h-6.inline.truncate > a').text().trim() ||
-        $(element).find('div.absolute.-inset-y-0.-right-0.w-80 > img').attr('alt') ||
-        null;
+      const xData = $(element).attr('x-data') || '';
+      const titles = (() => {
+        const jsonMatch = xData.match(/JSON\.parse\('(.*?)'\)/);
+
+        if (!jsonMatch) {
+          return {
+            name: null,
+            romaji: null,
+          };
+        }
+
+        try {
+          const json = jsonMatch[1]
+            .replace(/\\u0022/g, '"')
+            .replace(/\\"/g, '"')
+            .replace(/\\\\u/g, '\\u');
+
+          const parsed = JSON.parse(json);
+
+          return {
+            name: parsed['1'] || parsed['10'] || parsed['5'] || null,
+            romaji: parsed['5'] || null,
+          };
+        } catch {
+          return {
+            name: null,
+            romaji: null,
+          };
+        }
+      })();
+
+      const fallbackTitle = xData.match(/getTitle\(this\.anmTitles,\s*'([^']+)'/)?.[1] || null;
+      const name = titles.name || fallbackTitle || null;
+      const romaji = titles.romaji || fallbackTitle || null;
+
       const id =
-        $(element).find('div.h-6.inline.truncate > a').attr('href')?.split('/').at(-1) ||
+        $(element).find('a[href*="/anime/"]').attr('href')?.split('/').at(-1) ||
         $(element).attr('wire:key')?.split('-').at(-1) ||
         null;
 
+      const posterImage = $(element).find('img').attr('src') || null;
+      const infoSpans = $(element)
+        .find('div.inline.text-xs.h-4.line-clamp-1 span')
+        .map((_, el) => $(el).text().trim())
+        .get();
+
+      const genres = $(element)
+        .find('div.flex.flex-wrap.gap-2.line-clamp-1.h-6 a')
+        .map((_, el) => $(el).text().trim())
+        .get()
+        .filter(g => g.toLowerCase() !== 'manga');
+
       anime.push({
-        id: title ? `${this.createSlug(title)}-${id}` : id || null,
-        name: title,
-        // romaji: $(element).find('div.absolute.-inset-y-0.-right-0.w-80 > img').attr('alt') || null,
-        posterImage: $(element).find('div.absolute.-inset-y-0.-right-0.w-80 > img').attr('src') || null,
-        ...(() => {
-          const infoSpans = $(element)
-            .find('div.inline.text-xs.h-4.line-clamp-1 span')
-            .map((_, el) => $(el).text().trim())
-            .get();
-          const genres = $(element)
-            .find('div.flex.flex-wrap.gap-2.line-clamp-1.h-6 a')
-            .map((_, el) => $(el).text().trim())
-            .get()
-            .filter(g => g.toLowerCase() !== 'manga');
-          return {
-            type: infoSpans[0] ? (infoSpans[0].toLowerCase().includes('tv') ? 'TV' : infoSpans[0]) : null,
-            releaseDate: infoSpans[1] || null,
-            status: infoSpans[3] || null,
-            genres: genres || null,
-            totalEpisodes: infoSpans[2] ? parseInt(infoSpans[2].replace(/\D/g, ''), 10) : null,
-          };
-        })(),
+        id: name ? `${this.createSlug(name)}-${id}` : id || null,
+        name,
+        romaji,
+        posterImage,
+        type: infoSpans[0] ? (infoSpans[0].toLowerCase().includes('tv') ? 'TV' : infoSpans[0]) : null,
+        releaseDate: infoSpans[1] || null,
+        totalEpisodes: infoSpans[2] ? parseInt(infoSpans[2].replace(/\D/g, ''), 10) : null,
+        status: infoSpans[3] || null,
+        genres: genres.length ? genres : null,
       });
     });
-    if (Array.isArray(anime) && anime.length === 0) {
+
+    if (anime.length === 0) {
       return {
         data: [],
-        error: 'No results found for that query ',
+        error: 'No results found for that query',
         status: 404,
       };
     }
-    return { data: anime };
-  }
 
+    return {
+      data: anime,
+    };
+  }
   /**
    * Parses anime information and episode data from the Anizone anime page.
    * @private
@@ -224,13 +259,44 @@ export class Anizone extends AnimeParser {
   private parseAnimeinfo($: cheerio.CheerioAPI) {
     const synopsisHtml = $('.text-sm.md\\:text-base.xl\\:text-lg > div').html();
     const infoSpans = $('.text-slate-100.text-xs.lg\\:text-base.flex.flex-wrap > span');
-    const title = $('div.mx-auto img').attr('alt') || $('h1').text().trim();
-    const id = $('div.flex.mt-8 a').attr('href')?.split('/')[4];
+    const xData = $('main > div[x-data]').attr('x-data') || '';
 
+    const titles = (() => {
+      const match = xData.match(/JSON\.parse\('(.*?)'\)/);
+
+      if (!match) {
+        return {
+          name: $('h1').text().trim() || null,
+          romaji: $('h1').text().trim() || null,
+        };
+      }
+
+      try {
+        const parsed = JSON.parse(
+          match[1]
+            .replace(/\\u0022/g, '"')
+            .replace(/\\"/g, '"')
+            .replace(/\\\\u/g, '\\u'),
+        );
+
+        return {
+          name: parsed['1'] || parsed['10'] || parsed['5'] || null,
+          romaji: parsed['5'] || null,
+        };
+      } catch {
+        return {
+          name: $('h1').text().trim() || null,
+          romaji: $('h1').text().trim() || null,
+        };
+      }
+    })();
+    const id = $('div.flex.mt-8 a').attr('href')?.split('/')[4];
+    const title = titles.name;
+    const romaji = titles.romaji;
     const animeInfo: IBaseMediaInfo = {
       id: `${this.createSlug(title)}-${id}` || null,
       name: title || null,
-      // romaji: $('div.mx-auto img').attr('alt') || null,
+      romaji: romaji,
       type: $(infoSpans[0]).find('.inline-block').text().trim().toLowerCase().includes('tv')
         ? 'TV'
         : $(infoSpans[0]).find('.inline-block').text().trim() || null,
@@ -260,7 +326,25 @@ export class Anizone extends AnimeParser {
     $('ul.grid > li').each((_, el) => {
       const $el = $(el);
       const url = $el.find('a').attr('href') || null;
-      const title = $el.find('h3').text().trim() || null;
+      const title = (() => {
+        const xData = $el.attr('x-data') || '';
+        const match = xData.match(/JSON\.parse\('(.*?)'\)/);
+        if (!match) {
+          return $el.find('h3').text().trim() || null;
+        }
+        try {
+          const titles = JSON.parse(
+            match[1]
+              .replace(/\\u0022/g, '"')
+              .replace(/\\"/g, '"')
+              .replace(/\\\\u/g, '\\u'),
+          );
+          return titles['1'] || titles['5'] || $el.find('h3').text().trim() || null;
+        } catch {
+          return $el.find('h3').text().trim() || null;
+        }
+      })();
+
       const episodeNumber = url ? url.split('/').at(-1) : null;
       episodes.push({
         episodeId: `${animeInfo.id}-episode-${episodeNumber}`,
@@ -322,15 +406,25 @@ export class Anizone extends AnimeParser {
       lang: string | null;
       default: boolean;
     }[] = [];
+    // player.find('track[kind="subtitles"]').each((_, el) => {
+    //   const $el = $(el);
+    //   subtitles.push({
+    //     url: $el.attr('src') || null,
+    //     lang: $el.attr('label') || null,
+    //     default: $el.is('[default]'),
+    //   });
+    // });
     player.find('track[kind="subtitles"]').each((_, el) => {
       const $el = $(el);
+      if ($el.attr('srclang') !== 'en') {
+        return;
+      }
       subtitles.push({
         url: $el.attr('src') || null,
         lang: $el.attr('label') || null,
         default: $el.is('[default]'),
       });
     });
-
     const chapters = player.find('track[kind="chapters"]').attr('src') || null;
     const thumbnails = player.find('media-video-layout').attr('thumbnails') || null;
     const extractedData: IVideoSource = {

@@ -47,7 +47,9 @@ abstract class AnimeParser extends BaseClass {
    * @param id Anime ID (series slug)
    * @returns Anime details with or without  provider episodes
    */
-  abstract fetchAnimeInfo(id: string): Promise<IBaseAnimeInfo | null> | Promise<IAnimeInfoResponse<IBaseMediaInfo | null>>;
+  abstract fetchAnimeInfo(
+    id: string,
+  ): Promise<IResponse<IBaseAnimeInfo | null>> | Promise<IAnimeInfoResponse<IBaseMediaInfo | null>>;
 
   /**
    * Fetches streaming sources for a given episode.
