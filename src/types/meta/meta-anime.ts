@@ -153,7 +153,7 @@ export interface IMetaProviderEpisodesResponse<T> extends IResponse<T> {
   provider?: IProviderId | null;
 }
 export interface IProviderId {
-  id: string | null;
+  id: string |number| null;
   name: string | null;
   native?: string | null;
   romaji: string | null;

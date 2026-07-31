@@ -28,12 +28,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/middlegear/kenjitsu-extensions"
+    "url": "https://github.com/middlegear/kenjitsu-extensions-private"
   },
   "publishConfig": {
     "registry": "https://registry.npmjs.org/"
   },
-  "homepage": "https://github.com/middlegear/kenjitsu-extensions",
+  "homepage": "https://github.com/middlegear/kenjitsu-extensions-private",
   "devDependencies": {
     "@types/node": "^24.13.3",
     "prettier": "^3.9.6",
@@ -44,8 +44,10 @@
   },
   "dependencies": {
     "cheerio": "^1.2.0",
+    "fastest-levenshtein": "^1.0.16",
     "impit": "^0.14.3",
-    "p-queue": "^9.3.3"
+    "p-queue": "^9.3.3",
+    "tough-cookie": "^6.0.2"
   },
-  "packageManager": "pnpm@10.28.0+sha512.05df71d1421f21399e053fde567cea34d446fa02c76571441bfc1c7956e98e363088982d940465fd34480d4d90a0668bc12362f8aa88000a64e83d0b0e47be48"
+  "packageManager": "pnpm@10.33.2+sha512.a90faf6feeab71ad6c6e57f94e0fe1a12f5dcc22cd754db40ae9593eb6a3e0b6b12e3540218bb37ae083404b1f2ce6db2a4121e979829b4aff94b99f49da1cf8"
 }
