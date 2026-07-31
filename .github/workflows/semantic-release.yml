@@ -1,4 +1,4 @@
-name: Semantic Release & Publish
+name: Semantic Release
 
 on:
   workflow_dispatch:
@@ -7,54 +7,39 @@ permissions:
   contents: write
   issues: write
   pull-requests: write
-  packages: write
 
 jobs:
   release:
+    name: Semantic Release
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout Repository
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - uses: actions/setup-node@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: "24"
 
-      - run: npm install -g pnpm
+      - name: Install pnpm
+        run: npm install -g pnpm
 
-      - run: pnpm install --no-frozen-lockfile
+      - name: Install dependencies
+        run: pnpm install --no-frozen-lockfile
 
-      - run: pnpm test
+      - name: Run Tests
+        run: pnpm test
 
-      - run: pnpm lint
+      - name: Lint
+        run: pnpm lint
 
-      - run: pnpm build
+      - name: Build
+        run: pnpm build
 
       - name: Semantic Release
         run: pnpm semantic-release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Prepare GitHub Package name
-        run: |
-          jq '.name = "@${{ github.repository_owner }}/kenjitsu-extensions"' package.json > package.tmp.json
-          mv package.tmp.json package.json
-
-      - name: Configure GitHub Packages Auth
-        run: |
-          rm -f ~/.npmrc
-          echo "//npm.pkg.github.com/:_authToken=${{ secrets.NPM_TOKEN }}" > ~/.npmrc
-          echo "always-auth=true" >> ~/.npmrc
-          pnpm config set registry https://registry.npmjs.org/
-          pnpm config set @${{ github.repository_owner }}:registry https://npm.pkg.github.com
-
-      - name: Publish Stable Package
-        run: |
-          pnpm publish \
-            --registry=https://npm.pkg.github.com \
-            --no-git-checks \
-            --access restricted
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
