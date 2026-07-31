@@ -1,4 +1,4 @@
-name: Semantic Release
+name: Semantic Release & Publish
 
 on:
   workflow_dispatch:
@@ -7,6 +7,7 @@ permissions:
   contents: write
   issues: write
   pull-requests: write
+  packages: write
 
 jobs:
   release:
@@ -39,7 +40,28 @@ jobs:
       - name: Build
         run: pnpm build
 
+      - name: Configure GitHub Packages Auth
+        run: |
+          rm -f ~/.npmrc
+          echo "//npm.pkg.github.com/:_authToken=${{ secrets.NPM_TOKEN }}" > ~/.npmrc
+          echo "always-auth=true" >> ~/.npmrc
+
       - name: Semantic Release
         run: pnpm semantic-release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Prepare GitHub Package name
+        run: |
+          jq '.name = "@${{ github.repository_owner }}/kenjitsu-extensions"' package.json > package.tmp.json
+          mv package.tmp.json package.json
+
+      - name: Publish Stable Package
+        run: |
+          pnpm config set @${{ github.repository_owner }}:registry=https://npm.pkg.github.com
+          pnpm publish \
+            --registry=https://npm.pkg.github.com \
+            --no-git-checks \
+            --access restricted
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
