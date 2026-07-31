@@ -16,6 +16,7 @@ import { AnimeParser } from '../../models/animeparser.js';
  * Anizone class for interacting with the Anizone anime streaming platform.
  * Extends BaseClass to provide functionality for searching anime, fetching anime details,
  * retrieving video sources for episodes, and fetching recent updates.
+ * @extends BaseClass
  */
 export class Anizone extends AnimeParser {
   constructor(baseUrl: string = 'https://anizone.to', options: ClientConfig = {}) {
@@ -48,6 +49,7 @@ export class Anizone extends AnimeParser {
         return { error: response.statusText, status: response.status, data: [] };
       }
       const result = await response.text();
+
       return this.parseSearchResults(cheerio.load(result));
     } catch (error) {
       return { error: error instanceof Error ? error.message : 'Unknown err', data: [], status: 500 };

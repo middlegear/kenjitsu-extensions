@@ -1,22 +1,31 @@
-import { Anilist } from './provider/meta/anilist.js';
-import { Jikan } from './provider/meta/jikan.js';
-import { TheMovieDatabase } from './provider/meta/tmdb.js';
-import { Animepahe } from './provider/anime/animepahe.js';
-import { Anizone } from './provider/anime/anizone.js';
-import { Anikoto } from './provider/anime/anikoto.js';
 import type { Browser } from 'impit';
+import { Anilist } from './provider/meta/anilist.js';
+import { TheMovieDatabase } from './provider/meta/tmdb.js';
+import { Anizone } from './provider/anime/anizone.js';
 import type { IMetaFormat, Seasons } from './types/meta/meta-anime.js';
 import type { IAnimeCategory } from './types/base.js';
+import { Jikan } from './provider/meta/jikan.js';
+import { Anikoto } from './provider/anime/anikoto.js';
+import { AniDB } from './provider/anime/anidb.js';
+import { AnimeHeaven } from './provider/anime/animeheaven.js';
+import { AniBD } from './provider/anime/anibd.js';
+import { Kitsu } from './provider/meta/kitsu.js';
 
 export {
   Anilist,
-  Jikan,
   TheMovieDatabase,
-  Animepahe,
+  Jikan,
   Anizone,
   Anikoto,
-  type IMetaFormat,
+  AniDB,
+  AniBD,
+  AnimeHeaven,
+  Kitsu,
   type Browser,
+  type IMetaFormat,
   type Seasons,
   type IAnimeCategory,
 };
+
+// const data = await new Anilist().fetchAnizoneProviderId(210031);
+// console.log(data);

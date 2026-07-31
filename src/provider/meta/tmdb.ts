@@ -22,7 +22,13 @@ import { BaseClass, type ClientConfig } from '../../models/base.js';
  */
 export class TheMovieDatabase extends BaseClass {
   private readonly apiKey: string = 'ea021b3b0775c8531592713ab727f254';
+
+  /** Base URL for the TMDb API */
   private readonly baseUrl: string = 'https://api.themoviedb.org/3';
+
+  /**
+   * Creates an instance of the TMDb API client.
+   */
   constructor(
     options: ClientConfig = {
       browser: 'okhttp4',
@@ -31,44 +37,7 @@ export class TheMovieDatabase extends BaseClass {
   ) {
     super(options);
   }
-  /**
-   * Helper to build consistent image URL objects
-   */
-  private buildImageUrls(
-    path: string | null | undefined,
-    sizes: { small?: string; medium?: string; large?: string } = {
-      small: 'w185',
-      medium: 'w342',
-      large: 'w780',
-    },
-  ) {
-    if (!path) {
-      return { small: null, medium: null, large: null, original: null };
-    }
 
-    return {
-      small: `https://image.tmdb.org/t/p/${sizes.small}${path}`,
-      medium: `https://image.tmdb.org/t/p/${sizes.medium}${path}`,
-      large: `https://image.tmdb.org/t/p/${sizes.large}${path}`,
-      original: `https://image.tmdb.org/t/p/original${path}`,
-    };
-  }
-  /**
-   * Helper to format episode data (latest / next)
-   */
-  private formatEpisode(episode: any) {
-    if (!episode) return null;
-    return {
-      episodeId: episode.id,
-      title: episode.name,
-      episodeNumber: episode.episode_number,
-      episodeType: episode.episode_type,
-      season: episode.season_number,
-      summary: episode.overview,
-      rating: episode.vote_average,
-      airDate: episode.air_date,
-    };
-  }
   /**
    * Searches for TV shows based on the provided query string using TMDb API.
    *
@@ -108,15 +77,13 @@ export class TheMovieDatabase extends BaseClass {
     }
 
     try {
-      const params = {
+      const params = new URLSearchParams({
         api_key: this.apiKey,
-      };
+        append_to_response: 'images',
+        include_image_language: 'en,null',
+      });
 
-      const queryString = new URLSearchParams(params).toString();
-
-      const baseUrl = `${this.baseUrl}/tv/${tmdbId}?append_to_response=images`;
-      const finalUrl = baseUrl.includes('?') ? `${baseUrl}&${queryString}` : `${baseUrl}?${queryString}`;
-
+      const finalUrl = `${this.baseUrl}/tv/${tmdbId}?${params.toString()}`;
       const response = await this.client.fetch(finalUrl, {
         method: 'GET',
         headers: {
@@ -187,6 +154,7 @@ export class TheMovieDatabase extends BaseClass {
       };
     }
   }
+
   /**
    * Fetches episodes available in a specific season of a TV show from TMDb.
    *
@@ -367,6 +335,7 @@ export class TheMovieDatabase extends BaseClass {
     try {
       const queryParams = new URLSearchParams({
         api_key: this.apiKey,
+        include_image_language: 'en,null',
       }).toString();
 
       const url = `${this.baseUrl}/movie/${tmdbId}?append_to_response=images&${queryParams}`;
@@ -464,34 +433,6 @@ export class TheMovieDatabase extends BaseClass {
   }
 
   /**
-   * Automatically determines the current anime season and year
-   */
-  private getCurrentSeasonAndYear() {
-    const now = new Date();
-    const month = now.getMonth() + 1; // JS months are 0-11
-    const year = now.getFullYear();
-
-    let season: 'winter' | 'spring' | 'summer' | 'fall';
-
-    if (month >= 1 && month <= 3) season = 'winter';
-    else if (month >= 4 && month <= 6) season = 'spring';
-    else if (month >= 7 && month <= 9) season = 'summer';
-    else season = 'fall';
-
-    return { season, year };
-  }
-
-  private getSeasonDates(season: 'winter' | 'spring' | 'summer' | 'fall', year: number) {
-    const seasons = {
-      winter: { start: `${year}-01-01`, end: `${year}-03-31` },
-      spring: { start: `${year}-04-01`, end: `${year}-06-30` },
-      summer: { start: `${year}-07-01`, end: `${year}-09-30` },
-      fall: { start: `${year}-10-01`, end: `${year}-12-31` },
-    };
-    return seasons[season.toLowerCase() as keyof typeof seasons];
-  }
-
-  /**
    * Fetches the current season's anime automatically based on today's date.
    * @param env - Cloudflare Environment
    * @param page - Page number (default: 1)
@@ -573,6 +514,7 @@ export class TheMovieDatabase extends BaseClass {
       };
     }
   }
+
   /**
    * Fetches popular anime from TMDb
    * @param page - Page number (default: 1)
@@ -729,32 +671,6 @@ export class TheMovieDatabase extends BaseClass {
   }
 
   /**
-   * Calculates a weekly date range with a past offset.
-   * @param offsetWeeks - How many weeks to go back (default 1) very useful
-   */
-  private getWeeklyDates(offsetWeeks: number = 0): { start: string; end: string } {
-    const now = new Date();
-
-    // 1. Move the 'now' pointer back by X weeks
-    now.setDate(now.getDate() - offsetWeeks * 7);
-
-    const dayOfWeek = now.getDay(); // 0 (Sun) to 6 (Sat)
-
-    // 2. Calculate Monday for that specific past week
-    const diffToMonday = now.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
-    const monday = new Date(now.setDate(diffToMonday));
-
-    // 3. Calculate Sunday for that same past week
-    const sunday = new Date(monday);
-    sunday.setDate(monday.getDate() + 6);
-
-    return {
-      start: monday.toISOString().split('T')[0],
-      end: sunday.toISOString().split('T')[0],
-    };
-  }
-
-  /**
    * Fetches anime airing within the current week and enriches the data.
    * Useful for "Airing This Week" or "Simulcast" sections.
    * @param env - Cloudflare Environment
@@ -765,6 +681,7 @@ export class TheMovieDatabase extends BaseClass {
     try {
       const endpoint = '/discover/tv';
       const { start, end } = this.getWeeklyDates();
+      console.log(start, end);
       const params = {
         api_key: this.apiKey,
         with_genres: '16,10759',
@@ -835,6 +752,7 @@ export class TheMovieDatabase extends BaseClass {
       };
     }
   }
+
   /**
    * Fetches Artworks for shows
    */
@@ -890,6 +808,7 @@ export class TheMovieDatabase extends BaseClass {
       };
     }
   }
+
   /**
    * Fetches Artworks for movies
    */
@@ -945,6 +864,100 @@ export class TheMovieDatabase extends BaseClass {
         status: 500,
       };
     }
+  }
+
+  /**
+   * Helper to build consistent image URL objects
+   */
+  private buildImageUrls(
+    path: string | null | undefined,
+    sizes: { small?: string; medium?: string; large?: string } = {
+      small: 'w185',
+      medium: 'w342',
+      large: 'w780',
+    },
+  ) {
+    if (!path) {
+      return { small: null, medium: null, large: null, original: null };
+    }
+
+    return {
+      small: `https://image.tmdb.org/t/p/${sizes.small}${path}`,
+      medium: `https://image.tmdb.org/t/p/${sizes.medium}${path}`,
+      large: `https://image.tmdb.org/t/p/${sizes.large}${path}`,
+      original: `https://image.tmdb.org/t/p/original${path}`,
+    };
+  }
+
+  /**
+   * Helper to format episode data (latest / next)
+   */
+  private formatEpisode(episode: any) {
+    if (!episode) return null;
+    return {
+      episodeId: episode.id,
+      title: episode.name,
+      episodeNumber: episode.episode_number,
+      episodeType: episode.episode_type,
+      season: episode.season_number,
+      summary: episode.overview,
+      rating: episode.vote_average,
+      airDate: episode.air_date,
+    };
+  }
+
+  /**
+   * Automatically determines the current anime season and year
+   */
+  private getCurrentSeasonAndYear() {
+    const now = new Date();
+    const month = now.getMonth() + 1; // JS months are 0-11
+    const year = now.getFullYear();
+
+    let season: 'winter' | 'spring' | 'summer' | 'fall';
+
+    if (month >= 1 && month <= 3) season = 'winter';
+    else if (month >= 4 && month <= 6) season = 'spring';
+    else if (month >= 7 && month <= 9) season = 'summer';
+    else season = 'fall';
+
+    return { season, year };
+  }
+
+  private getSeasonDates(season: 'winter' | 'spring' | 'summer' | 'fall', year: number) {
+    const seasons = {
+      winter: { start: `${year}-01-01`, end: `${year}-03-31` },
+      spring: { start: `${year}-04-01`, end: `${year}-06-30` },
+      summer: { start: `${year}-07-01`, end: `${year}-09-30` },
+      fall: { start: `${year}-10-01`, end: `${year}-12-31` },
+    };
+    return seasons[season.toLowerCase() as keyof typeof seasons];
+  }
+
+  /**
+   * Calculates a weekly date range with a past offset.
+   * @param offsetWeeks - How many weeks to go back (default 1) very useful
+   */
+  private getWeeklyDates(offsetWeeks: number = 0): { start: string; end: string } {
+    const now = new Date();
+
+    // 1. Move the 'now' pointer back by X weeks
+    now.setDate(now.getDate() - offsetWeeks * 7);
+
+    const dayOfWeek = now.getDay(); // 0 (Sun) to 6 (Sat)
+
+    // 2. Calculate Monday for that specific past week
+    const diffToMonday = now.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
+    const monday = new Date(now.setDate(diffToMonday));
+
+    // 3. Calculate Sunday for that same past week
+    const sunday = new Date(monday);
+    sunday.setDate(monday.getDate() + 6);
+
+    return {
+      start: monday.toISOString().split('T')[0],
+      end: sunday.toISOString().split('T')[0],
+    };
   }
 
   /**
