@@ -28,12 +28,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/middlegear/kenjitsu-extensions-private"
+    "url": "https://github.com/middlegear/kenjitsu-extensions"
   },
   "publishConfig": {
     "registry": "https://registry.npmjs.org/"
   },
-  "homepage": "https://github.com/middlegear/kenjitsu-extensions-private",
+  "homepage": "https://github.com/middlegear/kenjitsu-extensions",
   "devDependencies": {
     "@types/node": "^24.13.3",
     "prettier": "^3.9.6",
