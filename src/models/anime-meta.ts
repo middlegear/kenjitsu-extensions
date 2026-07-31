@@ -1,36 +1,76 @@
 import { Anizone } from '../provider/anime/anizone.js';
-import { Animepahe } from '../provider/anime/animepahe.js';
-import { BaseClass, type ClientConfig } from './base.js';
+
 import type { IMetaMovieEpisodes } from '../types/meta/meta-movie.js';
 import { Anikoto } from '../provider/anime/anikoto.js';
+import { BaseClass, type ClientConfig } from './base.js';
 
+import { AniBD } from '../provider/anime/anibd.js';
+import { AniDB } from '../provider/anime/anidb.js';
+import { distance } from 'fastest-levenshtein';
+import { AnimeHeaven } from '../provider/anime/animeheaven.js';
+import { Kitsu } from '../provider/meta/kitsu.js';
+
+interface AnimeResult {
+  id: string | number | null;
+  name: string | null;
+  romaji: string | null;
+}
+
+interface AnilistTitles {
+  english: string | null;
+  romaji: string | null;
+}
 abstract class BaseAnimeMeta extends BaseClass {
   protected anizone: Anizone;
   protected anikoto: Anikoto;
-  protected animepahe: Animepahe;
+  protected anibd: AniBD;
+  protected anidb: AniDB;
+  protected animeheaven: AnimeHeaven;
+  protected kitsu: Kitsu;
 
   constructor(
     options: ClientConfig = {
-      browser: 'firefox144',
+      browser: 'okhttp4',
       http3: false,
     },
   ) {
     super(options);
-
-    this.animepahe = new Animepahe();
-    this.anizone = new Anizone();
     this.anikoto = new Anikoto();
+    this.anizone = new Anizone();
+    this.anibd = new AniBD();
+    this.anidb = new AniDB();
+    this.animeheaven = new AnimeHeaven();
+    this.kitsu = new Kitsu();
   }
 
-  protected createTitleSlug(text: string): string {
-    return text
-      .toLowerCase()
-      .trim()
-      .replace(/[^\w\s-]/g, '')
-      .replace(/[\s_-]+/g, '-')
-      .replace(/^-+|-+$/g, '');
-  }
+  protected findBestMatch(target: AnilistTitles, candidates: AnimeResult[]): AnimeResult | null {
+    if (candidates.length === 0) return null;
 
+    let bestMatch: AnimeResult | null = null;
+    let bestDistance = Number.MAX_SAFE_INTEGER;
+
+    for (const candidate of candidates) {
+      if (target.english && candidate.name) {
+        const d = distance(target.english.toLowerCase(), candidate.name.toLowerCase());
+
+        if (d < bestDistance) {
+          bestDistance = d;
+          bestMatch = candidate;
+        }
+      }
+
+      if (target.romaji && candidate.romaji) {
+        const d = distance(target.romaji.toLowerCase(), candidate.romaji.toLowerCase());
+
+        if (d < bestDistance) {
+          bestDistance = d;
+          bestMatch = candidate;
+        }
+      }
+    }
+
+    return bestMatch;
+  }
   protected createTitleSlugV2(text: string): string {
     return text
       .toLowerCase()
@@ -71,10 +111,14 @@ abstract class BaseAnimeMeta extends BaseClass {
 
     const episodeKeys = Object.keys(data.episodes);
 
+    const todayStr = new Date().toISOString().slice(0, 10);
+
     const transformedEpisodes = episodeKeys
       .filter(key => /^\d+$/.test(key))
       .map(key => {
         const episode = data.episodes[key];
+        const rawAirDate = episode.airDate || episode.airdate;
+
         return {
           episodeAnizipNumber: Number(episode.episode || episode.episodeNumber) || null,
           title: {
@@ -83,15 +127,15 @@ abstract class BaseAnimeMeta extends BaseClass {
             german: episode.title?.de || null,
             romanizedJapanese: episode.title?.['x-jat'] || null,
           },
-          airDate: episode.airDate || episode.airdate,
+          airDate: rawAirDate,
           runtime: episode.runtime || episode.length,
           overview: episode.overview || episode.summary,
           image: episode.image || null,
-          rating: episode.rating || null,
-          aired: true,
+          rating: episode.rating ? Number(episode.rating) : null,
+          aired: rawAirDate ? rawAirDate.slice(0, 10) <= todayStr : false,
         };
-      });
-
+      })
+      .filter(episode => episode.aired === true);
     const images = data.images || null;
     return {
       images,
@@ -100,8 +144,6 @@ abstract class BaseAnimeMeta extends BaseClass {
       episodes: transformedEpisodes,
     };
   }
-  // ------------------------
-  // Anizip integration
 
   protected anilistAnizip(id: number) {
     return this.fetchAnizipByMapping('anilist_id', id);
@@ -115,7 +157,7 @@ abstract class BaseAnimeMeta extends BaseClass {
     const episodeNumber = providerEp.episodeNumber || tmdb?.absoluteEpisodeNumber || aniZipEp?.episodeAnizipNumber || null;
     const rating = tmdb?.rating || aniZipEp?.rating || null;
     const aired = aniZipEp?.aired || null;
-    const episodeId = providerEp?.episodeId || null;
+    const episodeId = providerEp?.episodeId || providerEp.id || null;
     const title = tmdb?.title || aniZipEp?.title?.english || aniZipEp?.title?.romanizedJapanese || providerEp?.title || null;
     const overview = tmdb?.summary || aniZipEp?.overview || null;
     const thumbnail =

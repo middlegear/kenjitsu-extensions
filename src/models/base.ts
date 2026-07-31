@@ -4,48 +4,6 @@ export interface ClientConfig extends ClientOptions {}
 
 export abstract class BaseClass {
   protected readonly client: Client;
-
-  constructor(options: ClientConfig = {}) {
-    const config: ClientOptions = {
-      browser: 'chrome142',
-      timeout: 15000,
-      ignoreTlsErrors: true,
-      ...options,
-    };
-
-    this.client = new Client(config);
-  }
-
-  protected formatHttpError(statusCode: number, statusText?: string): string {
-    const resolvedText = statusText?.trim() || this.STATUS_TEXT_MAP[statusCode] || 'Unknown Error';
-    return `Request failed with status: ${statusCode} & message: ${resolvedText}`;
-  }
-
-  protected createSlug(text: string): string {
-    return text
-      .toLowerCase()
-      .trim()
-      .replace(/[^\w\s-]/g, '')
-      .replace(/[\s_-]+/g, '-')
-      .replace(/^-+|-+$/g, '');
-  }
-
-  protected normalizeKey(input: string): string {
-    return input
-      .toLowerCase()
-      .trim()
-      .replace(/\s+/g, '')
-      .replace(/[^a-z0-9]/g, '');
-  }
-
-  protected getMappedValue<T extends string, U extends string>(input: T, mapping: Record<string, U>): U {
-    const normalized = this.normalizeKey(input);
-    const mappingKeys = Object.keys(mapping);
-    const foundKey = mappingKeys.find(key => this.normalizeKey(key) === normalized);
-    if (!foundKey) throw new Error(`Invalid: ${input}. Must be one of: ${mappingKeys.join(', ')}`);
-    return mapping[foundKey];
-  }
-
   protected readonly STATUS_TEXT_MAP: Record<number, string> = {
     100: 'Continue',
     101: 'Switching Protocols',
@@ -128,4 +86,53 @@ export abstract class BaseClass {
     527: 'Railgun Error',
     530: 'Site Is Frozen',
   };
+
+  constructor(options: ClientConfig = {}) {
+    const config: ClientOptions = {
+      browser: 'chrome142',
+      timeout: 15000,
+      ignoreTlsErrors: true,
+      ...options,
+    };
+
+    this.client = new Client(config);
+  }
+
+  protected formatHttpError(statusCode: number, statusText?: string): string {
+    const resolvedText = statusText?.trim() || this.STATUS_TEXT_MAP[statusCode] || 'Unknown Error';
+    return `Request failed with status: ${statusCode} & message: ${resolvedText}`;
+  }
+
+  protected createSlug(text: string): string {
+    return text
+      .toLowerCase()
+      .trim()
+      .replace(/[^\w\s-]/g, '')
+      .replace(/[\s_-]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+  }
+  protected createSearchableTitle(text: string): string {
+    return text
+      .toLowerCase()
+      .replace(/[^\w\s]/g, '')
+      .trim()
+      .split(/\s+/)
+      .slice(0, 2)
+      .join(' ');
+  }
+  protected normalizeKey(input: string): string {
+    return input
+      .toLowerCase()
+      .trim()
+      .replace(/\s+/g, '')
+      .replace(/[^a-z0-9]/g, '');
+  }
+
+  protected getMappedValue<T extends string, U extends string>(input: T, mapping: Record<string, U>): U {
+    const normalized = this.normalizeKey(input);
+    const mappingKeys = Object.keys(mapping);
+    const foundKey = mappingKeys.find(key => this.normalizeKey(key) === normalized);
+    if (!foundKey) throw new Error(`Invalid: ${input}. Must be one of: ${mappingKeys.join(', ')}`);
+    return mapping[foundKey];
+  }
 }

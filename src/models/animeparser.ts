@@ -1,12 +1,12 @@
 import type { ClientOptions } from '../config/client.js';
 import type { IAnimeInfoResponse, IBaseAnime, IBaseAnimeInfo, IBaseAnimePaginated, ISubOrDub } from '../types/anime.js';
 import type { IBase, IBaseMediaInfo, IResponse, ISourceBaseResponse, IVideoSource } from '../types/base.js';
-
+import * as cheerio from 'cheerio';
 import { BaseClass } from './base.js';
 /**
  * @class AnimeParser
  * @extends BaseClass
- *
+ * * @description
  * An abstract base architecture designed for scraping and parsing streaming platforms.
  * It enforces a consistent contract for fetching external public data (`search`, `fetchAnimeInfo`, `fetchSources`)
  * while encapsulating site-specific HTML parsing via internal protected hooks.
