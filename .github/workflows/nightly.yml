@@ -33,7 +33,6 @@ jobs:
       - name: Generate unique version
         id: version_generator
         run: |
-          
           VERSION_DATE=$(date +%Y.%m.%d)
           VERSION_TIME=$(date +%H%M)
           echo "NEW_VERSION=${VERSION_DATE}-${VERSION_TIME}" >> $GITHUB_ENV
@@ -57,6 +56,7 @@ jobs:
           pnpm publish \
             --registry=https://npm.pkg.github.com \
             --no-git-checks \
-            --access restricted
+            --access restricted \
+            --tag nightly
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
