@@ -11,40 +11,26 @@ permissions:
 
 jobs:
   release:
-    name: Semantic Release
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: "24"
 
-      - name: Install pnpm
-        run: npm install -g pnpm
+      - run: npm install -g pnpm
 
-      - name: Install dependencies
-        run: pnpm install --no-frozen-lockfile
+      - run: pnpm install --no-frozen-lockfile
 
-      - name: Run Tests
-        run: pnpm test
+      - run: pnpm test
 
-      - name: Lint
-        run: pnpm lint
+      - run: pnpm lint
 
-      - name: Build
-        run: pnpm build
-
-      - name: Configure GitHub Packages Auth
-        run: |
-          rm -f ~/.npmrc
-          echo "@${{ github.repository_owner }}:registry=https://npm.pkg.github.com" >> ~/.npmrc
-          echo "//npm.pkg.github.com/:_authToken=${{ secrets.NPM_TOKEN }}" >> ~/.npmrc
+      - run: pnpm build
 
       - name: Semantic Release
         run: pnpm semantic-release
@@ -55,6 +41,14 @@ jobs:
         run: |
           jq '.name = "@${{ github.repository_owner }}/kenjitsu-extensions"' package.json > package.tmp.json
           mv package.tmp.json package.json
+
+      - name: Configure GitHub Packages Auth
+        run: |
+          rm -f ~/.npmrc
+          echo "//npm.pkg.github.com/:_authToken=${{ secrets.NPM_TOKEN }}" > ~/.npmrc
+          echo "always-auth=true" >> ~/.npmrc
+          pnpm config set registry https://registry.npmjs.org/
+          pnpm config set @${{ github.repository_owner }}:registry https://npm.pkg.github.com
 
       - name: Publish Stable Package
         run: |
