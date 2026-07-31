@@ -43,8 +43,8 @@ jobs:
       - name: Configure GitHub Packages Auth
         run: |
           rm -f ~/.npmrc
-          echo "//npm.pkg.github.com/:_authToken=${{ secrets.NPM_TOKEN }}" > ~/.npmrc
-          echo "always-auth=true" >> ~/.npmrc
+          echo "@${{ github.repository_owner }}:registry=https://npm.pkg.github.com" >> ~/.npmrc
+          echo "//npm.pkg.github.com/:_authToken=${{ secrets.NPM_TOKEN }}" >> ~/.npmrc
 
       - name: Semantic Release
         run: pnpm semantic-release
@@ -58,7 +58,6 @@ jobs:
 
       - name: Publish Stable Package
         run: |
-          pnpm config set @${{ github.repository_owner }}:registry=https://npm.pkg.github.com
           pnpm publish \
             --registry=https://npm.pkg.github.com \
             --no-git-checks \
