@@ -35,6 +35,9 @@
   },
   "homepage": "https://github.com/middlegear/kenjitsu-extensions",
   "devDependencies": {
+    "@semantic-release/commit-analyzer": "^13.0.1",
+    "@semantic-release/github": "^12.0.9",
+    "@semantic-release/release-notes-generator": "^14.1.1",
     "@types/node": "^24.13.3",
     "prettier": "^3.9.6",
     "semantic-release": "^24.2.9",
