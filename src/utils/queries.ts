@@ -385,35 +385,59 @@ export const mediaTrendQuery = `query Query($page: Int, $perPage: Int, $type: Me
     }
   }
 }`;
-export const relatedQuery = `query Media($mediaId: Int, $type: MediaType) {
+export const relatedQuery = `
+query Media($mediaId: Int!, $type: MediaType!) {
   Media(id: $mediaId, type: $type) {
-    relations {
-      edges {
-        node {
-          id
-          idMal
-          title {
-            romaji
-            english
-            native
-            userPreferred
-          }
-          countryOfOrigin
-          seasonYear
-          synonyms
-          type
-          bannerImage
-          coverImage {
-            extraLarge
-            large
-            medium
-            color
-          }
-          averageScore
-          meanScore
-        }
-      }
+    id
+    idMal
+    title {
+      romaji
+      english
+      native
+      userPreferred
     }
+    countryOfOrigin
+    seasonYear
+    synonyms
+    type
+    bannerImage
+    coverImage {
+      extraLarge
+      large
+      medium
+      color
+    }
+    averageScore
+    meanScore
+
+    relations {
+    edges {
+    relationType(version: 3)  
+    node {
+      id
+      idMal
+      title {
+        romaji
+        english
+        native
+        userPreferred
+      }
+      countryOfOrigin
+      seasonYear
+      synonyms
+      type
+      bannerImage
+      coverImage {
+        extraLarge
+        large
+        medium
+        color
+      }
+      averageScore
+      meanScore
+    }
+  }
+}
   }
 }`;
 

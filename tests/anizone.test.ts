@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest';
-import { Anizone } from '../src/provider/anime/anizone';
+import { Anizone } from '../src/provider/anime/anizone.js';
 
 const anizone = new Anizone();
 

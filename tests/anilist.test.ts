@@ -68,9 +68,3 @@ test('returns an object that contains both providerId and anime info for Anizone
   expect(data.data).not.toBeNull();
 });
 
-test('returns an object has anime info and provider episodes array for Anizone', async () => {
-  const data = await anilist.fetchAnizoneProviderEpisodes(116674);
-  expect(Array.isArray(data.providerEpisodes)).toBe(true);
-  expect(data.providerEpisodes.length).toBeGreaterThan(0);
-  expect(data.data).not.toBeNull();
-});

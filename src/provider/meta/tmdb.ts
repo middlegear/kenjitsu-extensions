@@ -1,14 +1,10 @@
-import type { IResponse, IVideoSource } from '../../types/base.js';
+import type { IResponse } from '../../types/base.js';
 import type {
   IAnimeListItem,
   IMetaMovie,
   IMetaMovieArtworks,
   IMetaMovieEpisodes,
-  IMetaMovieInfo,
-  IMetaMovieInfoResponse,
   IMetaMoviePaginated,
-  IMetaMovieSeasons,
-  IMetaTvInfo,
   IMovieInfo,
 } from '../../types/meta/meta-movie.js';
 import { BaseClass, type ClientConfig } from '../../models/base.js';
@@ -43,9 +39,10 @@ export class TheMovieDatabase extends BaseClass {
    *
    * @param query - The search query string (required)
    * @param page - The page number for pagination (optional, defaults to 1)
+   * @param year - The first air date year
    * @returns Promise resolving to paginated list of TV shows matching the search query
    */
-  async searchShows(query: string, page: number = 1): Promise<IMetaMoviePaginated<IMetaMovie[] | []>> {
+  async searchShows(query: string, page: number = 1, year?: number,): Promise<IMetaMoviePaginated<IMetaMovie[] | []>> {
     if (!query) {
       return {
         hasNextPage: false,
@@ -61,9 +58,9 @@ export class TheMovieDatabase extends BaseClass {
       include_adult: 'false',
       page: String(page),
       query,
+      ...(year !== undefined && { first_air_date_year: String(year) }),
     });
   }
-
   /**
    * Fetches detailed TV show information from TMDb using append_to_response
    */
@@ -172,7 +169,6 @@ export class TheMovieDatabase extends BaseClass {
         api_key: this.apiKey,
       }).toString();
 
-      // 2. Append the query string to the URL
       const response = await this.client.fetch(`${this.baseUrl}/tv/${tmdbId}/season/${season}?${queryString}`, {
         method: 'GET',
         headers: {
@@ -297,7 +293,7 @@ export class TheMovieDatabase extends BaseClass {
    * @param page - The page number for pagination (optional, defaults to 1)
    * @returns Promise resolving to paginated list of movies matching the search query
    */
-  async searchMovie(query: string, page: number = 1): Promise<IMetaMoviePaginated<IMetaMovie[] | []>> {
+  async searchMovie(query: string, page: number = 1,year?:number): Promise<IMetaMoviePaginated<IMetaMovie[] | []>> {
     if (!query) {
       return {
         hasNextPage: false,
@@ -313,6 +309,7 @@ export class TheMovieDatabase extends BaseClass {
       include_adult: 'false',
       page: String(page),
       query,
+      ...(year !== undefined && { first_air_date_year: String(year) }),
     });
   }
 
@@ -615,7 +612,7 @@ export class TheMovieDatabase extends BaseClass {
       const separator = endpoint.includes('?') ? '&' : '?';
       const url = `${this.baseUrl}${endpoint}${separator}${queryString}`;
 
-      // 3. Use fetch with the method explicitly set to GET
+
       const response = await this.client.fetch(url, {
         method: 'GET',
         headers: {
@@ -681,7 +678,7 @@ export class TheMovieDatabase extends BaseClass {
     try {
       const endpoint = '/discover/tv';
       const { start, end } = this.getWeeklyDates();
-      console.log(start, end);
+
       const params = {
         api_key: this.apiKey,
         with_genres: '16,10759',
@@ -697,7 +694,7 @@ export class TheMovieDatabase extends BaseClass {
 
       const url = `${this.baseUrl}${endpoint}${endpoint.includes('?') ? '&' : '?'}${queryString}`;
 
-      // 3. Execute with fetch
+
       const response = await this.client.fetch(url, {
         method: 'GET',
         headers: {
@@ -822,7 +819,7 @@ export class TheMovieDatabase extends BaseClass {
     }
 
     try {
-      // 1. Serialize the parameters
+
       const queryString = new URLSearchParams({
         api_key: this.apiKey,
       }).toString();
@@ -1000,6 +997,7 @@ export class TheMovieDatabase extends BaseClass {
         };
       }
       const result = await response.json();
+
       const pagination = {
         currentPage: result.page,
         hasNextPage: result.total_pages > 1,

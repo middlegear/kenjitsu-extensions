@@ -54,6 +54,7 @@ export interface IAnilistCharacters {
 
 export interface IRelatedAnilistData {
   anilistId: number;
+  relationType: any;
   malId: number;
   title: {
     romaji: string;
@@ -103,36 +104,11 @@ export interface AiringSchedule extends BaseAnimeSchedule {
   season: string | null;
 }
 
-export type Provider = 'hianime' | 'allanime' | 'animepahe' | 'anizone' | 'animekai';
-
 export const Seasons = ['WINTER', 'SPRING', 'SUMMER', 'FALL'] as const;
 export type Seasons = (typeof Seasons)[number];
 
-export const JSort = ['airing', 'bypopularity', 'upcoming', 'favorite', 'rating'] as const;
-export type JSort = (typeof JSort)[number];
-
 export type IMetaFormat = 'TV' | 'MOVIE' | 'SPECIAL' | 'OVA' | 'ONA' | 'MUSIC' | 'MANGA';
 
-export interface IMetaDataMap {
-  native?: string;
-  english?: string;
-  romaji: string;
-  ///added for animepahe
-  type: string;
-  season: string;
-  year: number;
-  episodes: number;
-}
-export interface IMetaData {
-  native?: string;
-  english?: string; // for anizone uses romaji titles
-  romaji: string;
-  ///added for animepahe
-  type: string;
-  season: string;
-  year: number;
-  episodes: number;
-}
 export interface IMetaAnimePaginated<T> extends IBasePaginated<T> {
   lastPage: number;
   perPage: number;
@@ -153,7 +129,7 @@ export interface IMetaProviderEpisodesResponse<T> extends IResponse<T> {
   provider?: IProviderId | null;
 }
 export interface IProviderId {
-  id: string |number| null;
+  id: string | number | null;
   name: string | null;
   native?: string | null;
   romaji: string | null;
@@ -163,4 +139,73 @@ export interface IProviderId {
 }
 export interface IMetaProviderIdResponse<T> extends IResponse<T> {
   provider: IProviderId | null;
+}
+
+export interface IRelatedKitsuData {
+  kitsuId: string;
+  relationType: string;
+  title: {
+    romaji: string | null;
+    english: string | null;
+    native: string | null;
+  };
+  type: string;
+  synonyms: string[] | null;
+  year: number | null;
+  startDate: string | null;
+  endDate: string | null;
+  score: number | null;
+  image: string | null;
+  bannerImage: string | null;
+}
+export interface IKitsuAnime {
+  kitsuId: number;
+
+  isAdult: boolean;
+  slug: string;
+
+  image: string | null;
+  bannerImage: string | null;
+
+  title: {
+    romaji: string | null;
+    english: string | null;
+    native: string | null;
+  };
+
+  trailer: {
+    id: string;
+    site: string;
+  } | null;
+
+  format: string | null;
+
+  synonyms: string[];
+
+  status: string | null;
+
+  releaseDate: string | null;
+  endDate: string | null;
+
+  duration: number | null;
+  episodes: number | null;
+
+  score: number | null;
+
+  synopsis: string | null;
+}
+
+export interface IKitsuEpisode {
+  episodeId: number;
+  thumbnail: string | null;
+  title: {
+    romaji: string | null;
+    english: string | null;
+    native: string | null;
+  };
+  airDate: string | null;
+  seasonNumber: number;
+  episodeNumber: number;
+  relativeNumber: number;
+  synopsis: string | null;
 }
