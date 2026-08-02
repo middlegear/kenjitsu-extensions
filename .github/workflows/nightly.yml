@@ -21,8 +21,9 @@ jobs:
       - name: Configure GitHub Packages Auth
         run: |
           rm -f ~/.npmrc
-          echo "//npm.pkg.github.com/:_authToken=${{ secrets.NPM_TOKEN}}" > ~/.npmrc
+          echo "//npm.pkg.github.com/:_authToken=${{ secrets.NPM_TOKEN }}" > ~/.npmrc
           echo "always-auth=true" >> ~/.npmrc
+          echo "manage-package-manager-versions=false" >> ~/.npmrc
 
       - name: Install dependencies
         run: |
@@ -54,9 +55,9 @@ jobs:
         run: |
           pnpm config set @${{ github.repository_owner }}:registry=https://npm.pkg.github.com
           pnpm publish \
-            --registry=https://npm.pkg.github.com \
             --no-git-checks \
             --access restricted \
             --tag nightly
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          COREPACK_ENABLE_AUTO_PIN: "0"
