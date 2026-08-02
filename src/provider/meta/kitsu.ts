@@ -26,7 +26,7 @@ class Kitsu extends BaseClass {
    * @returns A response containing an array of matching {@link IKitsuAnime}
    *          objects, or an empty array on failure.
    */
-  async search(query: string): Promise<IResponse<IKitsuAnime | []>> {
+  async search(query: string): Promise<IResponse<IKitsuAnime[] | []>> {
     try {
       const response = await this.client.fetch(`${this.baseUrl}/anime?filter[text]=${query}`, {
         method: 'GET',
@@ -256,7 +256,7 @@ class Kitsu extends BaseClass {
    * @param id - Numeric Kitsu anime ID.
    * @returns A response containing an array of episode objects.
    */
-  async fetchEpisodes(id: number): Promise<IResponse<IKitsuEpisode[]|[]>> {
+  async fetchEpisodes(id: number): Promise<IResponse<IKitsuEpisode[] | []>> {
     try {
       const [info, response] = await Promise.all([
         this.fetchInfo(id),
@@ -397,7 +397,7 @@ class Kitsu extends BaseClass {
    * @returns A response containing an array of {@link IRelatedKitsuData}
    *          entries sorted by timeline order.
    */
-  async findRelatedAnimeKitsu(mediaId: string): Promise<IResponse<IRelatedKitsuData[] | []>> {
+  async fetchRelatedAnime(mediaId: string): Promise<IResponse<IRelatedKitsuData[] | []>> {
     if (!mediaId) {
       return {
         data: [],
@@ -467,7 +467,7 @@ class Kitsu extends BaseClass {
    * @returns A response containing the chronologically sorted franchise
    *          timeline, with the earliest entry marked `relationType: 'ROOT'`.
    */
-  async findParentAnimeSeriesKitsu(mediaId: string): Promise<IResponse<IRelatedKitsuData[] | []>> {
+  async fetchParentSeries(mediaId:string): Promise<IResponse<IRelatedKitsuData[] | []>> {
     let currentId = mediaId;
     let currentNode: any = null;
     const visitedIds = new Set<string>();
@@ -502,7 +502,6 @@ class Kitsu extends BaseClass {
 
         const relationships = result.data ?? [];
         const included = result.included ?? [];
-
 
         if (!currentNode) {
           const nodeResponse = await this.client.fetch(`${this.baseUrl}/anime/${currentId}`, {
@@ -555,7 +554,6 @@ class Kitsu extends BaseClass {
           );
 
         const prequelEdge = rootEdges.find(edge => edge.relationType === 'prequel');
-
 
         if (!prequelEdge) {
           break;

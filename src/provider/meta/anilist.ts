@@ -1445,7 +1445,7 @@ export class Anilist extends BaseAnimeMeta {
    * @param mediaId - The unique Anilist anime ID (required)
    * @returns Promise that resolves to related anime information
    */
-  async findParentAnimeSeries(
+  async fetchParentSeries(
     mediaId: number,
   ): Promise<IResponse<IRelatedAnilistData[] | []>> {
     const TIMELINE_RELATIONS = new Set(['PREQUEL', 'SEQUEL', 'PARENT']);
