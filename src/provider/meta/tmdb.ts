@@ -670,7 +670,6 @@ export class TheMovieDatabase extends BaseClass {
   /**
    * Fetches anime airing within the current week and enriches the data.
    * Useful for "Airing This Week" or "Simulcast" sections.
-   * @param env - Cloudflare Environment
    * @param page - Page number (default: 1)
    * @returns Promise with enriched weekly anime data
    */

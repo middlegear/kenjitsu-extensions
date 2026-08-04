@@ -619,6 +619,7 @@ class Kitsu extends BaseClass {
         native: titles.ja_jp ?? null,
       },
       type: node.type,
+      format: attrs.subtype,
       synonyms: attrs.abbreviatedTitles ?? null,
       year: attrs.startDate ? Number(attrs.startDate.slice(0, 4)) : null,
       startDate: attrs.startDate ?? null,

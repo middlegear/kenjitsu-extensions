@@ -409,7 +409,7 @@ query Media($mediaId: Int!, $type: MediaType!) {
     }
     averageScore
     meanScore
-
+    format
     relations {
     edges {
     relationType(version: 3)  
@@ -426,6 +426,7 @@ query Media($mediaId: Int!, $type: MediaType!) {
       seasonYear
       synonyms
       type
+      format
       bannerImage
       coverImage {
         extraLarge

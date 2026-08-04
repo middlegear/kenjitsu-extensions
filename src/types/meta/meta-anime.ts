@@ -61,6 +61,7 @@ export interface IRelatedAnilistData {
     english: string;
     native: string;
   };
+  format: string;
   type: string;
   score: number;
   image: string;
@@ -150,6 +151,7 @@ export interface IRelatedKitsuData {
     native: string | null;
   };
   type: string;
+  format: string;
   synonyms: string[] | null;
   year: number | null;
   startDate: string | null;
