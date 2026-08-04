@@ -1,7 +1,7 @@
 import { BaseClass } from '../../models/base.js';
 import type { ClientOptions } from '../../config/client.js';
 import type { IResponse } from '../../types/base.js';
-import type { IKitsuAnime, IKitsuEpisode, IRelatedKitsuData } from '../../types/meta/meta-anime.js';
+import type { IKitsuAnime, IKitsuEpisode, IProviderId, IRelatedKitsuData } from '../../types/meta/meta-anime.js';
 
 /**
  * Client for interacting with the Kitsu.io anime API.
@@ -350,7 +350,7 @@ class Kitsu extends BaseClass {
    * @returns A response containing a lightweight mapping object
    *          (`id`, `provider`, `name`, `romaji`, `score`), or `null` on failure.
    */
-  async fetchMapping(id: number) {
+  async fetchMapping(id: number):Promise<IResponse<IProviderId|null>> {
     try {
       const response = await this.client.fetch(
         `${this.baseUrl}/mappings?filter[externalSite]=anilist/anime&filter[externalId]=${id}&include=item`,
@@ -376,6 +376,7 @@ class Kitsu extends BaseClass {
           name: anime?.attributes?.canonicalTitle,
           romaji: anime?.attributes?.titles?.en_jp ?? anime?.attributes?.canonicalTitle,
           score: null,
+          source:null,
         },
       };
     } catch (error) {
