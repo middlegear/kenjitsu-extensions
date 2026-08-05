@@ -346,14 +346,14 @@ class Kitsu extends BaseClass {
    *
    * Queries Kitsu's mappings endpoint with `externalSite=anilist/anime`.
    *
-   * @param id - AniList anime ID.
+   * @param id - anime ID.
+   * @param externalSite - database to use eg (anilist/myanimelist). Defaults to anilist
    * @returns A response containing a lightweight mapping object
-   *          (`id`, `provider`, `name`, `romaji`, `score`), or `null` on failure.
    */
-  async fetchMapping(id: number):Promise<IResponse<IProviderId|null>> {
+  async fetchMapping(id: number,externalSite:string="anilist"):Promise<IResponse<IProviderId|null>> {
     try {
       const response = await this.client.fetch(
-        `${this.baseUrl}/mappings?filter[externalSite]=anilist/anime&filter[externalId]=${id}&include=item`,
+        `${this.baseUrl}/mappings?filter[externalSite]=${externalSite}/anime&filter[externalId]=${id}&include=item`,
         { method: 'GET' },
       );
       if (!response.ok) {

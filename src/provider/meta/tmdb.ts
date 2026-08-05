@@ -309,7 +309,7 @@ export class TheMovieDatabase extends BaseClass {
       include_adult: 'false',
       page: String(page),
       query,
-      ...(year !== undefined && { first_air_date_year: String(year) }),
+      ...(year !== undefined && { primary_release_year: String(year) }),
     });
   }
 
@@ -374,6 +374,7 @@ export class TheMovieDatabase extends BaseClass {
         releaseDate: result.release_date || null,
         artWorks: {
           coverImages: (result.images?.backdrops || []).map((item: any) =>
+
             this.buildImageUrls(item.file_path, { small: 'w300', medium: 'w780', large: 'w1280' }),
           ),
           logos: (result.images?.logos || []).map((item: any) =>
