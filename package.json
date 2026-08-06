@@ -8,6 +8,7 @@
   "type": "module",
   "scripts": {
     "build": "tsup",
+    "prepare": "tsup",
     "dev": "pnpm build && node dist/main.js",
     "test": "vitest  --config vitest.config.ts",
     "lint": "tsc",
