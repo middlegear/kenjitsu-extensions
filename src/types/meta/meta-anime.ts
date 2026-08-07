@@ -198,13 +198,9 @@ export interface IKitsuAnime {
 }
 
 export interface IKitsuEpisode {
-  episodeId: number;
+  episodeId: number | string;
   thumbnail: string | null;
-  title: {
-    romaji: string | null;
-    english: string | null;
-    native: string | null;
-  };
+  title: string | null;
   airDate: string | null;
   seasonNumber: number;
   episodeNumber: number;

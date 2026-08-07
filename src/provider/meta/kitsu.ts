@@ -283,12 +283,7 @@ class Kitsu extends BaseClass {
 
           thumbnail: a.thumbnail?.original ?? null,
 
-          title: {
-            romaji: a.titles?.en_jp ?? null,
-            english: a.titles?.en ?? a.canonicalTitle ?? null,
-            native: a.titles?.ja_jp ?? null,
-          },
-
+          title: a.titles?.en ?? a.canonicalTitle ?? a.titles?.en_jp ?? a.titles?.ja_jp ?? null,
           airDate: a.airdate ?? null,
 
           seasonNumber: a.seasonNumber ?? 1,
@@ -311,11 +306,7 @@ class Kitsu extends BaseClass {
 
           thumbnail: null,
 
-          title: {
-            romaji: null,
-            english: `Episode ${episode}`,
-            native: null,
-          },
+          title: `Episode ${episode}`,
 
           airDate: null,
 
@@ -350,7 +341,7 @@ class Kitsu extends BaseClass {
    * @param externalSite - database to use eg (anilist/myanimelist). Defaults to anilist
    * @returns A response containing a lightweight mapping object
    */
-  async fetchMapping(id: number,externalSite:string="anilist"):Promise<IResponse<IProviderId|null>> {
+  async fetchMapping(id: number, externalSite: string = 'anilist'): Promise<IResponse<IProviderId | null>> {
     try {
       const response = await this.client.fetch(
         `${this.baseUrl}/mappings?filter[externalSite]=${externalSite}/anime&filter[externalId]=${id}&include=item`,
@@ -376,7 +367,7 @@ class Kitsu extends BaseClass {
           name: anime?.attributes?.canonicalTitle,
           romaji: anime?.attributes?.titles?.en_jp ?? anime?.attributes?.canonicalTitle,
           score: null,
-          source:null,
+          source: null,
         },
       };
     } catch (error) {
@@ -468,7 +459,7 @@ class Kitsu extends BaseClass {
    * @returns A response containing the chronologically sorted franchise
    *          timeline, with the earliest entry marked `relationType: 'ROOT'`.
    */
-  async fetchParentSeries(mediaId:string): Promise<IResponse<IRelatedKitsuData[] | []>> {
+  async fetchParentSeries(mediaId: string): Promise<IResponse<IRelatedKitsuData[] | []>> {
     let currentId = mediaId;
     let currentNode: any = null;
     const visitedIds = new Set<string>();

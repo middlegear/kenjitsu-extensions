@@ -9,10 +9,12 @@ import { AniDB } from './provider/anime/anidb.js';
 import { AnimeHeaven } from './provider/anime/animeheaven.js';
 import { AniBD } from './provider/anime/anibd.js';
 import { Kitsu } from './provider/meta/kitsu.js';
+import { Cinemeta } from './provider/meta/cinemeta.js';
 
 export {
   Anilist,
   TheMovieDatabase,
+  Cinemeta,
   Anizone,
   Anikoto,
   AniDB,
