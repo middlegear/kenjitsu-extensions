@@ -26,3 +26,6 @@ export {
   type Seasons,
   type IAnimeCategory,
 };
+
+// const data = await new Cinemeta().fetchAnimeEpisodes(244);
+// console.log(JSON.stringify(data));

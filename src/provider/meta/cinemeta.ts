@@ -46,7 +46,6 @@ class Cinemeta extends BaseClass {
       }
 
       const result = await response.json();
-
       const data = (result.metas ?? []).map((item: any) => ({
         id: item.id,
         name: item.name,
@@ -70,12 +69,15 @@ class Cinemeta extends BaseClass {
   private async fetchMediaInfo(id: string, format: string) {
     try {
       const mediaType = format.toLowerCase() === 'movie' ? 'movie' : 'series';
-      // const url = `https://tmdb-discover-plus.elfhosted.com/t5mDdzCuoL/meta/${mediaType}/${id}.json`;
-      const response = await this.client.fetch(`${this.baseUrl}/meta/${mediaType}/${id}.json`, {
-        method: 'GET',
-      });
 
-      // const response = await this.client.fetch(url, { method: 'GET' });
+      // const response = await this.client.fetch(`${this.baseUrl}/meta/${mediaType}/${id}.json`, {
+      //   method: 'GET',
+      // });
+
+      // const url = `https://tmdb-discover-plus.elfhosted.com/t5mDdzCuoL/meta/${mediaType}/${id}.json`;
+      const url = `https://aiometadata.elfhosted.com/stremio/d6259c47-5162-42ee-a17e-a1b793a9a4e4/meta/${mediaType}/${id}.json`;
+      const response = await this.client.fetch(url, { method: 'GET' });
+
 
       if (!response.ok) {
         return {
@@ -100,7 +102,7 @@ class Cinemeta extends BaseClass {
         coverImage: result.meta.background,
         year: result.meta.year,
       };
-
+  
       const rawVideos: any[] =
         Array.isArray(result.meta.videos) && result.meta.videos.length > 0
           ? result.meta.videos
@@ -215,7 +217,6 @@ class Cinemeta extends BaseClass {
       }
 
       const match = this.pickBestMatch(searchResult.data, candidateTitles);
-
       if (!match) {
         return {
           error: 'No confident Cinemeta match found',
