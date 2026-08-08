@@ -70,12 +70,12 @@ class Cinemeta extends BaseClass {
   private async fetchMediaInfo(id: string, format: string) {
     try {
       const mediaType = format.toLowerCase() === 'movie' ? 'movie' : 'series';
-      const url = `https://tmdb-discover-plus.elfhosted.com/t5mDdzCuoL/meta/${mediaType}/${id}.json`;
-      // const response = await this.client.fetch(`${this.baseUrl}/meta/${mediaType}/${id}.json`, {
-      //   method: 'GET',
-      // });
+      // const url = `https://tmdb-discover-plus.elfhosted.com/t5mDdzCuoL/meta/${mediaType}/${id}.json`;
+      const response = await this.client.fetch(`${this.baseUrl}/meta/${mediaType}/${id}.json`, {
+        method: 'GET',
+      });
 
-      const response = await this.client.fetch(url, { method: 'GET' });
+      // const response = await this.client.fetch(url, { method: 'GET' });
 
       if (!response.ok) {
         return {
