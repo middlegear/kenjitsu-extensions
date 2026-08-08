@@ -70,10 +70,12 @@ class Cinemeta extends BaseClass {
   private async fetchMediaInfo(id: string, format: string) {
     try {
       const mediaType = format.toLowerCase() === 'movie' ? 'movie' : 'series';
+      const url = `https://tmdb-discover-plus.elfhosted.com/t5mDdzCuoL/meta/${mediaType}/${id}.json`;
+      // const response = await this.client.fetch(`${this.baseUrl}/meta/${mediaType}/${id}.json`, {
+      //   method: 'GET',
+      // });
 
-      const response = await this.client.fetch(`${this.baseUrl}/meta/${mediaType}/${id}.json`, {
-        method: 'GET',
-      });
+      const response = await this.client.fetch(url, { method: 'GET' });
 
       if (!response.ok) {
         return {
@@ -99,7 +101,6 @@ class Cinemeta extends BaseClass {
         year: result.meta.year,
       };
 
-    
       const rawVideos: any[] =
         Array.isArray(result.meta.videos) && result.meta.videos.length > 0
           ? result.meta.videos
@@ -118,7 +119,6 @@ class Cinemeta extends BaseClass {
                 },
               ]
             : [];
-
 
       const today = new Date();
       today.setHours(23, 59, 59, 999);
@@ -456,75 +456,110 @@ class Cinemeta extends BaseClass {
   private selectEpisodesInRange(videos: ICinemetaEpisode[], anime: IKitsuAnime): ICinemetaEpisode[] {
     const format = (anime.format ?? 'TV').toUpperCase();
 
-    let filtered = [...videos];
+    const parseId = (id: string): { season: number; episode: number } | null => {
+      const parts = id.split(':');
+      const season = Number(parts[1]);
+      const episode = Number(parts[2]);
+      if (!Number.isFinite(season) || !Number.isFinite(episode)) return null;
+      return { season, episode };
+    };
 
-    // TV anime: exclude specials / season 0.
-    if (format === 'TV') {
-      filtered = filtered.filter(video => {
-        const [, season] = video.id.split(':');
-
-        const seasonNumber = Number(season);
-
-        return Number.isFinite(seasonNumber) && seasonNumber >= 1;
-      });
-    }
-
-    // Kitsu releaseDate is the beginning of this anime entry.
-    const startDate = anime.releaseDate ? new Date(anime.releaseDate) : null;
-
-    if (!startDate || Number.isNaN(startDate.getTime())) {
-      return [];
-    }
-
-    startDate.setHours(0, 0, 0, 0);
-
-    // Today is always the upper boundary.
-    const today = new Date();
-    today.setHours(23, 59, 59, 999);
-
-    filtered = filtered.filter(video => {
-      if (!video.airDate) {
-        return false;
-      }
-
-      const airDate = new Date(video.airDate);
-
-      if (Number.isNaN(airDate.getTime())) {
-        return false;
-      }
-      if (airDate < startDate) {
-        return false;
-      }
-
-      if (airDate > today) {
-        return false;
-      }
-
+    const all = videos.filter(v => {
+      const p = parseId(v.id);
+      if (!p) return false;
+      if (format === 'TV' && p.season < 1) return false;
       return true;
     });
 
-    // Remove duplicate season/episode entries.
+    if (all.length === 0) return [];
+
+    const bySeason = new Map<number, ICinemetaEpisode[]>();
+    for (const v of all) {
+      const season = parseId(v.id)!.season;
+      if (!bySeason.has(season)) bySeason.set(season, []);
+      bySeason.get(season)!.push(v);
+    }
+
+    interface SeasonStats {
+      season: number;
+      min: Date;
+      max: Date;
+    }
+    const seasonStats: SeasonStats[] = [];
+
+    for (const [season, eps] of bySeason) {
+      let min: Date | null = null;
+      let max: Date | null = null;
+      for (const e of eps) {
+        if (!e.airDate) continue;
+        const d = new Date(e.airDate);
+        if (Number.isNaN(d.getTime())) continue;
+        if (!min || d < min) min = d;
+        if (!max || d > max) max = d;
+      }
+      if (min && max) seasonStats.push({ season, min, max });
+    }
+
+    if (seasonStats.length === 0) return [];
+    seasonStats.sort((a, b) => a.season - b.season);
+
+    const closestSeasonTo = (target: Date): number => {
+      let best = seasonStats[0].season;
+      let bestDist = Infinity;
+      for (const s of seasonStats) {
+        let dist: number;
+        if (target >= s.min && target <= s.max) dist = 0;
+        else if (target < s.min) dist = s.min.getTime() - target.getTime();
+        else dist = target.getTime() - s.max.getTime();
+        if (dist < bestDist) {
+          bestDist = dist;
+          best = s.season;
+        }
+      }
+      return best;
+    };
+
+    const startDate = anime.releaseDate ? new Date(anime.releaseDate) : null;
+    if (!startDate || Number.isNaN(startDate.getTime())) return [];
+
+    const startSeason = closestSeasonTo(startDate);
+
+    let endSeason: number;
+
+    if (anime.endDate) {
+      const endDate = new Date(anime.endDate);
+      endSeason = !Number.isNaN(endDate.getTime()) ? closestSeasonTo(endDate) : seasonStats[seasonStats.length - 1].season;
+    } else if (anime.episodes && anime.episodes > 0) {
+      let remaining = anime.episodes;
+      endSeason = startSeason;
+
+      for (const s of seasonStats) {
+        if (s.season < startSeason) continue;
+
+        const count = (bySeason.get(s.season) ?? []).length;
+        endSeason = s.season;
+
+        if (remaining <= count) break;
+        remaining -= count;
+      }
+    } else {
+      endSeason = seasonStats[seasonStats.length - 1].season;
+    }
+
+    if (endSeason < startSeason) endSeason = startSeason;
+    let filtered = all.filter(v => {
+      const { season } = parseId(v.id)!;
+      return season >= startSeason && season <= endSeason;
+    });
+
     filtered = this.dedupeBySeasonEpisode(filtered);
 
     filtered.sort((a, b) => {
-      if (a.relativeNumber != null && b.relativeNumber != null) {
-        return a.relativeNumber - b.relativeNumber;
-      }
-
-      if (a.relativeNumber != null) {
-        return -1;
-      }
-
-      if (b.relativeNumber != null) {
-        return 1;
-      }
-
-      return new Date(a.airDate).getTime() - new Date(b.airDate).getTime();
+      const pa = parseId(a.id)!;
+      const pb = parseId(b.id)!;
+      if (pa.season !== pb.season) return pa.season - pb.season;
+      return pa.episode - pb.episode;
     });
-
-    if (anime.episodes && anime.episodes > 0) {
-      filtered = filtered.slice(0, anime.episodes);
-    }
 
     return filtered;
   }
