@@ -12,7 +12,7 @@ import type { IMetaAnime, IMetaAnimeEpisode, IProviderId, IRelatedAnimeData } fr
  *
  */
 class Kitsu extends BaseClass {
-  private baseUrl: string;
+  private readonly baseUrl: string;
 
   constructor(baseUrl: string = 'https://kitsu.io/api/edge', options: ClientOptions = { browser: 'okhttp4' }) {
     super(options);
@@ -302,9 +302,7 @@ class Kitsu extends BaseClass {
   }
 
   /**
-   * Retrieves the episode list for an anime.
-   *
-   *
+   * Retrieves the episode list for an anime from kitsu.(unreliable missing lists)
    * @param id - Numeric Kitsu anime ID.
    * @returns A response containing an array of episode objects.
    */
@@ -382,10 +380,18 @@ class Kitsu extends BaseClass {
           status: response.status,
         };
       }
+
       const result = await response.json();
 
       const kitsuId = result.data?.[0]?.relationships?.item?.data?.id;
 
+      if (!kitsuId) {
+        return {
+          data: null,
+          error: this.formatHttpError(404),
+          status: 404,
+        };
+      }
       const anime = result.included?.find((item: any) => item.type === 'anime' && item.id === kitsuId);
 
       return {
@@ -557,10 +563,6 @@ class Kitsu extends BaseClass {
           status: 404,
         };
       }
-
-      // ---------------------------------------------------------
-      // 2. Traverse the ENTIRE timeline from the root
-      // ---------------------------------------------------------
 
       const timelineNodes = new Map<
         string,

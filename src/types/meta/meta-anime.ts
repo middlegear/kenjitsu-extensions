@@ -2,7 +2,6 @@ import type { IBasePaginated, IResponse } from '../base.js';
 
 export interface IMetaAnime {
   id: string | null;
-
   isAdult: boolean;
   image: string | null;
   color?: string | null;
@@ -29,12 +28,11 @@ export interface IMetaAnime {
   episodes: number | null;
   synopsis: string | null;
   season?: string | null;
-
   releaseDate: string | null;
   endDate: string | null;
-
   studio?: string | null;
   producers: string[];
+  [x:string]:any
 }
 export interface IMetaCharacters {
   role: string;

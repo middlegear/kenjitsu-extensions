@@ -1,4 +1,4 @@
-import { BaseAnimeMeta } from '../../models/anime-meta.js';
+
 import type { IResponse } from '../../types/base.js';
 import type {
   AiringSchedule,
@@ -6,7 +6,6 @@ import type {
   IMetaAnime,
   IMetaAnimePaginated,
   IMetaFormat,
-  IMetaProviderEpisodesResponse,
   IMetaProviderIdResponse,
   IRelatedAnimeData,
   MediaSchedule,
@@ -25,7 +24,14 @@ import {
   topQuery,
 } from '../../utils/queries.js';
 import type { ClientOptions } from '../../config/client.js';
-import type { IMetaMovieEpisodes } from '../../types/meta/meta-movie.js';
+import { BaseClass } from '../../models/base.js';
+import { Kitsu } from './kitsu.js';
+import { Anizone } from '../anime/anizone.js';
+import { AniBD } from '../anime/anibd.js';
+import { AnimeHeaven } from '../anime/animeheaven.js';
+import { AniDB } from '../anime/anidb.js';
+import { Anikoto } from '../../main.js';
+import { findBestMatch } from '../../utils/libs.js';
 
 /**
  * A class for interacting with the Anilist API to search for anime, fetch detailed information,
@@ -34,7 +40,7 @@ import type { IMetaMovieEpisodes } from '../../types/meta/meta-movie.js';
  *
  *
  */
-export class Anilist extends BaseAnimeMeta {
+export class Anilist extends BaseClass {
   private readonly baseUrl: string = 'https://graphql.anilist.co';
   private readonly workerUrl: string = 'https://api.kenjitsu.workers.dev';
 
@@ -67,7 +73,7 @@ export class Anilist extends BaseAnimeMeta {
     try {
       const [anilist, kitsu] = await Promise.allSettled([
         this.fetchInfo(anilistId, 'ANIME'),
-        this.kitsu.fetchMapping(anilistId),
+        new Kitsu().fetchMapping(anilistId),
       ]);
 
       if (anilist.status === 'rejected') {
@@ -181,10 +187,11 @@ export class Anilist extends BaseAnimeMeta {
         .filter((title): title is string => Boolean(title))
         .filter((title, index, arr) => arr.indexOf(title) === index);
 
-      let searchResults: Awaited<ReturnType<typeof this.anizone.search>> | null = null;
+      const anizoneProvider = new Anizone();
+      let searchResults: Awaited<ReturnType<typeof anizoneProvider.search>> | null = null;
 
       for (const query of titles) {
-        const result = await this.anizone.search(query);
+        const result = await anizoneProvider.search(query);
 
         if (result.data.length > 0) {
           searchResults = result;
@@ -201,7 +208,7 @@ export class Anilist extends BaseAnimeMeta {
         };
       }
 
-      const match = this.findBestMatch(
+      const match = findBestMatch(
         anilistData.data.title,
         searchResults.data.map(item => ({
           id: item.id,
@@ -269,11 +276,11 @@ export class Anilist extends BaseAnimeMeta {
       const searchQueries = [anilist.data.title.romaji, anilist.data.title.english, anilist.data.title.native]
         .filter((title): title is string => Boolean(title))
         .filter((title, index, array) => array.indexOf(title) === index);
-
-      let anibdResults: Awaited<ReturnType<typeof this.anibd.search>> | null = null;
+      const anibdProvider = new AniBD();
+      let anibdResults: Awaited<ReturnType<typeof anibdProvider.search>> | null = null;
 
       for (const query of searchQueries) {
-        const result = await this.anibd.search(query);
+        const result = await anibdProvider.search(query);
 
         if (result.data.length > 0) {
           anibdResults = result;
@@ -305,7 +312,7 @@ export class Anilist extends BaseAnimeMeta {
         };
       }
 
-      const titleMatch = this.findBestMatch(
+      const titleMatch = findBestMatch(
         anilist.data.title,
         anibdResults.data.map(item => ({
           id: item.id,
@@ -375,10 +382,11 @@ export class Anilist extends BaseAnimeMeta {
         .filter((title): title is string => Boolean(title))
         .filter((title, index, array) => array.indexOf(title) === index);
 
-      let animeheavenResults: Awaited<ReturnType<typeof this.animeheaven.search>> | null = null;
+      const animeheavenProvider = new AnimeHeaven();
+      let animeheavenResults: Awaited<ReturnType<typeof animeheavenProvider.search>> | null = null;
 
       for (const query of searchQueries) {
-        const result = await this.animeheaven.search(query);
+        const result = await animeheavenProvider.search(query);
 
         if (result.data.length > 0) {
           animeheavenResults = result;
@@ -395,7 +403,7 @@ export class Anilist extends BaseAnimeMeta {
         };
       }
 
-      const match = this.findBestMatch(
+      const match = findBestMatch(
         anilist.data.title,
         animeheavenResults.data.map(item => ({
           id: item.id,
@@ -501,10 +509,11 @@ export class Anilist extends BaseAnimeMeta {
         .filter((title): title is string => Boolean(title))
         .filter((title, index, arr) => arr.indexOf(title) === index);
 
-      let searchResults: Awaited<ReturnType<typeof this.anidb.search>> | null = null;
+      const anidbProvider = new AniDB();
+      let searchResults: Awaited<ReturnType<typeof anidbProvider.search>> | null = null;
 
       for (const query of titles) {
-        const result = await this.anidb.search(query);
+        const result = await anidbProvider.search(query);
 
         if (result.data.length > 0) {
           searchResults = result;
@@ -521,7 +530,7 @@ export class Anilist extends BaseAnimeMeta {
         };
       }
 
-      const match = this.findBestMatch(
+      const match = findBestMatch(
         anilistData.data.title,
         searchResults.data.map(item => ({
           id: item.id,
@@ -606,7 +615,7 @@ export class Anilist extends BaseAnimeMeta {
 
       if (anikoto.status === 'fulfilled' && anikoto.value.ok) {
         const anikotoResult = await anikoto.value.json();
-        if (anikotoResult?.provider.id) {
+        if (anikotoResult?.provider?.id) {
           return {
             data: anilistData.data,
             provider: anikotoResult.provider,
@@ -616,9 +625,9 @@ export class Anilist extends BaseAnimeMeta {
 
       const query = anilistData.data.title?.english || (anilistData.data.title?.romaji as string);
 
-      const anikotoSearchResults = await this.anikoto.search(query);
+      const anikotoSearchResults = await new Anikoto().search(query);
 
-      const match = this.findBestMatch(
+      const match = findBestMatch(
         anilistData.data.title,
         anikotoSearchResults.data.map(item => ({
           id: item.id,
@@ -1505,14 +1514,10 @@ export class Anilist extends BaseAnimeMeta {
         rootMedia = media;
 
         rootEdges = (media.relations?.edges ?? []).filter(
-          (edge: any) =>
-            edge.node?.type === 'ANIME' &&
-            TIMELINE_RELATIONS.has(edge.relationType),
+          (edge: any) => edge.node?.type === 'ANIME' && TIMELINE_RELATIONS.has(edge.relationType),
         );
 
-        const prequelRelation = rootEdges.find(
-          (edge: any) => edge.relationType === 'PREQUEL',
-        );
+        const prequelRelation = rootEdges.find((edge: any) => edge.relationType === 'PREQUEL');
 
         if (!prequelRelation?.node?.id) {
           break;
@@ -1551,11 +1556,7 @@ export class Anilist extends BaseAnimeMeta {
 
         score: node.averageScore ?? node.meanScore ?? null,
 
-        image:
-          node.coverImage?.extraLarge ??
-          node.coverImage?.large ??
-          node.coverImage?.medium ??
-          null,
+        image: node.coverImage?.extraLarge ?? node.coverImage?.large ?? node.coverImage?.medium ?? null,
 
         bannerImage: node.bannerImage ?? null,
 
@@ -1565,9 +1566,7 @@ export class Anilist extends BaseAnimeMeta {
       // Build the timeline. Do NOT assign ROOT yet.
       const res: IRelatedAnimeData[] = [
         mapNode(rootMedia, ''),
-        ...rootEdges.map((edge: any) =>
-          mapNode(edge.node, edge.relationType),
-        ),
+        ...rootEdges.map((edge: any) => mapNode(edge.node, edge.relationType)),
       ];
 
       // Sort chronologically.
