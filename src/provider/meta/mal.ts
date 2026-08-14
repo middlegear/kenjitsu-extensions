@@ -103,8 +103,27 @@ class MyAnimeList extends BaseClass {
       const initialUrl = `${this.baseUrl}/anime/${id}/_/episode`;
       const response = await this.client.fetch(initialUrl, { method: 'GET' });
 
+      if (response.status === 404) { // for movies
+        return {
+          data: [
+            {
+              airDate: null,
+              title: null,
+              thumbnail: null,
+              isFiller: null,
+              episodeNumber: 1,
+              summary: null,
+            },
+          ],
+        };
+      }
+
       if (!response.ok) {
-        return { data: [], error: response.statusText, status: response.status };
+        return {
+          data: [],
+          error: response.statusText,
+          status: response.status,
+        };
       }
 
       const firstPageHtml = await response.text();
@@ -113,12 +132,16 @@ class MyAnimeList extends BaseClass {
       let allEpisodes = this.parseEpisodes($);
 
       const offsets: number[] = [];
+
       $('.pagination a.link').each((_, el) => {
         const href = $(el).attr('href');
+
         if (href) {
           const match = href.match(/offset=(\d+)/);
+
           if (match && match[1]) {
             const offset = parseInt(match[1], 10);
+
             if (offset > 0 && !offsets.includes(offset)) {
               offsets.push(offset);
             }
@@ -133,8 +156,11 @@ class MyAnimeList extends BaseClass {
               const pageRes = await this.client.fetch(`${this.baseUrl}/anime/${id}/_/episode?offset=${offset}`, {
                 method: 'GET',
               });
+
               if (!pageRes.ok) return [];
+
               const html = await pageRes.text();
+
               return this.parseEpisodes(cheerio.load(html));
             } catch {
               return [];
