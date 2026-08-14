@@ -1,7 +1,7 @@
 import { BaseClass } from '../../models/base.js';
 import type { ClientOptions } from '../../config/client.js';
 import type { IResponse } from '../../types/base.js';
-import type { IKitsuAnime, IKitsuEpisode, IProviderId, IRelatedKitsuData } from '../../types/meta/meta-anime.js';
+import type { IMetaAnime, IMetaAnimeEpisode, IProviderId, IRelatedAnimeData } from '../../types/meta/meta-anime.js';
 
 /**
  * Client for interacting with the Kitsu.io anime API.
@@ -23,14 +23,15 @@ class Kitsu extends BaseClass {
    * Searches for anime by free-text query.
    *
    * @param query - Search string (title, synonym, etc.).
-   * @returns A response containing an array of matching {@link IKitsuAnime}
+   * @returns A response containing an array of matching {@link IMetaAnime}
    *          objects, or an empty array on failure.
    */
-  async search(query: string): Promise<IResponse<IKitsuAnime[] | []>> {
+  async search(query: string): Promise<IResponse<IMetaAnime[] | []>> {
     try {
-      const response = await this.client.fetch(`${this.baseUrl}/anime?filter[text]=${query}`, {
+      const response = await this.client.fetch(`${this.baseUrl}/anime?filter[text]=${encodeURIComponent(query)}`, {
         method: 'GET',
       });
+
       if (!response.ok) {
         return {
           error: response.statusText,
@@ -40,22 +41,26 @@ class Kitsu extends BaseClass {
       }
 
       const result = await response.json();
-      const data = result.data.map((item: any) => {
+
+      const data: IMetaAnime[] = result.data.map((item: any) => {
         const a = item.attributes;
 
         return {
-          kitsuId: Number(item.id),
+          id: item.id?.toString() ?? null,
 
-          isAdult: a.nsfw,
-          slug: a.slug,
+          isAdult: a.nsfw ?? false,
+
           image:
             a.posterImage?.original ??
             a.posterImage?.large ??
             a.posterImage?.medium ??
             a.posterImage?.small ??
-            a.posterImage?.tiny,
+            a.posterImage?.tiny ??
+            null,
 
-          bannerImage: a.coverImage?.original ?? a.coverImage?.large ?? a.coverImage?.small ?? a.coverImage?.tiny,
+          bannerImage: a.coverImage?.original ?? a.coverImage?.large ?? a.coverImage?.small ?? a.coverImage?.tiny ?? null,
+
+          color: null,
 
           title: {
             romaji: a.titles?.en_jp ?? a.canonicalTitle ?? null,
@@ -63,33 +68,42 @@ class Kitsu extends BaseClass {
             native: a.titles?.ja_jp ?? null,
           },
 
-          trailer: a.youtubeVideoId
-            ? {
-                id: a.youtubeVideoId,
-                site: 'youtube',
-              }
-            : null,
+          trailer: a.youtubeVideoId ? `https://www.youtube.com/watch?v=${a.youtubeVideoId}` : null,
 
-          format: a.showType ?? a.subtype,
+          format: a.showType ?? a.subtype ?? null,
+
+          status: a.status ?? null,
 
           synonyms: a.abbreviatedTitles ?? [],
 
-          status: a.status,
+          country: null,
 
-          releaseDate: a.startDate,
-          endDate: a.endDate,
+          year: a.startDate ? new Date(a.startDate).getFullYear() : null,
 
-          duration: a.episodeLength,
-          episodes: a.episodeCount,
+          duration: a.episodeLength ?? null,
 
           score: a.averageRating ? Number(a.averageRating) : null,
 
-          synopsis: a.synopsis ?? a.description,
+          genres: [],
+
+          episodes: a.episodeCount ?? null,
+
+          synopsis: a.synopsis ?? a.description ?? null,
+
+          season: null,
+
+          releaseDate: a.startDate ?? null,
+
+          endDate: a.endDate ?? null,
+
+          studio: null,
+
+          producers: [],
         };
       });
 
       return {
-        data: data,
+        data,
       };
     } catch (error) {
       return {
@@ -101,17 +115,18 @@ class Kitsu extends BaseClass {
   }
 
   /**
-   * Looks up an anime by its exact Kitsu slug.
+   * Looks up anime by its exact Kitsu slug.
    *
    * @param query - The slug string (e.g. `'cowboy-bebop'`).
-   * @returns A response containing matching {@link IKitsuAnime} entries,
+   * @returns A response containing matching {@link IMetaAnime} entries,
    *          or an empty array on failure.
    */
-  async searchSlug(query: string): Promise<IResponse<IKitsuAnime | []>> {
+  async searchSlug(query: string): Promise<IResponse<IMetaAnime[] | []>> {
     try {
-      const response = await this.client.fetch(`${this.baseUrl}/anime?filter[slug]=${query}`, {
+      const response = await this.client.fetch(`${this.baseUrl}/anime?filter[slug]=${encodeURIComponent(query)}`, {
         method: 'GET',
       });
+
       if (!response.ok) {
         return {
           error: response.statusText,
@@ -121,22 +136,26 @@ class Kitsu extends BaseClass {
       }
 
       const result = await response.json();
-      const data = result.data.map((item: any) => {
+
+      const data: IMetaAnime[] = result.data.map((item: any) => {
         const a = item.attributes;
 
         return {
-          kitsuId: Number(item.id),
+          id: item.id?.toString() ?? null,
 
-          isAdult: a.nsfw,
-          slug: a.slug,
+          isAdult: a.nsfw ?? false,
+
           image:
             a.posterImage?.original ??
             a.posterImage?.large ??
             a.posterImage?.medium ??
             a.posterImage?.small ??
-            a.posterImage?.tiny,
+            a.posterImage?.tiny ??
+            null,
 
-          bannerImage: a.coverImage?.original ?? a.coverImage?.large ?? a.coverImage?.small ?? a.coverImage?.tiny,
+          bannerImage: a.coverImage?.original ?? a.coverImage?.large ?? a.coverImage?.small ?? a.coverImage?.tiny ?? null,
+
+          color: null,
 
           title: {
             romaji: a.titles?.en_jp ?? a.canonicalTitle ?? null,
@@ -144,33 +163,42 @@ class Kitsu extends BaseClass {
             native: a.titles?.ja_jp ?? null,
           },
 
-          trailer: a.youtubeVideoId
-            ? {
-                id: a.youtubeVideoId,
-                site: 'youtube',
-              }
-            : null,
+          trailer: a.youtubeVideoId ? `https://www.youtube.com/watch?v=${a.youtubeVideoId}` : null,
 
-          format: a.showType ?? a.subtype,
+          format: a.showType ?? a.subtype ?? null,
+
+          status: a.status ?? null,
 
           synonyms: a.abbreviatedTitles ?? [],
 
-          status: a.status,
+          country: null,
 
-          releaseDate: a.startDate,
-          endDate: a.endDate,
+          year: a.startDate ? new Date(a.startDate).getFullYear() : null,
 
-          duration: a.episodeLength,
-          episodes: a.episodeCount,
+          duration: a.episodeLength ?? null,
 
           score: a.averageRating ? Number(a.averageRating) : null,
 
-          synopsis: a.synopsis ?? a.description,
+          genres: [],
+
+          episodes: a.episodeCount ?? null,
+
+          synopsis: a.synopsis ?? a.description ?? null,
+
+          season: null,
+
+          releaseDate: a.startDate ?? null,
+
+          endDate: a.endDate ?? null,
+
+          studio: null,
+
+          producers: [],
         };
       });
 
       return {
-        data: data,
+        data,
       };
     } catch (error) {
       return {
@@ -188,9 +216,12 @@ class Kitsu extends BaseClass {
    * @returns A response containing the {@link IKitsuAnime} object,
    *          or `null` on failure.
    */
-  async fetchInfo(id: number): Promise<IResponse<IKitsuAnime | null>> {
+  async fetchInfo(id: number): Promise<IResponse<IMetaAnime | null>> {
     try {
-      const response = await this.client.fetch(`${this.baseUrl}/anime/${id}`, { method: 'GET' });
+      const response = await this.client.fetch(`${this.baseUrl}/anime/${id}`, {
+        method: 'GET',
+      });
+
       if (!response.ok) {
         return {
           data: null,
@@ -200,12 +231,13 @@ class Kitsu extends BaseClass {
       }
 
       const result = await response.json();
-
       const a = result.data.attributes;
-      const data = {
-        kitsuId: Number(result.data.id),
-        isAdult: a.nsfw,
-        slug: a.slug,
+
+      const data: IMetaAnime = {
+        id: result.data.id?.toString() ?? null,
+
+        isAdult: a.nsfw ?? false,
+
         image:
           a.posterImage?.original ??
           a.posterImage?.large ??
@@ -213,31 +245,53 @@ class Kitsu extends BaseClass {
           a.posterImage?.small ??
           a.posterImage?.tiny ??
           null,
+
         bannerImage: a.coverImage?.original ?? a.coverImage?.large ?? a.coverImage?.small ?? a.coverImage?.tiny ?? null,
+
+        color: null,
+
         title: {
           romaji: a.titles?.en_jp ?? a.canonicalTitle ?? null,
           english: a.titles?.en ?? null,
           native: a.titles?.ja_jp ?? null,
         },
 
-        trailer: a.youtubeVideoId
-          ? {
-              id: a.youtubeVideoId,
-              site: 'youtube',
-            }
-          : null,
-        format: a.showType ?? a.subtype,
+        trailer: a.youtubeVideoId ? `https://www.youtube.com/watch?v=${a.youtubeVideoId}` : null,
+
+        format: a.showType ?? a.subtype ?? null,
+
+        status: a.status ?? null,
+
         synonyms: a.abbreviatedTitles ?? [],
-        status: a.status,
-        releaseDate: a.startDate,
-        endDate: a.endDate,
-        duration: a.episodeLength,
-        episodes: a.episodeCount,
+
+        country: null,
+
+        year: a.startDate ? new Date(a.startDate).getFullYear() : null,
+
+        duration: a.episodeLength ?? null,
+
         score: a.averageRating ? Number(a.averageRating) : null,
-        synopsis: a.synopsis ?? a.description,
+
+        genres: [],
+
+        episodes: a.episodeCount ?? null,
+
+        synopsis: a.synopsis ?? a.description ?? null,
+
+        season: null,
+
+        releaseDate: a.startDate ?? null,
+
+        endDate: a.endDate ?? null,
+
+        studio: null,
+
+        producers: [],
       };
 
-      return { data: data };
+      return {
+        data,
+      };
     } catch (error) {
       return {
         error: error instanceof Error ? error.message : 'Unknown Err',
@@ -250,20 +304,15 @@ class Kitsu extends BaseClass {
   /**
    * Retrieves the episode list for an anime.
    *
-   * Also pads the returned list with placeholder entries when Kitsu
-   * reports fewer episodes than the anime's total episode count.
    *
    * @param id - Numeric Kitsu anime ID.
    * @returns A response containing an array of episode objects.
    */
-  async fetchEpisodes(id: number): Promise<IResponse<IKitsuEpisode[] | []>> {
+  async fetchEpisodes(id: number): Promise<IResponse<IMetaAnimeEpisode[] | []>> {
     try {
-      const [info, response] = await Promise.all([
-        this.fetchInfo(id),
-        this.client.fetch(`${this.baseUrl}/anime/${id}/episodes`, {
-          method: 'GET',
-        }),
-      ]);
+      const response = await this.client.fetch(`${this.baseUrl}/anime/${id}/episodes`, {
+        method: 'GET',
+      });
 
       if (!response.ok) {
         return {
@@ -275,57 +324,36 @@ class Kitsu extends BaseClass {
 
       const result = await response.json();
 
-      const data = result.data.map((item: any) => {
-        const a = item.attributes;
+      const data: IMetaAnimeEpisode[] = (result.data ?? []).map((item: any) => {
+        const a = item.attributes ?? {};
 
         return {
-          episodeId: Number(id),
-
-          thumbnail: a.thumbnail?.original ?? null,
-
-          title: a.titles?.en ?? a.canonicalTitle ?? a.titles?.en_jp ?? a.titles?.ja_jp ?? null,
           airDate: a.airdate ?? null,
 
-          seasonNumber: a.seasonNumber ?? 1,
+          title: a.titles?.en ?? a.canonicalTitle ?? a.titles?.en_jp ?? a.titles?.ja_jp ?? null,
 
-          episodeNumber: a.number,
+          thumbnail:
+            a.thumbnail?.original ??
+            a.thumbnail?.large ??
+            a.thumbnail?.medium ??
+            a.thumbnail?.small ??
+            a.thumbnail?.tiny ??
+            null,
 
-          relativeNumber: a.relativeNumber ?? a.number,
+          isFiller: null,
 
-          synopsis: a.synopsis ?? a.description ?? null,
+          episodeNumber: a.number ?? null,
+
+          summary: a.synopsis ?? a.description ?? null,
         };
       });
-
-      const expectedEpisodes = info.data?.episodes ?? data.length;
-
-      const lastSeason = data.at(-1)?.seasonNumber ?? 1;
-
-      for (let episode = data.length + 1; episode <= expectedEpisodes; episode++) {
-        data.push({
-          episodeId: Number(id),
-
-          thumbnail: null,
-
-          title: `Episode ${episode}`,
-
-          airDate: null,
-
-          seasonNumber: lastSeason,
-
-          episodeNumber: episode,
-
-          relativeNumber: episode,
-
-          synopsis: null,
-        });
-      }
 
       return {
         data,
       };
     } catch (error) {
       return {
-        error: error instanceof Error ? error.message : 'Unknown Error',
+        error: error instanceof Error ? error.message : 'Unknown Err',
         data: [],
         status: 500,
       };
@@ -386,10 +414,10 @@ class Kitsu extends BaseClass {
    *
    *
    * @param mediaId - The unique Kitsu anime ID (required).
-   * @returns A response containing an array of {@link IRelatedKitsuData}
+   * @returns A response containing an array of {@link IRelatedAnimeData}
    *          entries sorted by timeline order.
    */
-  async fetchRelatedAnime(mediaId: string): Promise<IResponse<IRelatedKitsuData[] | []>> {
+  async fetchRelatedAnime(mediaId: string): Promise<IResponse<IRelatedAnimeData[] | []>> {
     if (!mediaId) {
       return {
         data: [],
@@ -403,10 +431,6 @@ class Kitsu extends BaseClass {
         `${this.baseUrl}/anime/${mediaId}/media-relationships?include=destination&page[limit]=20`,
         {
           method: 'GET',
-          headers: {
-            'Content-Type': 'application/vnd.api+json',
-            Accept: 'application/vnd.api+json',
-          },
         },
       );
 
@@ -425,7 +449,7 @@ class Kitsu extends BaseClass {
 
       const findIncluded = (type: string, id: string) => included.find((inc: any) => inc.type === type && inc.id === id);
 
-      const res: IRelatedKitsuData[] = relationships
+      const res: IRelatedAnimeData[] = relationships
         .filter(
           (rel: any) =>
             rel.relationships?.destination?.data?.type === 'anime' && this.TIMELINE_ROLES.has(rel.attributes?.role),
@@ -436,7 +460,7 @@ class Kitsu extends BaseClass {
 
           return node ? this.mapKitsuNode(node, rel.attributes.role) : null;
         })
-        .filter((entry: any): entry is IRelatedKitsuData => entry !== null);
+        .filter((entry: any): entry is IRelatedAnimeData => entry !== null);
 
       return {
         data: this.sortByTimeline(res),
@@ -459,15 +483,13 @@ class Kitsu extends BaseClass {
    * @returns A response containing the chronologically sorted franchise
    *          timeline, with the earliest entry marked `relationType: 'ROOT'`.
    */
-  async fetchParentSeries(mediaId: string): Promise<IResponse<IRelatedKitsuData[] | []>> {
-    let currentId = mediaId;
-    let currentNode: any = null;
+  async fetchParentSeries(mediaId: string): Promise<IResponse<IRelatedAnimeData[] | []>> {
     const visitedIds = new Set<string>();
 
-    let rootNode: any = null;
-    let rootEdges: { relationType: string; node: any }[] = [];
-
     try {
+      let currentId = mediaId;
+      let rootNode: any = null;
+
       while (currentId && !visitedIds.has(currentId)) {
         visitedIds.add(currentId);
 
@@ -475,10 +497,6 @@ class Kitsu extends BaseClass {
           `${this.baseUrl}/anime/${currentId}/media-relationships?include=destination&page[limit]=20`,
           {
             method: 'GET',
-            headers: {
-              'Content-Type': 'application/vnd.api+json',
-              Accept: 'application/vnd.api+json',
-            },
           },
         );
 
@@ -495,64 +513,41 @@ class Kitsu extends BaseClass {
         const relationships = result.data ?? [];
         const included = result.included ?? [];
 
-        if (!currentNode) {
-          const nodeResponse = await this.client.fetch(`${this.baseUrl}/anime/${currentId}`, {
-            method: 'GET',
-            headers: {
-              'Content-Type': 'application/vnd.api+json',
-              Accept: 'application/vnd.api+json',
-            },
-          });
+        const nodeResponse = await this.client.fetch(`${this.baseUrl}/anime/${currentId}`, {
+          method: 'GET',
+        });
 
-          if (!nodeResponse.ok) {
-            return {
-              error: nodeResponse.statusText || 'Server returned an empty response',
-              data: [],
-              status: nodeResponse.status,
-            };
-          }
-
-          const nodeResult = await nodeResponse.json();
-          currentNode = nodeResult.data;
+        if (!nodeResponse.ok) {
+          return {
+            error: nodeResponse.statusText || 'Server returned an empty response',
+            data: [],
+            status: nodeResponse.status,
+          };
         }
+
+        const nodeResult = await nodeResponse.json();
+        const currentNode = nodeResult.data;
 
         rootNode = currentNode;
 
         const findIncluded = (type: string, id: string) => included.find((inc: any) => inc.type === type && inc.id === id);
 
-        rootEdges = relationships
-          .filter(
-            (rel: any) =>
-              this.TIMELINE_ROLES.has(rel.attributes?.role) && rel.relationships?.destination?.data?.type === 'anime',
-          )
-          .map((rel: any) => {
-            const dest = rel.relationships.destination.data;
-            const node = findIncluded(dest.type, dest.id);
+        const prequel = relationships.find(
+          (rel: any) => rel.attributes?.role === 'prequel' && rel.relationships?.destination?.data?.type === 'anime',
+        );
 
-            return node
-              ? {
-                  relationType: rel.attributes.role,
-                  node,
-                }
-              : null;
-          })
-          .filter(
-            (
-              edge: any,
-            ): edge is {
-              relationType: string;
-              node: any;
-            } => edge !== null,
-          );
-
-        const prequelEdge = rootEdges.find(edge => edge.relationType === 'prequel');
-
-        if (!prequelEdge) {
+        if (!prequel) {
           break;
         }
 
-        currentId = prequelEdge.node.id;
-        currentNode = prequelEdge.node;
+        const destination = prequel.relationships.destination.data;
+        const prequelNode = findIncluded(destination.type, destination.id);
+
+        if (!prequelNode) {
+          break;
+        }
+
+        currentId = prequelNode.id;
       }
 
       if (!rootNode) {
@@ -563,14 +558,108 @@ class Kitsu extends BaseClass {
         };
       }
 
-      const timeline = this.sortByTimeline([
-        this.mapKitsuNode(rootNode, ''),
-        ...rootEdges.map(edge => this.mapKitsuNode(edge.node, edge.relationType)),
-      ]);
+      // ---------------------------------------------------------
+      // 2. Traverse the ENTIRE timeline from the root
+      // ---------------------------------------------------------
 
-      if (timeline.length > 0) {
-        timeline[0] = {
-          ...timeline[0],
+      const timelineNodes = new Map<
+        string,
+        {
+          relationType: string;
+          node: any;
+        }
+      >();
+
+      const queue: {
+        node: any;
+        relationType: string;
+      }[] = [
+        {
+          node: rootNode,
+          relationType: '',
+        },
+      ];
+
+      const timelineVisited = new Set<string>();
+
+      while (queue.length > 0) {
+        const current = queue.shift()!;
+
+        const nodeId = current.node.id;
+
+        if (!nodeId || timelineVisited.has(nodeId)) {
+          continue;
+        }
+
+        timelineVisited.add(nodeId);
+
+        timelineNodes.set(nodeId, {
+          relationType: current.relationType,
+          node: current.node,
+        });
+
+        const response = await this.client.fetch(
+          `${this.baseUrl}/anime/${nodeId}/media-relationships?include=destination&page[limit]=20`,
+          {
+            method: 'GET',
+          },
+        );
+
+        if (!response.ok) {
+          continue;
+        }
+
+        const result = await response.json();
+
+        const relationships = result.data ?? [];
+        const included = result.included ?? [];
+
+        const findIncluded = (type: string, id: string) => included.find((inc: any) => inc.type === type && inc.id === id);
+
+        for (const rel of relationships) {
+          const role = rel.attributes?.role;
+
+          if (!this.TIMELINE_ROLES.has(role)) {
+            continue;
+          }
+
+          const destination = rel.relationships?.destination?.data;
+
+          if (!destination || destination.type !== 'anime') {
+            continue;
+          }
+
+          const node = findIncluded(destination.type, destination.id);
+
+          if (!node || timelineVisited.has(node.id)) {
+            continue;
+          }
+
+          queue.push({
+            node,
+            relationType: role,
+          });
+        }
+      }
+
+      // ---------------------------------------------------------
+      // 3. Convert everything to the standard format
+      // ---------------------------------------------------------
+
+      const timeline = this.sortByTimeline(
+        [...timelineNodes.values()].map(({ node, relationType }) => this.mapKitsuNode(node, relationType)),
+      );
+
+      // ---------------------------------------------------------
+      // 4. AFTER chronological sorting, designate ROOT
+      //    as the earliest TV entry
+      // ---------------------------------------------------------
+
+      const tvIndex = timeline.findIndex(item => item.format === 'TV');
+
+      if (tvIndex !== -1) {
+        timeline[tvIndex] = {
+          ...timeline[tvIndex],
           relationType: 'ROOT',
         };
       }
@@ -592,33 +681,52 @@ class Kitsu extends BaseClass {
 
   /**
    * Maps a raw Kitsu anime node (from `included` or a direct fetch)
-   * into the standardised {@link IRelatedKitsuData} shape.
+   * into the standardised {@link IRelatedAnimeData} shape.
    *
    * @param node - Raw Kitsu resource object.
    * @param relationType - Relation role (`prequel`, `sequel`, `ROOT`, etc.).
    * @returns Normalised related-anime entry.
    */
-  private mapKitsuNode(node: any, relationType: string): IRelatedKitsuData {
+  private mapKitsuNode(node: any, relationType: string): IRelatedAnimeData {
     const attrs = node.attributes ?? {};
     const titles = attrs.titles ?? {};
 
     return {
-      kitsuId: node.id,
+      id: node.id?.toString() ?? null,
+
       relationType,
+
       title: {
         romaji: attrs.canonicalTitle ?? titles.en_jp ?? titles.ja_jp ?? null,
         english: titles.en ?? null,
         native: titles.ja_jp ?? null,
       },
-      type: node.type,
-      format: attrs.subtype,
-      synonyms: attrs.abbreviatedTitles ?? null,
+
+      type: node.type ?? null,
+      format: attrs.subtype ?? null,
+
+      synonyms: attrs.abbreviatedTitles ?? [],
+
       year: attrs.startDate ? Number(attrs.startDate.slice(0, 4)) : null,
+
       startDate: attrs.startDate ?? null,
       endDate: attrs.endDate ?? null,
+
       score: attrs.averageRating ? Number(attrs.averageRating) : null,
-      image: attrs.posterImage?.large ?? attrs.posterImage?.original ?? attrs.posterImage?.medium ?? null,
-      bannerImage: attrs.coverImage?.large ?? attrs.coverImage?.original ?? null,
+
+      image:
+        attrs.posterImage?.large ??
+        attrs.posterImage?.original ??
+        attrs.posterImage?.medium ??
+        attrs.posterImage?.small ??
+        attrs.posterImage?.tiny ??
+        null,
+
+      bannerImage:
+        attrs.coverImage?.large ?? attrs.coverImage?.original ?? attrs.coverImage?.small ?? attrs.coverImage?.tiny ?? null,
+
+      color: null,
+      country: null,
     };
   }
 
@@ -630,7 +738,7 @@ class Kitsu extends BaseClass {
    * @param entries - Array of related-anime entries to sort.
    * @returns A new array sorted by timeline order.
    */
-  private sortByTimeline(entries: IRelatedKitsuData[]): IRelatedKitsuData[] {
+  private sortByTimeline(entries: IRelatedAnimeData[]): IRelatedAnimeData[] {
     return [...entries].sort((a, b) => {
       const aDate = a.startDate ?? a.endDate;
       const bDate = b.startDate ?? b.endDate;

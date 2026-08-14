@@ -8,7 +8,7 @@ import type {
   IMetaFormat,
   IMetaProviderEpisodesResponse,
   IMetaProviderIdResponse,
-  IRelatedAnilistData,
+  IRelatedAnimeData,
   MediaSchedule,
   Seasons,
 } from '../../types/meta/meta-anime.js';
@@ -614,12 +614,9 @@ export class Anilist extends BaseAnimeMeta {
         }
       }
 
-
-      const query = anilistData.data.title?.english || anilistData.data.title?.romaji
-
+      const query = anilistData.data.title?.english || (anilistData.data.title?.romaji as string);
 
       const anikotoSearchResults = await this.anikoto.search(query);
-
 
       const match = this.findBestMatch(
         anilistData.data.title,
@@ -658,7 +655,6 @@ export class Anilist extends BaseAnimeMeta {
       };
     }
   }
-
 
   /**
    * Searches for anime or manga using a query string.
@@ -729,7 +725,7 @@ export class Anilist extends BaseAnimeMeta {
 
       const res: IMetaAnime[] = result.data.Page.media.map((item: any) => ({
         malId: item.idMal,
-        anilistId: item.id,
+        id: item.id,
         image: item.coverImage.extraLarge ?? item.coverImage.large ?? item.coverImage.medium,
         color: item.coverImage.color,
         bannerImage: item.bannerImage ?? null,
@@ -738,7 +734,7 @@ export class Anilist extends BaseAnimeMeta {
           english: item.title.english,
           native: item.title.native,
         },
-        trailer: item.trailer,
+        trailer: item.trailer?.site === 'youtube' ? `https://www.youtube.com/watch?v=${item.trailer.id}` : null,
         format: item.format,
         status: item.status,
         duration: item.duration,
@@ -772,9 +768,8 @@ export class Anilist extends BaseAnimeMeta {
       let items: IMetaAnime[] = res;
 
       if (mediaType === 'MANGA') {
-        items = res.filter((item: { format: string }) => item.format === 'MANGA');
+        items = res.filter(item => item.format !== null && item.format === 'MANGA');
       }
-
       return {
         hasNextPage: pagination.hasNextPage,
         currentPage: pagination.currentPage,
@@ -841,7 +836,7 @@ export class Anilist extends BaseAnimeMeta {
       const result = await response.json();
       const res = {
         malId: result.data.Media.idMal,
-        anilistId: result.data.Media.id,
+        id: result.data.Media.id,
         isAdult: result.data.Media.isAdult,
         image:
           result.data.Media.coverImage.extraLarge ??
@@ -855,7 +850,10 @@ export class Anilist extends BaseAnimeMeta {
           english: result.data.Media.title.english,
           native: result.data.Media.title.native,
         },
-        trailer: result.data.Media.trailer,
+        trailer:
+          result.data.Media.trailer?.site === 'youtube'
+            ? `https://www.youtube.com/watch?v=${result.data.Media.trailer.id}`
+            : null,
         format: result.data.Media.format,
         country: result.data.Media.countryOfOrigin || null,
         synonyms: result.data.Media.synonyms || null,
@@ -969,7 +967,7 @@ export class Anilist extends BaseAnimeMeta {
 
       const res: IMetaAnime[] = result.data.Page.media.map((item: any) => ({
         malId: item.idMal,
-        anilistId: item.id,
+        id: item.id,
         image: item.coverImage.extraLarge ?? item.coverImage.large ?? item.coverImage.medium,
         bannerImage: item.bannerImage ?? null,
         title: {
@@ -977,7 +975,7 @@ export class Anilist extends BaseAnimeMeta {
           english: item.title.english,
           native: item.title.native,
         },
-        trailer: item.trailer,
+        trailer: item.trailer?.site === 'youtube' ? `https://www.youtube.com/watch?v=${item.trailer.id}` : null,
         format: item.format,
         status: item.status,
         genres: item.genres,
@@ -1095,7 +1093,7 @@ export class Anilist extends BaseAnimeMeta {
 
       const res: IMetaAnime[] = result.data.Page.media.map((item: any) => ({
         malId: item.idMal,
-        anilistId: item.id,
+        id: item.id,
         image: item.coverImage.extraLarge ?? item.coverImage.large ?? item.coverImage.medium,
         bannerImage: item.bannerImage ?? null,
         title: {
@@ -1103,7 +1101,7 @@ export class Anilist extends BaseAnimeMeta {
           english: item.title.english,
           native: item.title.native,
         },
-        trailer: item.trailer,
+        trailer: item.trailer?.site === 'youtube' ? `https://www.youtube.com/watch?v=${item.trailer.id}` : null,
         format: item.format,
         status: item.status,
         duration: item.duration,
@@ -1259,7 +1257,7 @@ export class Anilist extends BaseAnimeMeta {
 
       const res: IMetaAnime[] = result.data.Page.media.map((item: any) => ({
         malId: item.idMal,
-        anilistId: item.id,
+        id: item.id,
         image: item.coverImage.extraLarge ?? item.coverImage.large ?? item.coverImage.medium,
         bannerImage: item.bannerImage ?? null,
         title: {
@@ -1267,7 +1265,7 @@ export class Anilist extends BaseAnimeMeta {
           english: item.title.english,
           native: item.title.native,
         },
-        trailer: item.trailer,
+        trailer: item.trailer?.site === 'youtube' ? `https://www.youtube.com/watch?v=${item.trailer.id}` : null,
         format: item.format,
         status: item.status,
         duration: item.duration,
@@ -1381,7 +1379,7 @@ export class Anilist extends BaseAnimeMeta {
 
       const res: IMetaAnime[] = result.data.Page.media.map((item: any) => ({
         malId: item.idMal,
-        anilistId: item.id,
+        id: item.id,
         bannerImage: item.bannerImage ?? null,
         image: item.coverImage.extraLarge ?? item.coverImage.large ?? item.coverImage.medium,
         title: {
@@ -1445,9 +1443,7 @@ export class Anilist extends BaseAnimeMeta {
    * @param mediaId - The unique Anilist anime ID (required)
    * @returns Promise that resolves to related anime information
    */
-  async fetchParentSeries(
-    mediaId: number,
-  ): Promise<IResponse<IRelatedAnilistData[] | []>> {
+  async fetchParentSeries(mediaId: number): Promise<IResponse<IRelatedAnimeData[] | []>> {
     const TIMELINE_RELATIONS = new Set(['PREQUEL', 'SEQUEL', 'PARENT']);
 
     let currentId = mediaId;
@@ -1457,6 +1453,7 @@ export class Anilist extends BaseAnimeMeta {
     let rootEdges: any[] = [];
 
     try {
+      // Walk backwards through PREQUEL relations to find the oldest/root entry.
       while (currentId && !visitedIds.has(currentId)) {
         visitedIds.add(currentId);
 
@@ -1497,11 +1494,20 @@ export class Anilist extends BaseAnimeMeta {
 
         const media = result.data?.Media;
 
+        if (!media) {
+          return {
+            error: 'Could not resolve anime',
+            data: [],
+            status: 404,
+          };
+        }
+
         rootMedia = media;
 
-        rootEdges = (media?.relations?.edges ?? []).filter(
+        rootEdges = (media.relations?.edges ?? []).filter(
           (edge: any) =>
-            edge.node?.type === 'ANIME' && TIMELINE_RELATIONS.has(edge.relationType),
+            edge.node?.type === 'ANIME' &&
+            TIMELINE_RELATIONS.has(edge.relationType),
         );
 
         const prequelRelation = rootEdges.find(
@@ -1523,52 +1529,65 @@ export class Anilist extends BaseAnimeMeta {
         };
       }
 
-      const res: IRelatedAnilistData[] = [
-        {
-          anilistId: rootMedia.id,
-          malId: rootMedia.idMal,
-          relationType: 'ROOT',
-          title: {
-            romaji: rootMedia.title.romaji ?? rootMedia.title.userPreferred,
-            english: rootMedia.title.english,
-            native: rootMedia.title.native,
-          },
-          type: rootMedia.type,
-          format: rootMedia.format,
-          country: rootMedia.countryOfOrigin || null,
-          synonyms: rootMedia.synonyms || null,
-          year: rootMedia.seasonYear || null,
-          score: rootMedia.averageScore ?? rootMedia.meanScore,
-          image:
-            rootMedia.coverImage.extraLarge ??
-            rootMedia.coverImage.large ??
-            rootMedia.coverImage.medium,
-          bannerImage: rootMedia.bannerImage ?? null,
-          color: rootMedia.coverImage.color ?? null,
+      const mapNode = (node: any, relationType: string): IRelatedAnimeData => ({
+        id: node.id?.toString() ?? null,
+        malId: node.idMal ?? null,
+        relationType,
+
+        title: {
+          romaji: node.title?.romaji ?? node.title?.userPreferred ?? null,
+          english: node.title?.english ?? null,
+          native: node.title?.native ?? null,
         },
-        ...rootEdges.map((item: any) => ({
-          anilistId: item.node.id,
-          malId: item.node.idMal,
-          relationType: item.relationType,
-          title: {
-            romaji: item.node.title.romaji ?? item.node.title.userPreferred,
-            english: item.node.title.english,
-            native: item.node.title.native,
-          },
-          type: item.node.type,
-          format: item.node.format,
-          country: item.node.countryOfOrigin || null,
-          synonyms: item.node.synonyms || null,
-          year: item.node.seasonYear || null,
-          score: item.node.averageScore ?? item.node.meanScore,
-          image:
-            item.node.coverImage.extraLarge ??
-            item.node.coverImage.large ??
-            item.node.coverImage.medium,
-          bannerImage: item.node.bannerImage ?? null,
-          color: item.node.coverImage.color ?? null,
-        })),
+
+        type: node.type ?? null,
+        format: node.format ?? null,
+
+        country: node.countryOfOrigin ?? null,
+
+        synonyms: node.synonyms ?? [],
+
+        year: node.seasonYear ?? null,
+
+        score: node.averageScore ?? node.meanScore ?? null,
+
+        image:
+          node.coverImage?.extraLarge ??
+          node.coverImage?.large ??
+          node.coverImage?.medium ??
+          null,
+
+        bannerImage: node.bannerImage ?? null,
+
+        color: node.coverImage?.color ?? null,
+      });
+
+      // Build the timeline. Do NOT assign ROOT yet.
+      const res: IRelatedAnimeData[] = [
+        mapNode(rootMedia, ''),
+        ...rootEdges.map((edge: any) =>
+          mapNode(edge.node, edge.relationType),
+        ),
       ];
+
+      // Sort chronologically.
+      res.sort((a, b) => {
+        if (!a.year && !b.year) return 0;
+        if (!a.year) return 1;
+        if (!b.year) return -1;
+
+        return a.year - b.year;
+      });
+
+      // After sorting, the earliest TV entry becomes ROOT.
+      const tvIndex = res.findIndex(item => item.format === 'TV');
+
+      if (tvIndex !== -1) {
+        res[tvIndex] = {
+          ...res[tvIndex],
+          relationType: 'ROOT',
+        };
+      }
 
       return {
         data: res,
@@ -1582,7 +1601,6 @@ export class Anilist extends BaseAnimeMeta {
     }
   }
 
-
   /**
    * Fetches anime titles related to a specific anime ID, such as sequels,
    * prequels, or spin-offs. Does a single fetch against `mediaId`
@@ -1590,9 +1608,7 @@ export class Anilist extends BaseAnimeMeta {
    * @param mediaId - The unique Anilist anime ID (required)
    * @returns Promise that resolves to related anime information
    */
-  async fetchRelatedAnime(
-    mediaId: number,
-  ): Promise<IResponse<IRelatedAnilistData[] | []>> {
+  async fetchRelatedAnime(mediaId: number): Promise<IResponse<IRelatedAnimeData[] | []>> {
     if (!mediaId) {
       return {
         data: [],
@@ -1639,10 +1655,10 @@ export class Anilist extends BaseAnimeMeta {
         };
       }
 
-      const res: IRelatedAnilistData[] = result.data.Media.relations.edges
+      const res: IRelatedAnimeData[] = result.data.Media.relations.edges
         .filter((item: any) => item.node.type === 'ANIME')
         .map((item: any) => ({
-          anilistId: item.node.id,
+          id: item.node.id,
           malId: item.node.idMal,
           relationType: item.relationType,
           title: {
@@ -1651,15 +1667,12 @@ export class Anilist extends BaseAnimeMeta {
             native: item.node.title.native,
           },
           type: item.node.type,
-          format:item.node.format,
+          format: item.node.format,
           country: item.node.countryOfOrigin || null,
           synonyms: item.node.synonyms || null,
           year: item.node.seasonYear || null,
           score: item.node.averageScore ?? item.node.meanScore,
-          image:
-            item.node.coverImage.extraLarge ??
-            item.node.coverImage.large ??
-            item.node.coverImage.medium,
+          image: item.node.coverImage.extraLarge ?? item.node.coverImage.large ?? item.node.coverImage.medium,
           bannerImage: item.node.bannerImage ?? null,
           color: item.node.coverImage.color ?? null,
         }));
@@ -1675,8 +1688,6 @@ export class Anilist extends BaseAnimeMeta {
       };
     }
   }
-
-
 
   /**
    * Fetches characters associated with a specific anime.
@@ -1726,7 +1737,7 @@ export class Anilist extends BaseAnimeMeta {
       const result = await response.json();
       const res: IAnilistCharacters = {
         malId: result.data.Media.idMal,
-        anilistId: result.data.Media.id,
+        id: result.data.Media.id,
         title: {
           romaji: result.data.Media.title.romaji ?? result.data.Media.title.userPreferred,
           english: result.data.Media.title.english,
@@ -1799,7 +1810,7 @@ export class Anilist extends BaseAnimeMeta {
       const result = await response.json();
       const res = {
         malId: result.data.AiringSchedule.media.idMal,
-        anilistId: result.data.AiringSchedule.media.id,
+        id: result.data.AiringSchedule.media.id,
 
         image:
           result.data.AiringSchedule.media.coverImage.extraLarge ??
@@ -1909,7 +1920,7 @@ export class Anilist extends BaseAnimeMeta {
       const result = await response.json();
       const res = result.data.Page.airingSchedules.map((item: any) => ({
         malId: item.media.idMal,
-        anilistId: item.media.id,
+        id: item.media.id,
         bannerImage: item.media.bannerImage ?? null,
         image: item.media.coverImage.extraLarge ?? item.media.coverImage.large ?? item.media.coverImage.medium,
         color: item.media.coverImage.color,

@@ -1,31 +1,39 @@
 import type { IBasePaginated, IResponse } from '../base.js';
 
 export interface IMetaAnime {
-  malId: number;
-  anilistId?: number;
-  image: string;
-  color?: string;
-  bannerImage?: string;
+  id: string | null;
+
+  isAdult: boolean;
+  image: string | null;
+  color?: string | null;
+  bannerImage?: string | null;
+
   title: {
-    romaji: string;
-    english: string;
-    native: string;
+    romaji: string | null;
+    english: string | null;
+    native: string | null;
   };
-  trailer: string;
-  format: string;
-  status: string;
-  synonyms?: string[];
-  country?: string;
-  year?: number;
-  duration: number;
-  score: number;
+
+  trailer: string | null;
+
+  format: string | null;
+  status: string | null;
+  synonyms: string[];
+
+  country?: string | null;
+  year?: number | null;
+  duration: number | null;
+  score: number | null;
   genres: string[];
-  episodes: number;
-  synopsis: string;
-  season: string;
-  releaseDate: string;
-  endDate: string;
-  studio: string;
+
+  episodes: number | null;
+  synopsis: string | null;
+  season?: string | null;
+
+  releaseDate: string | null;
+  endDate: string | null;
+
+  studio?: string | null;
   producers: string[];
 }
 export interface IMetaCharacters {
@@ -42,7 +50,7 @@ type voiceActors = {
 };
 
 export interface IAnilistCharacters {
-  anilistId: number;
+  id: number;
   malId: number;
   title: {
     romaji: string;
@@ -52,25 +60,31 @@ export interface IAnilistCharacters {
   characters: IMetaCharacters[];
 }
 
-export interface IRelatedAnilistData {
-  anilistId: number;
-  relationType: any;
-  malId: number;
+export interface IRelatedAnimeData {
+  id: string | null;
+  relationType: string;
+
   title: {
-    romaji: string;
-    english: string;
-    native: string;
+    romaji: string | null;
+    english: string | null;
+    native: string | null;
   };
-  format: string;
-  type: string;
-  score: number;
-  image: string;
-  bannerImage: string;
-  color: string;
+
+  format: string | null;
+  type: string | null;
+
+  score: number | null;
+  image: string | null;
+  bannerImage: string | null;
+
+  color: string | null;
   synonyms: string[];
-  country: string;
-  year: number;
+  country: string | null;
+  year: number | null;
+
+  [x: string]: any;
 }
+
 interface NextAiringEpisode {
   episode: number;
   id: number;
@@ -80,7 +94,7 @@ interface NextAiringEpisode {
 
 interface BaseAnimeSchedule {
   malId: number;
-  anilistId: number;
+  id: number;
   bannerImage: string;
   image: string;
   title: { romaji: string; english: string | null; native: string | null };
@@ -142,68 +156,12 @@ export interface IMetaProviderIdResponse<T> extends IResponse<T> {
   provider: IProviderId | null;
 }
 
-export interface IRelatedKitsuData {
-  kitsuId: string;
-  relationType: string;
-  title: {
-    romaji: string | null;
-    english: string | null;
-    native: string | null;
-  };
-  type: string;
-  format: string;
-  synonyms: string[] | null;
-  year: number | null;
-  startDate: string | null;
-  endDate: string | null;
-  score: number | null;
-  image: string | null;
-  bannerImage: string | null;
-}
-export interface IKitsuAnime {
-  kitsuId: number;
-
-  isAdult: boolean;
-  slug: string;
-
-  image: string | null;
-  bannerImage: string | null;
-
-  title: {
-    romaji: string | null;
-    english: string | null;
-    native: string | null;
-  };
-
-  trailer: {
-    id: string;
-    site: string;
-  } | null;
-
-  format: string | null;
-
-  synonyms: string[];
-
-  status: string | null;
-
-  releaseDate: string | null;
-  endDate: string | null;
-
-  duration: number | null;
-  episodes: number | null;
-
-  score: number | null;
-
-  synopsis: string | null;
-}
-
-export interface IKitsuEpisode {
-  episodeId: number | string;
-  thumbnail: string | null;
-  title: string | null;
+export interface IMetaAnimeEpisode {
   airDate: string | null;
-  seasonNumber: number;
-  episodeNumber: number;
-  relativeNumber: number;
-  synopsis: string | null;
+  title: string | null;
+  thumbnail: string | null;
+  isFiller: boolean | null;
+  episodeNumber: number | null;
+  summary: string | null;
+  [x: string]: any;
 }

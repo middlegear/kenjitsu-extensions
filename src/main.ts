@@ -10,10 +10,12 @@ import { AnimeHeaven } from './provider/anime/animeheaven.js';
 import { AniBD } from './provider/anime/anibd.js';
 import { Kitsu } from './provider/meta/kitsu.js';
 import { Cinemeta } from './provider/meta/cinemeta.js';
+import { MyAnimeList } from './provider/meta/mal.js';
 
 export {
   Anilist,
   TheMovieDatabase,
+  MyAnimeList,
   Cinemeta,
   Anizone,
   Anikoto,
@@ -26,6 +28,3 @@ export {
   type Seasons,
   type IAnimeCategory,
 };
-
-// const data = await new Cinemeta().fetchAnimeEpisodes(244);
-// console.log(JSON.stringify(data));
