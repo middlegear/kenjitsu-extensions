@@ -1,4 +1,3 @@
-
 import type { IResponse } from '../../types/base.js';
 import type {
   AiringSchedule,
@@ -6,7 +5,7 @@ import type {
   IMetaAnime,
   IMetaAnimePaginated,
   IMetaFormat,
-  IMetaProviderIdResponse,
+  IMetaProviderIdResponse, IProviderId,
   IRelatedAnimeData,
   MediaSchedule,
   Seasons,
@@ -104,11 +103,20 @@ export class Anilist extends BaseClass {
           status: kitsu.value.status,
         };
       }
-      const anizoneResult = kitsu.value.data;
+      const kitsuResult = kitsu.value.data;
+      const malId = anilistData ? anilistData.malId : null;
+      const providerResult:IProviderId  = {
+        id: `${kitsuResult.id}-$-${malId}`, // for use with torrentio  and mal since kitsu episodes is incomplete
+        name:kitsuResult.name,
+        romaji: kitsuResult.romaji,
+        score: 1,
+        source: 'kitsu',
+        provider:'kitsu'
 
+      }
       return {
         data: anilistData,
-        provider: anizoneResult,
+        provider: providerResult,
       };
     } catch (error) {
       return {
