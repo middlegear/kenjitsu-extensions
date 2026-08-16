@@ -761,25 +761,45 @@ class Kitsu extends BaseClass {
 
   private async fetchAnizipEpisodes(id: number): Promise<IResponse<IMetaAnimeEpisode[] | []>> {
     if (!id) return { error: `Missing required param: id`, data: [] };
+
     try {
-      const response = await this.client.fetch(`https://api.ani.zip/mappings?kitsu_id=${id}`, { method: 'GET' });
-      if (!response.ok) {
-        return {
-          data: [],
-          error: response.statusText,
-          status: response.status,
-        };
-      }
-      const result = await response.json();
 
-      if (result.mappings?.type?.toLowerCase() === 'movie') {
-        return { data: [] };
+      const kitsuResponse = await this.client.fetch(`https://api.ani.zip/mappings?kitsu_id=${id}`, { method: 'GET' });
+
+      if (kitsuResponse.ok) {
+        const kitsuResult = await kitsuResponse.json();
+        if (kitsuResult.mappings?.type?.toLowerCase() === 'movie') {
+          return { data: [] };
+        }
+        const kitsuEpisodes = this.formatAnizipData(kitsuResult);
+
+        if (kitsuEpisodes.episodes.length > 0) {
+          return {
+            data: kitsuEpisodes.episodes,
+          };
+        }
+        const anilistId = kitsuResult.mappings?.anilist_id;
+        if (anilistId) {
+          const anilistResponse = await this.client.fetch(`https://api.ani.zip/mappings?anilist_id=${anilistId}`, { method: 'GET' });
+
+          if (anilistResponse.ok) {
+            const anilistResult = await anilistResponse.json();
+            if (anilistResult.mappings?.type?.toLowerCase() === 'movie') {
+              return { data: [] };
+            }
+            const anilistEpisodes = this.formatAnizipData(anilistResult);
+
+            if (anilistEpisodes.episodes.length > 0) {
+              return {
+                data: anilistEpisodes.episodes,
+              };
+            }
+          }
+        }
       }
 
-      const results = this.formatAnizipData(result);
-      return {
-        data: results.episodes,
-      };
+      return { data: [] };
+
     } catch (error) {
       return {
         error: error instanceof Error ? error.message : 'Unknown error occurred',
@@ -788,7 +808,6 @@ class Kitsu extends BaseClass {
       };
     }
   }
-
   private formatAnizipData(data: any): { episodes: IMetaAnimeEpisode[] } {
     if (!data || !data.episodes) {
       return { episodes: [] };
