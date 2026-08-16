@@ -647,30 +647,30 @@ class Kitsu extends BaseClass {
       }
 
       const result = await response.json();
+      const todayStr = new Date().toISOString().slice(0, 10);
 
-      const data: IMetaAnimeEpisode[] = (result.data ?? []).map((item: any) => {
-        const a = item.attributes ?? {};
+      const data: IMetaAnimeEpisode[] = (result.data ?? [])
+        .map((item: any) => {
+          const a = item.attributes ?? {};
+          const rawAirDate = a.airdate ?? null;
 
-        return {
-          airDate: a.airdate ?? null,
-
-          title: a.titles?.en ?? a.canonicalTitle ?? a.titles?.en_jp ?? a.titles?.ja_jp ?? null,
-
-          thumbnail:
-            a.thumbnail?.original ??
-            a.thumbnail?.large ??
-            a.thumbnail?.medium ??
-            a.thumbnail?.small ??
-            a.thumbnail?.tiny ??
-            null,
-
-          isFiller: null,
-
-          episodeNumber: a.number ?? null,
-
-          summary: a.synopsis ?? a.description ?? null,
-        };
-      });
+          return {
+            airDate: rawAirDate,
+            title: a.titles?.en ?? a.canonicalTitle ?? a.titles?.en_jp ?? a.titles?.ja_jp ?? null,
+            thumbnail:
+              a.thumbnail?.original ??
+              a.thumbnail?.large ??
+              a.thumbnail?.medium ??
+              a.thumbnail?.small ??
+              a.thumbnail?.tiny ??
+              null,
+            isFiller: null,
+            episodeNumber: a.number ?? null,
+            summary: a.synopsis ?? a.description ?? null,
+            aired: rawAirDate ? rawAirDate.slice(0, 10) <= todayStr : false,
+          };
+        })
+        .filter((episode: { aired: boolean }) => episode.aired === true);
 
       return {
         data,
@@ -814,7 +814,7 @@ class Kitsu extends BaseClass {
           airDate: rawAirDate || null,
           title: englishTitle || japaneseTitle || null,
           // thumbnail: episode.image || null,
-          thumbnail : null ,// I prefer tmdb images
+          thumbnail: null, // I prefer tmdb images
           isFiller: episode.filler ?? null,
           episodeNumber: episodeNumber,
           summary: episode.overview || episode.summary || null,
