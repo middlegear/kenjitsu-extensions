@@ -106,7 +106,7 @@ export class Anilist extends BaseClass {
       const kitsuResult = kitsu.value.data;
       const malId = anilistData ? anilistData.malId : null;
       const providerResult:IProviderId  = {
-        id: `${kitsuResult.id}-$-${malId}`, // for use with torrentio  and mal since kitsu episodes is incomplete
+        id: `${kitsuResult.id}-$-${null}`, // for use with torrentio  and mal since kitsu episodes is incomplete
         name:kitsuResult.name,
         romaji: kitsuResult.romaji,
         score: 1,

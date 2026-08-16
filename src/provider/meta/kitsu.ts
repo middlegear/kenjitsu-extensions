@@ -3,6 +3,7 @@ import type { ClientOptions } from '../../config/client.js';
 import type { IResponse } from '../../types/base.js';
 import type { IMetaAnime, IMetaAnimeEpisode, IProviderId, IRelatedAnimeData } from '../../types/meta/meta-anime.js';
 
+
 /**
  * Client for interacting with the Kitsu.io anime API.
  *
@@ -302,62 +303,21 @@ class Kitsu extends BaseClass {
   }
 
   /**
-   * Retrieves the episode list for an anime from kitsu.(unreliable missing lists)
+   * Retrieves the episode list for an anime from kitsu & Anizip
    * @param id - Numeric Kitsu anime ID.
    * @returns A response containing an array of episode objects.
    */
   async fetchEpisodes(id: number): Promise<IResponse<IMetaAnimeEpisode[] | []>> {
-    try {
-      const response = await this.client.fetch(`${this.baseUrl}/anime/${id}/episodes`, {
-        method: 'GET',
-      });
+    if (!id) return { error: `Missing required param: id`, data: [] };
 
-      if (!response.ok) {
-        return {
-          error: response.statusText,
-          data: [],
-          status: response.status,
-        };
-      }
+    const anizipResult = await this.fetchAnizipEpisodes(id);
 
-      const result = await response.json();
-
-      const data: IMetaAnimeEpisode[] = (result.data ?? []).map((item: any) => {
-        const a = item.attributes ?? {};
-
-        return {
-          airDate: a.airdate ?? null,
-
-          title: a.titles?.en ?? a.canonicalTitle ?? a.titles?.en_jp ?? a.titles?.ja_jp ?? null,
-
-          thumbnail:
-            a.thumbnail?.original ??
-            a.thumbnail?.large ??
-            a.thumbnail?.medium ??
-            a.thumbnail?.small ??
-            a.thumbnail?.tiny ??
-            null,
-
-          isFiller: null,
-
-          episodeNumber: a.number ?? null,
-
-          summary: a.synopsis ?? a.description ?? null,
-        };
-      });
-
-      return {
-        data,
-      };
-    } catch (error) {
-      return {
-        error: error instanceof Error ? error.message : 'Unknown Err',
-        data: [],
-        status: 500,
-      };
+    if (anizipResult.data && anizipResult.data.length > 0) {
+      return anizipResult;
     }
-  }
 
+    return await this.fetchKitsuEpisodes(id);
+  }
   /**
    * Resolves an AniList anime ID to its corresponding Kitsu entry.
    *
@@ -581,7 +541,6 @@ class Kitsu extends BaseClass {
           relationType: '',
         },
       ];
-
       const timelineVisited = new Set<string>();
 
       while (queue.length > 0) {
@@ -644,18 +603,9 @@ class Kitsu extends BaseClass {
         }
       }
 
-      // ---------------------------------------------------------
-      // 3. Convert everything to the standard format
-      // ---------------------------------------------------------
-
       const timeline = this.sortByTimeline(
         [...timelineNodes.values()].map(({ node, relationType }) => this.mapKitsuNode(node, relationType)),
       );
-
-      // ---------------------------------------------------------
-      // 4. AFTER chronological sorting, designate ROOT
-      //    as the earliest TV entry
-      // ---------------------------------------------------------
 
       const tvIndex = timeline.findIndex(item => item.format === 'TV');
 
@@ -672,6 +622,62 @@ class Kitsu extends BaseClass {
     } catch (error) {
       return {
         error: error instanceof Error ? error.message : 'Unknown Error',
+        data: [],
+        status: 500,
+      };
+    }
+  }
+  /**
+   * Retrieves the episode list for an anime from kitsu.(unreliable missing lists)
+   * @param id - Numeric Kitsu anime ID.
+   * @returns A response containing an array of episode objects.
+   */
+  private async fetchKitsuEpisodes(id: number): Promise<IResponse<IMetaAnimeEpisode[] | []>> {
+    try {
+      const response = await this.client.fetch(`${this.baseUrl}/anime/${id}/episodes`, {
+        method: 'GET',
+      });
+
+      if (!response.ok) {
+        return {
+          error: response.statusText,
+          data: [],
+          status: response.status,
+        };
+      }
+
+      const result = await response.json();
+
+      const data: IMetaAnimeEpisode[] = (result.data ?? []).map((item: any) => {
+        const a = item.attributes ?? {};
+
+        return {
+          airDate: a.airdate ?? null,
+
+          title: a.titles?.en ?? a.canonicalTitle ?? a.titles?.en_jp ?? a.titles?.ja_jp ?? null,
+
+          thumbnail:
+            a.thumbnail?.original ??
+            a.thumbnail?.large ??
+            a.thumbnail?.medium ??
+            a.thumbnail?.small ??
+            a.thumbnail?.tiny ??
+            null,
+
+          isFiller: null,
+
+          episodeNumber: a.number ?? null,
+
+          summary: a.synopsis ?? a.description ?? null,
+        };
+      });
+
+      return {
+        data,
+      };
+    } catch (error) {
+      return {
+        error: error instanceof Error ? error.message : 'Unknown Err',
         data: [],
         status: 500,
       };
@@ -752,6 +758,74 @@ class Kitsu extends BaseClass {
       return aDate.localeCompare(bDate);
     });
   }
-}
 
+  private async fetchAnizipEpisodes(id: number): Promise<IResponse<IMetaAnimeEpisode[] | []>> {
+    if (!id) return { error: `Missing required param: id`, data: [] };
+    try {
+      const response = await this.client.fetch(`https://api.ani.zip/mappings?kitsu_id=${id}`, { method: 'GET' });
+      if (!response.ok) {
+        return {
+          data: [],
+          error: response.statusText,
+          status: response.status,
+        };
+      }
+      const result = await response.json();
+
+      if (result.mappings?.type?.toLowerCase() === 'movie') {
+        return { data: [] };
+      }
+
+      const results = this.formatAnizipData(result);
+      return {
+        data: results.episodes,
+      };
+    } catch (error) {
+      return {
+        error: error instanceof Error ? error.message : 'Unknown error occurred',
+        data: [],
+        status: 500,
+      };
+    }
+  }
+
+  private formatAnizipData(data: any): { episodes: IMetaAnimeEpisode[] } {
+    if (!data || !data.episodes) {
+      return { episodes: [] };
+    }
+
+    if (data.type?.toLowerCase() === 'movie' || data.mappings?.type?.toLowerCase() === 'movie') {
+      return { episodes: [] };
+    }
+
+    const episodeKeys = Object.keys(data.episodes);
+    const todayStr = new Date().toISOString().slice(0, 10);
+
+    const transformedEpisodes: IMetaAnimeEpisode[] = episodeKeys
+      .filter(key => /^\d+$/.test(key))
+      .map(key => {
+        const episode = data.episodes[key];
+        const rawAirDate = episode.airDate || episode.airdate;
+        const englishTitle = episode.title?.en || episode.title?.['x-jat'] || null;
+        const japaneseTitle = episode.title?.ja || null;
+        const episodeNumber = Number(episode.episode || episode.episodeNumber) || null;
+
+        return {
+          airDate: rawAirDate || null,
+          title: englishTitle || japaneseTitle || null,
+          // thumbnail: episode.image || null,
+          thumbnail : null ,// I prefer tmdb images
+          isFiller: episode.filler ?? null,
+          episodeNumber: episodeNumber,
+          summary: episode.overview || episode.summary || null,
+          aired: rawAirDate ? rawAirDate.slice(0, 10) <= todayStr : false,
+        };
+      })
+      .filter(episode => episode.aired);
+
+    return {
+      episodes: transformedEpisodes,
+    };
+  }
+}
 export { Kitsu };

@@ -1,1 +1,0 @@
-// https://github.com/infanf/livechart.me-rest-api check this repository

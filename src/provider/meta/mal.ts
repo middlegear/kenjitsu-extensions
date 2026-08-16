@@ -249,15 +249,15 @@ class MyAnimeList extends BaseClass {
       },
       trailer: $('div.video-promotion > a ').attr('href') || null,
       format: getSidebar('Type:') || null,
-      episodes: parseInt(getSidebar('Episodes:') || '0', 10) || 0,
+      episodes: parseInt(getSidebar('Episodes:') || '0', 10) || null,
       status: getSidebar('Status:'),
       synonyms:
         getSidebar('Synonyms:')
           ?.split(',')
           .map(s => s.trim()) || [],
       year: parseInt(getSidebar('Premiered:')?.split(' ')[1] || '', 10) || null,
-      duration: parseInt(getSidebar('Duration:') || '0', 10) || 0,
-      score: parseFloat($('.score-label').text().trim()) || 0,
+      duration: parseInt(getSidebar('Duration:') || '0', 10) || null,
+      score: parseFloat($('.score-label').text().trim()) || null,
       genres: getSidebarArray('Genres:'),
       synopsis: $('[itemprop="description"]').text().trim() || null,
       season: getSidebar('Premiered:')?.split(' ')[0] || null,
