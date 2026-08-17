@@ -310,13 +310,13 @@ class Kitsu extends BaseClass {
   async fetchEpisodes(id: number): Promise<IResponse<IMetaAnimeEpisode[] | []>> {
     if (!id) return { error: `Missing required param: id`, data: [] };
 
-    const anizipResult = await this.fetchAnizipEpisodes(id);
+    // const anizipResult = await this.fetchAnizipEpisodes(id);
+    //
+    // if (anizipResult.data && anizipResult.data.length > 0) {
+    //   return anizipResult;
+    // }
 
-    if (anizipResult.data && anizipResult.data.length > 0) {
-      return anizipResult;
-    }
-
-    return await this.fetchKitsuEpisodes(id);
+    return await this.fetchTVDbEpisodes(id);
   }
   /**
    * Resolves an AniList anime ID to its corresponding Kitsu entry.
@@ -758,6 +758,45 @@ class Kitsu extends BaseClass {
       return aDate.localeCompare(bDate);
     });
   }
+  private async fetchTVDbEpisodes(id: number): Promise<IResponse<IMetaAnimeEpisode[] | []>> {
+    if (!id) return { error: `Missing required param: id`, data: [] };
+
+    try {
+      const kitsuResponse = await this.client.fetch(`https://api.ani.zip/mappings?kitsu_id=${id}`, { method: 'GET' });
+
+      if (!kitsuResponse.ok) {
+        return {
+          data: [],
+          error: kitsuResponse.statusText,
+          status: kitsuResponse.status,
+        };
+      }
+      const result = await kitsuResponse.json();
+      const anilistId = result.mappings.anilist_id;
+
+      const tvdbData = await this.client.fetch(
+        `https://api.kenjitsu.workers.dev/api/meta/anilist/${anilistId}?platform=tvdb`,
+        { method: 'GET' },
+      );
+      const tvdbResult  = await tvdbData.json()
+      const episodes  = tvdbResult.data.episodes.map((item:any)=>({
+        airDate: item.airDate,
+        title: item.title,
+        thumbnail: item.image,
+        isFiller: null ,/// idk check mal
+        episodeNumber: item.episodeNumber,
+        summary: item.summary
+      }))
+      return { data: episodes };
+    } catch (error) {
+      return {
+        error: error instanceof Error ? error.message : 'Unknown error occurred',
+        data: [],
+        status: 500,
+      };
+    }
+  }
+
 
   private async fetchAnizipEpisodes(id: number): Promise<IResponse<IMetaAnimeEpisode[] | []>> {
     if (!id) return { error: `Missing required param: id`, data: [] };
