@@ -12,6 +12,7 @@ import { Kitsu } from './provider/meta/kitsu.js';
 import { Cinemeta } from './provider/meta/cinemeta.js';
 import { MyAnimeList } from './provider/meta/mal.js';
 import { Nyaa } from './provider/torrents/nyaa.js';
+import type { INyaaTorrent, ITorrentDetails } from './types/torrents.js';
 
 export {
   Anilist,
@@ -23,11 +24,14 @@ export {
   AniDB,
   AniBD,
   AnimeHeaven,
+  Nyaa,
   Kitsu,
+  type INyaaTorrent,
+  type ITorrentDetails,
   type Browser,
   type IMetaFormat,
   type Seasons,
   type IAnimeCategory,
 };
-// const data = await new Nyaa().fetchInfoHashDetails('733970bd6cd2fd13a4cbbccf0f01e56780710007');
+// const data = await new Nyaa().search('Tsue to Tsurugi no Wistoria ');
 // console.log(JSON.stringify(data));

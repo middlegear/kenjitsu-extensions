@@ -49,6 +49,7 @@
     "vitest": "^3.2.7"
   },
   "dependencies": {
+    "anitomy-ng": "^1.0.9",
     "cheerio": "^1.2.0",
     "fastest-levenshtein": "^1.0.16",
     "impit": "^0.14.3",

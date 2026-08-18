@@ -1,4 +1,5 @@
 import * as cheerio from 'cheerio';
+import { parse as parseAnitomy } from 'anitomy-ng';
 import parseTorrent from 'parse-torrent';
 import torrentStream from 'torrent-stream';
 
@@ -60,6 +61,7 @@ class Nyaa extends BaseClass {
 
       if (response.ok) {
         const text = await response.text();
+
         const bestTrackers = text
           .split('\n')
           .map(t => t.trim())
@@ -79,9 +81,11 @@ class Nyaa extends BaseClass {
 
   private buildMagnetLink(infoHash: string, title?: string, trackers: string[] = []): string {
     const trackerList = trackers.length > 0 ? trackers : Nyaa.ANIME_TRACKERS;
+
     const trackerParams = trackerList.map(tr => `tr=${encodeURIComponent(tr)}`).join('&');
 
     const nameParam = title ? `&dn=${encodeURIComponent(title)}` : '';
+
     return `magnet:?xt=urn:btih:${infoHash}${nameParam}&${trackerParams}`;
   }
 
@@ -116,6 +120,113 @@ class Nyaa extends BaseClass {
     return url.toString();
   }
 
+  private parseTorrentName(name: string) {
+    const elements = parseAnitomy(name);
+
+    const parsed = {
+      title: undefined as string | undefined,
+      episodes: [] as string[],
+      episodeTitle: undefined as string | undefined,
+      seasons: [] as string[],
+      year: undefined as string | undefined,
+      releaseGroup: undefined as string | undefined,
+      releaseVersion: undefined as string | undefined,
+      source: undefined as string | undefined,
+      resolution: undefined as string | undefined,
+      videoTerms: [] as string[],
+      audioTerms: [] as string[],
+      subtitles: undefined as string | undefined,
+      language: undefined as string | undefined,
+      type: undefined as string | undefined,
+      part: undefined as string | undefined,
+      volume: undefined as string | undefined,
+      checksum: undefined as string | undefined,
+      extension: undefined as string | undefined,
+
+      // Torrent-level signals.
+      batch: /\[\s*batch\s*\]|\(\s*batch\s*\)/i.test(name),
+      complete: /\[\s*complete(?:\s+season)?\s*\]|\(\s*complete(?:\s+season)?\s*\)/i.test(name),
+    };
+
+    for (const element of elements) {
+      switch (element.kind) {
+        case 'title':
+          parsed.title ??= element.value;
+          break;
+
+        case 'episode':
+          parsed.episodes.push(element.value);
+          break;
+
+        case 'episode_title':
+          parsed.episodeTitle ??= element.value;
+          break;
+
+        case 'season':
+          parsed.seasons.push(element.value);
+          break;
+
+        case 'year':
+          parsed.year ??= element.value;
+          break;
+
+        case 'release_group':
+          parsed.releaseGroup ??= element.value;
+          break;
+
+        case 'release_version':
+          parsed.releaseVersion ??= element.value;
+          break;
+
+        case 'source':
+          parsed.source ??= element.value;
+          break;
+
+        case 'video_resolution':
+          parsed.resolution ??= element.value;
+          break;
+
+        case 'video_term':
+          parsed.videoTerms.push(element.value);
+          break;
+
+        case 'audio_term':
+          parsed.audioTerms.push(element.value);
+          break;
+
+        case 'subtitles':
+          parsed.subtitles ??= element.value;
+          break;
+
+        case 'language':
+          parsed.language ??= element.value;
+          break;
+
+        case 'type':
+          parsed.type ??= element.value;
+          break;
+
+        case 'part':
+          parsed.part ??= element.value;
+          break;
+
+        case 'volume':
+          parsed.volume ??= element.value;
+          break;
+
+        case 'file_checksum':
+          parsed.checksum ??= element.value;
+          break;
+
+        case 'file_extension':
+          parsed.extension ??= element.value;
+          break;
+      }
+    }
+
+    return parsed;
+  }
+
   private parseHtml(htmlString: string): INyaaTorrent[] {
     const $ = cheerio.load(htmlString);
     const items: INyaaTorrent[] = [];
@@ -127,23 +238,31 @@ class Nyaa extends BaseClass {
       if ($tds.length < 8) return;
 
       const $titleCell = $tds.eq(1);
+
       const $titleLink = $titleCell
         .find('a')
         .filter((_, el) => {
           const href = $(el).attr('href') || '';
+
           return href.startsWith('/view/') && !$(el).hasClass('comments');
         })
         .first();
 
       const title = $titleLink.attr('title')?.trim() || $titleLink.text().trim();
+
       const relativeLink = $titleLink.attr('href') || '';
+
       const link = relativeLink ? (relativeLink.startsWith('http') ? relativeLink : `${this.baseUrl}${relativeLink}`) : '';
 
       const $downloadCell = $tds.eq(2);
+
       const magnetLink = $downloadCell.find('a[href^="magnet:"]').attr('href') || '';
+
       let infoHash = '';
+
       if (magnetLink) {
         const match = magnetLink.match(/urn:btih:([a-fA-F0-9]{40}|[a-zA-Z2-7]{32})/i);
+
         if (match) {
           infoHash = match[1].toLowerCase();
         }
@@ -170,6 +289,7 @@ class Nyaa extends BaseClass {
           size,
           isTrusted,
           isRemake,
+          parsed: this.parseTorrentName(title),
         });
       }
     });
@@ -183,10 +303,13 @@ class Nyaa extends BaseClass {
 
     $('item').each((_, element) => {
       const $el = $(element);
+
       const getXmlText = (tag: string): string => $el.find(tag).text().trim();
 
+      const title = getXmlText('title');
+
       items.push({
-        title: getXmlText('title'),
+        title,
         link: getXmlText('link'),
         pubDate: getXmlText('pubDate'),
         seeders: parseInt(getXmlText('nyaa\\:seeders'), 10) || 0,
@@ -196,6 +319,7 @@ class Nyaa extends BaseClass {
         size: getXmlText('nyaa\\:size'),
         isTrusted: getXmlText('nyaa\\:trusted') === 'Yes',
         isRemake: getXmlText('nyaa\\:remake') === 'Yes',
+        parsed: this.parseTorrentName(title),
       });
     });
 
@@ -205,7 +329,7 @@ class Nyaa extends BaseClass {
   async search(
     query: string,
     page: number = 1,
-    filter: 0 | 1 | 2 = 1,
+    filter: 0 | 1 | 2 = 0,
     sort: 'seeders' | 'leechers' | 'downloads' | 'size' | 'id' = 'seeders',
     order: 'asc' | 'desc' = 'desc',
   ): Promise<IBasePaginated<INyaaTorrent[] | []>> {
@@ -271,7 +395,6 @@ class Nyaa extends BaseClass {
 
       const response = await this.client.fetch(url, {
         method: 'GET',
-
       });
 
       if (!response.ok) {
@@ -280,7 +403,6 @@ class Nyaa extends BaseClass {
           currentPage: 0,
           data: [],
           error: response.statusText,
-          status: response.status,
         };
       }
 
@@ -309,7 +431,9 @@ class Nyaa extends BaseClass {
 
   private static deriveGroupKey(path: string): string {
     const parts = Nyaa.splitPathSegments(path);
+
     if (parts.length <= 2) return 'root';
+
     return parts[1];
   }
 
@@ -317,17 +441,28 @@ class Nyaa extends BaseClass {
     return Nyaa.splitPathSegments(path).some(segment => EXTRAS_SEGMENT.test(segment));
   }
 
-  private static processAndSortFiles<T extends { path?: string; name: string; length: number }>(
+  private static processAndSortFiles<
+    T extends {
+      path?: string;
+      name: string;
+      length: number;
+    },
+  >(
     rawFiles: readonly T[],
-  ): { sortedFiles: ITorrentFileDetails[]; groups: ITorrentFileGroup[] } {
+  ): {
+    sortedFiles: ITorrentFileDetails[];
+    groups: ITorrentFileGroup[];
+  } {
     const sortedRaw = [...rawFiles].sort((a, b) => {
       const pathA = a.path || a.name;
       const pathB = b.path || b.name;
+
       return pathA < pathB ? -1 : pathA > pathB ? 1 : 0;
     });
 
     const sortedFiles: ITorrentFileDetails[] = sortedRaw.map((file, index) => {
       const path = file.path || file.name;
+
       return {
         fileIdx: index + 1,
         name: file.name,
@@ -338,24 +473,37 @@ class Nyaa extends BaseClass {
     });
 
     const groupOrder: string[] = [];
-    const groupMap = new Map<string, { count: number; bytes: number }>();
+
+    const groupMap = new Map<
+      string,
+      {
+        count: number;
+        bytes: number;
+      }
+    >();
 
     sortedRaw.forEach(file => {
       const path = file.path || file.name;
       const key = Nyaa.deriveGroupKey(path);
 
       const entry = groupMap.get(key);
+
       if (entry) {
         entry.count += 1;
         entry.bytes += file.length;
       } else {
-        groupMap.set(key, { count: 1, bytes: file.length });
+        groupMap.set(key, {
+          count: 1,
+          bytes: file.length,
+        });
+
         groupOrder.push(key);
       }
     });
 
     const groups: ITorrentFileGroup[] = groupOrder.map(name => {
       const entry = groupMap.get(name)!;
+
       return {
         name,
         fileCount: entry.count,
@@ -363,7 +511,10 @@ class Nyaa extends BaseClass {
       };
     });
 
-    return { sortedFiles, groups };
+    return {
+      sortedFiles,
+      groups,
+    };
   }
 
   async fetchInfoHashDetails(infoHash: string, timeoutMs: number = 5000): Promise<ITorrentDetails> {
@@ -371,9 +522,9 @@ class Nyaa extends BaseClass {
 
     try {
       const torrentUrl = `${this.baseUrl}/download/${infoHash}.torrent`;
+
       const response = await this.client.fetch(torrentUrl, {
-        headers: { 'User-Agent': 'Mozilla/5.0' },
-        signal: AbortSignal.timeout(2500),
+        signal: AbortSignal.timeout(2000),
       });
 
       if (response.ok) {
@@ -384,9 +535,11 @@ class Nyaa extends BaseClass {
         if (parsed.files && parsed.files.length > 0) {
           const filesize = Nyaa.formatBytes(parsed.length || 0);
           const fileCount = parsed.files.length;
+
           const { sortedFiles, groups } = Nyaa.processAndSortFiles(parsed.files);
 
           const trackers = Nyaa.trackersCache.length > 0 ? Nyaa.trackersCache : Nyaa.ANIME_TRACKERS;
+
           const sources = [...trackers.map(tr => `tracker:${tr}`), `dht:${infoHash}`];
 
           return {
@@ -405,6 +558,7 @@ class Nyaa extends BaseClass {
     }
 
     const trackers = Nyaa.trackersCache.length > 0 ? Nyaa.trackersCache : Nyaa.ANIME_TRACKERS;
+
     const magnetURI = this.buildMagnetLink(infoHash, undefined, trackers);
 
     return new Promise((resolve, reject) => {
@@ -415,10 +569,13 @@ class Nyaa extends BaseClass {
         dht: true,
         tracker: true,
         connections: 50,
-      }) as unknown as TorrentStreamEngine & { removeAllListeners?: () => void };
+      }) as unknown as TorrentStreamEngine & {
+        removeAllListeners?: () => void;
+      };
 
       const cleanupAndExit = (error?: Error, details?: ITorrentDetails) => {
         if (isDone) return;
+
         isDone = true;
         clearTimeout(timer);
 
@@ -449,10 +606,14 @@ class Nyaa extends BaseClass {
         if (isDone) return;
 
         const { torrent, files: engineFiles } = engine;
-        if (!torrent || !engineFiles || engineFiles.length === 0) return;
+
+        if (!torrent || !engineFiles || engineFiles.length === 0) {
+          return;
+        }
 
         const filesize = Nyaa.formatBytes(torrent.length);
         const fileCount = engineFiles.length;
+
         const { sortedFiles, groups } = Nyaa.processAndSortFiles(engineFiles);
 
         const sources = [...trackers.map(tr => `tracker:${tr}`), `dht:${torrent.infoHash}`];
