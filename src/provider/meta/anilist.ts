@@ -3,9 +3,11 @@ import type {
   AiringSchedule,
   IAnilistCharacters,
   IMetaAnime,
+  IMetaAnimeEpisode,
   IMetaAnimePaginated,
   IMetaFormat,
-  IMetaProviderIdResponse, IProviderId,
+  IMetaProviderIdResponse,
+  IProviderId,
   IRelatedAnimeData,
   MediaSchedule,
   Seasons,
@@ -104,16 +106,15 @@ export class Anilist extends BaseClass {
         };
       }
       const kitsuResult = kitsu.value.data;
-      const malId = anilistData ? anilistData.malId : null;
-      const providerResult:IProviderId  = {
-        id: `${kitsuResult.id}-$-${null}`, // for use with torrentio  and mal since kitsu episodes is incomplete
-        name:kitsuResult.name,
+
+      const providerResult: IProviderId = {
+        id: kitsuResult.id,
+        name: kitsuResult.name,
         romaji: kitsuResult.romaji,
         score: 1,
-        source: 'kitsu',
-        provider:'kitsu'
-
-      }
+        source: 'N/A',
+        provider: 'kitsu',
+      };
       return {
         data: anilistData,
         provider: providerResult,
@@ -1992,6 +1993,49 @@ export class Anilist extends BaseClass {
         perPage: 0,
         data: [],
         error: error instanceof Error ? error.message : 'Unknown err',
+        status: 500,
+      };
+    }
+  }
+  /**
+   * Fetches episode details for a given media ID from the TVDb metadata service
+   * and maps them into standardized `IMetaAnimeEpisode` objects.
+   *
+   * Uses `absoluteEpisodeNumber` from TVDb as the primary `episodeNumber`.
+   *
+   * @param id - The unique media identifier (e.g., AniList ID).
+   * @returns A promise containing an array of mapped `IMetaAnimeEpisode` objects, or an empty array if an error occurs.
+   */
+  async fetchEpisodes(id: number): Promise<IResponse<IMetaAnimeEpisode[] | []>> {
+    if (!id) return { error: `Missing required param: id`, data: [], status: 400 };
+
+    try {
+      const response = await this.client.fetch(`https://api.kenjitsu.workers.dev/api/meta/anilist/${id}?platform=tvdb`, {
+        method: 'GET',
+      });
+      if (!response.ok) {
+        return {
+          data: [],
+          error: response.statusText,
+          status: response.status,
+        };
+      }
+      const tvdbResult = await response.json();
+      const episodes = tvdbResult.data.episodes.map((item: any) => ({
+        airDate: item.airDate,
+        title: item.title,
+        thumbnail: item.image,
+        isFiller: null, /// idk check mal
+        episodeNumber: item.absoluteEpisodeNumber,
+        summary: item.summary,
+      }));
+
+      return { data: episodes };
+    } catch (error) {
+      return {
+        error: error instanceof Error ? error.message : 'Unknown error occurred',
+        data: [],
+        status: 500,
       };
     }
   }

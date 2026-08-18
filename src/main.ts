@@ -11,6 +11,7 @@ import { AniBD } from './provider/anime/anibd.js';
 import { Kitsu } from './provider/meta/kitsu.js';
 import { Cinemeta } from './provider/meta/cinemeta.js';
 import { MyAnimeList } from './provider/meta/mal.js';
+import { Nyaa } from './provider/torrents/nyaa.js';
 
 export {
   Anilist,
@@ -28,3 +29,5 @@ export {
   type Seasons,
   type IAnimeCategory,
 };
+// const data = await new Nyaa().fetchInfoHashDetails('733970bd6cd2fd13a4cbbccf0f01e56780710007');
+// console.log(JSON.stringify(data));

@@ -1,7 +1,6 @@
 export interface IBase {
   id: string | number | null;
   name: string | null;
-  posterImage?: string | null;
   [x: string]: any;
 }
 
@@ -13,6 +12,7 @@ export interface IBaseEpisodes {
 }
 
 export interface IBaseMediaInfo extends IBase {
+  posterImage?:string|null
   type: string | null;
   releaseDate: string | number | null;
   synopsis: string | null;
