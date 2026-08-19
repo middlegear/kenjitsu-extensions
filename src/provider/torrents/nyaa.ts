@@ -379,7 +379,11 @@ class Nyaa extends BaseClass {
     }
   }
 
-  async searchRss(query: string, page: number = 1, filter: 0 | 1 | 2 = 0): Promise<IBasePaginated<INyaaTorrent[] | []>> {
+  async searchRss(
+    query: string,
+    page: number = 1,
+    filter: 0 | 1 | 2 = 0,
+  ): Promise<IBasePaginated<INyaaTorrent[] | []>> {
     if (!query) {
       return {
         hasNextPage: false,
@@ -407,7 +411,10 @@ class Nyaa extends BaseClass {
       }
 
       const xmlText = await response.text();
-      const data = this.parseRssXml(xmlText);
+
+      const data = this.parseRssXml(xmlText).sort(
+        (a, b) => b.seeders - a.seeders,
+      );
 
       return {
         hasNextPage: data.length >= 75,
@@ -424,7 +431,6 @@ class Nyaa extends BaseClass {
       };
     }
   }
-
   private static splitPathSegments(path: string): string[] {
     return path.split(/[/\\]+/).filter(Boolean);
   }
