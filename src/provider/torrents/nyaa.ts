@@ -5,7 +5,7 @@ import torrentStream from 'torrent-stream';
 
 import type { ClientOptions } from '../../config/client.js';
 import { BaseClass } from '../../models/base.js';
-import type { IBasePaginated } from '../../types/base.js';
+import type { IBasePaginated, IResponse } from '../../types/base.js';
 import type {
   INyaaTorrent,
   ITorrentDetails,
@@ -517,7 +517,7 @@ class Nyaa extends BaseClass {
     };
   }
 
-  async fetchInfoHashDetails(infoHash: string, timeoutMs: number = 5000): Promise<ITorrentDetails> {
+  async fetchInfoHashDetails(infoHash: string, timeoutMs: number = 5000): Promise<IResponse<ITorrentDetails | null>> {
     this.initTrackers().catch(() => {});
 
     try {
@@ -542,7 +542,7 @@ class Nyaa extends BaseClass {
 
           const sources = [...trackers.map(tr => `tracker:${tr}`), `dht:${infoHash}`];
 
-          return {
+          const result: ITorrentDetails = {
             name: parsed.name || 'Unknown',
             infoHash: parsed.infoHash || infoHash,
             sources,
@@ -551,6 +551,7 @@ class Nyaa extends BaseClass {
             groups,
             files: sortedFiles,
           };
+          return { data: result };
         }
       }
     } catch (error) {
@@ -561,7 +562,7 @@ class Nyaa extends BaseClass {
 
     const magnetURI = this.buildMagnetLink(infoHash, undefined, trackers);
 
-    return new Promise((resolve, reject) => {
+    return new Promise<IResponse<ITorrentDetails | null>>(resolve => {
       let isDone = false;
 
       const engine = torrentStream(magnetURI, {
@@ -592,9 +593,11 @@ class Nyaa extends BaseClass {
         } catch {}
 
         if (error) {
-          reject(error);
+          resolve({ data: null, error: error.message });
         } else if (details) {
-          resolve(details);
+          resolve({ data: details });
+        } else {
+          resolve({ data: null, error: 'Unknown error occurred' });
         }
       };
 
