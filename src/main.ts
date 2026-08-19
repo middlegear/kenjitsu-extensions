@@ -33,5 +33,5 @@ export {
   type Seasons,
   type IAnimeCategory,
 };
-// const data = await new Nyaa().search('Tsue to Tsurugi no Wistoria ');
+// const data = await new Nyaa().fetchInfoHashDetails('4afdbe4341bab0dbdabeb2aff679e4d5dc74ead0');
 // console.log(JSON.stringify(data));

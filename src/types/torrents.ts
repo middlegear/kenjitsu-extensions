@@ -88,6 +88,7 @@ export interface ITorrentFileDetails {
   name: string;
   path: string;
   filesize: string;
+  parsed: INyaaTorrentParsed;
   isExtra: boolean;
 }
 export interface ITorrentFileGroup {
@@ -102,6 +103,7 @@ export interface ITorrentDetails {
   sources: string[];
   filesize: string;
   title: string;
+  parsed: INyaaTorrentParsed;
   groups: ITorrentFileGroup[];
   files: ITorrentFileDetails[];
 }

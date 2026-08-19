@@ -18,6 +18,7 @@ const EXTRAS_SEGMENT = /^extras$/i;
 
 class Nyaa extends BaseClass {
   private readonly baseUrl: string;
+
   private static trackersCache: string[] = [];
   private static isTrackersInitialized = false;
 
@@ -76,6 +77,7 @@ class Nyaa extends BaseClass {
     }
 
     Nyaa.isTrackersInitialized = true;
+
     return Nyaa.trackersCache;
   }
 
@@ -120,7 +122,7 @@ class Nyaa extends BaseClass {
     return url.toString();
   }
 
-  private parseTorrentName(name: string) {
+  private static parseTorrentName(name: string) {
     const elements = parseAnitomy(name);
 
     const parsed = {
@@ -143,8 +145,8 @@ class Nyaa extends BaseClass {
       checksum: undefined as string | undefined,
       extension: undefined as string | undefined,
 
-      // Torrent-level signals.
       batch: /\[\s*batch\s*\]|\(\s*batch\s*\)/i.test(name),
+
       complete: /\[\s*complete(?:\s+season)?\s*\]|\(\s*complete(?:\s+season)?\s*\)/i.test(name),
     };
 
@@ -270,8 +272,11 @@ class Nyaa extends BaseClass {
 
       const size = $tds.eq(3).text().trim();
       const pubDate = $tds.eq(4).text().trim();
+
       const seeders = parseInt($tds.eq(5).text().trim(), 10) || 0;
+
       const leechers = parseInt($tds.eq(6).text().trim(), 10) || 0;
+
       const downloads = parseInt($tds.eq(7).text().trim(), 10) || 0;
 
       const isTrusted = $row.hasClass('success');
@@ -289,7 +294,7 @@ class Nyaa extends BaseClass {
           size,
           isTrusted,
           isRemake,
-          parsed: this.parseTorrentName(title),
+          parsed: Nyaa.parseTorrentName(title),
         });
       }
     });
@@ -298,7 +303,10 @@ class Nyaa extends BaseClass {
   }
 
   private parseRssXml(xmlString: string): INyaaTorrent[] {
-    const $ = cheerio.load(xmlString, { xmlMode: true });
+    const $ = cheerio.load(xmlString, {
+      xmlMode: true,
+    });
+
     const items: INyaaTorrent[] = [];
 
     $('item').each((_, element) => {
@@ -319,7 +327,7 @@ class Nyaa extends BaseClass {
         size: getXmlText('nyaa\\:size'),
         isTrusted: getXmlText('nyaa\\:trusted') === 'Yes',
         isRemake: getXmlText('nyaa\\:remake') === 'Yes',
-        parsed: this.parseTorrentName(title),
+        parsed: Nyaa.parseTorrentName(title),
       });
     });
 
@@ -379,11 +387,7 @@ class Nyaa extends BaseClass {
     }
   }
 
-  async searchRss(
-    query: string,
-    page: number = 1,
-    filter: 0 | 1 | 2 = 0,
-  ): Promise<IBasePaginated<INyaaTorrent[] | []>> {
+  async searchRss(query: string, page: number = 1, filter: 0 | 1 | 2 = 0): Promise<IBasePaginated<INyaaTorrent[] | []>> {
     if (!query) {
       return {
         hasNextPage: false,
@@ -412,9 +416,7 @@ class Nyaa extends BaseClass {
 
       const xmlText = await response.text();
 
-      const data = this.parseRssXml(xmlText).sort(
-        (a, b) => b.seeders - a.seeders,
-      );
+      const data = this.parseRssXml(xmlText).sort((a, b) => b.seeders - a.seeders);
 
       return {
         hasNextPage: data.length >= 75,
@@ -431,6 +433,7 @@ class Nyaa extends BaseClass {
       };
     }
   }
+
   private static splitPathSegments(path: string): string[] {
     return path.split(/[/\\]+/).filter(Boolean);
   }
@@ -475,6 +478,7 @@ class Nyaa extends BaseClass {
         path,
         filesize: Nyaa.formatBytes(file.length),
         isExtra: Nyaa.isExtraFile(path),
+        parsed: Nyaa.parseTorrentName(file.name),
       };
     });
 
@@ -539,6 +543,7 @@ class Nyaa extends BaseClass {
         const parsed = await parseTorrent(buffer);
 
         if (parsed.files && parsed.files.length > 0) {
+          const name = parsed.name || 'Unknown';
           const filesize = Nyaa.formatBytes(parsed.length || 0);
           const fileCount = parsed.files.length;
 
@@ -549,15 +554,19 @@ class Nyaa extends BaseClass {
           const sources = [...trackers.map(tr => `tracker:${tr}`), `dht:${infoHash}`];
 
           const result: ITorrentDetails = {
-            name: parsed.name || 'Unknown',
+            name,
             infoHash: parsed.infoHash || infoHash,
             sources,
             filesize,
-            title: `${parsed.name}\n${filesize} ${fileCount} file${fileCount !== 1 ? 's' : ''}`,
+            title: `${name}\n${filesize} ${fileCount} file${fileCount !== 1 ? 's' : ''}`,
             groups,
             files: sortedFiles,
+            parsed: Nyaa.parseTorrentName(name),
           };
-          return { data: result };
+
+          return {
+            data: result,
+          };
         }
       }
     } catch (error) {
@@ -599,11 +608,19 @@ class Nyaa extends BaseClass {
         } catch {}
 
         if (error) {
-          resolve({ data: null, error: error.message });
+          resolve({
+            data: null,
+            error: error.message,
+          });
         } else if (details) {
-          resolve({ data: details });
+          resolve({
+            data: details,
+          });
         } else {
-          resolve({ data: null, error: 'Unknown error occurred' });
+          resolve({
+            data: null,
+            error: 'Unknown error occurred',
+          });
         }
       };
 
@@ -620,6 +637,8 @@ class Nyaa extends BaseClass {
           return;
         }
 
+        const name = torrent.name || 'Unknown';
+
         const filesize = Nyaa.formatBytes(torrent.length);
         const fileCount = engineFiles.length;
 
@@ -628,19 +647,21 @@ class Nyaa extends BaseClass {
         const sources = [...trackers.map(tr => `tracker:${tr}`), `dht:${torrent.infoHash}`];
 
         const details: ITorrentDetails = {
-          name: torrent.name,
+          name,
           infoHash: torrent.infoHash,
           sources,
           filesize,
-          title: `${torrent.name}\n${filesize} ${fileCount} file${fileCount !== 1 ? 's' : ''}`,
+          title: `${name}\n${filesize} ${fileCount} file${fileCount !== 1 ? 's' : ''}`,
           groups,
           files: sortedFiles,
+          parsed: Nyaa.parseTorrentName(name),
         };
 
         cleanupAndExit(undefined, details);
       };
 
       engine.on('torrent', handleMetadata);
+
       engine.on('ready', handleMetadata);
 
       engine.on('error', (err: Error | string) => {
