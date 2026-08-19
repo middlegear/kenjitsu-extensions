@@ -517,7 +517,7 @@ class Nyaa extends BaseClass {
     };
   }
 
-  async fetchInfoHashDetails(infoHash: string, timeoutMs: number = 5000): Promise<IResponse<ITorrentDetails | null>> {
+  async fetchInfoHashDetails(infoHash: string, timeoutMs: number = 10000): Promise<IResponse<ITorrentDetails | null>> {
     this.initTrackers().catch(() => {});
 
     try {
