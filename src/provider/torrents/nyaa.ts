@@ -32,6 +32,23 @@ class Nyaa extends BaseClass {
     'udp://tracker.opentrackr.org:1337/announce',
   ];
 
+  private static readonly VIDEO_EXTENSIONS = [
+    '.mkv',
+    '.mp4',
+    '.avi',
+    '.mov',
+    '.wmv',
+    '.flv',
+    '.webm',
+    '.m4v',
+    '.mpg',
+    '.mpeg',
+    '.ts',
+    '.m2ts',
+    '.3gp',
+    '.ogv',
+  ];
+
   constructor(baseUrl: string = 'https://nyaa.si', options: ClientOptions = {}) {
     super(options);
     this.baseUrl = baseUrl;
@@ -45,6 +62,91 @@ class Nyaa extends BaseClass {
     const value = bytes / Math.pow(1024, i);
 
     return `${value.toFixed(2)} ${units[i]}`;
+  }
+
+  private static isVideoFile(fileName: string): boolean {
+    const ext = fileName.substring(fileName.lastIndexOf('.')).toLowerCase();
+    return Nyaa.VIDEO_EXTENSIONS.includes(ext);
+  }
+
+  private static extractRegexSeason(name: string, anitomySeason?: string): string | undefined {
+
+    const hasAnitomySeason = !!anitomySeason;
+
+    //  Check for part/cour/volume (always capture these)
+    const partPatterns = [
+      /(?:part|pt\.?)\s*(\d{1,2})/i,
+      /(?:cour)\s*(\d{1,2})/i,
+      /(?:volume|vol\.?)\s*(\d{1,2})/i,
+      /(?:arc)\s*(\d{1,2})/i,
+    ];
+
+    for (const pattern of partPatterns) {
+      const match = name.match(pattern);
+      if (match && match[1]) {
+
+        if (hasAnitomySeason) {
+          return match[1];
+        }
+
+        return match[1];
+      }
+    }
+
+
+    if (hasAnitomySeason) {
+      return undefined;
+    }
+
+
+    const seasonPatterns = [/season\s*(\d{1,2})/i, /s(\d{1,2})(?:\s|$)/i, /(\d{1,2})\s*season/i];
+
+    for (const pattern of seasonPatterns) {
+      const match = name.match(pattern);
+      if (match && match[1]) {
+        return match[1];
+      }
+    }
+
+
+    const romanMap: { [key: string]: string } = {
+      I: '1',
+      II: '2',
+      III: '3',
+      IV: '4',
+      V: '5',
+      VI: '6',
+      VII: '7',
+      VIII: '8',
+      IX: '9',
+      X: '10',
+    };
+
+    const romanMatch = name.match(/(?:season|part|cour|volume|arc)\s*(I{1,3}|IV|V|VI{0,3}|IX|X)\b/i);
+    if (romanMatch) {
+      const roman = romanMatch[1].toUpperCase();
+      return romanMap[roman] || roman;
+    }
+
+
+    const bracketMatch = name.match(/\[(\d{1,2})\]/);
+    if (bracketMatch) {
+      return bracketMatch[1];
+    }
+
+    return undefined;
+  }
+
+  private static cleanParsedData(data: any): any {
+    const clean: any = {};
+
+    for (const [key, value] of Object.entries(data)) {
+      if (value !== undefined && value !== null) {
+        clean[key] = value;
+      }
+    }
+
+    return clean;
   }
 
   private async initTrackers(): Promise<string[]> {
@@ -122,111 +224,79 @@ class Nyaa extends BaseClass {
     return url.toString();
   }
 
-  private static parseTorrentName(name: string) {
+  private static parseTorrentName(name: string): {
+    animeTitle?: string;
+    season?: string;
+    regexSeason?: string;
+    episode?: string;
+    year?: string;
+    releaseGroup?: string;
+    source?: string;
+    resolution?: string;
+    type?: string;
+    batch?: boolean;
+    complete?: boolean;
+  } {
     const elements = parseAnitomy(name);
 
-    const parsed = {
-      title: undefined as string | undefined,
-      episodes: [] as string[],
-      episodeTitle: undefined as string | undefined,
-      seasons: [] as string[],
-      year: undefined as string | undefined,
-      releaseGroup: undefined as string | undefined,
-      releaseVersion: undefined as string | undefined,
-      source: undefined as string | undefined,
-      resolution: undefined as string | undefined,
-      videoTerms: [] as string[],
-      audioTerms: [] as string[],
-      subtitles: undefined as string | undefined,
-      language: undefined as string | undefined,
-      type: undefined as string | undefined,
-      part: undefined as string | undefined,
-      volume: undefined as string | undefined,
-      checksum: undefined as string | undefined,
-      extension: undefined as string | undefined,
-
+    const result: {
+      animeTitle?: string;
+      season?: string;
+      regexSeason?: string;
+      episode?: string;
+      year?: string;
+      releaseGroup?: string;
+      source?: string;
+      resolution?: string;
+      type?: string;
+      batch?: boolean;
+      complete?: boolean;
+    } = {
       batch: /\[\s*batch\s*\]|\(\s*batch\s*\)/i.test(name),
-
       complete: /\[\s*complete(?:\s+season)?\s*\]|\(\s*complete(?:\s+season)?\s*\)/i.test(name),
     };
 
     for (const element of elements) {
       switch (element.kind) {
         case 'title':
-          parsed.title ??= element.value;
+          result.animeTitle ??= element.value;
           break;
 
         case 'episode':
-          parsed.episodes.push(element.value);
-          break;
-
-        case 'episode_title':
-          parsed.episodeTitle ??= element.value;
+          result.episode ??= element.value;
           break;
 
         case 'season':
-          parsed.seasons.push(element.value);
-          break;
-
-        case 'year':
-          parsed.year ??= element.value;
+          result.season ??= element.value;
           break;
 
         case 'release_group':
-          parsed.releaseGroup ??= element.value;
-          break;
-
-        case 'release_version':
-          parsed.releaseVersion ??= element.value;
+          result.releaseGroup ??= element.value;
           break;
 
         case 'source':
-          parsed.source ??= element.value;
+          result.source ??= element.value;
           break;
 
-        case 'video_resolution':
-          parsed.resolution ??= element.value;
-          break;
-
-        case 'video_term':
-          parsed.videoTerms.push(element.value);
-          break;
-
-        case 'audio_term':
-          parsed.audioTerms.push(element.value);
-          break;
-
-        case 'subtitles':
-          parsed.subtitles ??= element.value;
-          break;
-
-        case 'language':
-          parsed.language ??= element.value;
-          break;
 
         case 'type':
-          parsed.type ??= element.value;
+          result.type ??= element.value;
           break;
 
-        case 'part':
-          parsed.part ??= element.value;
-          break;
-
-        case 'volume':
-          parsed.volume ??= element.value;
-          break;
-
-        case 'file_checksum':
-          parsed.checksum ??= element.value;
-          break;
-
-        case 'file_extension':
-          parsed.extension ??= element.value;
+        case 'year':
+          result.year ??= element.value;
           break;
       }
     }
 
-    return parsed;
+
+    const regexSeason = Nyaa.extractRegexSeason(name, result.season);
+    if (regexSeason) {
+      result.regexSeason = regexSeason;
+    }
+
+
+    return Nyaa.cleanParsedData(result);
   }
 
   private parseHtml(htmlString: string): INyaaTorrent[] {
@@ -283,6 +353,7 @@ class Nyaa extends BaseClass {
       const isRemake = $row.hasClass('danger');
 
       if (title) {
+        const parsed = Nyaa.parseTorrentName(title);
         items.push({
           title,
           link,
@@ -294,7 +365,7 @@ class Nyaa extends BaseClass {
           size,
           isTrusted,
           isRemake,
-          parsed: Nyaa.parseTorrentName(title),
+          ...parsed,
         });
       }
     });
@@ -316,6 +387,7 @@ class Nyaa extends BaseClass {
 
       const title = getXmlText('title');
 
+      const parsed = Nyaa.parseTorrentName(title);
       items.push({
         title,
         link: getXmlText('link'),
@@ -327,7 +399,7 @@ class Nyaa extends BaseClass {
         size: getXmlText('nyaa\\:size'),
         isTrusted: getXmlText('nyaa\\:trusted') === 'Yes',
         isRemake: getXmlText('nyaa\\:remake') === 'Yes',
-        parsed: Nyaa.parseTorrentName(title),
+        ...parsed,
       });
     });
 
@@ -462,33 +534,40 @@ class Nyaa extends BaseClass {
     sortedFiles: ITorrentFileDetails[];
     groups: ITorrentFileGroup[];
   } {
-    const sortedRaw = [...rawFiles].sort((a, b) => {
+
+    const videoFiles = [...rawFiles].filter(file => {
+      const path = file.path || file.name;
+      
+      if (Nyaa.isExtraFile(path)) {
+        return false;
+      }
+      return Nyaa.isVideoFile(file.name);
+    });
+
+
+    const sortedRaw = videoFiles.sort((a, b) => {
       const pathA = a.path || a.name;
       const pathB = b.path || b.name;
 
       return pathA < pathB ? -1 : pathA > pathB ? 1 : 0;
     });
 
-    const sortedFiles: ITorrentFileDetails[] = sortedRaw.map((file, index) => {
-      const path = file.path || file.name;
 
+    if (sortedRaw.length === 0) {
       return {
-        fileIdx: index + 1,
-        name: file.name,
-        path,
-        filesize: Nyaa.formatBytes(file.length),
-        isExtra: Nyaa.isExtraFile(path),
-        parsed: Nyaa.parseTorrentName(file.name),
+        sortedFiles: [],
+        groups: [],
       };
-    });
+    }
+
 
     const groupOrder: string[] = [];
-
     const groupMap = new Map<
       string,
       {
         count: number;
         bytes: number;
+        files: T[];
       }
     >();
 
@@ -501,10 +580,12 @@ class Nyaa extends BaseClass {
       if (entry) {
         entry.count += 1;
         entry.bytes += file.length;
+        entry.files.push(file);
       } else {
         groupMap.set(key, {
           count: 1,
           bytes: file.length,
+          files: [file],
         });
 
         groupOrder.push(key);
@@ -519,6 +600,43 @@ class Nyaa extends BaseClass {
         fileCount: entry.count,
         filesize: Nyaa.formatBytes(entry.bytes),
       };
+    });
+
+
+    const sortedFiles: ITorrentFileDetails[] = [];
+
+
+    groupOrder.forEach(groupKey => {
+      const entry = groupMap.get(groupKey)!;
+
+
+      const sortedGroupFiles = entry.files.sort((a, b) => {
+        const pathA = a.path || a.name;
+        const pathB = b.path || b.name;
+        return pathA < pathB ? -1 : pathA > pathB ? 1 : 0;
+      });
+
+
+      sortedGroupFiles.forEach((file, index) => {
+        const path = file.path || file.name;
+        const parsed = Nyaa.parseTorrentName(file.name);
+
+
+        const groupName = groups.find(g => g.name === groupKey)?.name || groupKey;
+
+        sortedFiles.push({
+          fileName: file.name,
+          path,
+          filesize: Nyaa.formatBytes(file.length),
+          isExtra: false,
+          title: parsed.animeTitle,
+          season: parsed.season,
+          episode: parsed.episode,
+          regexSeason: parsed.regexSeason,
+          group: groupName,
+          fileIdx: index + 1,
+        });
+      });
     });
 
     return {
@@ -545,23 +663,17 @@ class Nyaa extends BaseClass {
         if (parsed.files && parsed.files.length > 0) {
           const name = parsed.name || 'Unknown';
           const filesize = Nyaa.formatBytes(parsed.length || 0);
-          const fileCount = parsed.files.length;
 
           const { sortedFiles, groups } = Nyaa.processAndSortFiles(parsed.files);
-
-          const trackers = Nyaa.trackersCache.length > 0 ? Nyaa.trackersCache : Nyaa.ANIME_TRACKERS;
-
-          const sources = [...trackers.map(tr => `tracker:${tr}`), `dht:${infoHash}`];
+          const parsedData = Nyaa.parseTorrentName(name);
 
           const result: ITorrentDetails = {
             name,
             infoHash: parsed.infoHash || infoHash,
-            sources,
             filesize,
-            title: `${name}\n${filesize} ${fileCount} file${fileCount !== 1 ? 's' : ''}`,
+            ...parsedData,
             groups,
             files: sortedFiles,
-            parsed: Nyaa.parseTorrentName(name),
           };
 
           return {
@@ -640,21 +752,17 @@ class Nyaa extends BaseClass {
         const name = torrent.name || 'Unknown';
 
         const filesize = Nyaa.formatBytes(torrent.length);
-        const fileCount = engineFiles.length;
 
         const { sortedFiles, groups } = Nyaa.processAndSortFiles(engineFiles);
-
-        const sources = [...trackers.map(tr => `tracker:${tr}`), `dht:${torrent.infoHash}`];
+        const parsedData = Nyaa.parseTorrentName(name);
 
         const details: ITorrentDetails = {
           name,
           infoHash: torrent.infoHash,
-          sources,
           filesize,
-          title: `${name}\n${filesize} ${fileCount} file${fileCount !== 1 ? 's' : ''}`,
+          ...parsedData,
           groups,
           files: sortedFiles,
-          parsed: Nyaa.parseTorrentName(name),
         };
 
         cleanupAndExit(undefined, details);

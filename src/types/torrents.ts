@@ -1,49 +1,3 @@
-
-export interface INyaaTorrentParsed {
-  title?: string;
-  episodes: string[];
-  episodeTitle?: string;
-  seasons: string[];
-  year?: string;
-
-  releaseGroup?: string;
-  releaseVersion?: string;
-
-  source?: string;
-  resolution?: string;
-
-  videoTerms: string[];
-  audioTerms: string[];
-
-  subtitles?: string;
-  language?: string;
-  type?: string;
-  part?: string;
-  volume?: string;
-
-  checksum?: string;
-  extension?: string;
-
-  /**
-   * The release is explicitly marked as a batch.
-   *
-   * Examples:
-   * [Batch]
-   * (Batch)
-   */
-  batch: boolean;
-
-  /**
-   * The release is explicitly marked as complete.
-   *
-   * Examples:
-   * [Complete]
-   * [Complete Season]
-   * (Complete)
-   */
-  complete: boolean;
-}
-
 export interface INyaaTorrent {
   title: string;
   link: string;
@@ -59,7 +13,17 @@ export interface INyaaTorrent {
   isTrusted: boolean;
   isRemake: boolean;
 
-  parsed: INyaaTorrentParsed;
+  animeTitle?: string;
+  season?: string;
+  regexSeason?: string;
+  episode?: string;
+  year?: string;
+  releaseGroup?: string;
+  source?: string;
+  resolution?: string;
+  type?: string;
+  batch?: boolean;
+  complete?: boolean;
 }
 
 export interface TorrentStreamFile {
@@ -85,25 +49,40 @@ export interface TorrentStreamEngine {
 
 export interface ITorrentFileDetails {
   fileIdx: number;
-  name: string;
+  fileName: string;
   path: string;
   filesize: string;
-  parsed: INyaaTorrentParsed;
   isExtra: boolean;
+  title: string | undefined;
+  season: string | undefined;
+  episode: string | undefined;
+  regexSeason?: string;
+  group: string;
 }
+
 export interface ITorrentFileGroup {
   name: string;
   fileCount: number;
   filesize: string;
-
 }
+
 export interface ITorrentDetails {
   name: string;
   infoHash: string;
-  sources: string[];
   filesize: string;
-  title: string;
-  parsed: INyaaTorrentParsed;
+
+  animeTitle?: string;
+  season?: string;
+  regexSeason?: string;
+  episode?: string;
+  year?: string;
+  releaseGroup?: string;
+  source?: string;
+  resolution?: string;
+  type?: string;
+  batch?: boolean;
+  complete?: boolean;
+
   groups: ITorrentFileGroup[];
   files: ITorrentFileDetails[];
 }
