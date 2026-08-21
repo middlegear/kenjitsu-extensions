@@ -1,4 +1,4 @@
-export interface INyaaTorrent {
+export interface INyaaTorrent extends IParsedTorrentName {
   title: string;
   link: string;
   pubDate: string;
@@ -12,19 +12,21 @@ export interface INyaaTorrent {
 
   isTrusted: boolean;
   isRemake: boolean;
-
-  animeTitle?: string;
-  season?: string;
-  regexSeason?: string;
-  episode?: string;
-  year?: string;
-  releaseGroup?: string;
-  source?: string;
-  resolution?: string;
-  type?: string;
-  batch?: boolean;
-  complete?: boolean;
 }
+export interface IParsedTorrentName {
+  animeTitle: string | null;
+  season: string | null;
+  regexSeason: string | null;
+  episode: string | null;
+  year: string | null;
+  releaseGroup: string | null;
+  source: string | null;
+  resolution: string | null;
+  type: string | null;
+  batch: boolean;
+  complete: boolean;
+}
+
 
 export interface TorrentStreamFile {
   name: string;
@@ -53,10 +55,12 @@ export interface ITorrentFileDetails {
   path: string;
   filesize: string;
   isExtra: boolean;
-  title: string | undefined;
-  season: string | undefined;
-  episode: string | undefined;
-  regexSeason?: string;
+
+  title: string | null;
+  season: string | null;
+  episode: string | null;
+  regexSeason: string | null;
+
   group: string;
 }
 
@@ -71,17 +75,17 @@ export interface ITorrentDetails {
   infoHash: string;
   filesize: string;
 
-  animeTitle?: string;
-  season?: string;
-  regexSeason?: string;
-  episode?: string;
-  year?: string;
-  releaseGroup?: string;
-  source?: string;
-  resolution?: string;
-  type?: string;
-  batch?: boolean;
-  complete?: boolean;
+  animeTitle: string | null;
+  season: string | null;
+  regexSeason: string | null;
+  episode: string | null;
+  year: string | null;
+  releaseGroup: string | null;
+  source: string | null;
+  resolution: string | null;
+  type: string | null;
+  batch: boolean;
+  complete: boolean;
 
   groups: ITorrentFileGroup[];
   files: ITorrentFileDetails[];

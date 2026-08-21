@@ -12,7 +12,7 @@ import { Kitsu } from './provider/meta/kitsu.js';
 import { Cinemeta } from './provider/meta/cinemeta.js';
 import { MyAnimeList } from './provider/meta/mal.js';
 import { Nyaa } from './provider/torrents/nyaa.js';
-import type { INyaaTorrent, ITorrentDetails } from './types/torrents.js';
+import type { INyaaTorrent, ITorrentDetails,ITorrentFileDetails,ITorrentFileGroup,IParsedTorrentName } from './types/torrents.js';
 
 export {
   Anilist,
@@ -28,6 +28,9 @@ export {
   Kitsu,
   type INyaaTorrent,
   type ITorrentDetails,
+  type ITorrentFileDetails,
+  type ITorrentFileGroup,
+  type IParsedTorrentName,
   type Browser,
   type IMetaFormat,
   type Seasons,

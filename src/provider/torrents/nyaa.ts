@@ -2,12 +2,12 @@ import * as cheerio from 'cheerio';
 import { parse as parseAnitomy } from 'anitomy-ng';
 import parseTorrent from 'parse-torrent';
 import torrentStream from 'torrent-stream';
-
 import type { ClientOptions } from '../../config/client.js';
 import { BaseClass } from '../../models/base.js';
 import type { IBasePaginated, IResponse } from '../../types/base.js';
 import type {
   INyaaTorrent,
+  IParsedTorrentName,
   ITorrentDetails,
   ITorrentFileDetails,
   ITorrentFileGroup,
@@ -69,11 +69,10 @@ class Nyaa extends BaseClass {
     return Nyaa.VIDEO_EXTENSIONS.includes(ext);
   }
 
-  private static extractRegexSeason(name: string, anitomySeason?: string): string | undefined {
+  private static extractRegexSeason(name: string, anitomySeason: string | null): string | null {
+    const hasAnitomySeason = anitomySeason !== null;
 
-    const hasAnitomySeason = !!anitomySeason;
-
-    //  Check for part/cour/volume (always capture these)
+    // Check for part/cour/volume (always capture these)
     const partPatterns = [
       /(?:part|pt\.?)\s*(\d{1,2})/i,
       /(?:cour)\s*(\d{1,2})/i,
@@ -84,20 +83,13 @@ class Nyaa extends BaseClass {
     for (const pattern of partPatterns) {
       const match = name.match(pattern);
       if (match && match[1]) {
-
-        if (hasAnitomySeason) {
-          return match[1];
-        }
-
         return match[1];
       }
     }
 
-
     if (hasAnitomySeason) {
-      return undefined;
+      return null;
     }
-
 
     const seasonPatterns = [/season\s*(\d{1,2})/i, /s(\d{1,2})(?:\s|$)/i, /(\d{1,2})\s*season/i];
 
@@ -107,7 +99,6 @@ class Nyaa extends BaseClass {
         return match[1];
       }
     }
-
 
     const romanMap: { [key: string]: string } = {
       I: '1',
@@ -128,25 +119,12 @@ class Nyaa extends BaseClass {
       return romanMap[roman] || roman;
     }
 
-
     const bracketMatch = name.match(/\[(\d{1,2})\]/);
     if (bracketMatch) {
       return bracketMatch[1];
     }
 
-    return undefined;
-  }
-
-  private static cleanParsedData(data: any): any {
-    const clean: any = {};
-
-    for (const [key, value] of Object.entries(data)) {
-      if (value !== undefined && value !== null) {
-        clean[key] = value;
-      }
-    }
-
-    return clean;
+    return null;
   }
 
   private async initTrackers(): Promise<string[]> {
@@ -224,34 +202,19 @@ class Nyaa extends BaseClass {
     return url.toString();
   }
 
-  private static parseTorrentName(name: string): {
-    animeTitle?: string;
-    season?: string;
-    regexSeason?: string;
-    episode?: string;
-    year?: string;
-    releaseGroup?: string;
-    source?: string;
-    resolution?: string;
-    type?: string;
-    batch?: boolean;
-    complete?: boolean;
-  } {
+  private static parseTorrentName(name: string): IParsedTorrentName {
     const elements = parseAnitomy(name);
 
-    const result: {
-      animeTitle?: string;
-      season?: string;
-      regexSeason?: string;
-      episode?: string;
-      year?: string;
-      releaseGroup?: string;
-      source?: string;
-      resolution?: string;
-      type?: string;
-      batch?: boolean;
-      complete?: boolean;
-    } = {
+    const result: IParsedTorrentName = {
+      animeTitle: null,
+      season: null,
+      regexSeason: null,
+      episode: null,
+      year: null,
+      releaseGroup: null,
+      source: null,
+      resolution: null,
+      type: null,
       batch: /\[\s*batch\s*\]|\(\s*batch\s*\)/i.test(name),
       complete: /\[\s*complete(?:\s+season)?\s*\]|\(\s*complete(?:\s+season)?\s*\)/i.test(name),
     };
@@ -278,7 +241,6 @@ class Nyaa extends BaseClass {
           result.source ??= element.value;
           break;
 
-
         case 'type':
           result.type ??= element.value;
           break;
@@ -289,14 +251,9 @@ class Nyaa extends BaseClass {
       }
     }
 
+    result.regexSeason = Nyaa.extractRegexSeason(name, result.season);
 
-    const regexSeason = Nyaa.extractRegexSeason(name, result.season);
-    if (regexSeason) {
-      result.regexSeason = regexSeason;
-    }
-
-
-    return Nyaa.cleanParsedData(result);
+    return result;
   }
 
   private parseHtml(htmlString: string): INyaaTorrent[] {
@@ -534,16 +491,14 @@ class Nyaa extends BaseClass {
     sortedFiles: ITorrentFileDetails[];
     groups: ITorrentFileGroup[];
   } {
-
     const videoFiles = [...rawFiles].filter(file => {
       const path = file.path || file.name;
-      
+
       if (Nyaa.isExtraFile(path)) {
         return false;
       }
       return Nyaa.isVideoFile(file.name);
     });
-
 
     const sortedRaw = videoFiles.sort((a, b) => {
       const pathA = a.path || a.name;
@@ -552,14 +507,12 @@ class Nyaa extends BaseClass {
       return pathA < pathB ? -1 : pathA > pathB ? 1 : 0;
     });
 
-
     if (sortedRaw.length === 0) {
       return {
         sortedFiles: [],
         groups: [],
       };
     }
-
 
     const groupOrder: string[] = [];
     const groupMap = new Map<
@@ -602,13 +555,10 @@ class Nyaa extends BaseClass {
       };
     });
 
-
     const sortedFiles: ITorrentFileDetails[] = [];
-
 
     groupOrder.forEach(groupKey => {
       const entry = groupMap.get(groupKey)!;
-
 
       const sortedGroupFiles = entry.files.sort((a, b) => {
         const pathA = a.path || a.name;
@@ -616,11 +566,9 @@ class Nyaa extends BaseClass {
         return pathA < pathB ? -1 : pathA > pathB ? 1 : 0;
       });
 
-
       sortedGroupFiles.forEach((file, index) => {
         const path = file.path || file.name;
         const parsed = Nyaa.parseTorrentName(file.name);
-
 
         const groupName = groups.find(g => g.name === groupKey)?.name || groupKey;
 
