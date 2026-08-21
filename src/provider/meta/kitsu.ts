@@ -830,8 +830,7 @@ class Kitsu extends BaseClass {
         return {
           airDate: rawAirDate || null,
           title: englishTitle || japaneseTitle || null,
-          // thumbnail: episode.image || null,
-          thumbnail: null, // I prefer tmdb images
+          thumbnail: episode.image || null,
           isFiller: episode.filler ?? null,
           episodeNumber: episodeNumber,
           summary: episode.overview || episode.summary || null,

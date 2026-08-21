@@ -2020,16 +2020,26 @@ export class Anilist extends BaseClass {
           status: response.status,
         };
       }
+      const kitsu = await new Kitsu().fetchMapping(id)
+      if(kitsu.error || !kitsu.data){
+        return{
+          data: [],
+          error: kitsu.error,
+          status: kitsu.status,
+        }
+      }
+      const kitsuId = kitsu.data?.id
       const tvdbResult = await response.json();
+
       const episodes = tvdbResult.data.episodes.map((item: any) => ({
+        kitsuId: kitsuId ? Number(kitsuId) : null,
         airDate: item.airDate,
         title: item.title,
         thumbnail: item.image,
-        isFiller: null, /// idk check mal
+        isFiller: null,
         episodeNumber: item.absoluteEpisodeNumber,
         summary: item.summary,
       }));
-
       return { data: episodes };
     } catch (error) {
       return {
