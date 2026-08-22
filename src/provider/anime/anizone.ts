@@ -169,73 +169,56 @@ export class Anizone extends AnimeParser {
    * @returns - An object containing an array of parsed anime data or an empty array.
    */
   private parseSearchResults($: cheerio.CheerioAPI) {
-    const selector: cheerio.SelectorType =
-      'div.grid.grid-cols-1.gap-4 > div.relative.overflow-hidden.h-26.rounded-lg.px-4.py-3.bg-slate-900.drop-shadow-lg';
+
+    const container = $('div[x-data*="items: JSON.parse("]').first();
+    const xData = container.attr('x-data') || '';
 
     const anime: IBase[] = [];
 
-    $(selector).each((_, element) => {
-      const xData = $(element).attr('x-data') || '';
-      const titles = (() => {
-        const jsonMatch = xData.match(/JSON\.parse\('(.*?)'\)/);
+    const jsonMatch = xData.match(/items:\s*JSON\.parse\('(.*?)'\)\s*,/s);
 
-        if (!jsonMatch) {
-          return {
-            name: null,
-            romaji: null,
-          };
-        }
+    if (!jsonMatch) {
+      return {
+        data: [],
+        error: 'No results found for that query',
+        status: 404,
+      };
+    }
 
-        try {
-          const json = jsonMatch[1]
-            .replace(/\\u0022/g, '"')
-            .replace(/\\"/g, '"')
-            .replace(/\\\\u/g, '\\u');
+    let items: any[] = [];
+    try {
+      const jsonStr = jsonMatch[1]
+        .replace(/\\u0022/g, '"')
+        .replace(/\\'/g, "'")
+        .replace(/\\\\u/g, '\\u');
 
-          const parsed = JSON.parse(json);
+      items = JSON.parse(jsonStr);
+    } catch {
+      return {
+        data: [],
+        error: 'No results found for that query',
+        status: 404,
+      };
+    }
 
-          return {
-            name: parsed['1'] || parsed['10'] || parsed['5'] || null,
-            romaji: parsed['5'] || null,
-          };
-        } catch {
-          return {
-            name: null,
-            romaji: null,
-          };
-        }
-      })();
+    items.forEach(item => {
+      const titleList = item.title_list || {};
+      const name = titleList['1'] || titleList['10'] || titleList['5'] || item.main_title || null;
+      const romaji = titleList['5'] || item.main_title || null;
 
-      const fallbackTitle = xData.match(/getTitle\(this\.anmTitles,\s*'([^']+)'/)?.[1] || null;
-      const name = titles.name || fallbackTitle || null;
-      const romaji = titles.romaji || fallbackTitle || null;
-
-      const id =
-        $(element).find('a[href*="/anime/"]').attr('href')?.split('/').at(-1) ||
-        $(element).attr('wire:key')?.split('-').at(-1) ||
-        null;
-
-      const posterImage = $(element).find('img').attr('src') || null;
-      const infoSpans = $(element)
-        .find('div.inline.text-xs.h-4.line-clamp-1 span')
-        .map((_, el) => $(el).text().trim())
-        .get();
-
-      const genres = $(element)
-        .find('div.flex.flex-wrap.gap-2.line-clamp-1.h-6 a')
-        .map((_, el) => $(el).text().trim())
-        .get()
-        .filter(g => g.toLowerCase() !== 'manga');
+      const genres = (item.tags || [])
+        .map((t: any) => t.name)
+        .filter((g: string) => g?.toLowerCase() !== 'manga');
 
       anime.push({
-        id: name ? `${this.createSlug(name)}-${id}` : id || null,
+        id: name ? `${this.createSlug(name)}-${item.slug}` : item.slug || null,
         name,
         romaji,
-        posterImage,
-        type: infoSpans[0] ? (infoSpans[0].toLowerCase().includes('tv') ? 'TV' : infoSpans[0]) : null,
-        releaseDate: infoSpans[1] || null,
-        totalEpisodes: infoSpans[2] ? parseInt(infoSpans[2].replace(/\D/g, ''), 10) : null,
-        status: infoSpans[3] || null,
+        posterImage: item.cover || null,
+        type: item.type ? (item.type.toLowerCase().includes('tv') ? 'TV' : item.type) : null,
+        releaseDate: item.start_year != null ? String(item.start_year) : null,
+        totalEpisodes: typeof item.episode_count === 'number' ? item.episode_count : null,
+        status: item.is_ongoing ? 'Ongoing' : 'Completed',
         genres: genres.length ? genres : null,
       });
     });
@@ -399,66 +382,81 @@ export class Anizone extends AnimeParser {
    * @returns  - An object containing parsed video source data.
    */
   private parseSources($: cheerio.CheerioAPI): { extractedData: IVideoSource } {
-    const player = $('media-player');
-    const videoUrl = player.attr('src') || null;
-    const poster = player.find('media-poster').attr('src') || null;
-
-    const subtitles: {
-      url: string | null;
-      lang: string | null;
-      default: boolean;
-    }[] = [];
-    // player.find('track[kind="subtitles"]').each((_, el) => {
-    //   const $el = $(el);
-    //   subtitles.push({
-    //     url: $el.attr('src') || null,
-    //     lang: $el.attr('label') || null,
-    //     default: $el.is('[default]'),
-    //   });
-    // });
-    player.find('track[kind="subtitles"]').each((_, el) => {
-      const $el = $(el);
-      if ($el.attr('srclang') !== 'en') {
-        return;
-      }
-      subtitles.push({
-        url: $el.attr('src') || null,
-        lang: $el.attr('label') || null,
-        default: $el.is('[default]'),
-      });
-    });
-    const chapters = player.find('track[kind="chapters"]').attr('src') || null;
-    const thumbnails = player.find('media-video-layout').attr('thumbnails') || null;
     const extractedData: IVideoSource = {
       subtitles: [],
       sources: [],
       tracks: [],
       posterImage: null,
     };
-    if (videoUrl) {
-      extractedData.sources.push({
-        url: videoUrl,
-        isM3u8: videoUrl.includes('m3u8'),
-        type: videoUrl.includes('m3u8') ? 'hls' : 'Unknown',
-      });
-    }
-    if (subtitles && Array.isArray(subtitles)) {
-      extractedData.subtitles = subtitles;
+
+
+    const playerAttr = $('div[x-data^="vidstackPlayer("]').attr('x-data') || '';
+    const jsonMatch = playerAttr.match(/vidstackPlayer\(JSON\.parse\('(.*?)'\)\)/s);
+
+    if (!jsonMatch) {
+      return { extractedData };
     }
 
-    if (chapters) {
+    let data: {
+      src?: string;
+      snapshot?: string;
+      storyboard?: string;
+      chapter?: string;
+      subtitles?: {
+        title?: string;
+        format?: string;
+        language?: string;
+        default?: boolean;
+        forced?: string;
+        file?: string;
+      }[];
+    } = {};
+
+    try {
+      const jsonStr = jsonMatch[1]
+        .replace(/\\u0022/g, '"')
+        .replace(/\\\\\//g, '/')
+        .replace(/\\\\u/g, '\\u');
+
+      data = JSON.parse(jsonStr);
+    } catch {
+      return { extractedData };
+    }
+
+    if (data.src) {
+      extractedData.sources.push({
+        url: data.src,
+        isM3u8: data.src.includes('m3u8'),
+        type: data.src.includes('m3u8') ? 'hls' : 'Unknown',
+      });
+    }
+
+    if (Array.isArray(data.subtitles)) {
+      extractedData.subtitles = data.subtitles
+        .filter(sub => sub.language === 'en')
+        .map(sub => ({
+          url: sub.file || null,
+          lang: sub.title || null,
+          default: !!sub.default,
+        }));
+    }
+
+    if (data.chapter) {
       extractedData.tracks?.push({
-        url: chapters,
+        url: data.chapter,
         type: 'chapters',
       });
     }
-    if (thumbnails) {
+
+    if (data.storyboard) {
       extractedData.tracks?.push({
-        url: thumbnails,
+        url: data.storyboard,
         type: 'thumbnails',
       });
     }
-    extractedData.posterImage = poster;
+
+    extractedData.posterImage = data.snapshot || null;
+
     return { extractedData };
   }
 
