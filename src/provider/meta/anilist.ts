@@ -155,7 +155,7 @@ export class Anilist extends BaseClass {
         };
       }
 
-      const titles = [anilist.data.title.romaji, anilist.data.title.english, anilist.data.title.native]
+      const titles = [anilist.data.title.english, anilist.data.title.romaji, anilist.data.title.native]
         .filter((title): title is string => Boolean(title))
         .filter((title, index, arr) => arr.indexOf(title) === index);
 
@@ -179,7 +179,7 @@ export class Anilist extends BaseClass {
           status: 404,
         };
       }
-
+      // console.log(searchResults);
       const match = findBestMatch(
         anilist.data.title,
         searchResults.data.map(item => ({

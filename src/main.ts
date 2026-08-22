@@ -36,3 +36,5 @@ export {
   type Seasons,
   type IAnimeCategory,
 };
+// const data = await new Anilist().fetchAnizoneProviderId(269)
+// console.log(data);

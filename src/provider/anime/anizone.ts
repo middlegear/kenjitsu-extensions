@@ -129,22 +129,28 @@ export class Anizone extends AnimeParser {
       let lastPageEpisodes: IBaseEpisodes[] = [];
       const maxPages = this.extractMaxPages(html);
 
-
       if (maxPages > 1) {
         lastPageEpisodes = await this.fetchEpisodePage(id, maxPages, data.id as string);
       }
 
-      const realEpisodes = new Map<number, IBaseEpisodes>();
+
+      const regularEpisodes = new Map<number, IBaseEpisodes>();
       [...page1Episodes, ...lastPageEpisodes].forEach(ep => {
-        if (ep.episodeNumber !== null) realEpisodes.set(ep.episodeNumber, ep);
+
+        if (ep.episodeNumber !== null && Number.isInteger(ep.episodeNumber)) {
+          regularEpisodes.set(ep.episodeNumber, ep);
+        }
       });
 
-      const highestKnownEpisode = Math.max(0, ...Array.from(realEpisodes.keys()));
+
+      const numericKeys = Array.from(regularEpisodes.keys());
+      const highestKnownEpisode = numericKeys.length > 0 ? Math.max(...numericKeys) : 0;
+
 
       const providerEpisodes: IBaseEpisodes[] = [];
       for (let i = 1; i <= highestKnownEpisode; i++) {
         providerEpisodes.push(
-          realEpisodes.get(i) ?? {
+          regularEpisodes.get(i) ?? {
             episodeId: `${data.id}-episode-${i}`,
             episodeNumber: i,
             thumbnail: null,
@@ -174,7 +180,6 @@ export class Anizone extends AnimeParser {
     }
   }
 
-
   private extractMaxPages(html: string): number {
     const match = html.match(/maxPages:\s*(\d+)/);
     return match ? parseInt(match[1], 10) : 1;
@@ -194,7 +199,6 @@ export class Anizone extends AnimeParser {
       return [];
     }
   }
-
 
   private parseEpisodeList($: cheerio.CheerioAPI, animeInfoId: string): IBaseEpisodes[] {
     const episodes: IBaseEpisodes[] = [];
@@ -417,10 +421,10 @@ export class Anizone extends AnimeParser {
           .filter(g => g.toLowerCase() !== 'manga') || null,
     };
 
-    // Use the shared parseEpisodeList method for page 1
+
     const episodes = this.parseEpisodeList($, animeInfo.id as string);
 
-    if (animeInfo === null) {
+    if (!animeInfo) {
       return {
         data: null,
         error: 'Anime info is null',

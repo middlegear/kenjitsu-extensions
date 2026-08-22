@@ -51,7 +51,7 @@
   "dependencies": {
     "anitomy-ng": "^1.0.9",
     "cheerio": "^1.2.0",
-    "fastest-levenshtein": "^1.0.16",
+    "fuzzball": "^2.2.6",
     "impit": "^0.14.3",
     "p-queue": "^9.3.3",
     "parse-torrent": "^11.0.24",
