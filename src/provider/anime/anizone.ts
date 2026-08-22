@@ -115,7 +115,7 @@ export class Anizone extends AnimeParser {
       }
 
       const html = await response.text();
-      const { data, providerEpisodes, error, status } = this.parseAnimeinfo(cheerio.load(html));
+      const { data, providerEpisodes: page1Episodes, error, status } = this.parseAnimeinfo(cheerio.load(html));
 
       if (!data) {
         return {
@@ -126,91 +126,44 @@ export class Anizone extends AnimeParser {
         };
       }
 
+      let lastPageEpisodes: IBaseEpisodes[] = [];
+      const maxPages = this.extractMaxPages(html);
 
-      const totalEpisodes = data.totalEpisodes;
-      const existingEpisodes = providerEpisodes || [];
 
-      if (totalEpisodes && totalEpisodes > 0) {
-        const generatedEpisodes: IBaseEpisodes[] = [];
-        for (let i = 1; i <= totalEpisodes; i++) {
-          generatedEpisodes.push({
+      if (maxPages > 1) {
+        lastPageEpisodes = await this.fetchEpisodePage(id, maxPages, data.id as string);
+      }
+
+      const realEpisodes = new Map<number, IBaseEpisodes>();
+      [...page1Episodes, ...lastPageEpisodes].forEach(ep => {
+        if (ep.episodeNumber !== null) realEpisodes.set(ep.episodeNumber, ep);
+      });
+
+      const highestKnownEpisode = Math.max(0, ...Array.from(realEpisodes.keys()));
+
+      const providerEpisodes: IBaseEpisodes[] = [];
+      for (let i = 1; i <= highestKnownEpisode; i++) {
+        providerEpisodes.push(
+          realEpisodes.get(i) ?? {
             episodeId: `${data.id}-episode-${i}`,
             episodeNumber: i,
             thumbnail: null,
             teaser: null,
             title: null,
             airDate: null,
-          });
-        }
-
-
-        if (existingEpisodes.length > 0) {
-          const episodeMap = new Map<number, IBaseEpisodes>();
-          generatedEpisodes.forEach(ep => {
-            if (ep.episodeNumber !== null) {
-              episodeMap.set(ep.episodeNumber, ep);
-            }
-          });
-          existingEpisodes.forEach(ep => {
-            if (ep.episodeNumber !== null) {
-              episodeMap.set(ep.episodeNumber, { ...episodeMap.get(ep.episodeNumber), ...ep });
-            }
-          });
-          return {
-            data,
-            providerEpisodes: Array.from(episodeMap.values()).sort(
-              (a, b) => (a.episodeNumber || 0) - (b.episodeNumber || 0),
-            ),
-          };
-        }
-
-        return { data, providerEpisodes: generatedEpisodes };
+          },
+        );
       }
 
-      const maxPages = this.extractMaxPages(html);
-      if (maxPages > 1) {
-        const lastPageEpisodes = await this.fetchEpisodePage(id, maxPages, data.id as string);
-        if (lastPageEpisodes.length > 0) {
-          const lastEpisode = lastPageEpisodes[lastPageEpisodes.length - 1];
-          if (lastEpisode && lastEpisode.episodeNumber) {
-            const generatedEpisodes: IBaseEpisodes[] = [];
-            for (let i = 1; i <= lastEpisode.episodeNumber; i++) {
-              generatedEpisodes.push({
-                episodeId: `${data.id}-episode-${i}`,
-                episodeNumber: i,
-                thumbnail: null,
-                teaser: null,
-                title: null,
-                airDate: null,
-              });
-            }
 
-            if (existingEpisodes.length > 0) {
-              const episodeMap = new Map<number, IBaseEpisodes>();
-              generatedEpisodes.forEach(ep => {
-                if (ep.episodeNumber !== null) {
-                  episodeMap.set(ep.episodeNumber, ep);
-                }
-              });
-              existingEpisodes.forEach(ep => {
-                if (ep.episodeNumber !== null) {
-                  episodeMap.set(ep.episodeNumber, { ...episodeMap.get(ep.episodeNumber), ...ep });
-                }
-              });
-              return {
-                data,
-                providerEpisodes: Array.from(episodeMap.values()).sort(
-                  (a, b) => (a.episodeNumber || 0) - (b.episodeNumber || 0),
-                ),
-              };
-            }
+      const now = new Date();
+      const releasedEpisodes = providerEpisodes.filter(ep => {
+        if (!ep.airDate) return true;
+        const d = new Date(ep.airDate);
+        return isNaN(d.getTime()) || d <= now;
+      });
 
-            return { data, providerEpisodes: generatedEpisodes };
-          }
-        }
-      }
-
-      return { data, providerEpisodes: existingEpisodes };
+      return { data, providerEpisodes: releasedEpisodes };
     } catch (error) {
       return {
         error: error instanceof Error ? error.message : 'Unknown error',

@@ -36,5 +36,3 @@ export {
   type Seasons,
   type IAnimeCategory,
 };
-// const data = await new Nyaa().fetchInfoHashDetails('843fe4dfbcaa4a00ccbac93455cec6a97e8f78d4');
-// console.log(JSON.stringify(data));
