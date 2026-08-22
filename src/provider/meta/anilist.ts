@@ -43,7 +43,6 @@ import { findBestMatch } from '../../utils/libs.js';
  */
 export class Anilist extends BaseClass {
   private readonly baseUrl: string = 'https://graphql.anilist.co';
-  private readonly workerUrl: string = 'https://api.kenjitsu.workers.dev';
 
   constructor(
     options: ClientOptions = {
@@ -145,54 +144,18 @@ export class Anilist extends BaseClass {
     }
 
     try {
-      const [anilist, anizone] = await Promise.allSettled([
-        this.fetchInfo(anilistId, 'ANIME'),
-        this.client.fetch(`${this.workerUrl}/api/anime/anilist/${anilistId}?provider=anizone`, {
-          method: 'GET',
-        }),
-      ]);
+      const anilist = await this.fetchInfo(anilistId, 'ANIME');
 
-      if (anilist.status === 'rejected') {
+      if (anilist.error || !anilist.data) {
         return {
           data: null,
           provider: null,
-          error: anilist.reason,
-          status: 500,
+          error: anilist.error,
+          status: anilist.status,
         };
       }
 
-      const anilistData = anilist.value;
-
-      if (!anilistData.data) {
-        return {
-          error: anilistData.error,
-          data: null,
-          provider: null,
-          status: anilistData.status,
-        };
-      }
-
-      if (anizone.status === 'rejected') {
-        return {
-          data: null,
-          provider: null,
-          error: anizone.reason,
-          status: 500,
-        };
-      }
-
-      if (anizone.value.ok) {
-        const anizoneResult = await anizone.value.json();
-
-        if (anizoneResult?.provider?.id) {
-          return {
-            data: anilistData.data,
-            provider: anizoneResult.provider,
-          };
-        }
-      }
-
-      const titles = [anilistData.data.title.romaji, anilistData.data.title.english, anilistData.data.title.native]
+      const titles = [anilist.data.title.romaji, anilist.data.title.english, anilist.data.title.native]
         .filter((title): title is string => Boolean(title))
         .filter((title, index, arr) => arr.indexOf(title) === index);
 
@@ -218,7 +181,7 @@ export class Anilist extends BaseClass {
       }
 
       const match = findBestMatch(
-        anilistData.data.title,
+        anilist.data.title,
         searchResults.data.map(item => ({
           id: item.id,
           name: item.name,
@@ -236,7 +199,7 @@ export class Anilist extends BaseClass {
       }
 
       return {
-        data: anilistData.data,
+        data: anilist.data,
         provider: {
           id: match.id,
           name: match.name,
@@ -467,54 +430,18 @@ export class Anilist extends BaseClass {
     }
 
     try {
-      const [anilist, anidb] = await Promise.allSettled([
-        this.fetchInfo(anilistId, 'ANIME'),
-        this.client.fetch(`${this.workerUrl}/api/anime/anilist/${anilistId}?provider=anidb`, {
-          method: 'GET',
-        }),
-      ]);
+      const anilist = await this.fetchInfo(anilistId, 'ANIME');
 
-      if (anilist.status === 'rejected') {
+      if (anilist.error || !anilist.data) {
         return {
           data: null,
           provider: null,
-          error: anilist.reason,
-          status: 500,
+          error: anilist.error,
+          status: anilist.status,
         };
       }
 
-      const anilistData = anilist.value;
-
-      if (!anilistData.data) {
-        return {
-          error: anilistData.error,
-          data: null,
-          provider: null,
-          status: anilistData.status,
-        };
-      }
-
-      if (anidb.status === 'rejected') {
-        return {
-          data: null,
-          provider: null,
-          error: anidb.reason,
-          status: 500,
-        };
-      }
-
-      if (anidb.value.ok) {
-        const anidbResult = await anidb.value.json();
-
-        if (anidbResult?.provider?.id) {
-          return {
-            data: anilistData.data,
-            provider: anidbResult.provider,
-          };
-        }
-      }
-
-      const titles = [anilistData.data.title.english, anilistData.data.title.romaji, anilistData.data.title.native]
+      const titles = [anilist.data.title.english, anilist.data.title.romaji, anilist.data.title.native]
         .filter((title): title is string => Boolean(title))
         .filter((title, index, arr) => arr.indexOf(title) === index);
 
@@ -540,7 +467,7 @@ export class Anilist extends BaseClass {
       }
 
       const match = findBestMatch(
-        anilistData.data.title,
+        anilist.data.title,
         searchResults.data.map(item => ({
           id: item.id,
           name: item.name,
@@ -558,7 +485,7 @@ export class Anilist extends BaseClass {
       }
 
       return {
-        data: anilistData.data,
+        data: anilist.data,
         provider: {
           id: match.id,
           name: match.name,
@@ -595,49 +522,23 @@ export class Anilist extends BaseClass {
     }
 
     try {
-      const [anilist, anikoto] = await Promise.allSettled([
-        this.fetchInfo(anilistId, 'ANIME'),
-        this.client.fetch(`${this.workerUrl}/api/anime/anilist/${anilistId}?provider=anikoto`, {
-          method: 'GET',
-        }),
-      ]);
+      const anilist = await this.fetchInfo(anilistId, 'ANIME');
 
-      if (anilist.status === 'rejected') {
+      if (anilist.error || !anilist.data) {
         return {
           data: null,
           provider: null,
-          error: anilist.reason,
-          status: 500,
+          error: anilist.error,
+          status: anilist.status,
         };
       }
 
-      const anilistData = anilist.value;
+      const query = anilist.data.title.english || anilist.data.title.romaji;
 
-      if (!anilistData.data) {
-        return {
-          error: 'Anime not found on AniList.',
-          data: null,
-          provider: null,
-          status: 404,
-        };
-      }
-
-      if (anikoto.status === 'fulfilled' && anikoto.value.ok) {
-        const anikotoResult = await anikoto.value.json();
-        if (anikotoResult?.provider?.id) {
-          return {
-            data: anilistData.data,
-            provider: anikotoResult.provider,
-          };
-        }
-      }
-
-      const query = anilistData.data.title?.english || (anilistData.data.title?.romaji as string);
-
-      const anikotoSearchResults = await new Anikoto().search(query);
+      const anikotoSearchResults = await new Anikoto().search(query as string);
 
       const match = findBestMatch(
-        anilistData.data.title,
+        anilist.data.title,
         anikotoSearchResults.data.map(item => ({
           id: item.id,
           name: item.name,
@@ -655,7 +556,7 @@ export class Anilist extends BaseClass {
       }
 
       return {
-        data: anilistData.data,
+        data: anilist.data,
         provider: {
           id: match.id,
           name: match.name,
@@ -2020,15 +1921,15 @@ export class Anilist extends BaseClass {
           status: response.status,
         };
       }
-      const kitsu = await new Kitsu().fetchMapping(id)
-      if(kitsu.error || !kitsu.data){
-        return{
+      const kitsu = await new Kitsu().fetchMapping(id);
+      if (kitsu.error || !kitsu.data) {
+        return {
           data: [],
           error: kitsu.error,
           status: kitsu.status,
-        }
+        };
       }
-      const kitsuId = kitsu.data?.id
+      const kitsuId = kitsu.data?.id;
       const tvdbResult = await response.json();
 
       const episodes = tvdbResult.data.episodes.map((item: any) => ({
