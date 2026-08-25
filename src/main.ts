@@ -36,5 +36,5 @@ export {
   type Seasons,
   type IAnimeCategory,
 };
-// const data = await new Anilist().fetchAnizoneProviderId(269)
+// const data = await new Anilist().fetchAnimeHeavenProviderId(126357)
 // console.log(data);

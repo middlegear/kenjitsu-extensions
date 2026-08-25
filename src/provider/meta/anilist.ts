@@ -340,7 +340,6 @@ export class Anilist extends BaseClass {
 
     try {
       const anilist = await this.resolveAnimeInfo(anilistId);
-
       if (!anilist.data) {
         return {
           error: anilist.error,
@@ -349,8 +348,9 @@ export class Anilist extends BaseClass {
           status: anilist.status,
         };
       }
-
-      const searchQueries = [anilist.data.title.romaji, anilist.data.title.english, anilist.data.title.native]
+      const rootShow = await this.resolveFranchiseMedia(anilistId);
+      const titleObject = rootShow.data[0].title;
+      const searchQueries = [anilist.data.title.romaji,titleObject.romaji,titleObject.english, anilist.data.title.english]
         .filter((title): title is string => Boolean(title))
         .filter((title, index, array) => array.indexOf(title) === index);
 
@@ -1951,30 +1951,26 @@ export class Anilist extends BaseClass {
     }
   }
 
-
-  private async resolveAnimeInfo(
-    anilistId: number
-  ): Promise<IResponse<IMetaAnime | null>> {
-    const anilistResult = await this.fetchInfo(anilistId,'ANIME')
+  private async resolveAnimeInfo(anilistId: number): Promise<IResponse<IMetaAnime | null>> {
+    const anilistResult = await this.fetchInfo(anilistId, 'ANIME');
 
     if (!anilistResult.error && anilistResult.data) {
       return { data: anilistResult.data, status: 200 };
     }
 
     const RETRYABLE_STATUSES = [403, 429];
-    const canFallback =
-      anilistResult.status !== undefined && RETRYABLE_STATUSES.includes(anilistResult.status);
+    const canFallback = anilistResult.status !== undefined && RETRYABLE_STATUSES.includes(anilistResult.status);
 
     if (!canFallback) {
       return { data: null, error: anilistResult.error, status: anilistResult.status };
     }
 
-    const mappedId = await new Kitsu().fetchMapping(anilistId)
+    const mappedId = await new Kitsu().fetchMapping(anilistId);
     if (mappedId.error || !mappedId.data?.id) {
       return {
         data: null,
         error: mappedId.error ?? 'Could not map anilist id to a kitsu id',
-        status: mappedId.status ?? 404
+        status: mappedId.status ?? 404,
       };
     }
 
@@ -1983,17 +1979,44 @@ export class Anilist extends BaseClass {
       return { data: null, error: 'Invalid kitsu id returned from mapping', status: 500 };
     }
 
-    const kitsuResult = await new Kitsu().fetchInfo( kitsuAnimeId);
+    const kitsuResult = await new Kitsu().fetchInfo(kitsuAnimeId);
     if (kitsuResult.error || !kitsuResult.data) {
       return {
         data: null,
         error: kitsuResult.error ?? 'Kitsu fallback failed',
-        status: kitsuResult.status ?? 500
+        status: kitsuResult.status ?? 500,
       };
     }
 
     return { data: kitsuResult.data };
   }
+  private async resolveFranchiseMedia(anilistId: number): Promise<IResponse<IRelatedAnimeData[] | []>> {
+    const mappedId = await new Kitsu().fetchMapping(anilistId);
+    if (mappedId.error || !mappedId.data?.id) {
+      return {
+        data: [],
+        error: mappedId.error ?? 'Could not map anilist id to a kitsu id',
+        status: mappedId.status ?? 404,
+      };
+    }
+
+    const kitsuAnimeId = mappedId.data.id as string;
+    if (Number.isNaN(kitsuAnimeId)) {
+      return { data: [], error: 'Invalid kitsu id returned from mapping', status: 500 };
+    }
+
+    const kitsuResult = await new Kitsu().fetchParentSeries(kitsuAnimeId);
+    if (kitsuResult.error || !kitsuResult.data) {
+      return {
+        data: [],
+        error: kitsuResult.error ?? 'Kitsu fallback failed',
+        status: kitsuResult.status ?? 500,
+      };
+    }
+
+    return { data: kitsuResult.data };
+  }
+
   /**
    * Converts two date strings into a variables object for AniList
    * @param {string} startDate - Format "YYYY-MM-DD"
