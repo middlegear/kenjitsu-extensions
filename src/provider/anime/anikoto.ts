@@ -956,7 +956,8 @@ export class Anikoto extends AnimeParser {
         } else if (type === 'dub') {
           servers.dub.push(server);
         } else {
-          servers.sub.push(server);
+          // hsub will live here
+          servers.raw.push(server);
         }
       });
     });
