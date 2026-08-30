@@ -12,7 +12,13 @@ import { Kitsu } from './provider/meta/kitsu.js';
 import { Cinemeta } from './provider/meta/cinemeta.js';
 import { MyAnimeList } from './provider/meta/mal.js';
 import { Nyaa } from './provider/torrents/nyaa.js';
-import type { INyaaTorrent, ITorrentDetails,ITorrentFileDetails,ITorrentFileGroup,IParsedTorrentName } from './types/torrents.js';
+import type {
+  INyaaTorrent,
+  ITorrentDetails,
+  ITorrentFileDetails,
+  ITorrentFileGroup,
+  IParsedTorrentName,
+} from './types/torrents.js';
 
 export {
   Anilist,
@@ -36,5 +42,3 @@ export {
   type Seasons,
   type IAnimeCategory,
 };
-// const data = await new Anilist().fetchAnimeHeavenProviderId(126357)
-// console.log(data);

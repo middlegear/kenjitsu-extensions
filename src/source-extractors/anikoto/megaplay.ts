@@ -79,12 +79,13 @@ export class MegaPlay extends BaseClass {
       });
       extractedData.intro = result.intro;
       extractedData.outro = result.outro;
-      extractedData.subtitles = result.tracks.map((item: any) => ({
-        url: item.file,
-        lang: item.label,
-        default: item.default,
-      }));
-
+      extractedData.subtitles = result.tracks
+        .filter((item: any) => item.label?.toLowerCase().includes('english'))
+        .map((item: any) => ({
+          url: item.file,
+          lang: item.label,
+          default: item.default,
+        }));
       return {
         data: extractedData,
       };
