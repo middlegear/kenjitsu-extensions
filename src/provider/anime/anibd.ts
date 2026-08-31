@@ -120,15 +120,17 @@ class AniBD extends AnimeParser {
       }
       const episodesResult = await episodesResponse.json();
 
-      const episodes: IBaseAnimeEpisodes[] = episodesResult.flatMap((server: any) =>
-        server.server_data.map((episode: any) => ({
-          episodeId: episode.link,
-          episodeNumber: Number(episode.slug),
-          title: episode.name,
-          hasDub: server.server_name.toLowerCase().includes('dub'),
-          hasSub: server.server_name.toLowerCase().includes('sub'),
-        })),
-      );
+      const episodes: IBaseAnimeEpisodes[] = episodesResult
+        .flatMap((server: any) =>
+          server.server_data.map((episode: any) => ({
+            episodeId: episode.link,
+            episodeNumber: Number(episode.slug),
+            title: episode.name,
+            hasDub: server.server_name.toLowerCase().includes('dub'),
+            hasSub: server.server_name.toLowerCase().includes('sub'),
+          })),
+        )
+        .filter((ep: IBaseAnimeEpisodes) => Number.isInteger(ep.episodeNumber));
 
       return {
         data: info,
@@ -176,15 +178,17 @@ class AniBD extends AnimeParser {
       }
       const episodesResult = await episodesResponse.json();
 
-      const episodes: IBaseAnimeEpisodes[] = episodesResult.flatMap((server: any) =>
-        server.server_data.map((episode: any) => ({
-          episodeId: episode.link,
-          episodeNumber: Number(episode.slug),
-          title: episode.name,
-          hasDub: server.server_name.toLowerCase().includes('dub'),
-          hasSub: server.server_name.toLowerCase().includes('sub'),
-        })),
-      );
+      const episodes: IBaseAnimeEpisodes[] = episodesResult
+        .flatMap((server: any) =>
+          server.server_data.map((episode: any) => ({
+            episodeId: episode.link,
+            episodeNumber: Number(episode.slug),
+            title: episode.name,
+            hasDub: server.server_name.toLowerCase().includes('dub'),
+            hasSub: server.server_name.toLowerCase().includes('sub'),
+          })),
+        )
+        .filter((ep: IBaseAnimeEpisodes) => Number.isInteger(ep.episodeNumber));
       return {
         data: episodes,
       };
