@@ -126,50 +126,43 @@ export class Anizone extends AnimeParser {
         };
       }
 
-      let lastPageEpisodes: IBaseEpisodes[] = [];
-      const maxPages = this.extractMaxPages(html);
 
-      if (maxPages > 1) {
-        lastPageEpisodes = await this.fetchEpisodePage(id, maxPages, data.id as string);
-      }
-
-
-      const regularEpisodes = new Map<number, IBaseEpisodes>();
-      [...page1Episodes, ...lastPageEpisodes].forEach(ep => {
-
+      const parsedEpisodes = new Map<number, IBaseEpisodes>();
+      page1Episodes.forEach(ep => {
         if (ep.episodeNumber !== null && Number.isInteger(ep.episodeNumber)) {
-          regularEpisodes.set(ep.episodeNumber, ep);
+          parsedEpisodes.set(ep.episodeNumber, ep);
         }
       });
 
-
-      const numericKeys = Array.from(regularEpisodes.keys());
-      const highestKnownEpisode = numericKeys.length > 0 ? Math.max(...numericKeys) : 0;
-
+      const totalEpisodes = data.totalEpisodes || 0;
 
       const providerEpisodes: IBaseEpisodes[] = [];
-      for (let i = 1; i <= highestKnownEpisode; i++) {
-        providerEpisodes.push(
-          regularEpisodes.get(i) ?? {
-            episodeId: `${data.id}-episode-${i}`,
-            episodeNumber: i,
-            thumbnail: null,
-            teaser: null,
-            title: null,
-            airDate: null,
-          },
-        );
+
+      if (totalEpisodes > 0) {
+
+        for (let i = 1; i <= totalEpisodes; i++) {
+          const existingEpisode = parsedEpisodes.get(i);
+
+          if (existingEpisode) {
+            providerEpisodes.push(existingEpisode);
+          } else {
+
+            providerEpisodes.push({
+              episodeId: `${data.id}-episode-${i}`,
+              episodeNumber: i,
+              thumbnail: null,
+              teaser: null,
+              title: null,
+              airDate: null,
+            });
+          }
+        }
+      } else {
+
+        providerEpisodes.push(...page1Episodes);
       }
 
-
-      const now = new Date();
-      const releasedEpisodes = providerEpisodes.filter(ep => {
-        if (!ep.airDate) return true;
-        const d = new Date(ep.airDate);
-        return isNaN(d.getTime()) || d <= now;
-      });
-
-      return { data, providerEpisodes: releasedEpisodes };
+      return { data, providerEpisodes };
     } catch (error) {
       return {
         error: error instanceof Error ? error.message : 'Unknown error',
@@ -180,30 +173,44 @@ export class Anizone extends AnimeParser {
     }
   }
 
-  private extractMaxPages(html: string): number {
-    const match = html.match(/maxPages:\s*(\d+)/);
-    return match ? parseInt(match[1], 10) : 1;
-  }
-
-  /**
-   * Fetches and parses a single episode-list page (page 2+).
-   * Used as a fallback to get the last episode number.
-   */
-  private async fetchEpisodePage(id: string, page: number, animeInfoId: string): Promise<IBaseEpisodes[]> {
-    try {
-      const response = await this.client.fetch(`${this.baseUrl}/anime/${id}?page=${page}`, { method: 'GET' });
-      if (!response.ok) return [];
-      const html = await response.text();
-      return this.parseEpisodeList(cheerio.load(html), animeInfoId);
-    } catch {
-      return [];
-    }
-  }
 
   private parseEpisodeList($: cheerio.CheerioAPI, animeInfoId: string): IBaseEpisodes[] {
     const episodes: IBaseEpisodes[] = [];
 
-    $('ul.grid > li').each((_, el) => {
+
+    const mainContainer = $('main > div[x-data]').first();
+    const xData = mainContainer.attr('x-data') || '';
+
+
+    const itemsMatch = xData.match(/items:\s*JSON\.parse\('(.*?)'\)\s*,/s);
+
+    if (itemsMatch) {
+      try {
+        const items = JSON.parse(this.unescapeAlpineJson(itemsMatch[1]));
+
+        if (Array.isArray(items)) {
+          items.forEach((item: any) => {
+            const episodeNumber = item.slug ? Number(item.slug) : null;
+            const titleList = item.title_list || {};
+
+            episodes.push({
+              episodeId: `${animeInfoId}-episode-${item.slug}`,
+              episodeNumber: episodeNumber,
+              thumbnail: item.snapshot || null,
+              teaser: item.teaser || null,
+              title: titleList['1'] || titleList['5'] || null,
+              airDate: item.air_date || null,
+            });
+          });
+        }
+
+        return episodes;
+      } catch (error) {
+        console.error('Error parsing episodes from JSON:', error);
+      }
+    }
+
+    $('ul.grid > li, ul.grid-cols-1 > li').each((_, el) => {
       const $el = $(el);
       const url = $el.find('a').attr('href') || null;
 
@@ -224,24 +231,15 @@ export class Anizone extends AnimeParser {
         episodeId: `${animeInfoId}-episode-${episodeNumber}`,
         episodeNumber: episodeNumber ? Number(episodeNumber) : null,
         thumbnail: $el.find('div.absolute img').attr('src') || null,
-        teaser:
-          $el
-            .find('div.absolute img')
-            .attr(':src')
-            ?.match(/'([^']*teaser\.webp)'/)?.[1] || null,
+        teaser: $el.find('div.absolute img').attr(':src')?.match(/'([^']*teaser\.webp)'/)?.[1] || null,
         title,
-        airDate:
-          $el
-            .find('span')
-            .filter((i, span) => /^\d{4}-\d{2}-\d{2}$/.test($(span).text().trim()))
-            .first()
-            .text()
-            .trim() || null,
+        airDate: $el.find('span').filter((i, span) => /^\d{4}-\d{2}-\d{2}$/.test($(span).text().trim())).first().text().trim() || null,
       });
     });
 
     return episodes;
   }
+
 
   /**
    * Fetches video sources and related metadata for a specific episode.
