@@ -350,7 +350,7 @@ export class Anilist extends BaseClass {
       }
       const rootShow = await this.resolveFranchiseMedia(anilistId);
       const titleObject = rootShow.data[0].title;
-      const searchQueries = [anilist.data.title.romaji,titleObject.romaji,titleObject.english, anilist.data.title.english]
+      const searchQueries = [anilist.data.title.romaji, titleObject.romaji, titleObject.english, anilist.data.title.english]
         .filter((title): title is string => Boolean(title))
         .filter((title, index, array) => array.indexOf(title) === index);
 
@@ -1940,6 +1940,10 @@ export class Anilist extends BaseClass {
         isFiller: null,
         episodeNumber: item.absoluteEpisodeNumber,
         summary: item.summary,
+        imdbId: item.imdbId,
+        tvdbIdEpisodeId: item.tvdbEpisodeId,
+        seasonNumber: item.seasonNumber,
+        seasonEpisodeNumber: item.episodeNumber,
       }));
       return { data: episodes };
     } catch (error) {
