@@ -516,6 +516,11 @@ export class Anikoto extends AnimeParser {
             headers: { Referer: `${serverUrl.origin}/` },
             data: (await this.VidPlay.extract(serverUrl, `${this.baseUrl}/`)).data,
           };
+        case 'hd-2':
+          return {
+            headers: { Referer: `${serverUrl.origin}/` },
+            data: (await this.MegaPlay.extractNew(serverUrl, `${this.baseUrl}/`)).data,
+          };
         default:
           return {
             headers: { Referer: null },
