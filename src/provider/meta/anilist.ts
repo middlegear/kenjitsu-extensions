@@ -1911,7 +1911,7 @@ export class Anilist extends BaseClass {
     if (!id) return { error: `Missing required param: id`, data: [], status: 400 };
 
     try {
-      const response = await this.client.fetch(`https://api.kenjitsu.workers.dev/api/meta/anilist/${id}?platform=tvdb`, {
+      const response = await this.client.fetch(`https://api.kenjitsu.workers.dev/api/meta/anilist/${id}?platform=merged`, {
         method: 'GET',
       });
       if (!response.ok) {
