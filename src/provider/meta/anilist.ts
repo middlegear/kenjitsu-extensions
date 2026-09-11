@@ -1940,10 +1940,11 @@ export class Anilist extends BaseClass {
         isFiller: null,
         episodeNumber: item.absoluteEpisodeNumber,
         summary: item.summary,
-        imdbId: item.imdbId,
+        imdbId: item.imdbId || null,
         tvdbIdEpisodeId: item.tvdbEpisodeId,
         seasonNumber: item.seasonNumber,
         seasonEpisodeNumber: item.episodeNumber,
+        type: item.type,
       }));
       return { data: episodes };
     } catch (error) {
