@@ -16,10 +16,9 @@ import {
   type ISubOrDub,
   type ScheduleDay,
 } from '../../types/anime.js';
-import { MegaPlay } from '../../source-extractors/anikoto/megaplay.js';
-import { VidWish } from '../../source-extractors/anikoto/vidwish.js';
-import { VidTube } from '../../source-extractors/anikoto/vidtube.js';
+
 import { AnimeParser } from '../../models/animeparser.js';
+import { MegaPlay } from '../../source-extractors/megaplay.js';
 
 /**
  * Anikoto (anikototv.to) anime scraper.
@@ -29,15 +28,10 @@ import { AnimeParser } from '../../models/animeparser.js';
  */
 export class Anikoto extends AnimeParser {
   private MegaPlay: MegaPlay;
-  private VidWish: VidWish;
-  private VidPlay: VidTube;
-
   constructor(baseUrl = 'https://anikototv.to', options: ClientOptions = {}) {
     super(baseUrl, options);
     this.baseUrl = baseUrl;
     this.MegaPlay = new MegaPlay(options);
-    this.VidWish = new VidWish(options);
-    this.VidPlay = new VidTube(options);
   }
 
   /**
@@ -496,30 +490,11 @@ export class Anikoto extends AnimeParser {
       const serverUrl = new URL(episodeId);
       switch (server) {
         case 'vidstream-2':
-          return {
-            headers: { Referer: `${serverUrl.origin}/` },
-            data: (await this.MegaPlay.extract(serverUrl, `${this.baseUrl}/`)).data,
-          };
         case 'hd-1':
-          return {
-            headers: { Referer: `${serverUrl.origin}/` },
-            data: (await this.MegaPlay.extractNew(serverUrl, `${this.baseUrl}/`)).data,
-          };
-        case 'vidcloud-1': // busted stuff returns 522
-          return {
-            headers: { Referer: `${serverUrl.origin}/` },
-            data: (await this.VidWish.extract(serverUrl, `${this.baseUrl}/`)).data,
-          };
-
-        case 'vidplay-1':
-          return {
-            headers: { Referer: `${serverUrl.origin}/` },
-            data: (await this.VidPlay.extract(serverUrl, `${this.baseUrl}/`)).data,
-          };
         case 'hd-2':
           return {
             headers: { Referer: `${serverUrl.origin}/` },
-            data: (await this.MegaPlay.extractNew(serverUrl, `${this.baseUrl}/`)).data,
+            data: (await this.MegaPlay.extract(serverUrl, `${this.baseUrl}/`)).data,
           };
         default:
           return {
