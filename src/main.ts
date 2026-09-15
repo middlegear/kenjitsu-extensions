@@ -42,14 +42,3 @@ export {
   type Seasons,
   type IAnimeCategory,
 };
-const data = await new Anikoto().fetchSources(
-  'WWdGU2VTa0VlTEZHOVBrUVIxOWlBT3FyMHVpQURkais1dzBaS1Z1QTdDUGFUa2c4U280TmxzKzZUcW5jTm13dVFFbnUreTZudW9lWDVXTTdCZVByVHpWT05FNjl5SEFldmxTU25FdFdRZk10L0ZsdUZkMjMyQ05SZFhtMHZObDFWVmQwdGRNZlR6SjFxUDJBdVYxUUY2VUVBUnl2YWFpTHo1eVFydTVKS1JNPQ',
-  'sub',
-  'hd-2',
-);
-console.log(data);
-
-//  https://megaplay.buzz/stream/s-2/694507/sub?autostart=true which evals to https://megaplay.buzz/stream/getSources?id=178189 this is vidstream-2
-// https://megaplay.buzz/stream/s-2/694507/sub?s=tcdn&autostart=true this is from hd-1 which evals to https://megaplay.buzz/stream/getSources?id=178189&s=tcdn
-
-// https://megaplay.buzz/stream/s-2/694507/sub?s=bcdn&autostart=true hd-2 which evals to  https://megaplay.buzz/stream/getSources?id=178189&s=bcdn

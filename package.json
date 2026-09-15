@@ -39,7 +39,7 @@
     "@semantic-release/commit-analyzer": "^13.0.1",
     "@semantic-release/github": "^12.0.9",
     "@semantic-release/release-notes-generator": "^14.1.1",
-    "@types/node": "^24.13.3",
+    "@types/node": "^24.13.4",
     "@types/parse-torrent": "^11.0.1",
     "@types/torrent-stream": "^0.0.9",
     "prettier": "^3.9.6",
@@ -49,10 +49,10 @@
     "vitest": "^3.2.7"
   },
   "dependencies": {
-    "anitomy-ng": "^1.0.9",
+    "anitomy-ng": "^1.0.10",
     "cheerio": "^1.2.0",
     "fuzzball": "^2.2.6",
-    "impit": "^0.14.3",
+    "impit": "^0.14.5",
     "p-queue": "^9.3.3",
     "parse-torrent": "^11.0.24",
     "torrent-stream": "^1.2.1",
