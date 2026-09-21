@@ -30,7 +30,6 @@ import { Kitsu } from './kitsu.js';
 import { Anizone } from '../anime/anizone.js';
 import { AniBD } from '../anime/anibd.js';
 import { AnimeHeaven } from '../anime/animeheaven.js';
-import { AniDB } from '../anime/anidb.js';
 import { Anikoto } from '../../main.js';
 import { findBestMatch } from '../../utils/libs.js';
 
@@ -400,97 +399,6 @@ export class Anilist extends BaseClass {
           name: match.name,
           romaji: match.romaji,
           provider: 'animeheaven',
-          score: null,
-        },
-      };
-    } catch (error) {
-      return {
-        error: error instanceof Error ? error.message : 'Unknown error occurred',
-        data: null,
-        provider: null,
-        status: 500,
-      };
-    }
-  }
-
-  /**
-   * Maps an Anilist anime ID to the corresponding AniDB (animepahe reupload) provider ID.
-   *
-   * @param anilistId - Anilist media ID (required)
-   * @returns Provider mapping result including Anilist metadata and provider-specific ID (if found)
-   */
-  async fetchAniDBProviderId(anilistId: number): Promise<IMetaProviderIdResponse<IMetaAnime | null>> {
-    if (!anilistId) {
-      return {
-        error: 'Invalid or missing required parameter: anilistId!',
-        data: null,
-        provider: null,
-        status: 400,
-      };
-    }
-
-    try {
-      const anilist = await this.resolveAnimeInfo(anilistId);
-
-      if (anilist.error || !anilist.data) {
-        return {
-          data: null,
-          provider: null,
-          error: anilist.error,
-          status: anilist.status,
-        };
-      }
-
-      const titles = [anilist.data.title.english, anilist.data.title.romaji, anilist.data.title.native]
-        .filter((title): title is string => Boolean(title))
-        .filter((title, index, arr) => arr.indexOf(title) === index);
-
-      const anidbProvider = new AniDB();
-      let searchResults: Awaited<ReturnType<typeof anidbProvider.search>> | null = null;
-
-      for (const query of titles) {
-        const result = await anidbProvider.search(query);
-
-        if (result.data.length > 0) {
-          searchResults = result;
-          break;
-        }
-      }
-
-      if (!searchResults) {
-        return {
-          error: 'No AniDB search results found.',
-          data: null,
-          provider: null,
-          status: 404,
-        };
-      }
-
-      const match = findBestMatch(
-        anilist.data.title,
-        searchResults.data.map(item => ({
-          id: item.id,
-          name: item.name,
-          romaji: item.romaji,
-        })),
-      );
-
-      if (!match) {
-        return {
-          error: 'No matching AniDB entry found.',
-          data: null,
-          provider: null,
-          status: 404,
-        };
-      }
-
-      return {
-        data: anilist.data,
-        provider: {
-          id: match.id,
-          name: match.name,
-          romaji: match.romaji,
-          provider: 'anidb',
           score: null,
         },
       };
