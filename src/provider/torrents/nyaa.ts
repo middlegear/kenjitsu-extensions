@@ -49,7 +49,7 @@ class Nyaa extends BaseClass {
     '.ogv',
   ];
 
-  constructor(baseUrl: string = 'https://nyaa.si', options: ClientOptions = {}) {
+  constructor(baseUrl: string = 'https://nyaa.media', options: ClientOptions = {}) {
     super(options);
     this.baseUrl = baseUrl;
   }
