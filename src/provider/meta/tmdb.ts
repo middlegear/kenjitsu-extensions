@@ -124,15 +124,20 @@ export class TheMovieDatabase extends BaseClass {
           posterImage: item.poster_path ? `https://image.tmdb.org/t/p/original${item.poster_path}` : null,
         })),
         artWorks: {
-          backdrop: (result.images?.backdrops || []).map((item: any) =>
-            item.file_path ? `https://image.tmdb.org/t/p/w1280${item.file_path}` : null,
-          ),
-          logos: (result.images?.logos || []).map((item: any) =>
-            item.file_path ? `https://image.tmdb.org/t/p/w780${item.file_path}` : null,
-          ),
-          posterImages: (result.images?.posters || []).map((item: any) =>
-            item.file_path ? `https://image.tmdb.org/t/p/original${item.file_path}` : null,
-          ),
+          backdrop: (result.images?.backdrops || [])
+            .map((item: any) => (item.file_path ? `https://image.tmdb.org/t/p/w1280${item.file_path}` : null))
+            .filter(Boolean)
+            .slice(0, 5),
+
+          logos: (result.images?.logos || [])
+            .map((item: any) => (item.file_path ? `https://image.tmdb.org/t/p/w780${item.file_path}` : null))
+            .filter(Boolean)
+            .slice(0, 5),
+
+          posterImages: (result.images?.posters || [])
+            .map((item: any) => (item.file_path ? `https://image.tmdb.org/t/p/original${item.file_path}` : null))
+            .filter(Boolean)
+            .slice(0, 5),
         },
       };
 
@@ -363,15 +368,20 @@ export class TheMovieDatabase extends BaseClass {
         summary: result.overview || null,
         releaseDate: result.release_date || null,
         artWorks: {
-          backdrop: (result.images?.backdrops || []).map((item: any) =>
-            item.file_path ? `https://image.tmdb.org/t/p/w1280${item.file_path}` : null,
-          ),
-          logos: (result.images?.logos || []).map((item: any) =>
-            item.file_path ? `https://image.tmdb.org/t/p/w780${item.file_path}` : null,
-          ),
-          posterImages: (result.images?.posters || []).map((item: any) =>
-            item.file_path ? `https://image.tmdb.org/t/p/original${item.file_path}` : null,
-          ),
+          backdrop: (result.images?.backdrops || [])
+            .map((item: any) => (item.file_path ? `https://image.tmdb.org/t/p/w1280${item.file_path}` : null))
+            .filter(Boolean)
+            .slice(0, 5),
+
+          logos: (result.images?.logos || [])
+            .map((item: any) => (item.file_path ? `https://image.tmdb.org/t/p/w780${item.file_path}` : null))
+            .filter(Boolean)
+            .slice(0, 5),
+
+          posterImages: (result.images?.posters || [])
+            .map((item: any) => (item.file_path ? `https://image.tmdb.org/t/p/original${item.file_path}` : null))
+            .filter(Boolean)
+            .slice(0, 5),
         },
       };
 
