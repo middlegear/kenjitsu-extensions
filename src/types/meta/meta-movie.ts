@@ -4,18 +4,8 @@ export interface IMetaMovie {
   tmdbId: number;
   name: string;
   originalName: string;
-  posterImage: {
-    small: string | null;
-    medium: string | null;
-    large: string | null;
-    original: string | null;
-  };
-  coverImage: {
-    small: string | null;
-    medium: string | null;
-    large: string | null;
-    original: string | null;
-  };
+  posterImage: string | null;
+  backdrop: string | null;
   country?: string;
   type?: string;
   status?: string;
@@ -64,12 +54,7 @@ export interface IMetaMovieSeasons {
   totalEpisodes: number;
   summary: string;
   seasonNumber: string;
-  posterImage: {
-    small: string;
-    medium: string;
-    large: string;
-    original: string;
-  };
+  posterImage: string | null;
 }
 
 interface IArtWorks {
@@ -82,15 +67,13 @@ interface IArtWorks {
 }
 
 export interface IMetaMovieArtworks {
-  coverImages: IArtWorks[] | [];
+  backdrop: IArtWorks[] | [];
   logos: IArtWorks[] | [];
   posterImages: IArtWorks[] | [];
 }
 
 export interface IMetaMovieEpisodes {
-  absoluteEpisodeNumber: number | null;
   airDate: string | null;
-  episodeNumber: number | null;
   episodeType?: string | null;
   tmdbEpisodeId: number | null;
   title: string | null;
@@ -99,12 +82,7 @@ export interface IMetaMovieEpisodes {
   seasonNumber: number | null;
   tmdbId?: number | null;
   runtime: string | null;
-  images: {
-    small: string;
-    medium: string;
-    large: string;
-    original: string;
-  };
+  thumbnail: string | null;
 }
 
 export interface IMetaMoviePaginated<T> extends IBasePaginated<T> {
@@ -121,18 +99,10 @@ export interface IAnimeListItem {
   tmdbId: number;
   name: string;
   originalName: string;
-  posterImage: {
-    small: string | null;
-    medium: string | null;
-    large: string | null;
-    original: string | null;
-  };
-  coverImage: {
-    small: string | null;
-    medium: string | null;
-    large: string | null;
-    original: string | null;
-  };
+  posterImage: string | null;
+
+  backdrop: string | null;
+
   rating: number | null;
   genres: string;
   episodes: number | string | null;

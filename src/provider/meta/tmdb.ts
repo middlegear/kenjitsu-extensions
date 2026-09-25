@@ -13,8 +13,6 @@ import { BaseClass, type ClientConfig } from '../../models/base.js';
  * A class for interacting with The Movie Database (TMDb) API to search for and retrieve
  * information about TV shows and movies, including trending, popular, top-rated, seasonal data,
  * episode information, and streaming source integration with external providers.
- *
- *
  */
 export class TheMovieDatabase extends BaseClass {
   private readonly apiKey: string = 'ea021b3b0775c8531592713ab727f254';
@@ -42,7 +40,7 @@ export class TheMovieDatabase extends BaseClass {
    * @param year - The first air date year
    * @returns Promise resolving to paginated list of TV shows matching the search query
    */
-  async searchShows(query: string, page: number = 1, year?: number,): Promise<IMetaMoviePaginated<IMetaMovie[] | []>> {
+  async searchShows(query: string, page: number = 1, year?: number): Promise<IMetaMoviePaginated<IMetaMovie[] | []>> {
     if (!query) {
       return {
         hasNextPage: false,
@@ -101,12 +99,8 @@ export class TheMovieDatabase extends BaseClass {
         tmdbId: result.id || null,
         name: result.name || null,
         originalName: result.original_name || null,
-        posterImage: this.buildImageUrls(result.poster_path),
-        coverImage: this.buildImageUrls(result.backdrop_path, {
-          small: 'w300',
-          medium: 'w780',
-          large: 'w1280',
-        }),
+        posterImage: result.poster_path ? `https://image.tmdb.org/t/p/original${result.poster_path}` : null,
+        backdrop: result.backdrop_path ? `https://image.tmdb.org/t/p/w1280${result.backdrop_path}` : null,
         status: result.status || null,
         country: result.origin_country || null,
         language: result.original_language || null,
@@ -127,17 +121,17 @@ export class TheMovieDatabase extends BaseClass {
           totalEpisodes: item.episode_count || null,
           summary: item.overview || null,
           seasonNumber: item.season_number,
-          posterImage: this.buildImageUrls(item.poster_path),
+          posterImage: item.poster_path ? `https://image.tmdb.org/t/p/original${item.poster_path}` : null,
         })),
         artWorks: {
-          coverImages: (result.images?.backdrops || []).map((item: any) =>
-            this.buildImageUrls(item.file_path, { small: 'w300', medium: 'w780', large: 'w1280' }),
+          backdrop: (result.images?.backdrops || []).map((item: any) =>
+            item.file_path ? `https://image.tmdb.org/t/p/w1280${item.file_path}` : null,
           ),
           logos: (result.images?.logos || []).map((item: any) =>
-            this.buildImageUrls(item.file_path, { small: 'w300', medium: 'w780', large: 'w1280' }),
+            item.file_path ? `https://image.tmdb.org/t/p/w780${item.file_path}` : null,
           ),
           posterImages: (result.images?.posters || []).map((item: any) =>
-            this.buildImageUrls(item.file_path, { small: 'w300', medium: 'w780', large: 'w1280' }),
+            item.file_path ? `https://image.tmdb.org/t/p/original${item.file_path}` : null,
           ),
         },
       };
@@ -189,7 +183,7 @@ export class TheMovieDatabase extends BaseClass {
         seasonNumber: item.season_number,
         tmdbId: item.show_id || null,
         runtime: item.runtime || null,
-        images: this.buildImageUrls(item.still_path),
+        images: item.still_path ? `https://image.tmdb.org/t/p/w1280${item.still_path}` : null,
       }));
 
       return { data: episodes as IMetaMovieEpisodes[] };
@@ -237,7 +231,7 @@ export class TheMovieDatabase extends BaseClass {
         seasonNumber: result.season_number || null,
         tmdbEpisodeId: result.id || null,
         runtime: result.runtime || null,
-        images: this.buildImageUrls(result.still_path),
+        thumbnail: result.still_path ? `https://image.tmdb.org/t/p/w1280${result.still_path}` : null,
       };
 
       return {
@@ -293,7 +287,7 @@ export class TheMovieDatabase extends BaseClass {
    * @param page - The page number for pagination (optional, defaults to 1)
    * @returns Promise resolving to paginated list of movies matching the search query
    */
-  async searchMovie(query: string, page: number = 1,year?:number): Promise<IMetaMoviePaginated<IMetaMovie[] | []>> {
+  async searchMovie(query: string, page: number = 1, year?: number): Promise<IMetaMoviePaginated<IMetaMovie[] | []>> {
     if (!query) {
       return {
         hasNextPage: false,
@@ -358,12 +352,8 @@ export class TheMovieDatabase extends BaseClass {
         tmdbId: result.id || null,
         name: result.title || null,
         originalName: result.original_title || null,
-        posterImage: this.buildImageUrls(result.poster_path),
-        coverImage: this.buildImageUrls(result.backdrop_path, {
-          small: 'w300',
-          medium: 'w780',
-          large: 'w1280',
-        }),
+        posterImage: result.poster_path ? `https://image.tmdb.org/t/p/original${result.poster_path}` : null,
+        backdrop: result.backdrop_path ? `https://image.tmdb.org/t/p/w1280${result.backdrop_path}` : null,
         status: result.status || null,
         country: result.origin_country || null,
         language: result.original_language || null,
@@ -373,15 +363,14 @@ export class TheMovieDatabase extends BaseClass {
         summary: result.overview || null,
         releaseDate: result.release_date || null,
         artWorks: {
-          coverImages: (result.images?.backdrops || []).map((item: any) =>
-
-            this.buildImageUrls(item.file_path, { small: 'w300', medium: 'w780', large: 'w1280' }),
+          backdrop: (result.images?.backdrops || []).map((item: any) =>
+            item.file_path ? `https://image.tmdb.org/t/p/w1280${item.file_path}` : null,
           ),
           logos: (result.images?.logos || []).map((item: any) =>
-            this.buildImageUrls(item.file_path, { small: 'w300', medium: 'w780', large: 'w1280' }),
+            item.file_path ? `https://image.tmdb.org/t/p/w780${item.file_path}` : null,
           ),
           posterImages: (result.images?.posters || []).map((item: any) =>
-            this.buildImageUrls(item.file_path, { small: 'w300', medium: 'w780', large: 'w1280' }),
+            item.file_path ? `https://image.tmdb.org/t/p/original${item.file_path}` : null,
           ),
         },
       };
@@ -482,8 +471,8 @@ export class TheMovieDatabase extends BaseClass {
         tmdbId: item.id || null,
         name: item.name || item.title || null,
         originalName: item.original_name || item.original_title || null,
-        posterImage: this.buildImageUrls(item.poster_path),
-        coverImage: this.buildImageUrls(item.backdrop_path),
+        posterImage: item.poster_path ? `https://image.tmdb.org/t/p/original${item.poster_path}` : null,
+        backdrop: item.backdrop_path ? `https://image.tmdb.org/t/p/w1280${item.backdrop_path}` : null,
         country: item.origin_country?.[0] || null,
         type: 'tv',
         language: item.original_language || null,
@@ -556,8 +545,8 @@ export class TheMovieDatabase extends BaseClass {
         tmdbId: item.id || null,
         name: item.name || item.title || null,
         originalName: item.original_name || item.original_title || null,
-        posterImage: this.buildImageUrls(item.poster_path),
-        coverImage: this.buildImageUrls(item.backdrop_path),
+        posterImage: item.poster_path ? `https://image.tmdb.org/t/p/original${item.poster_path}` : null,
+        backdrop: item.backdrop_path ? `https://image.tmdb.org/t/p/w1280${item.backdrop_path}` : null,
         country: item.origin_country || null,
         type: item.media_type || null,
         language: item.original_language || null,
@@ -613,7 +602,6 @@ export class TheMovieDatabase extends BaseClass {
       const separator = endpoint.includes('?') ? '&' : '?';
       const url = `${this.baseUrl}${endpoint}${separator}${queryString}`;
 
-
       const response = await this.client.fetch(url, {
         method: 'GET',
         headers: {
@@ -638,8 +626,8 @@ export class TheMovieDatabase extends BaseClass {
         tmdbId: item.id || null,
         name: item.name || item.title || null,
         originalName: item.original_name || item.original_title || null,
-        posterImage: this.buildImageUrls(item.poster_path),
-        coverImage: this.buildImageUrls(item.backdrop_path),
+        posterImage: item.poster_path ? `https://image.tmdb.org/t/p/original${item.poster_path}` : null,
+        backdrop: item.backdrop_path ? `https://image.tmdb.org/t/p/w1280${item.backdrop_path}` : null,
         country: item.origin_country || null,
         type: item.media_type || null,
         language: item.original_language || null,
@@ -694,7 +682,6 @@ export class TheMovieDatabase extends BaseClass {
 
       const url = `${this.baseUrl}${endpoint}${endpoint.includes('?') ? '&' : '?'}${queryString}`;
 
-
       const response = await this.client.fetch(url, {
         method: 'GET',
         headers: {
@@ -720,8 +707,8 @@ export class TheMovieDatabase extends BaseClass {
         tmdbId: item.id || null,
         name: item.name || item.title || null,
         originalName: item.original_name || item.original_title || null,
-        posterImage: this.buildImageUrls(item.poster_path),
-        coverImage: this.buildImageUrls(item.backdrop_path),
+        posterImage: item.poster_path ? `https://image.tmdb.org/t/p/original${item.poster_path}` : null,
+        backdrop: item.backdrop_path ? `https://image.tmdb.org/t/p/w1280${item.backdrop_path}` : null,
         country: item.origin_country?.[0] || null,
         type: 'tv',
         language: item.original_language || null,
@@ -785,14 +772,14 @@ export class TheMovieDatabase extends BaseClass {
 
       const result = await response.json();
       const data: IMetaMovieArtworks = {
-        coverImages: (result.backdrops || []).map((item: any) =>
-          this.buildImageUrls(item.file_path, { small: 'w300', medium: 'w780', large: 'w1280' }),
+        backdrop: (result.backdrops || []).map((item: any) =>
+          item.file_path ? `https://image.tmdb.org/t/p/w1280${item.file_path}` : null,
         ),
         logos: (result.logos || []).map((item: any) =>
-          this.buildImageUrls(item.file_path, { small: 'w300', medium: 'w780', large: 'w1280' }),
+          item.file_path ? `https://image.tmdb.org/t/p/w780${item.file_path}` : null,
         ),
         posterImages: (result.posters || []).map((item: any) =>
-          this.buildImageUrls(item.file_path, { small: 'w300', medium: 'w780', large: 'w1280' }),
+          item.file_path ? `https://image.tmdb.org/t/p/original${item.file_path}` : null,
         ),
       };
 
@@ -819,7 +806,6 @@ export class TheMovieDatabase extends BaseClass {
     }
 
     try {
-
       const queryString = new URLSearchParams({
         api_key: this.apiKey,
       }).toString();
@@ -842,14 +828,14 @@ export class TheMovieDatabase extends BaseClass {
 
       const result = await response.json();
       const data: IMetaMovieArtworks = {
-        coverImages: (result.backdrops || []).map((item: any) =>
-          this.buildImageUrls(item.file_path, { small: 'w300', medium: 'w780', large: 'w1280' }),
+        backdrop: (result.backdrops || []).map((item: any) =>
+          item.file_path ? `https://image.tmdb.org/t/p/w1280${item.file_path}` : null,
         ),
         logos: (result.logos || []).map((item: any) =>
-          this.buildImageUrls(item.file_path, { small: 'w300', medium: 'w780', large: 'w1280' }),
+          item.file_path ? `https://image.tmdb.org/t/p/w780${item.file_path}` : null,
         ),
         posterImages: (result.posters || []).map((item: any) =>
-          this.buildImageUrls(item.file_path, { small: 'w300', medium: 'w780', large: 'w1280' }),
+          item.file_path ? `https://image.tmdb.org/t/p/original${item.file_path}` : null,
         ),
       };
 
@@ -861,29 +847,6 @@ export class TheMovieDatabase extends BaseClass {
         status: 500,
       };
     }
-  }
-
-  /**
-   * Helper to build consistent image URL objects
-   */
-  private buildImageUrls(
-    path: string | null | undefined,
-    sizes: { small?: string; medium?: string; large?: string } = {
-      small: 'w185',
-      medium: 'w342',
-      large: 'w780',
-    },
-  ) {
-    if (!path) {
-      return { small: null, medium: null, large: null, original: null };
-    }
-
-    return {
-      small: `https://image.tmdb.org/t/p/${sizes.small}${path}`,
-      medium: `https://image.tmdb.org/t/p/${sizes.medium}${path}`,
-      large: `https://image.tmdb.org/t/p/${sizes.large}${path}`,
-      original: `https://image.tmdb.org/t/p/original${path}`,
-    };
   }
 
   /**
@@ -1009,8 +972,8 @@ export class TheMovieDatabase extends BaseClass {
         tmdbId: item.id || null,
         name: item.name || item.title || null,
         originalName: item.original_name || item.original_title || null,
-        posterImage: this.buildImageUrls(item.poster_path),
-        coverImage: this.buildImageUrls(item.backdrop_path),
+        posterImage: item.poster_path ? `https://image.tmdb.org/t/p/original${item.poster_path}` : null,
+        backdrop: item.backdrop_path ? `https://image.tmdb.org/t/p/w1280${item.backdrop_path}` : null,
         country: item.origin_country || null,
         type: item.media_type || null,
         language: item.original_language || null,
@@ -1089,8 +1052,8 @@ export class TheMovieDatabase extends BaseClass {
         tmdbId: item.id || null,
         name: item.title || null,
         originalName: item.original_title || null,
-        posterImage: this.buildImageUrls(item.poster_path),
-        coverImage: this.buildImageUrls(item.backdrop_path),
+        posterImage: item.poster_path ? `https://image.tmdb.org/t/p/original${item.poster_path}` : null,
+        backdrop: item.backdrop_path ? `https://image.tmdb.org/t/p/w1280${item.backdrop_path}` : null,
         language: item.original_language || null,
         releaseDate: item.release_date || null,
         summary: item.overview || null,
