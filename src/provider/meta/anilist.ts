@@ -1831,11 +1831,7 @@ export class Anilist extends BaseClass {
       }
       const kitsu = await new Kitsu().fetchMapping(id);
       if (kitsu.error || !kitsu.data) {
-        return {
-          data: [],
-          error: kitsu.error,
-          status: kitsu.status,
-        };
+        console.error(kitsu.error);
       }
       const kitsuId = kitsu.data?.id;
       const tvdbResult = await response.json();
