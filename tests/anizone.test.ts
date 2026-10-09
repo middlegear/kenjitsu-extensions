@@ -10,14 +10,6 @@ test('return an array of search results', async () => {
   expect(data.data.length).toBeGreaterThan(0);
 });
 
-test('return an array of recent updates', async () => {
-  const data = await anizone.fetchUpdates();
-
-  expect(Array.isArray(data.data)).toBe(true);
-  expect(data.data.length).toBeGreaterThan(0);
-  expect(Array.isArray(data.recentlyAdded)).toBe(true);
-  expect(data.recentlyAdded.length).toBeGreaterThan(0);
-});
 test('return an object containing animeinfo including providerEpisodes', async () => {
   const data = await anizone.fetchAnimeInfo('bleach-sennen-kessen-hen-soukoku-tan-gwna8xmk');
 

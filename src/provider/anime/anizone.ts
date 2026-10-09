@@ -65,29 +65,6 @@ export class Anizone extends AnimeParser {
   }
 
   /**
-   * Fetches recent updates from the Anizone homepage, including recently added anime and latest episodes.
-   * @returns - A promise resolving to an object containing arrays of recently added anime, latest episodes, or an error message.
-   */
-  async fetchUpdates(): Promise<IBaseAnimeResponse<IBaseEpisodes[] | []>> {
-    try {
-      const response = await this.client.fetch(`${this.baseUrl}/`, { method: 'GET' });
-
-      if (!response.ok) {
-        return { error: response.statusText, status: response.status, data: [], recentlyAdded: [] };
-      }
-      const result = await response.text();
-      return this.parseUpdates(cheerio.load(result));
-    } catch (error) {
-      return {
-        error: error instanceof Error ? error.message : 'Unknown err',
-        data: [],
-        recentlyAdded: [],
-        status: 500,
-      };
-    }
-  }
-
-  /**
    * Fetches detailed information and episode list for a specific anime.
    * @param {string} animeId - The unique identifier for the anime.
    * @returns - A promise resolving to an object containing anime details and episodes or an error message.
@@ -126,7 +103,6 @@ export class Anizone extends AnimeParser {
         };
       }
 
-
       const parsedEpisodes = new Map<number, IBaseEpisodes>();
       page1Episodes.forEach(ep => {
         if (ep.episodeNumber !== null && Number.isInteger(ep.episodeNumber)) {
@@ -139,14 +115,12 @@ export class Anizone extends AnimeParser {
       const providerEpisodes: IBaseEpisodes[] = [];
 
       if (totalEpisodes > 0) {
-
         for (let i = 1; i <= totalEpisodes; i++) {
           const existingEpisode = parsedEpisodes.get(i);
 
           if (existingEpisode) {
             providerEpisodes.push(existingEpisode);
           } else {
-
             providerEpisodes.push({
               episodeId: `${data.id}-episode-${i}`,
               episodeNumber: i,
@@ -158,7 +132,6 @@ export class Anizone extends AnimeParser {
           }
         }
       } else {
-
         providerEpisodes.push(...page1Episodes);
       }
 
@@ -173,14 +146,11 @@ export class Anizone extends AnimeParser {
     }
   }
 
-
   private parseEpisodeList($: cheerio.CheerioAPI, animeInfoId: string): IBaseEpisodes[] {
     const episodes: IBaseEpisodes[] = [];
 
-
     const mainContainer = $('main > div[x-data]').first();
     const xData = mainContainer.attr('x-data') || '';
-
 
     const itemsMatch = xData.match(/items:\s*JSON\.parse\('(.*?)'\)\s*,/s);
 
@@ -231,15 +201,24 @@ export class Anizone extends AnimeParser {
         episodeId: `${animeInfoId}-episode-${episodeNumber}`,
         episodeNumber: episodeNumber ? Number(episodeNumber) : null,
         thumbnail: $el.find('div.absolute img').attr('src') || null,
-        teaser: $el.find('div.absolute img').attr(':src')?.match(/'([^']*teaser\.webp)'/)?.[1] || null,
+        teaser:
+          $el
+            .find('div.absolute img')
+            .attr(':src')
+            ?.match(/'([^']*teaser\.webp)'/)?.[1] || null,
         title,
-        airDate: $el.find('span').filter((i, span) => /^\d{4}-\d{2}-\d{2}$/.test($(span).text().trim())).first().text().trim() || null,
+        airDate:
+          $el
+            .find('span')
+            .filter((i, span) => /^\d{4}-\d{2}-\d{2}$/.test($(span).text().trim()))
+            .first()
+            .text()
+            .trim() || null,
       });
     });
 
     return episodes;
   }
-
 
   /**
    * Fetches video sources and related metadata for a specific episode.
@@ -419,7 +398,6 @@ export class Anizone extends AnimeParser {
           .filter(g => g.toLowerCase() !== 'manga') || null,
     };
 
-
     const episodes = this.parseEpisodeList($, animeInfo.id as string);
 
     if (!animeInfo) {
@@ -518,68 +496,6 @@ export class Anizone extends AnimeParser {
     extractedData.posterImage = data.snapshot || null;
 
     return { extractedData };
-  }
-
-  /**
-   * Parses recent updates from the Anizone homepage, including recently added anime and latest episodes.
-   * @private
-   * @param {cheerio.CheerioAPI} $ - Cheerio instance for parsing HTML.
-   * @returns  - An object containing arrays of recently added anime and latest episodes.
-   */
-  private parseUpdates($: cheerio.CheerioAPI) {
-    const recentlyAdded: IBase[] = [];
-
-    const latestAnimeBlock = 'div.swiper-wrapper.flex div.space-y-3.pb-6.swiper-slide';
-
-    $(latestAnimeBlock).each((_, el) => {
-      const id = $(el).find('a').first().attr('href')?.split('/').at(-1) || null;
-      const title = $(el).find('a[title]').attr('title') || $(el).find('img').attr('alt');
-
-      recentlyAdded.push({
-        id: title ? `${this.createSlug(title)}-${id}` : null,
-        name: title || null,
-        posterImage: $(el).find('a > img').attr('src') || null,
-      });
-    });
-
-    const latestEpisodes: IBaseEpisodes[] = [];
-    const latestBlockEpisodes = $('div.md\\:w-2\\/3.lg\\:w-3\\/4 ul');
-    latestBlockEpisodes.find('li').each((_, el) => {
-      const $el = $(el);
-      const episodeNumber = $el.find('a.group').attr('href')?.split('/').at(-1);
-      const animeId = $el.find('div .title').first().attr('href')?.split('/').at(-1);
-      const title = $el.find('div .title').first().text().trim() || null;
-      const teaserMatch = $el
-        .find('img')
-        .attr(':src')
-        ?.match(/'([^']*teaser\.webp)'/);
-      latestEpisodes.push({
-        episodeId: title ? `${this.createSlug(title)}-${animeId}-episode-${episodeNumber}` : null,
-        episodeNumber: episodeNumber ? Number(episodeNumber) : null,
-        title: $el.find('div .title').last().text().trim() || null,
-        thumbnail: $el.find('img').attr('src') || null,
-        teaser: teaserMatch ? teaserMatch[1] : null,
-        airDate: $el.find('.flex.flex-row.text-xs span').eq(0).text().trim() || null,
-      });
-    });
-
-    if (Array.isArray(latestEpisodes) && latestEpisodes.length === 0) {
-      return {
-        data: [],
-        error: 'Latest episodes is empty',
-        status: 404,
-        recentlyAdded: [],
-      };
-    }
-    if (Array.isArray(recentlyAdded) && recentlyAdded.length === 0) {
-      return {
-        data: [],
-        error: 'Recently added is empty',
-        status: 404,
-        recentlyAdded: [],
-      };
-    }
-    return { data: latestEpisodes, recentlyAdded };
   }
 
   private formatQuery = (title: string): string => {
